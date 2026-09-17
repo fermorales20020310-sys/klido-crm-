@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO AVANZA - CRM</title>
+<title>KLIDO AVANZA</title>
 <style>
-:root{--azul:#0A3D9C;--azul-claro:#E8F0FF;--azul-hover:#08307a}
-*{box-sizing:border-box} body{margin:0;font-family:system-ui,Arial;background:var(--azul-claro);display:flex;flex-direction:column;height:100vh}
-header{background:var(--azul);color:white;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
-header h1{margin:0;font-size:20px;font-weight:900;letter-spacing:1px} header h1 span{font-weight:400}
-header a{background:white;color:var(--azul);padding:8px 14px;border-radius:20px;text-decoration:none;font-weight:800;font-size:14px}
-#main{display:flex;flex:1;overflow:hidden}
-#list{width:35%;background:white;border-right:2px solid var(--azul-claro);overflow:auto}
-#list .c{padding:12px;border-bottom:1px solid #eef;cursor:pointer} #list .c:hover{background:var(--azul-claro)} #list .c.active{background:var(--azul);color:white}
-#chat{flex:1;display:flex;flex-direction:column;background:#f5f8ff}
-#msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
-.m{max-width:70%;padding:10px 14px;border-radius:18px;font-size:14px} .me{align-self:flex-end;background:var(--azul);color:white;border-bottom-right-radius:4px} .them{align-self:flex-start;background:white;border:1px solid #ddd;border-bottom-left-radius:4px}
-#send{display:flex;gap:8px;padding:12px;background:white;border-top:1px solid #ddd}
-#send input{flex:1;padding:12px;border-radius:20px;border:1px solid #ccc} #send button{background:var(--azul);color:white;border:none;padding:12px 20px;border-radius:20px;font-weight:700;cursor:pointer}
+body{margin:0;font-family:system-ui;background:#eef3ff} 
+header{background:#0A3D9C;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:20px;font-weight:900} 
+header span{font-weight:400}
+#wrap{display:flex;height:calc(100vh - 48px)}
+#list{width:320px;background:#fff;border-right:1px solid #ccc;overflow:auto}
+.contact{padding:12px 14px;border-bottom:1px solid #eee;cursor:pointer}
+.contact:hover{background:#e8f0ff} .contact.active{background:#0A3D9C;color:#fff}
+#chat{flex:1;display:flex;flex-direction:column}
+#msgs{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:10px;background:#f5f8ff}
+.bubble{max-width:70%;padding:10px 14px;border-radius:16px;font-size:14px}
+.me{align-self:flex-end;background:#0A3D9C;color:#fff;border-bottom-right-radius:4px}
+.them{align-self:flex-start;background:#fff;border:1px solid #ddd;border-bottom-left-radius:4px}
+#send{padding:12px;background:#fff;display:flex;gap:8px}
+#send input{flex:1;padding:12px;border-radius:20px;border:1px solid #ccc}
+#send button{background:#0A3D9C;color:#fff;border:0;border-radius:20px;padding:12px 20px;font-weight:700;cursor:pointer}
 </style></head><body>
-<header><h1>KLIDO <span>AVANZA</span></h1><div><a href="/campaigns.html">📢 Campañas 1000</a></div></header>
-<div id="main">
-<div id="list"></div>
-<div id="chat"><div id="msgs"></div><div id="send"><input id="txt" placeholder="Escribe mensaje..."><button onclick="enviar()">Enviar</button></div></div>
-</div>
+<header><h1>KLIDO <span>AVANZA</span></h1><a href="/campaigns.html" style="background:#fff;color:#0A3D9C;padding:8px 14px;border-radius:20px;text-decoration:none;font-weight:800">📢 Campañas 1000</a></header>
+<div id="wrap"><div id="list"></div><div id="chat"><div id="msgs"></div><div id="send"><input id="txt" placeholder="Escribe mensaje..."><button onclick="send()">Enviar</button></div></div></div>
 <script>
 let sel=null;
-async function loadCons(){let r=await fetch('/api/contacts');let d=await r.json();list.innerHTML=d.map(x=>`<div class="c ${sel===x.phone?'active':''}" onclick="openChat('${x.phone}')"><b>${x.name||'Sin nombre'}</b><br>${x.phone}</div>`).join('')}
-async function openChat(phone){sel=phone;let r=await fetch('/api/messages/'+phone);let d=await r.json();msgs.innerHTML=d.map(m=>`<div class="m ${m.from_me?'me':'them'}">${m.body}</div>`).join('');msgs.scrollTop=msgs.scrollHeight;loadCons()}
-async function enviar(){let t=txt.value; if(!t||!sel) return; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:sel,body:t})}); txt.value=''; openChat(sel)}
-setInterval(()=>{if(sel)openChat(sel);loadCons()},3000); loadCons();
-document.getElementById('txt').addEventListener('keydown',e=>{if(e.key==='Enter') enviar()});
+async function load(){let r=await fetch('/api/contacts');let d=await r.json();list.innerHTML=d.map(c=>`<div class="contact ${sel==c.phone?'active':''}" onclick="openChat('${c.phone}')"><b>${c.name||'Sin nombre'}</b><br><small>${c.phone}</small><br><small>${(c.last_message||'').substring(0,30)}</small></div>`).join('')}
+async function openChat(p){sel=p;load();let r=await fetch('/api/messages/'+p);let m=await r.json();msgs.innerHTML=m.map(x=>`<div class="bubble ${x.from_me?'me':'them'}">${x.body}</div>`).join('');msgs.scrollTop=msgs.scrollHeight}
+async function send(){let t=txt.value;if(!t||!sel)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:sel,body:t})});txt.value='';openChat(sel)}
+setInterval(()=>{if(sel)openChat(sel);load()},3000);load();
+txt.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
 </script></body></html>
