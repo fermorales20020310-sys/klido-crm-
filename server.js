@@ -1,93 +1,106 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const bodyParser = require('body-parser');
 const axios = require('axios');
+const path = require('path');
 const cors = require('cors');
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
-app.use(express.static(__dirname));
+app.use(bodyParser.json({ limit: '10mb' }));
 
-let chats = {};
-try { if(fs.existsSync('chats.json')) chats = JSON.parse(fs.readFileSync('chats.json','utf8')); } catch(e){ chats = {}; }
+// ESTO ES LO QUE TE FALTABA - sirve la carpeta public
+app.use(express.static(path.join(__dirname, 'public')));
 
-function save(){ fs.writeFileSync('chats.json', JSON.stringify(chats, null, 2)); }
+// Memoria de chats
+let chats = {}; // { tel: { nombre, tel, msgs: [] } }
 
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_ID = process.env.PHONE_NUMBER_ID;
-const VERIFY = process.env.VERIFY_TOKEN || 'klido123';
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "klido123";
 
-// Verificación Meta
-app.get('/webhook', (req,res)=>{
-  if(req.query['hub.verify_token'] === VERIFY){
-    return res.send(req.query['hub.challenge']);
+// 1. Webhook para que Meta te verifique
+app.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+    console.log('WEBHOOK VERIFICADO');
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
   }
-  res.sendStatus(403);
 });
 
-// Recibir mensajes
-app.post('/webhook', (req,res)=>{
-  try{
-    const value = req.body.entry?.[0]?.changes?.[0]?.value;
-    const msg = value?.messages?.[0];
-    if(msg){
-      const from = msg.from;
-      const text = msg.text?.body || msg.button?.text || msg.interactive?.list_reply?.title || msg.interactive?.button_reply?.title || `[${msg.type}]`;
-      const name = value.contacts?.[0]?.profile?.name || value.contacts?.[0]?.wa_id || from;
-      if(!chats[from]) chats[from] = {tel: from, nombre: name, msgs: [], unread: 0};
-      chats[from].nombre = name;
-      chats[from].msgs.push({from:'cliente', text, time: new Date().toLocaleString('es-CO')});
-      chats[from].unread = (chats[from].unread || 0) + 1;
-      save();
-      console.log('Mensaje de', from, text);
+// 2. Webhook para recibir mensajes
+app.post('/webhook', (req, res) => {
+  try {
+    const entry = req.body.entry?.[0]?.changes?.[0]?.value;
+    const msg = entry?.messages?.[0];
+    if (msg) {
+      const tel = msg.from;
+      const text = msg.text?.body || (msg.image? '📷 Imagen' : '📎 Archivo');
+      const name = entry.contacts?.[0]?.profile?.name || tel;
+
+      if (!chats[tel]) chats[tel] = { tel, nombre: name, msgs: [] };
+      chats[tel].nombre = name;
+      chats[tel].msgs.push({ from: 'cliente', text, time: new Date().toLocaleTimeString() });
+      console.log(`Nuevo mensaje de ${tel}: ${text}`);
     }
-  }catch(e){ console.error(e); }
+  } catch (e) { console.log(e) }
   res.sendStatus(200);
 });
 
-app.get('/api/chats', (req,res)=>{
-  res.json(Object.values(chats).sort((a,b)=> (b.msgs?.[b.msgs.length-1]?.time || '').localeCompare(a.msgs?.[a.msgs.length-1]?.time || '')));
+// 3. API para la bandeja
+app.get('/api/chats', (req, res) => {
+  const lista = Object.values(chats).sort((a,b)=> b.msgs.length - a.msgs.length);
+  res.json(lista);
 });
 
-app.get('/api/clear', (req,res)=>{
-  chats = {};
-  save();
-  res.json({ok:true, cleared:true});
-});
-
-app.post('/api/send', async (req,res)=>{
-  const {to, text} = req.body;
-  try{
+// 4. API para responder desde la bandeja
+app.post('/api/send', async (req, res) => {
+  const { to, text } = req.body;
+  try {
     await axios.post(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
-      messaging_product: 'whatsapp', to, text: {body: text}
-    }, {headers: {Authorization: `Bearer ${TOKEN}`}});
-    if(!chats[to]) chats[to] = {tel: to, nombre: to, msgs: [], unread: 0};
-    chats[to].msgs.push({from:'yo', text, time: new Date().toLocaleString('es-CO')});
-    save();
-    res.json({ok:true});
-  }catch(e){
-    console.error(e.response?.data || e.message);
-    res.status(500).json({error: e.response?.data || e.message});
+      messaging_product: "whatsapp",
+      to: to,
+      type: "text",
+      text: { body: text }
+    }, { headers: { Authorization: `Bearer ${TOKEN}` } });
+
+    if (!chats[to]) chats[to] = { tel: to, nombre: to, msgs: [] };
+    chats[to].msgs.push({ from: 'yo', text, time: new Date().toLocaleTimeString() });
+    res.json({ ok: true });
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
   }
 });
 
-app.post('/api/send-campaign', async (req,res)=>{
-  const {contacts, message} = req.body;
+// 5. API para campañas (ALIÓN)
+app.post('/api/send-campaign', async (req, res) => {
+  const { contacts, message } = req.body;
   let sent = 0;
-  for(const c of contacts){
-    const txt = message.replace(/{nombre}/gi, c.nombre || '').replace(/{name}/gi, c.nombre || '');
-    try{
+  for (let c of contacts) {
+    const textoFinal = message.replace(/{nombre}/gi, c.nombre || '').replace(/{name}/gi, c.nombre || '');
+    try {
       await axios.post(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
-        messaging_product: 'whatsapp', to: c.tel, text: {body: txt}
-      }, {headers: {Authorization: `Bearer ${TOKEN}`}});
+        messaging_product: "whatsapp",
+        to: c.tel,
+        type: "text",
+        text: { body: textoFinal }
+      }, { headers: { Authorization: `Bearer ${TOKEN}` } });
       sent++;
-    }catch(e){ console.error('fail', c.tel); }
-    await new Promise(r=> setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 700)); // evita bloqueo
+    } catch (e) { console.log('Error enviando a', c.tel) }
   }
-  res.json({ok:true, sent});
+  res.json({ ok: true, sent });
+});
+
+// 6. Limpiar
+app.get('/api/clear', (req, res) => {
+  chats = {};
+  res.json({ ok: true, cleared: true });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=> console.log('KLIDO CRM en', PORT));
+app.listen(PORT, () => console.log('KLIDO CRM ONLINE EN PUERTO ' + PORT));
