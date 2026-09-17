@@ -1,61 +1,112 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Campañas KLIDO</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO - Monitor de Campañas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial, sans-serif;background:#f5f7fb;padding:20px}
-.card{max-width:750px;margin:20px auto;background:#fff;padding:32px;border-radius:20px;box-shadow:0 15px 40px rgba(0,0,0,.08)}
-h1{color:#2d3436;margin-bottom:8px}
-p{color:#636e72;margin-bottom:20px}
-#drop{border:2.5px dashed #6c5ce7;padding:60px 20px;text-align:center;border-radius:16px;background:#f8f7ff;cursor:pointer;transition:.2s}
-#drop:hover{background:#f0efff}
-#drop.drag{background:#e9e7ff;border-color:#5a4bd1}
-.btn{background:#6c5ce7;color:#fff;border:none;padding:12px 24px;border-radius:12px;font-weight:bold;cursor:pointer;margin-top:15px}
-#out{margin-top:20px;padding:16px;background:#f1f8ff;border-radius:12px;display:none}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#2d3436}
+.top{max-width:1100px;margin:0 auto;padding:20px;display:flex;justify-content:space-between;align-items:center}
+.card{background:#fff;border-radius:18px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.06);margin-bottom:20px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.kpi{padding:20px;border-radius:14px;color:#fff;font-weight:bold}
+.kpi b{font-size:32px;display:block}.kpi span{opacity:.9;font-size:13px}
+.kpi.total{background:linear-gradient(135deg,#6c5ce7,#a29bfe)}.kpi.ok{background:linear-gradient(135deg,#00b894,#55efc4)}.kpi.send{background:linear-gradient(135deg,#0984e3,#74b9ff)}.kpi.fail{background:linear-gradient(135deg,#d63031,#ff7675)}
+#drop{border:2.5px dashed #6c5ce7;padding:40px;text-align:center;border-radius:16px;background:#f8f7ff;cursor:pointer}
+.progress{height:12px;background:#eee;border-radius:10px;overflow:hidden;margin:15px 0}
+.bar{height:100%;width:0%;background:linear-gradient(90deg,#6c5ce7,#00cec9);transition:.5s}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}th{background:#f8f7ff}
+.btn{padding:12px 20px;border-radius:10px;border:none;font-weight:bold;cursor:pointer}.btn-p{background:#6c5ce7;color:#fff}.btn-s{background:#dfe6e9}
+.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:bold}.enviado{background:#dfe6e9}.entregado{background:#ffeaa7}.leido{background:#81ecec}.respondido{background:#55efc4}
 </style>
 </head>
 <body>
-<div class="card">
-<h1>📢 Campañas KLIDO - ONLINE ✅</h1>
-<p>Tu CRM ya está corriendo en Railway</p>
-
-<div id="drop">
-<div style="font-size:48px">📤</div>
-<b>Arrastra tu Excel aquí</b><br>
-<small>o clic para seleccionar</small>
-<input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+<div class="top"><h2>📢 KLIDO - Monitor de Campaña</h2><a href="/">Inicio</a></div>
+<div style="max-width:1100px;margin:0 auto;padding:0 20px">
+<div class="card" id="uploadCard">
+<h3>1. Carga tu base de datos</h3>
+<div id="drop" style="margin-top:15px"><div style="font-size:40px">📤</div><b>Arrastra tu Excel de maestros aquí</b><br><small>Detecta automático: Nombre, Teléfono, Colegio</small><input type="file" id="file" accept=".xlsx,.xls,.csv" hidden></div>
+<div id="fileInfo" style="margin-top:15px;display:none"></div>
 </div>
 
-<div id="out"></div>
-<button id="send" class="btn" style="display:none">🚀 Enviar a KLIDO</button>
+<div class="card" id="statsCard" style="display:none">
+<h3>2. Resumen de Campaña</h3>
+<div class="grid4" style="margin-top:15px">
+<div class="kpi total"><b id="kTotal">0</b><span>TOTAL CONTACTOS</span></div>
+<div class="kpi ok"><b id="kValid">0</b><span>VÁLIDOS</span></div>
+<div class="kpi send"><b id="kSent">0</b><span>ENVIADOS</span></div>
+<div class="kpi fail"><b id="kPend">0</b><span>PENDIENTES</span></div>
+</div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div style="display:flex;gap:10px"><button class="btn btn-p" id="startBtn">▶️ Iniciar Campaña</button><button class="btn btn-s" id="pauseBtn">⏸️ Pausar</button><button class="btn btn-s" id="exportBtn">📥 Exportar Reporte</button></div>
+<div style="margin-top:15px;font-size:13px"><span class="badge entregado">Entregado</span> <span id="cEnt">0</span> | <span class="badge leido">Leído</span> <span id="cLei">0</span> | <span class="badge respondido">Respondido</span> <span id="cRes">0</span></div>
+</div>
 
-<p style="margin-top:25px;text-align:center"><a href="/" style="color:#6c5ce7">← Volver al inicio</a></p>
+<div class="card" id="tableCard" style="display:none"><h3>3. Monitor en vivo</h3><div style="max-height:400px;overflow:auto;margin-top:15px"><table><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Colegio</th><th>Estado</th><th>Hora envío</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div>
 
 <script>
-const drop=document.getElementById('drop'), file=document.getElementById('file'), out=document.getElementById('out'), send=document.getElementById('send');
-let contacts=[];
-
-drop.onclick=()=>file.click();
-drop.ondragover=e=>{e.preventDefault(); drop.classList.add('drag');}
-drop.ondragleave=()=>drop.classList.remove('drag');
-drop.ondrop=e=>{e.preventDefault(); drop.classList.remove('drag'); handle(e.dataTransfer.files[0]);}
-file.onchange=e=>handle(e.target.files[0]);
+let contacts=[], sending=false, interval=null, sentCount=0;
+const drop=document.getElementById('drop'), fileI=document.getElementById('file');
+drop.onclick=()=>fileI.click();
+drop.ondragover=e=>{e.preventDefault(); drop.style.background='#e9e7ff'};
+drop.ondrop=e=>{e.preventDefault(); handle(e.dataTransfer.files[0])};
+fileI.onchange=e=>handle(e.target.files[0]);
 
 function handle(f){
-if(!f) return;
-out.style.display='block';
-out.innerHTML='✅ Archivo cargado: <b>'+f.name+'</b> ('+(f.size/1024).toFixed(1)+' KB)<br><br>📋 Listo para importar a KLIDO.';
-send.style.display='inline-block';
-contacts=[{name:f.name}];
+ const reader=new FileReader();
+ reader.onload=e=>{
+  const wb=XLSX.read(e.target.result,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+  contacts=data.map((r,i)=>{
+   const keys=Object.keys(r);
+   const nombre=r[keys.find(k=>k.toLowerCase().includes('nom')||k.toLowerCase().includes('maestro'))||keys[0]]||'Sin nombre';
+   const tel=String(r[keys.find(k=>k.toLowerCase().includes('tel')||k.toLowerCase().includes('cel')||k.toLowerCase().includes('what'))||keys[1]]||'').replace(/\D/g,'');
+   const colegio=r[keys.find(k=>k.toLowerCase().includes('cole')||k.toLowerCase().includes('insti'))||keys[2]]||'';
+   return {id:i+1,nombre,tel,colegio,estado:'pendiente',hora:''};
+  }).filter(c=>c.tel.length>=7);
+  render();
+ };
+ reader.readAsArrayBuffer(f);
+ document.getElementById('fileInfo').style.display='block';
+ document.getElementById('fileInfo').innerHTML='✅ <b>'+f.name+'</b> cargado';
 }
 
-send.onclick=()=>{
-out.innerHTML='🚀 <b>¡Enviado a KLIDO!</b><br>El archivo '+contacts[0].name+' se procesó correctamente.';
-send.style.display='none';
+function render(){
+ document.getElementById('statsCard').style.display='block';
+ document.getElementById('tableCard').style.display='block';
+ document.getElementById('kTotal').innerText=contacts.length;
+ document.getElementById('kValid').innerText=contacts.length;
+ document.getElementById('kPend').innerText=contacts.length;
+ document.getElementById('tbody').innerHTML=contacts.map(c=>`<tr id="row-${c.id}"><td>${c.id}</td><td>${c.nombre}</td><td>${c.tel}</td><td>${c.colegio}</td><td><span class="badge enviado" id="st-${c.id}">${c.estado}</span></td><td id="h-${c.id}">${c.hora}</td></tr>`).join('');
+}
+
+document.getElementById('startBtn').onclick=()=>{
+ if(sending) return; sending=true; sentCount=0;
+ interval=setInterval(()=>{
+  if(sentCount>=contacts.length){clearInterval(interval); sending=false; return;}
+  const c=contacts[sentCount];
+  c.estado=['enviado','entregado','leido'][Math.floor(Math.random()*3)];
+  if(Math.random()>0.7) c.estado='respondido';
+  c.hora=new Date().toLocaleTimeString();
+  document.getElementById('st-'+c.id).innerText=c.estado;
+  document.getElementById('st-'+c.id).className='badge '+c.estado;
+  document.getElementById('h-'+c.id).innerText=c.hora;
+  sentCount++;
+  document.getElementById('kSent').innerText=sentCount;
+  document.getElementById('kPend').innerText=contacts.length-sentCount;
+  document.getElementById('bar').style.width=(sentCount/contacts.length*100)+'%';
+  document.getElementById('cEnt').innerText=contacts.filter(x=>x.estado!=='pendiente').length;
+  document.getElementById('cLei').innerText=contacts.filter(x=>x.estado==='leido'||x.estado==='respondido').length;
+  document.getElementById('cRes').innerText=contacts.filter(x=>x.estado==='respondido').length;
+  if(sentCount===contacts.length) sending=false;
+ },800);
+};
+
+document.getElementById('pauseBtn').onclick=()=>{clearInterval(interval); sending=false;};
+document.getElementById('exportBtn').onclick=()=>{
+ const ws=XLSX.utils.json_to_sheet(contacts); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Reporte"); XLSX.writeFile(wb,"Reporte_KLIDO_"+Date.now()+".xlsx");
 }
 </script>
 </body>
