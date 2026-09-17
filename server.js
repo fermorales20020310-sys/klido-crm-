@@ -29,41 +29,46 @@ async function initDB(){
 }
 initDB();
 
-// VERIFICACION META - ACEPTA LAS DOS RUTAS PARA ARREGLAR EL FORBIDDEN
 app.get(['/webhook','/webhook/whatsapp'], (req,res)=>{
   const token = process.env.VERIFY_TOKEN || 'klido123';
   if(req.query['hub.verify_token'] === token) return res.send(req.query['hub.challenge']);
   return res.sendStatus(403);
 });
 
-// RECIBIR MENSAJES - ACEPTA LAS DOS RUTAS
 app.post(['/webhook','/webhook/whatsapp'], async (req,res)=>{
+  res.sendStatus(200);
   try{
     const entry = req.body.entry?.[0]?.changes?.[0]?.value;
     const msg = entry?.messages?.[0];
-    if(msg){
-      const phone = msg.from;
-      const body = msg.text?.body || '[media]';
-      const name = entry.contacts?.[0]?.profile?.name || phone;
-      const tagDetectado = body.toLowerCase().includes('afili')? 'afiliacion' : 'campana';
+    if(!msg) return;
+    const phone = msg.from;
+    const body = msg.text?.body || '[media]';
+    const name = entry.contacts?.[0]?.profile?.name || phone;
+    const tagDetectado = body.toLowerCase().includes('afili')? 'afiliacion' : 'campana';
 
+    try{
       await pool.query(`
         INSERT INTO contacts(phone,name,last_message,tag)
         VALUES($1,$2,$3,$4)
-        ON CONFLICT(phone) DO UPDATE SET
-          last_message=$3, updated_at=NOW(), name=$2,
-          tag=CASE WHEN contacts.tag IS NULL THEN $4 ELSE contacts.tag END
+        ON CONFLICT(phone) DO UPDATE SET last_message=$3, updated_at=NOW(), name=$2
       `, [phone,name,body,tagDetectado]);
-
-      await pool.query(`INSERT INTO messages(phone,body,from_me) VALUES($1,$2,false)`, [phone,body]);
+    }catch(err){
+      // Si aun no tiene columna tag, guarda sin tag
+      await pool.query(`
+        INSERT INTO contacts(phone,name,last_message)
+        VALUES($1,$2,$3)
+        ON CONFLICT(phone) DO UPDATE SET last_message=$3, updated_at=NOW(), name=$2
+      `, [phone,name,body]);
     }
-  }catch(e){ console.log(e.message); }
-  res.sendStatus(200);
+    await pool.query(`INSERT INTO messages(phone,body,from_me) VALUES($1,$2,false)`, [phone,body]);
+  }catch(e){ console.log("Webhook error", e.message); }
 });
 
 app.get('/api/contacts', async (req,res)=>{
-  const r = await pool.query(`SELECT * FROM contacts ORDER BY updated_at DESC`);
-  res.json(r.rows);
+  try{
+    const r = await pool.query(`SELECT * FROM contacts ORDER BY updated_at DESC`);
+    res.json(r.rows);
+  }catch(e){ res.json([]); }
 });
 app.get('/api/messages/:phone', async (req,res)=>{
   const r = await pool.query(`SELECT * FROM messages WHERE phone=$1 ORDER BY created_at ASC`, [req.params.phone]);
@@ -78,11 +83,9 @@ app.post('/api/send', async (req,res)=>{
   await pool.query(`UPDATE contacts SET last_message=$2, updated_at=NOW() WHERE phone=$1`, [phone,body]);
   res.json({ok:true});
 });
-
 app.post('/api/tag', async (req,res)=>{
   const {phone, tag} = req.body;
   await pool.query(`UPDATE contacts SET tag=$2 WHERE phone=$1`, [phone, tag]);
   res.json({ok:true});
 });
-
 app.listen(process.env.PORT||3000, ()=>console.log("KLIDO con colores listo"));
