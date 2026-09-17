@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO - Campañas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-[#f5f5f7] p-4">
+<div class="max-w-3xl mx-auto bg-white rounded-[24px] shadow-sm p-8">
+  <div class="flex items-center gap-3 mb-2">
+    <div class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold">K</div>
+    <h1 class="text-2xl font-bold">KLIDO</h1>
+    <span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full ml-auto">2000/día | acolbogota</span>
+  </div>
+  <p class="text-gray-400 text-sm mb-6">Carga tu Excel y envía 600 hoy</p>
+
+  <div id="drop" class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center cursor-pointer hover:bg-gray-50">
+    <div class="text-4xl">📊</div>
+    <p class="font-semibold mt-2">Arrastra tu Excel de 600 aquí</p>
+    <p class="text-xs text-gray-400 mt-1">Base_de_datos_maestros_colombia_2025_1_1.xlsx</p>
+    <input type="file" id="file" accept=".xlsx,.xls" class="hidden">
+  </div>
+
+  <div id="preview" class="hidden mt-6">
+    <div class="flex justify-between items-center">
+      <p class="font-bold">Listos: <span id="count" class="text-blue-600">0</span></p>
+      <p id="status" class="text-xs text-gray-500"></p>
+    </div>
+    <div id="list" class="mt-3 bg-gray-50 rounded-xl p-3 text-xs max-h-40 overflow-auto"></div>
+
+    <button id="send" class="mt-6 w-full bg-black text-white py-4 rounded-full font-bold text-[16px]">🚀 Enviar campaña (600)</button>
+
+    <div id="barWrap" class="hidden mt-4">
+      <div class="w-full bg-gray-200 rounded-full h-2"><div id="bar" class="bg-black h-2 rounded-full" style="width:0%"></div></div>
+      <p id="txt" class="text-center text-sm font-medium mt-2"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+let contactos=[];
+const drop=document.getElementById('drop'), inp=document.getElementById('file');
+drop.onclick=()=>inp.click();
+drop.ondragover=e=>e.preventDefault();
+drop.ondrop=e=>{e.preventDefault(); handle(e.dataTransfer.files[0]);};
+inp.onchange=e=>handle(e.target.files[0]);
+
+function handle(f){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=new Uint8Array(e.target.result);
+    const wb=XLSX.read(data,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const json=XLSX.utils.sheet_to_json(ws);
+    contactos=json.map(r=>({TELEFONO:r.TELEFONO||r.whatsapp||r.Mensajes||r.TELEFONO2, NOMBRE:r['NOMBRE Y APELLIDO']})).filter(c=>c.TELEFONO);
+    document.getElementById('count').innerText=contactos.length;
+    document.getElementById('list').innerHTML=contactos.slice(0,80).map(c=>`• ${c.NOMBRE} - ${c.TELEFONO}`).join('<br>');
+    document.getElementById('preview').classList.remove('hidden');
+    document.getElementById('status').innerText=`Detectados ${contactos.length} | Se enviarán ${Math.min(600,contactos.length)} hoy`;
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+document.getElementById('send').onclick=async()=>{
+  if(!contactos.length) return alert('Carga el Excel primero');
+  const btn=document.getElementById('send');
+  btn.disabled=true; btn.innerText='Enviando...';
+  document.getElementById('barWrap').classList.remove('hidden');
+  let enviados=0;
+
+  // Envía al backend de a 600
+  const res=await fetch('/api/campaigns/send',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contacts:contactos.slice(0,600)})
+  });
+  const data=await res.json();
+  document.getElementById('bar').style.width='100%';
+  document.getElementById('txt').innerText=`✅ Enviados ${data.enviados} de ${data.total}`;
+  btn.innerText=`✅ ${data.enviados} Enviados`;
+  alert(`¡Listo Fer! Enviados ${data.enviados} con plantilla acolbogota`);
+};
+</script>
+</body>
+</html>
