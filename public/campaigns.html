@@ -1,64 +1,87 @@
 <!DOCTYPE html>
-<html>
-<head><title>Klido - Campañas Masivas</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{font-family:system-ui;padding:20px;max-width:900px;margin:auto}.card{border:1px solid #ddd;padding:16px;border-radius:12px;margin-bottom:16px} input,button{padding:10px;border-radius:8px;border:1px solid #ccc} button{background:#111;color:#fff;cursor:pointer} table{width:100%;border-collapse:collapse} td,th{border:1px solid #eee;padding:8px}</style>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO - Campañas Acol</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body>
-<h1>📢 Campañas Masivas - 1000 contactos</h1>
-<a href="/">← Volver al CRM</a>
+<body class="bg-[#f5f5f7] font-sans">
+<div class="max-w-5xl mx-auto p-6">
+  <div class="bg-white rounded-[20px] shadow-sm p-8">
+    <div class="flex justify-between items-center mb-8">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold">K</div>
+        <h1 class="text-2xl font-bold">KLIDO <span class="text-gray-400 font-normal">Campañas</span></h1>
+      </div>
+      <div class="text-sm bg-green-50 text-green-700 px-3 py-1 rounded-full">✓ 2000/día activos | Plantilla: acolbogota</div>
+    </div>
 
-<div class="card">
-<h3>1. Crear campaña</h3>
-<input id="campName" placeholder="Nombre campaña ej: Promo Mayo" style="width:200px">
-<input id="templateName" placeholder="Plantilla aprobada ej: promo_klido" style="width:250px">
-<p><small>Sube CSV con columnas: phone,name (ej: 573001234567,Juan) - Máx 2000</small></p>
-<input type="file" id="csvFile" accept=".csv,.txt">
-<button onclick="createCampaign()">Crear campaña</button>
-<p id="createStatus"></p>
-</div>
+    <div id="drop" class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:bg-gray-50 cursor-pointer">
+      <div class="text-4xl mb-3">📊</div>
+      <p class="font-semibold">Arrastra tu Excel de 600 aquí o haz clic</p>
+      <p class="text-sm text-gray-400 mt-1">Base_de_datos_maestros_colombia_2025_1_1.xlsx</p>
+      <input type="file" id="file" accept=".xlsx,.xls" class="hidden">
+    </div>
 
-<div class="card">
-<h3>2. Campañas</h3>
-<button onclick="loadCampaigns()">Refrescar</button>
-<table id="campTable"><thead><tr><th>ID</th><th>Nombre</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Fallidos</th><th>Estado</th><th>Acción</th></tr></thead><tbody></tbody></table>
+    <div id="preview" class="hidden mt-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold">Contactos listos: <span id="count" class="text-blue-600">0</span></h3>
+        <button id="sendBtn" class="bg-black text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-800">🚀 Enviar campaña (600)</button>
+      </div>
+      <div class="bg-gray-50 rounded-xl p-4 max-h-60 overflow-auto text-sm" id="list"></div>
+
+      <div id="progressWrap" class="hidden mt-6">
+        <div class="w-full bg-gray-200 rounded-full h-3"><div id="bar" class="bg-black h-3 rounded-full" style="width:0%"></div></div>
+        <p id="progressText" class="text-sm mt-2 text-center font-medium">Enviando 0 / 600</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-let contactsParsed = [];
-document.getElementById('csvFile').addEventListener('change', async (e)=>{
-  const text = await e.target.files[0].text();
-  contactsParsed = text.split('\n').filter(l=>l.trim()).map(line=>{
-    const [phone,name] = line.split(',').map(s=>s.trim().replace(/"/g,''));
-    return {phone, name:name||''};
-  }).filter(c=>c.phone);
-  document.getElementById('createStatus').innerText = `${contactsParsed.length} contactos cargados`;
-});
+let contactos = [];
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+drop.onclick = () => fileInput.click();
 
-async function createCampaign(){
-  const name = document.getElementById('campName').value;
-  const template_name = document.getElementById('templateName').value;
-  if(!name ||!template_name ||!contactsParsed.length) return alert('Falta nombre, plantilla y CSV');
-  const res = await fetch('/api/campaigns/create',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, template_name, contacts:contactsParsed})});
-  const data = await res.json();
-  document.getElementById('createStatus').innerText = 'Creada ID '+data.id;
-  loadCampaigns();
+drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('bg-gray-50'); };
+drop.ondrop = (e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); };
+fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+function handleFile(f){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws);
+    contactos = json.map(r => ({ TELEFONO: r.TELEFONO || r.whatsapp, NOMBRE: r['NOMBRE Y APELLIDO'],...r })).filter(c => c.TELEFONO);
+    document.getElementById('count').innerText = contactos.length;
+    document.getElementById('list').innerHTML = contactos.slice(0,100).map(c=>`• ${c.NOMBRE} - ${c.TELEFONO}`).join('<br>') + (contactos.length>100? `<br><br>...y ${contactos.length-100} más` : '');
+    document.getElementById('preview').classList.remove('hidden');
+  };
+  reader.readAsArrayBuffer(f);
 }
-async function loadCampaigns(){
-  const res = await fetch('/api/campaigns'); const data = await res.json();
-  const tbody = document.querySelector('#campTable tbody'); tbody.innerHTML='';
-  data.forEach(c=>{
-    tbody.innerHTML+=`<tr><td>${c.id}</td><td>${c.name}</td><td>${c.template_name}</td><td>${c.total_contacts}</td><td>${c.sent}</td><td>${c.failed}</td><td>${c.status}</td><td>${c.status==='draft'?`<button onclick="startCamp(${c.id})">Iniciar envío</button>`:''}</td></tr>`;
+
+document.getElementById('sendBtn').onclick = async () => {
+  if(!contactos.length) return alert('Carga el Excel primero');
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.innerText = 'Enviando...';
+  document.getElementById('progressWrap').classList.remove('hidden');
+
+  const res = await fetch('/api/campaigns/send', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ contacts: contactos.slice(0,600) })
   });
-}
-async function startCamp(id){
-  if(!confirm('¿Iniciar envío masivo? Se mandará 1 por segundo.')) return;
-  await fetch('/api/campaigns/'+id+'/start',{method:'POST'});
-  alert('Iniciada! Refresca para ver progreso');
-  loadCampaigns();
-}
-loadCampaigns();
-setInterval(loadCampaigns,5000);
+  const data = await res.json();
+
+  document.getElementById('bar').style.width = '100%';
+  document.getElementById('progressText').innerText = `✅ Enviados: ${data.enviados} de ${data.total}`;
+  btn.innerText = `✅ Enviados ${data.enviados}`;
+  alert(`¡Listo! Enviados ${data.enviados} con plantilla acolbogota. Revisa WhatsApp Manager.`);
+};
 </script>
 </body>
 </html>
