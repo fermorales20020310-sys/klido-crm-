@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO AVANZA - Login</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+*{font-family:'Inter',sans-serif;box-sizing:border-box}
+body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f7fb}
+.card{width:380px;background:#fff;border-radius:20px;padding:32px;box-shadow:0 12px 40px rgba(0,0,0,.08);text-align:center}
+input{width:100%;padding:13px 14px;border:1px solid #e5e7eb;border-radius:10px;margin-top:12px;font-size:14px}
+.btn{width:100%;padding:13px;background:#111827;color:#fff;border:none;border-radius:10px;font-weight:700;margin-top:16px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="card">
+<img src="logo.png" style="height:90px;object-fit:contain">
+<h2 style="margin:8px 0 4px">KLIDO AVANZA</h2>
+<div style="font-size:12px;color:#6b7280;margin-bottom:18px">CRM DE REDES Y WHATSAPP</div>
+<input id="email" type="email" placeholder="Correo">
+<input id="pass" type="password" placeholder="Contraseña">
+<button class="btn" onclick="login()">Ingresar a plataforma</button>
+<div id="err" style="color:#ef4444;font-size:12px;margin-top:10px;display:none">Correo o contraseña incorrectos</div>
+</div>
+<script>
+async function login(){
+  let email=document.getElementById('email').value;
+  let password=document.getElementById('pass').value;
+  let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  let j=await r.json();
+  if(j.success){ localStorage.setItem('klido_auth','ok'); localStorage.setItem('klido_email',email); location.href='/bandeja'; }
+  else document.getElementById('err').style.display='block';
+}
+</script>
+</body>
+</html>
