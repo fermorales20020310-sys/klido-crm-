@@ -3,104 +3,82 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json({ limit: '10mb' }));
-
-// ESTO ES LO QUE TE FALTABA - sirve la carpeta public
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Memoria de chats
-let chats = {}; // { tel: { nombre, tel, msgs: [] } }
+app.use(bodyParser.json());
 
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_ID = process.env.PHONE_NUMBER_ID;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "klido123";
 
-// 1. Webhook para que Meta te verifique
+let chats = {};
+
+// RUTA EXACTA DE TUS ARCHIVOS
+const publicPath = path.join(__dirname, 'public');
+console.log("PUBLIC PATH:", publicPath);
+console.log("FILES IN PUBLIC:", fs.existsSync(publicPath)? fs.readdirSync(publicPath) : "NO EXISTE PUBLIC");
+
+app.use(express.static(publicPath));
+
+// Forzar bandeja y campañas aunque falle el static
+app.get('/bandeja', (req,res) => res.sendFile(path.join(publicPath, 'bandeja.html')));
+app.get('/bandeja.html', (req,res) => res.sendFile(path.join(publicPath, 'bandeja.html')));
+app.get('/campanas', (req,res) => res.sendFile(path.join(publicPath, 'campanas.html')));
+app.get('/campanas.html', (req,res) => res.sendFile(path.join(publicPath, 'campanas.html')));
+
+// WEBHOOK VERIFICACION
 app.get('/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-    console.log('WEBHOOK VERIFICADO');
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
-  }
+  if (req.query['hub.verify_token'] === VERIFY_TOKEN) {
+    res.send(req.query['hub.challenge']);
+  } else res.sendStatus(403);
 });
 
-// 2. Webhook para recibir mensajes
 app.post('/webhook', (req, res) => {
   try {
     const entry = req.body.entry?.[0]?.changes?.[0]?.value;
     const msg = entry?.messages?.[0];
     if (msg) {
       const tel = msg.from;
-      const text = msg.text?.body || (msg.image? '📷 Imagen' : '📎 Archivo');
+      const text = msg.text?.body || 'Archivo';
       const name = entry.contacts?.[0]?.profile?.name || tel;
-
       if (!chats[tel]) chats[tel] = { tel, nombre: name, msgs: [] };
-      chats[tel].nombre = name;
       chats[tel].msgs.push({ from: 'cliente', text, time: new Date().toLocaleTimeString() });
-      console.log(`Nuevo mensaje de ${tel}: ${text}`);
     }
-  } catch (e) { console.log(e) }
+  } catch(e){ console.log(e) }
   res.sendStatus(200);
 });
 
-// 3. API para la bandeja
-app.get('/api/chats', (req, res) => {
-  const lista = Object.values(chats).sort((a,b)=> b.msgs.length - a.msgs.length);
-  res.json(lista);
-});
+app.get('/api/chats', (req, res) => res.json(Object.values(chats)));
+app.get('/api/clear', (req, res) => { chats = {}; res.json({ok:true}) });
 
-// 4. API para responder desde la bandeja
 app.post('/api/send', async (req, res) => {
   const { to, text } = req.body;
   try {
     await axios.post(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
-      messaging_product: "whatsapp",
-      to: to,
-      type: "text",
-      text: { body: text }
+      messaging_product: "whatsapp", to, type: "text", text: { body: text }
     }, { headers: { Authorization: `Bearer ${TOKEN}` } });
-
     if (!chats[to]) chats[to] = { tel: to, nombre: to, msgs: [] };
     chats[to].msgs.push({ from: 'yo', text, time: new Date().toLocaleTimeString() });
     res.json({ ok: true });
-  } catch (err) {
-    console.log(err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
-  }
+  } catch (err) { res.status(500).json(err.response?.data || {}) }
 });
 
-// 5. API para campañas (ALIÓN)
 app.post('/api/send-campaign', async (req, res) => {
   const { contacts, message } = req.body;
   let sent = 0;
   for (let c of contacts) {
-    const textoFinal = message.replace(/{nombre}/gi, c.nombre || '').replace(/{name}/gi, c.nombre || '');
+    const textoFinal = message.replace(/{nombre}/gi, c.nombre||'');
     try {
       await axios.post(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
-        messaging_product: "whatsapp",
-        to: c.tel,
-        type: "text",
-        text: { body: textoFinal }
+        messaging_product: "whatsapp", to: c.tel, type: "text", text: { body: textoFinal }
       }, { headers: { Authorization: `Bearer ${TOKEN}` } });
-      sent++;
-      await new Promise(r => setTimeout(r, 700)); // evita bloqueo
-    } catch (e) { console.log('Error enviando a', c.tel) }
+      sent++; await new Promise(r=>setTimeout(r,700));
+    } catch(e){}
   }
-  res.json({ ok: true, sent });
-});
-
-// 6. Limpiar
-app.get('/api/clear', (req, res) => {
-  chats = {};
-  res.json({ ok: true, cleared: true });
+  res.json({ ok:true, sent });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('KLIDO CRM ONLINE EN PUERTO ' + PORT));
+app.listen(PORT, () => console.log('KLIDO ONLINE'));
