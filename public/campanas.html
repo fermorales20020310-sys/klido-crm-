@@ -1,37 +1,7 @@
-<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas KLIDO</title><style>body{font-family:system-ui;background:#f5f7fb;padding:20px}.card{max-width:700px;margin:auto;background:white;padding:24px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.1)} h1{margin:0 0 12px} #drop{border:2px dashed #6c5ce7;padding:30px;text-align:center;border-radius:12px;background:#fafaff;cursor:pointer} #progress{margin-top:20px;display:none}.bar{height:18px;background:#eee;border-radius:10px;overflow:hidden}.fill{height:100%;width:0%;background:#6c5ce7;transition:width.3s} button{background:#6c5ce7;color:white;border:0;padding:12px 18px;border-radius:10px;font-weight:600;cursor:pointer;width:100%;margin-top:12px}</style></head><body><div class="card"><h1>📢 Campañas KLIDO</h1><p>Arrastra tu Excel con columna WHATSAPP y NOMBRE</p><div id="drop">Arrastra aquí tu Excel o click para seleccionar<input type="file" id="file" accept=".xlsx,.xls" hidden></div><div id="info"></div><button id="sendBtn" style="display:none">🚀 Enviar campaña</button><div id="progress"><p><b id="status">Enviando...</b> - <span id="count">0/0</span></p><div class="bar"><div class="fill" id="fill"></div></div><p id="errores" style="color:#d63031"></p></div></div><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script>
-let contacts=[];
-const drop=document.getElementById('drop'), fileIn=document.getElementById('file'), info=document.getElementById('info'), sendBtn=document.getElementById('sendBtn'), progress=document.getElementById('progress');
-drop.onclick=()=>fileIn.click();
-drop.ondragover=e=>{e.preventDefault(); drop.style.background='#eee8ff'};
-drop.ondragleave=()=>drop.style.background='#fafaff';
-drop.ondrop=e=>{e.preventDefault(); handleFile(e.dataTransfer.files[0])};
-fileIn.onchange=e=>handleFile(e.target.files[0]);
-function handleFile(f){
- if(!f) return;
- const r=new FileReader();
- r.onload=e=>{
-  const wb=XLSX.read(e.target.result,{type:'binary'});
-  const data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-  contacts=data.filter(row=>row.WHATSAPP||row.Whatsapp||row.whatsapp);
-  info.innerHTML=`<p>✅ ${contacts.length} contactos cargados</p>`;
-  sendBtn.style.display='block';
- };
- r.readAsBinaryString(f);
-}
-let interval=null;
-sendBtn.onclick=async()=>{
- sendBtn.disabled=true; progress.style.display='block';
- const res=await fetch('/api/campaigns/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contacts,template:'acolbogota'})});
- const j=await res.json();
- document.getElementById('status').innerText='Enviando...';
- interval=setInterval(async()=>{
-  const pr=await fetch('/api/campaigns/progress').then(r=>r.json());
-  const pct=pr.total?Math.round(pr.enviados/pr.total*100):0;
-  document.getElementById('fill').style.width=pct+'%';
-  document.getElementById('count').innerText=`${pr.enviados}/${pr.total}`;
-  document.getElementById('errores').innerText=pr.errores?`Errores: ${pr.errores}`:'';
-  if(pr.estado==='terminado'){ clearInterval(interval); document.getElementById('status').innerText='🎉 Terminado'; sendBtn.disabled=false; }
- },1000);
-};
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>KLIDO</title>
+<style>body{font-family:Arial;background:#f5f7fb;padding:20px}.card{max-width:650px;margin:auto;background:#fff;padding:24px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.1)}#drop{border:2px dashed #6c5ce7;padding:40px;text-align:center;border-radius:12px;cursor:pointer}#progress{display:none;margin-top:20px}.bar{height:20px;background:#eee;border-radius:10px;overflow:hidden}.fill{height:100%;width:0%;background:#6c5ce7;transition:.3s}button{background:#6c5ce7;color:#fff;border:0;padding:14px;border-radius:10px;width:100%;font-weight:bold;margin-top:15px}</style></head><body><div class="card"><h1>📢 Campañas KLIDO</h1><div id="drop">Arrastra tu Excel aquí o click<input type=file id=file hidden accept=.xlsx></div><div id=info></div><button id=sendBtn style=display:none>🚀 Enviar campaña</button><div id=progress><p><b id=status>Enviando...</b> <span id=count></span></p><div class=bar><div class=fill id=fill></div></div></div></div><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script>
+let contacts=[]; const drop=document.getElementById('drop'), fileIn=document.getElementById('file'), info=document.getElementById('info'), sendBtn=document.getElementById('sendBtn');
+drop.onclick=()=>fileIn.click(); drop.ondragover=e=>{e.preventDefault(); drop.style.background='#e0d8ff'}; drop.ondrop=e=>{e.preventDefault(); handle(e.dataTransfer.files[0])}; fileIn.onchange=e=>handle(e.target.files[0]);
+function handle(f){ if(!f) return; let r=new FileReader(); r.onload=e=>{ let wb=XLSX.read(e.target.result,{type:'binary'}); let d=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); contacts=d; info.innerHTML=`✅ ${d.length} contactos`; sendBtn.style.display='block'; }; r.readAsBinaryString(f); }
+sendBtn.onclick=async()=>{ document.getElementById('progress').style.display='block'; let res=await fetch('/api/campaigns/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contacts,template:'acolbogota'})}); let timer=setInterval(async()=>{ let p=await fetch('/api/campaigns/progress').then(r=>r.json()); document.getElementById('fill').style.width=Math.round(p.enviados/p.total*100)+'%'; document.getElementById('count').innerText=`${p.enviados}/${p.total}`; if(p.estado==='terminado'){clearInterval(timer); document.getElementById('status').innerText='🎉 Terminado';} },1000); };
 </script></body></html>
