@@ -1,31 +1,32 @@
 const express = require('express');
 const path = require('path');
-const cors = require('cors');
-const fs = require('fs');
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
-
-// asegura que public existe
-if (!fs.existsSync(path.join(__dirname, 'public'))) {
-  fs.mkdirSync(path.join(__dirname, 'public'));
-}
+app.use(express.json({limit: '50mb'}));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/api/test', (req, res) => res.json({ok:true, msg:'KLIDO ONLINE'}));
+// Variables que ya tienes en Railway
+const TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_ID = process.env.PHONE_NUMBER_ID;
 
-app.get('/', (req,res)=>{
-  const p = path.join(__dirname,'public','index.html');
-  if(fs.existsSync(p)) return res.sendFile(p);
-  res.send('<h1>KLIDO CRM</h1><a href="/campanas.html">Ir a Campanas</a>');
+app.post('/api/send', async (req, res) => {
+  const { to, message } = req.body;
+  if(!TOKEN ||!PHONE_ID) return res.status(500).json({error: 'Falta TOKEN o PHONE_ID en Railway Variables'});
+  try {
+    const url = `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`;
+    const r = await axios.post(url, {
+      messaging_product: 'whatsapp',
+      to: to,
+      type: 'text',
+      text: { body: message }
+    }, { headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' } });
+    res.json({ok:true, id: r.data.messages[0].id});
+  } catch(e) {
+    res.status(500).json({ok:false, error: e.response?.data || e.message});
+  }
 });
 
-app.get('/campanas', (req,res)=>{
-  const p = path.join(__dirname,'public','campanas.html');
-  if(fs.existsSync(p)) return res.sendFile(p);
-  res.send('Falta campanas.html - crealo en public/');
-});
-
-app.listen(PORT, ()=>console.log('KLIDO OK en '+PORT));
+app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','campanas.html')));
+app.listen(PORT, ()=> console.log('KLIDO REAL ONLINE en puerto '+PORT));
