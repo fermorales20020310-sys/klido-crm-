@@ -1,1 +1,106 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>KLIDO</title></head><body style="font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;background:#f5f7fb"><a href="/campanas.html" style="background:#6c5ce7;color:#fff;padding:20px 32px;border-radius:16px;text-decoration:none;font-weight:bold;font-size:20px">Ir a Campañas KLIDO →</a></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>KLIDO - Campañas</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{font-family:Inter,Arial;box-sizing:border-box}
+body{margin:0;background:#f8fafc;min-height:100vh}
+.top{height:68px;background:white;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.card{max-width:900px;margin:30px auto;background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.06);padding:28px}
+.drop{border:2px dashed #cbd5e1;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all.2s}
+.drop.dragover{border-color:#2563eb;background:#eff6ff}
+select,input{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin:8px 0;font-size:14px}
+.btn{padding:12px 20px;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+.btn-primary{background:#2563eb;color:white;width:100%;margin-top:12px}
+.btn-primary:disabled{background:#94a3b8}
+.badge{display:inline-block;background:#fffbeb;border:1px solid #f59e0b;color:#92400e;padding:4px 8px;border-radius:6px;font-size:12px;margin:4px}
+</style>
+</head>
+<body>
+<div class="top">
+<div style="display:flex;align-items:center;gap:12px"><img src="/logo.png" style="height:42px"><b>KLIDO AVANZA</b><span style="font-size:12px;color:#64748b;margin-left:10px">Campañas API Oficial - Plantillas aprobadas</span></div>
+<button onclick="location.href='/'" style="padding:8px 14px;border:1px solid #e5e7eb;background:white;border-radius:8px;cursor:pointer">← Volver a Bandeja</button>
+</div>
+<div class="card">
+<h2 style="margin:0 0 8px">Lanzar nueva campaña</h2>
+<p style="color:#64748b;font-size:13px;margin:0 0 20px">Tus plantillas se cargan automático de la API de Meta. Si apruebas una nueva, aparece aquí sin hacer nada.</p>
+<label style="font-weight:600;font-size:13px">Plantilla aprobada (API)</label>
+<select id="templateSelect"><option>Cargando plantillas aprobadas...</option></select>
+<div id="tplInfo" style="font-size:12px;color:#64748b;margin:6px 0"></div>
+<label style="font-weight:600;font-size:13px;margin-top:12px;display:block">Nombre de campaña (para seguimiento amarillo)</label>
+<input id="campName" placeholder="Ej: Alianza Agosto - alion_co">
+<label style="font-weight:600;font-size:13px;margin-top:12px;display:block">Excel con números (columna A)</label>
+<div class="drop" id="drop">
+<div style="font-size:32px">📊</div>
+<div style="font-weight:600">Arrastra tu Excel aquí</div>
+<div style="font-size:12px;color:#64748b">o haz clic para seleccionar</div>
+<input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
+<div id="fileInfo" style="margin-top:12px"></div>
+</div>
+<div id="preview" style="margin-top:16px;max-height:160px;overflow:auto;background:#f8fafc;padding:12px;border-radius:8px;font-size:12px;display:none"></div>
+<button class="btn btn-primary" id="sendBtn" disabled onclick="sendCamp()">Enviar campaña ahora</button>
+<div id="result" style="margin-top:16px"></div>
+<h3 style="margin-top:32px">Historial de campañas - Seguimiento real</h3>
+<div id="history"></div>
+</div>
+<script>
+let numbers=[];
+async function loadTemplates(){
+  try{
+    let r=await fetch('/api/templates'); let tpl=await r.json();
+    let sel=document.getElementById('templateSelect');
+    if(!tpl.length){ sel.innerHTML='<option>No hay plantillas aprobadas aún</option>'; return; }
+    sel.innerHTML=tpl.map(t=>`<option value="${t.name}">${t.name} - ${t.language} - ${t.status}</option>`).join('');
+    sel.onchange=()=>{ let t=tpl.find(x=>x.name===sel.value); document.getElementById('tplInfo').innerText=t?`Categoría: ${t.category} | Componentes: ${t.components?.length||0}`:''; check(); };
+    document.getElementById('tplInfo').innerText=`${tpl.length} plantillas aprobadas cargadas automáticamente`;
+    check();
+  }catch(e){ document.getElementById('templateSelect').innerHTML='<option>Error cargando API</option>'; }
+}
+function check(){ document.getElementById('sendBtn').disabled=!(numbers.length>0 && document.getElementById('templateSelect').value); }
+const drop=document.getElementById('drop');
+drop.onclick=()=>document.getElementById('file').click();
+drop.ondragover=(e)=>{ e.preventDefault(); drop.classList.add('dragover'); };
+drop.ondragleave=()=>drop.classList.remove('dragover');
+drop.ondrop=(e)=>{ e.preventDefault(); drop.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); };
+document.getElementById('file').onchange=(e)=>handleFile(e.target.files[0]);
+function handleFile(f){
+  if(!f) return;
+  document.getElementById('fileInfo').innerHTML=`<span class="badge">📁 ${f.name} (${(f.size/1024).toFixed(1)} KB)</span>`;
+  let reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      let wb=XLSX.read(e.target.result,{type:'binary'});
+      let ws=wb.Sheets[wb.SheetNames[0]];
+      let data=XLSX.utils.sheet_to_json(ws,{header:1});
+      numbers=data.flat().map(v=>String(v||'').replace(/\D/g,'')).filter(v=>v.length>=10);
+      numbers=[...new Set(numbers)];
+      document.getElementById('preview').style.display='block';
+      document.getElementById('preview').innerHTML=`<b>${numbers.length} números detectados:</b><br>${numbers.slice(0,20).join(', ')}${numbers.length>20?'...':''}`;
+      document.getElementById('fileInfo').innerHTML+=`<span class="badge" style="background:#dcfce7;border-color:#16a34a;color:#166534">${numbers.length} contactos listos</span>`;
+      check();
+    }catch(err){ alert('Error leyendo Excel'); }
+  };
+  reader.readAsBinaryString(f);
+}
+async function sendCamp(){
+  let tpl=document.getElementById('templateSelect').value;
+  let cname=document.getElementById('campName').value||tpl;
+  if(!confirm(`Enviar "${tpl}" a ${numbers.length} contactos? Campaña: ${cname}`)) return;
+  document.getElementById('sendBtn').disabled=true; document.getElementById('sendBtn').innerText='Enviando...';
+  let r=await fetch('/api/send-campaign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers, templateName:tpl, campaignName:cname})});
+  let res=await r.json();
+  document.getElementById('result').innerHTML=`<div style="background:#dcfce7;padding:12px;border-radius:8px">✅ Enviados: ${res.sent} | Fallidos: ${res.failed}<br><small>Aparecerán en amarillo en bandeja. Cuando respondan, entrarán a Hot con puntico rojo.</small></div>`;
+  document.getElementById('sendBtn').innerText='Enviar campaña ahora'; loadHistory();
+}
+async function loadHistory(){
+  let r=await fetch('/api/campaigns'); let h=await r.json();
+  document.getElementById('history').innerHTML=h.map(c=>`<div style="border:1px solid #e5e7eb;padding:12px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><div><b>${c.name}</b><br><small>${new Date(c.date).toLocaleString()} - Plantilla ${c.template} - ${c.total} contactos</small></div><div><span class="badge" style="background:#dcfce7">${c.sent} enviados</span></div></div>`).join('')||'Sin campañas aún';
+}
+loadTemplates(); loadHistory();
+setInterval(loadTemplates, 30000);
+</script>
+</body>
+</html>
