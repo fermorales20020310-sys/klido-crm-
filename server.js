@@ -6,16 +6,31 @@ app.use(express.json());
 app.use(express.static('public'));
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
+
 async function initDB(){
  try{
-  await pool.query(`CREATE TABLE IF NOT EXISTS contacts (phone TEXT PRIMARY KEY, name TEXT, last_message TEXT, updated_at TIMESTAMP DEFAULT NOW())`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, phone TEXT, body TEXT, from_me BOOLEAN, created_at TIMESTAMP DEFAULT NOW())`);
-  console.log("DB OK");
+  await pool.query(`CREATE TABLE IF NOT EXISTS contacts (
+    phone TEXT PRIMARY KEY,
+    name TEXT,
+    last_message TEXT,
+    tag TEXT DEFAULT 'campana',
+    updated_at TIMESTAMP DEFAULT NOW()
+  )`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS messages (
+    id SERIAL PRIMARY KEY,
+    phone TEXT,
+    body TEXT,
+    from_me BOOLEAN,
+    created_at TIMESTAMP DEFAULT NOW()
+  )`);
+  // Si la tabla ya existia, le agregamos la columna tag
+  await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS tag TEXT DEFAULT 'campana'`);
+  console.log("DB OK con tags");
  }catch(e){ console.log("DB error", e.message); }
 }
 initDB();
 
-// VERIFICACION META - ESTO ES LO QUE ARREGLA EL FORBIDDEN
+// VERIFICACION META - ARREGLA EL FORBIDDEN
 app.get('/webhook', (req,res)=>{
   const token = process.env.VERIFY_TOKEN || 'klido123';
   if(req.query['hub.verify_token'] === token) return res.send(req.query['hub.challenge']);
@@ -31,9 +46,18 @@ app.post('/webhook', async (req,res)=>{
       const phone = msg.from;
       const body = msg.text?.body || '[media]';
       const name = entry.contacts?.[0]?.profile?.name || phone;
-      await pool.query(`INSERT INTO contacts(phone,name,last_message) VALUES($1,$2,$3) ON CONFLICT(phone) DO UPDATE SET last_message=$3, updated_at=NOW(), name=$2`, [phone,name,body]);
+      // Si es por afiliacion detectamos por palabra clave, si no queda como campana (amarillo)
+      const tagDetectado = body.toLowerCase().includes('afili')? 'afiliacion' : 'campana';
+
+      await pool.query(`
+        INSERT INTO contacts(phone,name,last_message,tag)
+        VALUES($1,$2,$3,$4)
+        ON CONFLICT(phone) DO UPDATE SET
+          last_message=$3, updated_at=NOW(), name=$2,
+          tag=CASE WHEN contacts.tag IS NULL THEN $4 ELSE contacts.tag END
+      `, [phone,name,body,tagDetectado]);
+
       await pool.query(`INSERT INTO messages(phone,body,from_me) VALUES($1,$2,false)`, [phone,body]);
-      console.log("Guardado:", phone, body);
     }
   }catch(e){ console.log(e.message); }
   res.sendStatus(200);
@@ -57,4 +81,11 @@ app.post('/api/send', async (req,res)=>{
   res.json({ok:true});
 });
 
-app.listen(process.env.PORT||3000, ()=>console.log("KLIDO AVANZA FINAL listo"));
+// CAMBIAR COLOR MANUALMENTE
+app.post('/api/tag', async (req,res)=>{
+  const {phone, tag} = req.body;
+  await pool.query(`UPDATE contacts SET tag=$2 WHERE phone=$1`, [phone, tag]);
+  res.json({ok:true});
+});
+
+app.listen(process.env.PORT||3000, ()=>console.log("KLIDO con colores listo"));
