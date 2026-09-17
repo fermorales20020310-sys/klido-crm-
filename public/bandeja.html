@@ -1,10 +1,68 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Klido Bandeja</title><style>body{font-family:sans-serif;background:#111;color:#fff;margin:0;display:flex;height:100vh}.lista{width:35%;border-right:1px solid #333;overflow:auto}.chat{padding:12px;border-bottom:1px solid #222;cursor:pointer}.chat:hover{background:#222}.msgs{flex:1;display:flex;flex-direction:column}.mensajes{flex:1;overflow:auto;padding:20px}.msg{margin:8px;padding:10px 14px;border-radius:12px;max-width:70%}.cliente{background:#222}.yo{background:#25D366;color:#000;margin-left:auto}.input{display:flex;padding:10px;border-top:1px solid #333}input{flex:1;padding:12px;border-radius:20px;border:none}button{margin-left:10px;padding:12px 20px;background:#25D366;border:none;border-radius:20px;font-weight:bold}</style></head><body>
-<div class="lista" id="lista"></div>
-<div class="msgs"><div class="mensajes" id="mensajes"><p>Selecciona un chat</p></div><div class="input"><input id="txt" placeholder="Escribe un mensaje..."><button onclick="enviar()">Enviar</button></div></div>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klido Bandeja</title>
+<style>
+body{margin:0;font-family:Arial;background:#111;color:#fff;display:flex;height:100vh}
+.lista{width:350px;background:#181818;border-right:1px solid #333;overflow:auto}
+.chat{padding:14px;border-bottom:1px solid #222;cursor:pointer}
+.chat:hover{background:#222}
+.chat b{color:#25D366}
+.msgs{flex:1;display:flex;flex-direction:column}
+.mensajes{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
+.msg{padding:10px 14px;border-radius:12px;max-width:65%;font-size:15px}
+.cliente{background:#2a2a2a;align-self:flex-start}
+.yo{background:#25D366;color:#000;align-self:flex-end}
+.input{display:flex;padding:12px;border-top:1px solid #333;background:#181818}
+#txt{flex:1;padding:12px;border-radius:20px;border:none;outline:none}
+#btn{margin-left:10px;padding:12px 20px;background:#25D366;border:none;border-radius:20px;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="lista" id="lista"><p style="padding:20px">Cargando chats...</p></div>
+<div class="msgs">
+<div class="mensajes" id="mensajes"><p>Selecciona un chat a la izquierda</p></div>
+<div class="input"><input id="txt" placeholder="Escribe un mensaje..."><button id="btn" onclick="enviar()">Enviar</button></div>
+</div>
 <script>
 let chats=[], actual=null;
-async function cargar(){let r=await fetch('/api/chats');chats=await r.json();let h='';chats.forEach(c=>{h+=`<div class="chat" onclick="abrir('${c.tel}')"><b>${c.nombre}</b><br><small>${c.tel} - ${c.msgs[c.msgs.length-1]?.text.slice(0,30)||''}</small></div>`});document.getElementById('lista').innerHTML=h;if(actual) abrir(actual,false);}
-function abrir(tel,reset=true){actual=tel;let c=chats.find(x=>x.tel==tel);let h='';c.msgs.forEach(m=>{h+=`<div class="msg ${m.from}"><small>${m.time||''}</small><br>${m.text}</div>`});document.getElementById('mensajes').innerHTML=h;document.getElementById('mensajes').scrollTop=99999;}
-async function enviar(){let text=document.getElementById('txt').value;if(!text||!actual)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:actual,text})});document.getElementById('txt').value='';cargar();}
-setInterval(cargar,3000);cargar();
-</script></body></html>
+async function cargar(){
+  try{
+    let r=await fetch('/api/chats');
+    chats=await r.json();
+    let h='';
+    if(chats.length==0){document.getElementById('lista').innerHTML='<p style="padding:20px">No hay chats aún. Mándate un WhatsApp de prueba.</p>';return;}
+    chats.forEach(c=>{
+      let ultimo=c.msgs[c.msgs.length-1]?.text||'';
+      h+=`<div class="chat" onclick="abrir('${c.tel}')"><b>${c.nombre}</b><br><small>${c.tel}</small><br><small style="color:#aaa">${ultimo.slice(0,30)}</small></div>`;
+    });
+    document.getElementById('lista').innerHTML=h;
+  }catch(e){document.getElementById('lista').innerHTML='Error cargando: '+e}
+}
+function abrir(tel){
+  actual=tel;
+  let c=chats.find(x=>x.tel==tel);
+  if(!c)return;
+  let h='';
+  c.msgs.forEach(m=>{
+    h+=`<div class="msg ${m.from}"><small style="font-size:11px;opacity:.7">${m.time||''}</small><br>${m.text}</div>`;
+  });
+  document.getElementById('mensajes').innerHTML=h;
+  document.getElementById('mensajes').scrollTop=999999;
+}
+async function enviar(){
+  let text=document.getElementById('txt').value;
+  if(!text||!actual)return;
+  document.getElementById('txt').value='';
+  await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:actual,text})});
+  cargar();
+  setTimeout(()=>abrir(actual),500);
+}
+document.getElementById('txt').addEventListener('keydown',e=>{if(e.key=='Enter')enviar()});
+setInterval(cargar,3000);
+cargar();
+</script>
+</body>
+</html>
