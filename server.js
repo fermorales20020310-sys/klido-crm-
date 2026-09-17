@@ -7,13 +7,12 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json({limit: '50mb'}));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Variables que ya tienes en Railway
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_ID = process.env.PHONE_NUMBER_ID;
 
 app.post('/api/send', async (req, res) => {
   const { to, message } = req.body;
-  if(!TOKEN ||!PHONE_ID) return res.status(500).json({error: 'Falta TOKEN o PHONE_ID en Railway Variables'});
+  if(!TOKEN ||!PHONE_ID) return res.status(500).json({error: 'Falta TOKEN o PHONE_ID'});
   try {
     const url = `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`;
     const r = await axios.post(url, {
@@ -29,4 +28,4 @@ app.post('/api/send', async (req, res) => {
 });
 
 app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','campanas.html')));
-app.listen(PORT, ()=> console.log('KLIDO REAL ONLINE en puerto '+PORT));
+app.listen(PORT, ()=> console.log('KLIDO REAL EN '+PORT));
