@@ -23,20 +23,19 @@ async function initDB(){
     from_me BOOLEAN,
     created_at TIMESTAMP DEFAULT NOW()
   )`);
-  // Si la tabla ya existia, le agregamos la columna tag
   await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS tag TEXT DEFAULT 'campana'`);
   console.log("DB OK con tags");
  }catch(e){ console.log("DB error", e.message); }
 }
 initDB();
 
-// VERIFICACION META - ARREGLA EL FORBIDDEN
-app.get('/webhook', (req,res)=>{
+// VERIFICACION META - ACEPTA LAS DOS RUTAS PARA ARREGLAR EL FORBIDDEN
+app.get(['/webhook','/webhook/whatsapp'], (req,res)=>{
   const token = process.env.VERIFY_TOKEN || 'klido123';
   if(req.query['hub.verify_token'] === token) return res.send(req.query['hub.challenge']);
   return res.sendStatus(403);
-// VERIFICACION META - ACEPTA /webhook Y /webhook/whatsapp
-app.get(['/webhook','/webhook/whatsapp'], (req,res)=>{
+});
+
 // RECIBIR MENSAJES - ACEPTA LAS DOS RUTAS
 app.post(['/webhook','/webhook/whatsapp'], async (req,res)=>{
   try{
@@ -46,7 +45,6 @@ app.post(['/webhook','/webhook/whatsapp'], async (req,res)=>{
       const phone = msg.from;
       const body = msg.text?.body || '[media]';
       const name = entry.contacts?.[0]?.profile?.name || phone;
-      // Si es por afiliacion detectamos por palabra clave, si no queda como campana (amarillo)
       const tagDetectado = body.toLowerCase().includes('afili')? 'afiliacion' : 'campana';
 
       await pool.query(`
@@ -81,7 +79,6 @@ app.post('/api/send', async (req,res)=>{
   res.json({ok:true});
 });
 
-// CAMBIAR COLOR MANUALMENTE
 app.post('/api/tag', async (req,res)=>{
   const {phone, tag} = req.body;
   await pool.query(`UPDATE contacts SET tag=$2 WHERE phone=$1`, [phone, tag]);
