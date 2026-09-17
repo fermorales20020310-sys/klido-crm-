@@ -6,58 +6,64 @@ const app = express();
 app.use(express.json());
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'klido123';
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
 
-// WEBHOOK VERIFICATION - Esto es lo que pones en Meta
+// VERIFICACION WEBHOOK
 app.get('/webhook', (req,res)=>{
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-  if(mode==='subscribe' && token===VERIFY_TOKEN){ console.log("WEBHOOK VERIFICADO"); return res.status(200).send(challenge); }
-  return res.sendStatus(403);
+  const mode=req.query['hub.mode']; const token=req.query['hub.verify_token']; const challenge=req.query['hub.challenge'];
+  if(mode==='subscribe' && token===VERIFY_TOKEN){ return res.status(200).send(challenge); }
+  res.sendStatus(403);
 });
 
-// ESTA ES LA URL QUE DEBES PEGAR EN META:
-// https://klido-crm-production.up.railway.app/webhook
-
+// URL PARA META: https://klido-crm-production.up.railway.app/webhook
 app.post(['/webhook','/webhook/whatsapp'], async (req,res)=>{
   try{
-    console.log("LLEGO MENSAJE:", JSON.stringify(req.body).slice(0,2000));
-    const entry = req.body.entry?.[0];
-    const change = entry?.changes?.[0];
-    const value = change?.value;
-    const msg = value?.messages?.[0];
+    console.log("LLEGO:", JSON.stringify(req.body).slice(0,2000));
+    const msg = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    const contact = req.body.entry?.[0]?.changes?.[0]?.value?.contacts?.[0];
     if(!msg) return res.sendStatus(200);
-
-    const phone = msg.from;
-    const body = msg.text?.body || msg.image?.caption || "[archivo]";
-    const name = value.contacts?.[0]?.profile?.name || phone;
-
-    await pool.query(`INSERT INTO contacts(phone,name,last_message,tag) VALUES($1,$2,$3,'campana') ON CONFLICT(phone) DO UPDATE SET last_message=$3, tag=COALESCE(contacts.tag,'campana'), updated_at=NOW()`, [phone,name,body]);
+    const phone = msg.from; const body = msg.text?.body || "[archivo]"; const name = contact?.profile?.name || phone;
+    await pool.query(`INSERT INTO contacts(phone,name,last_message,tag) VALUES($1,$2,$3,'campana') ON CONFLICT(phone) DO UPDATE SET last_message=$3, updated_at=NOW()`, [phone,name,body]);
     await pool.query(`INSERT INTO messages(phone,body,from_me) VALUES($1,$2,false)`, [phone,body]);
-
     res.sendStatus(200);
-  }catch(e){ console.error("Error webhook:", e.message); res.sendStatus(200); }
+  }catch(e){ console.error(e); res.sendStatus(200); }
 });
 
+// APIS QUE USA TU FRONTEND
+app.get('/api/contacts', async (req,res)=>{
+  const r = await pool.query(`SELECT * FROM contacts ORDER BY updated_at DESC`);
+  res.json(r.rows);
+});
+app.get('/api/messages/:phone', async (req,res)=>{
+  const r = await pool.query(`SELECT * FROM messages WHERE phone=$1 ORDER BY created_at ASC`, [req.params.phone]);
+  res.json(r.rows);
+});
+app.post('/api/send', async (req,res)=>{
+  const { phone, message } = req.body;
+  try{
+    await axios.post(`https://graph.facebook.com/v19.0/${PHONE_NUMBER_ID}/messages`, { messaging_product:"whatsapp", to:phone, text:{body:message} }, { headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`}});
+    await pool.query(`INSERT INTO messages(phone,body,from_me) VALUES($1,$2,true)`, [phone,message]);
+    await pool.query(`UPDATE contacts SET last_message=$2, updated_at=NOW() WHERE phone=$1`, [phone,message]);
+    res.json({ok:true});
+  }catch(e){ res.json({error:e.response?.data || e.message}); }
+});
+app.post('/api/tag', async (req,res)=>{
+  const { phone, tag } = req.body;
+  await pool.query(`UPDATE contacts SET tag=$2 WHERE phone=$1`, [phone,tag]);
+  res.json({ok:true});
+});
+app.get('/api/health', async (req,res)=>{ res.send('KLIDO OK DB con tags'); });
+
+// TEST PARA TI
 app.get('/test', async (req,res)=>{
-  const phone = "573001112233";
-  const body = "prueba manual KLIDO " + new Date().toLocaleTimeString();
+  const phone="573001112233"; const body="Prueba KLIDO "+new Date().toLocaleTimeString();
   await pool.query(`INSERT INTO contacts(phone,name,last_message,tag) VALUES($1,$2,$3,'campana') ON CONFLICT(phone) DO UPDATE SET last_message=$3, tag='campana', updated_at=NOW()`, [phone,"Fer Prueba",body]);
   await pool.query(`INSERT INTO messages(phone,body,from_me) VALUES($1,$2,false)`, [phone,body]);
-  res.send("OK - Ve a tu CRM, debe aparecer Fer Prueba");
-});
-
-app.get('/api/health', async (req,res)=>{
-  try{ await pool.query('SELECT 1'); res.send('KLIDO con colores listo - DB OK con tags'); }
-  catch(e){ res.send('DB Error: '+e.message); }
+  res.send("OK - Ahora ve al CRM y veras a Fer Prueba");
 });
 
 app.use(express.static(path.join(__dirname,'public')));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=>console.log("KLIDO en "+PORT));
+app.listen(process.env.PORT||3000, ()=>console.log("KLIDO listo"));
