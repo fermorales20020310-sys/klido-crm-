@@ -22,8 +22,9 @@ try {
 } catch(e){}
 function save(){ try{ fs.writeFileSync('./data.json', JSON.stringify({contacts, campaigns})); }catch(e){} }
 
+// FIX 1: Desactivar index.html automático para que / no sea campañas
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use(bodyParser.json({limit:'10mb'}));
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/webhook', (req,res)=>{
   if (req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) return res.status(200).send(req.query['hub.challenge']);
@@ -70,8 +71,12 @@ app.get('/api/templates', async (req,res)=>{
     }
     const r = await axios.get(`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=100`, {headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`}});
     const approved = (r.data.data||[]).filter(t=>t.status==='APPROVED');
+    console.log('Plantillas aprobadas:', approved.length);
     res.json(approved);
-  }catch(e){ res.json([]); }
+  }catch(e){
+    console.log('ERROR PLANTILLAS:', e.response?.data || e.message);
+    res.json([]);
+  }
 });
 
 app.post('/api/send', async (req,res)=>{
@@ -100,7 +105,9 @@ app.post('/api/send-campaign', async (req,res)=>{
   res.json({success:true, sent, failed});
 });
 
+// FIX 2: Rutas explicitas
 app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','bandeja.html')));
 app.get('/campanas', (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
+app.get('/bandeja', (req,res)=> res.sendFile(path.join(__dirname,'public','bandeja.html')));
 
 app.listen(PORT, ()=> console.log('KLIDO AVANZA listo en '+PORT));
