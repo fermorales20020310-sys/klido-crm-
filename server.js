@@ -16,7 +16,6 @@ let templatesCache = [];
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// VERIFY WEBHOOK
 app.get('/webhook', (req, res) => {
   if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) {
     return res.status(200).send(req.query['hub.challenge']);
@@ -24,7 +23,7 @@ app.get('/webhook', (req, res) => {
   res.sendStatus(403);
 });
 
-// WEBHOOK - 1. FIX: entra a HOT + punto rojo
+// 1. CUANDO LLEGA MENSAJE -> ENTRA A HOT + PUNTO ROJO
 app.post('/webhook', (req, res) => {
   const body = req.body;
   if (body.object === 'whatsapp_business_account') {
@@ -37,11 +36,11 @@ app.post('/webhook', (req, res) => {
             const text = msg.text?.body || `[${msg.type}]`;
             const name = change.value.contacts?.[0]?.profile?.name || wa_id;
             if (!contacts[wa_id]) {
-              contacts[wa_id] = { wa_id, name, lastMessage: '', hot: false, unread: 0, messages: [] };
+              contacts[wa_id] = { wa_id, name, lastMessage: '', hot: false, unread: 0, messages: [], tag: '' };
             }
             contacts[wa_id].lastMessage = text;
-            contacts[wa_id].hot = true; // FIX 1: se va a HOT
-            contacts[wa_id].unread = (contacts[wa_id].unread || 0) + 1; // FIX 2: punto rojo
+            contacts[wa_id].hot = true;
+            contacts[wa_id].unread = (contacts[wa_id].unread || 0) + 1;
             contacts[wa_id].messages.push({ from: 'client', text, timestamp: new Date() });
           });
         }
@@ -51,23 +50,24 @@ app.post('/webhook', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/api/contacts', (req, res) => res.json(Object.values(contacts)));
+app.get('/api/contacts', (req, res) => {
+  res.json(Object.values(contacts));
+});
 
 app.get('/api/messages/:wa_id', (req, res) => {
   const c = contacts[req.params.wa_id];
   if (c) {
+    // Al abrirlo se quita lo amarillo pero SIGUE en Hot hasta que respondas
     c.unread = 0;
     res.json(c.messages);
   } else res.json([]);
 });
 
-// FIX 3: PLANTILLAS - TRAE LAS 2 APROBADAS
+// 2. PLANTILLAS - TRAE LAS 2 APROBADAS
 app.get('/api/templates', async (req, res) => {
   try {
     const url = `https://graph.facebook.com/v20.0/${WABA_ID}/message_templates?limit=100`;
     const r = await axios.get(url, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` } });
-    // ANTES: .filter(t => status==='APPROVED' && language==='es_CO') -> SOLO 1
-    // AHORA: trae todas las aprobadas
     templatesCache = (r.data.data || []).filter(t => t.status === 'APPROVED');
     res.json(templatesCache);
   } catch (e) {
@@ -76,7 +76,7 @@ app.get('/api/templates', async (req, res) => {
   }
 });
 
-// SEND - FIX: sale de HOT cuando contestas
+// 3. CUANDO RESPONDES -> SALE DE HOT DEFINITIVO
 app.post('/api/send', async (req, res) => {
   const { wa_id, text, templateName } = req.body;
   try {
@@ -91,7 +91,7 @@ app.post('/api/send', async (req, res) => {
     });
     if (contacts[wa_id]) {
       contacts[wa_id].messages.push({ from: 'me', text: text || templateName, timestamp: new Date() });
-      contacts[wa_id].hot = false; // FIX: sale de HOT al contestar
+      contacts[wa_id].hot = false;
       contacts[wa_id].unread = 0;
       contacts[wa_id].lastMessage = text || templateName;
     }
@@ -101,6 +101,13 @@ app.post('/api/send', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'bandeja.html')));
+// Tu diseño se queda igual - bandeja como principal
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'bandeja.html'));
+});
+
+app.get('/campanas', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.listen(PORT, () => console.log(`KLIDO corriendo ${PORT}`));
