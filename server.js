@@ -8,6 +8,9 @@ app.use(express.json());
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'klido123';
 
+let ULTIMO_WEBHOOK = { hora: "nunca", body: {} };
+app.get('/debug', (req,res)=> res.json(ULTIMO_WEBHOOK));
+
 app.get('/webhook', (req,res)=>{
   console.log("VERIFICANDO WEBHOOK:", req.query);
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN) {
@@ -19,6 +22,7 @@ app.get('/webhook', (req,res)=>{
 });
 
 app.post('/webhook', async (req,res)=>{
+  ULTIMO_WEBHOOK = { hora: new Date().toISOString(), body: req.body };
   console.log("LLEGÓ ALGO AL WEBHOOK:", JSON.stringify(req.body).substring(0,500));
   try{
     const entry = req.body.entry?.[0]?.changes?.[0]?.value;
