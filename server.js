@@ -14,7 +14,8 @@ let contacts = {};
 let templatesCache = [];
 
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// IMPORTANTE: index:false para que no abra campañas por defecto
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 app.get('/webhook', (req, res) => {
   if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) {
@@ -23,7 +24,6 @@ app.get('/webhook', (req, res) => {
   res.sendStatus(403);
 });
 
-// 1. CUANDO LLEGA MENSAJE -> ENTRA A HOT + PUNTO ROJO
 app.post('/webhook', (req, res) => {
   const body = req.body;
   if (body.object === 'whatsapp_business_account') {
@@ -36,7 +36,7 @@ app.post('/webhook', (req, res) => {
             const text = msg.text?.body || `[${msg.type}]`;
             const name = change.value.contacts?.[0]?.profile?.name || wa_id;
             if (!contacts[wa_id]) {
-              contacts[wa_id] = { wa_id, name, lastMessage: '', hot: false, unread: 0, messages: [], tag: '' };
+              contacts[wa_id] = { wa_id, name, lastMessage: '', hot: false, unread: 0, messages: [], tag: 'alion_co' };
             }
             contacts[wa_id].lastMessage = text;
             contacts[wa_id].hot = true;
@@ -50,44 +50,29 @@ app.post('/webhook', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/api/contacts', (req, res) => {
-  res.json(Object.values(contacts));
-});
-
+app.get('/api/contacts', (req, res) => res.json(Object.values(contacts)));
 app.get('/api/messages/:wa_id', (req, res) => {
   const c = contacts[req.params.wa_id];
-  if (c) {
-    // Al abrirlo se quita lo amarillo pero SIGUE en Hot hasta que respondas
-    c.unread = 0;
-    res.json(c.messages);
-  } else res.json([]);
+  if (c) { c.unread = 0; res.json(c.messages); } else res.json([]);
 });
 
-// 2. PLANTILLAS - TRAE LAS 2 APROBADAS
 app.get('/api/templates', async (req, res) => {
   try {
     const url = `https://graph.facebook.com/v20.0/${WABA_ID}/message_templates?limit=100`;
     const r = await axios.get(url, { headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` } });
     templatesCache = (r.data.data || []).filter(t => t.status === 'APPROVED');
     res.json(templatesCache);
-  } catch (e) {
-    console.error(e.response?.data || e.message);
-    res.json(templatesCache);
-  }
+  } catch (e) { res.json(templatesCache); }
 });
 
-// 3. CUANDO RESPONDES -> SALE DE HOT DEFINITIVO
 app.post('/api/send', async (req, res) => {
   const { wa_id, text, templateName } = req.body;
   try {
-    let payload;
-    if (templateName) {
-      payload = { messaging_product: "whatsapp", to: wa_id, type: "template", template: { name: templateName, language: { code: "es_CO" } } };
-    } else {
-      payload = { messaging_product: "whatsapp", to: wa_id, type: "text", text: { body: text } };
-    }
+    let payload = templateName 
+      ? { messaging_product: "whatsapp", to: wa_id, type: "template", template: { name: templateName, language: { code: "es_CO" } } }
+      : { messaging_product: "whatsapp", to: wa_id, type: "text", text: { body: text } };
     await axios.post(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`, payload, {
-      headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' }
+      headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` }
     });
     if (contacts[wa_id]) {
       contacts[wa_id].messages.push({ from: 'me', text: text || templateName, timestamp: new Date() });
@@ -96,18 +81,12 @@ app.post('/api/send', async (req, res) => {
       contacts[wa_id].lastMessage = text || templateName;
     }
     res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.response?.data || e.message });
-  }
+  } catch (e) { res.status(500).json({ error: e.response?.data || e.message }); }
 });
 
-// Tu diseño se queda igual - bandeja como principal
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'bandeja.html'));
-});
+// RUTAS FIJAS - AHORA SI BANDEJA ES LA PRINCIPAL
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'bandeja.html')));
+app.get('/bandeja', (req, res) => res.sendFile(path.join(__dirname, 'public', 'bandeja.html')));
+app.get('/campanas', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-app.get('/campanas', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(PORT, () => console.log(`KLIDO corriendo ${PORT}`));
+app.listen(PORT, () => console.log('KLIDO OK'));
