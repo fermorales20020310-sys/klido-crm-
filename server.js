@@ -13,25 +13,14 @@ const WABA_ID = process.env.WABA_ID;
 
 let contacts = {};
 let campaigns = [];
-
-// Persistencia para que no se borren tus 83 contactos al reiniciar Railway
 try {
   if (fs.existsSync('./data.json')) {
     const d = JSON.parse(fs.readFileSync('./data.json'));
     contacts = d.contacts || {};
     campaigns = d.campaigns || [];
-    Object.values(contacts).forEach(c => {
-      if(!c.messages) c.messages=[];
-      if(c.hot===undefined) c.hot=false;
-      if(c.unread===undefined) c.unread=0;
-      if(c.fromCampaign===undefined) c.fromCampaign = c.tag==='alion_co';
-    });
   }
 } catch(e){}
-
-function save() {
-  try { fs.writeFileSync('./data.json', JSON.stringify({ contacts, campaigns })); } catch(e){}
-}
+function save(){ try{ fs.writeFileSync('./data.json', JSON.stringify({contacts, campaigns})); }catch(e){} }
 
 app.use(bodyParser.json({limit:'10mb'}));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
@@ -41,7 +30,6 @@ app.get('/webhook', (req,res)=>{
   res.sendStatus(403);
 });
 
-// WEBHOOK TIEMPO REAL - MENSAJE NUEVO -> HOT + PUNTICO ROJO + AMARILLO SI ES DE CAMPAÑA
 app.post('/webhook', (req,res)=>{
   const body=req.body;
   if(body.object==='whatsapp_business_account'){
@@ -53,16 +41,11 @@ app.post('/webhook', (req,res)=>{
             const wa_id=msg.from;
             const text=msg.text?.body||`[${msg.type}]`;
             const name=change.value.contacts?.[0]?.profile?.name||wa_id;
-            if(!contacts[wa_id]){
-              contacts[wa_id]={ wa_id, name, lastMessage:'', hot:false, unread:0, messages:[], tag:'', fromCampaign:false, campaignName:'' };
-            }
+            if(!contacts[wa_id]) contacts[wa_id]={ wa_id, name, lastMessage:'', hot:false, unread:0, messages:[], tag:'', fromCampaign:false, campaignName:'' };
             contacts[wa_id].lastMessage=text;
-            contacts[wa_id].hot=true; // ENTRA DIRECTO A HOT
-            contacts[wa_id].unread=(contacts[wa_id].unread||0)+1; // CIRCULO ROJO
-            // Si ya era de campaña, se mantiene amarillo
-            if(contacts[wa_id].tag==='alion_co' || contacts[wa_id].fromCampaign){
-              contacts[wa_id].fromCampaign=true;
-            }
+            contacts[wa_id].hot=true;
+            contacts[wa_id].unread=(contacts[wa_id].unread||0)+1;
+            if(contacts[wa_id].tag==='alion_co'||contacts[wa_id].fromCampaign) contacts[wa_id].fromCampaign=true;
             contacts[wa_id].messages.push({ from:'client', text, timestamp:new Date() });
           });
         }
@@ -76,74 +59,53 @@ app.post('/webhook', (req,res)=>{
 app.get('/api/contacts', (req,res)=> res.json(Object.values(contacts)));
 app.get('/api/campaigns', (req,res)=> res.json(campaigns));
 app.get('/api/export', (req,res)=>{
-  const csv = 'wa_id,name,tag,fromCampaign,campaignName,lastMessage\n' + Object.values(contacts).map(c=>`${c.wa_id},"${c.name}",${c.tag},${c.fromCampaign},"${c.campaignName||''}","${(c.lastMessage||'').replace(/"/g,'')}"`).join('\n');
-  res.header('Content-Type','text/csv'); res.attachment('klido_leads.csv'); res.send(csv);
+  const csv='wa_id,name,tag,fromCampaign,lastMessage\n'+Object.values(contacts).map(c=>`${c.wa_id},${c.name},${c.tag},${c.fromCampaign},${(c.lastMessage||'').replace(/,/g,'')}`).join('\n');
+  res.header('Content-Type','text/csv'); res.attachment('klido.csv'); res.send(csv);
 });
-
 app.get('/api/messages/:wa_id', (req,res)=>{
   const c=contacts[req.params.wa_id];
-  if(c){ c.unread=0; save(); res.json(c.messages); } else res.json([]);
+  if(c){ c.unread=0; save(); res.json(c.messages);} else res.json([]);
 });
 
-// PLANTILLAS APROBADAS - SE AÑADEN AUTOMATICO CUANDO META APRUEBA
+// ESTE ES EL QUE ARREGLA TUS PLANTILLAS - SE AUTO-DETECTA SOLO
 app.get('/api/templates', async (req,res)=>{
   try{
-    const url=`https://graph.facebook.com/v20.0/${WABA_ID}/message_templates?limit=100`;
-    const r=await axios.get(url,{ headers:{ Authorization:`Bearer ${WHATSAPP_TOKEN}` } });
+    let wabaId=WABA_ID;
+    if(!wabaId){
+      const info=await axios.get(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}?fields=whatsapp_business_account`,{ headers:{ Authorization:`Bearer ${WHATSAPP_TOKEN}` } });
+      wabaId=info.data?.whatsapp_business_account?.id;
+    }
+    const r=await axios.get(`https://graph.facebook.com/v20.0/${wabaId}/message_templates?limit=100`,{ headers:{ Authorization:`Bearer ${WHATSAPP_TOKEN}` } });
     const approved=(r.data.data||[]).filter(t=>t.status==='APPROVED');
     res.json(approved);
-  }catch(e){ res.status(500).json([]); }
+  }catch(e){ res.json([]); }
 });
 
-// RESPONDER ORGANICO -> SALE DE HOT Y PASA A BANDEJA GENERAL
 app.post('/api/send', async (req,res)=>{
-  const { wa_id, text }=req.body;
+  const {wa_id,text}=req.body;
   try{
-    await axios.post(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`,
-      { messaging_product:"whatsapp", to:wa_id, type:"text", text:{ body:text } },
-      { headers:{ Authorization:`Bearer ${WHATSAPP_TOKEN}` } }
-    );
-    if(contacts[wa_id]){
-      contacts[wa_id].messages.push({ from:'me', text, timestamp:new Date() });
-      contacts[wa_id].hot=false; // SALE DE HOT DEFINITIVO
-      contacts[wa_id].unread=0;
-      contacts[wa_id].lastMessage=text;
-      save();
-    }
-    res.json({ success:true });
-  }catch(e){ res.status(500).json({ error:e.response?.data||e.message }); }
+    await axios.post(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`,{ messaging_product:"whatsapp", to:wa_id, type:"text", text:{body:text} },{ headers:{ Authorization:`Bearer ${WHATSAPP_TOKEN}` } });
+    if(contacts[wa_id]){ contacts[wa_id].messages.push({from:'me',text,timestamp:new Date()}); contacts[wa_id].hot=false; contacts[wa_id].unread=0; contacts[wa_id].lastMessage=text; save(); }
+    res.json({success:true});
+  }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-// ENVIAR CAMPAÑA CON PLANTILLA APROBADA + MARCA AMARILLO
 app.post('/api/send-campaign', async (req,res)=>{
-  const { numbers, templateName, campaignName }=req.body;
+  const {numbers,templateName,campaignName}=req.body;
   let sent=0, failed=0;
-  const campId=Date.now();
-  campaigns.unshift({ id:campId, name:campaignName||templateName, template:templateName, total:numbers.length, date:new Date(), sent:0 });
-
+  campaigns.unshift({id:Date.now(), name:campaignName||templateName, template:templateName, total:numbers.length, date:new Date(), sent:0});
   for(let wa_id of numbers){
-    let clean=wa_id.toString().replace(/\D/g,'');
-    if(clean.length>=10 &&!clean.startsWith('57')) clean='57'+clean;
+    let clean=wa_id.toString().replace(/\D/g,''); if(clean.length>=10 &&!clean.startsWith('57')) clean='57'+clean;
     try{
-      await axios.post(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`,
-        { messaging_product:"whatsapp", to:clean, type:"template", template:{ name:templateName, language:{ code:"es_CO" } } },
-        { headers:{ Authorization:`Bearer ${WHATSAPP_TOKEN}` } }
-      );
-      if(!contacts[clean]) contacts[clean]={ wa_id:clean, name:clean, lastMessage:'', hot:false, unread:0, messages:[], tag:'alion_co', fromCampaign:true, campaignName:campaignName||templateName };
-      contacts[clean].tag='alion_co';
-      contacts[clean].fromCampaign=true;
-      contacts[clean].campaignName=campaignName||templateName;
-      contacts[clean].lastMessage=`[Campaña: ${templateName}]`;
-      contacts[clean].messages.push({ from:'me', text:`[Plantilla ${templateName} enviada]`, timestamp:new Date() });
-      sent++;
+      await axios.post(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`,{ messaging_product:"whatsapp", to:clean, type:"template", template:{name:templateName, language:{code:"es_CO"}} },{ headers:{ Authorization:`Bearer ${WHATSAPP_TOKEN}` } });
+      if(!contacts[clean]) contacts[clean]={wa_id:clean,name:clean,lastMessage:'',hot:false,unread:0,messages:[],tag:'alion_co',fromCampaign:true,campaignName};
+      contacts[clean].tag='alion_co'; contacts[clean].fromCampaign=true; contacts[clean].campaignName=campaignName||templateName; contacts[clean].lastMessage=`[Campaña: ${templateName}]`; contacts[clean].messages.push({from:'me',text:`[Plantilla ${templateName}]`,timestamp:new Date()}); sent++;
     }catch(e){ failed++; }
   }
   campaigns[0].sent=sent; campaigns[0].failed=failed; save();
-  res.json({ success:true, sent, failed });
+  res.json({success:true,sent,failed});
 });
 
 app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','bandeja.html')));
-app.get('/bandeja', (req,res)=> res.sendFile(path.join(__dirname,'public','bandeja.html')));
 app.get('/campanas', (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
-
-app.listen(PORT, ()=> console.log(`KLIDO AVANZA listo en ${PORT}`));
+app.listen(PORT, ()=> console.log('KLIDO listo'));
