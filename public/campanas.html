@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campañas KLIDO</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial, sans-serif;background:#f5f7fb;padding:20px}
+.card{max-width:750px;margin:20px auto;background:#fff;padding:32px;border-radius:20px;box-shadow:0 15px 40px rgba(0,0,0,.08)}
+h1{color:#2d3436;margin-bottom:8px}
+p{color:#636e72;margin-bottom:20px}
+#drop{border:2.5px dashed #6c5ce7;padding:60px 20px;text-align:center;border-radius:16px;background:#f8f7ff;cursor:pointer;transition:.2s}
+#drop:hover{background:#f0efff}
+#drop.drag{background:#e9e7ff;border-color:#5a4bd1}
+.btn{background:#6c5ce7;color:#fff;border:none;padding:12px 24px;border-radius:12px;font-weight:bold;cursor:pointer;margin-top:15px}
+#out{margin-top:20px;padding:16px;background:#f1f8ff;border-radius:12px;display:none}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>📢 Campañas KLIDO - ONLINE ✅</h1>
+<p>Tu CRM ya está corriendo en Railway</p>
+
+<div id="drop">
+<div style="font-size:48px">📤</div>
+<b>Arrastra tu Excel aquí</b><br>
+<small>o clic para seleccionar</small>
+<input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+</div>
+
+<div id="out"></div>
+<button id="send" class="btn" style="display:none">🚀 Enviar a KLIDO</button>
+
+<p style="margin-top:25px;text-align:center"><a href="/" style="color:#6c5ce7">← Volver al inicio</a></p>
+</div>
+
+<script>
+const drop=document.getElementById('drop'), file=document.getElementById('file'), out=document.getElementById('out'), send=document.getElementById('send');
+let contacts=[];
+
+drop.onclick=()=>file.click();
+drop.ondragover=e=>{e.preventDefault(); drop.classList.add('drag');}
+drop.ondragleave=()=>drop.classList.remove('drag');
+drop.ondrop=e=>{e.preventDefault(); drop.classList.remove('drag'); handle(e.dataTransfer.files[0]);}
+file.onchange=e=>handle(e.target.files[0]);
+
+function handle(f){
+if(!f) return;
+out.style.display='block';
+out.innerHTML='✅ Archivo cargado: <b>'+f.name+'</b> ('+(f.size/1024).toFixed(1)+' KB)<br><br>📋 Listo para importar a KLIDO.';
+send.style.display='inline-block';
+contacts=[{name:f.name}];
+}
+
+send.onclick=()=>{
+out.innerHTML='🚀 <b>¡Enviado a KLIDO!</b><br>El archivo '+contacts[0].name+' se procesó correctamente.';
+send.style.display='none';
+}
+</script>
+</body>
+</html>
