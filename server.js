@@ -35,10 +35,10 @@ app.get('/webhook', (req,res)=>{
   const token = process.env.VERIFY_TOKEN || 'klido123';
   if(req.query['hub.verify_token'] === token) return res.send(req.query['hub.challenge']);
   return res.sendStatus(403);
-});
-
-// RECIBIR MENSAJES
-app.post('/webhook', async (req,res)=>{
+// VERIFICACION META - ACEPTA /webhook Y /webhook/whatsapp
+app.get(['/webhook','/webhook/whatsapp'], (req,res)=>{
+// RECIBIR MENSAJES - ACEPTA LAS DOS RUTAS
+app.post(['/webhook','/webhook/whatsapp'], async (req,res)=>{
   try{
     const entry = req.body.entry?.[0]?.changes?.[0]?.value;
     const msg = entry?.messages?.[0];
