@@ -1,91 +1,71 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO</title>
+
+   <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO</title>
 <style>
 body{margin:0;font-family:Arial;display:flex;height:100vh}
-.side{width:320px;border-right:1px solid #ddd;background:#fff;display:flex;flex-direction:column}
-.list{flex:1;overflow:auto}.item{padding:12px;border-bottom:1px solid #eee;cursor:pointer}
-.item.active{background:#e6f4ff;border-left:4px solid #25D366}
-.main{flex:1;display:flex;flex-direction:column;background:#e5ddd5}
-.msgs{flex:1;padding:20px;overflow:auto;display:flex;flex-direction:column;gap:2px}
-.b{background:#fff;padding:8px 12px;border-radius:8px;margin:4px 0;max-width:70%;word-break:break-word;box-shadow:0 1px 1px #0001}
+.side{width:350px;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column}
+.item{padding:14px;border-bottom:1px solid #eee;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.item.nuevo{background:#fff1f1;border-left:5px solid red}
+.item.normal{border-left:5px solid transparent}
+.item.active{background:#e6f4ff}
+.punto{width:10px;height:10px;background:red;border-radius:50%;display:inline-block;margin-left:6px;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.badge{background:red;color:#fff;border-radius:12px;padding:3px 8px;font-size:12px;font-weight:bold}
+.main{flex:1;display:flex;flex-direction:column;background:#efeae2}
+.msgs{flex:1;padding:20px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+.b{background:#fff;padding:8px 12px;border-radius:8px;margin:3px 0;max-width:70%;box-shadow:0 1px 0 #0001}
 .b.me{background:#dcf8c6;margin-left:auto}
 .top{padding:15px;background:#f0f0f0;font-weight:bold;border-bottom:1px solid #ddd}
-.input{display:flex;padding:10px;background:#f0f0f0;gap:8px;align-items:center}
+.input{display:flex;padding:10px;background:#f0f0f0;gap:8px}
 input{flex:1;padding:12px;border-radius:20px;border:1px solid #ccc;outline:none}
-#typing{font-size:12px;color:#25D366;padding:0 20px;height:18px}
 </style>
 </head><body>
-<div class="side"><div style="padding:15px;background:#111;color:#fff;font-weight:bold">KLIDO - Tiempo Real</div><div id="lista" class="list"></div></div>
+<div class="side">
+  <div style="padding:15px;background:#000;color:#fff;font-weight:bold">KLIDO - Bandeja</div>
+  <div id="lista" style="flex:1;overflow:auto"></div>
+</div>
 <div class="main">
   <div id="header" class="top">Selecciona un chat</div>
-  <div id="typing"></div>
   <div id="msgs" class="msgs"></div>
-  <div class="input"><input id="texto" placeholder="Escribe y presiona Enter..." autocomplete="off"><button onclick="enviar()" style="background:#25D366;color:#fff;border:0;padding:10px 20px;border-radius:20px;font-weight:bold;cursor:pointer">Enviar</button></div>
+  <div class="input"><input id="texto" placeholder="Escribe..." autocomplete="off"><button onclick="enviar()" style="background:#25D366;color:#fff;border:0;padding:10px 22px;border-radius:20px;font-weight:bold;cursor:pointer">Enviar</button></div>
 </div>
 <script>
-let telActual=null;
-let ultimoConteo=0;
-
-async function loadContacts(silent){
-  try{
-    const r=await fetch('/api/contacts'); const data=await r.json();
-    document.getElementById('lista').innerHTML=data.map(c=>{
-      const tel = c.telefono || c.id || '';
-      const nom = c.nombre || tel;
-      if(!tel) return '';
-      return `<div class="item ${telActual===tel?'active':''}" onclick="abrir('${tel}')"><b>${nom}</b><br><small>${tel}</small></div>`;
-    }).join('') || '<div style="padding:20px;color:#999">Esperando mensajes...</div>';
-  }catch(e){}
+let telActual=null, ultimo=0;
+async function cargarContactos(){
+  const r=await fetch('/api/contacts'); const cs=await r.json();
+  document.getElementById('lista').innerHTML = cs.map(c=>`
+    <div class="item ${c.isNew?'nuevo':'normal'} ${telActual===c.telefono?'active':''}" onclick="abrir('${c.telefono}')">
+      <div style="flex:1"><b>${c.nombre}</b> ${c.isNew?'<span class="punto"></span> <small style="color:red;font-weight:bold">NUEVO</small>':''}<br><small style="color:#555">${c.lastMsg?.substring(0,35)||''}</small><br><small style="color:#999">${c.telefono}</small></div>
+      ${c.unread>0?`<span class="badge">${c.unread}</span>`:''}
+    </div>
+  `).join('') || '<div style="padding:20px;color:#999">Esperando mensajes...</div>';
 }
-
-async function loadMessages(){
+async function cargarMensajes(forzar){
   if(!telActual) return;
-  try{
-    const r=await fetch('/api/messages/'+telActual); 
-    const msgs=await r.json();
-    if(msgs.length === ultimoConteo) return; // Si no hay nuevos, no renderiza = no se congela
-    if(msgs.length > ultimoConteo && ultimoConteo !== 0){
-      document.getElementById('typing').innerText = 'Nuevo mensaje...';
-      setTimeout(()=>document.getElementById('typing').innerText='',1500);
-    }
-    ultimoConteo = msgs.length;
-    const c=document.getElementById('msgs');
-    const estabaAbajo = c.scrollTop + c.clientHeight >= c.scrollHeight - 100;
-    c.innerHTML=msgs.map(m=>`<div class="b ${m.tipo==='enviado'?'me':''}">${m.texto}</div>`).join('');
-    if(estabaAbajo) c.scrollTop=c.scrollHeight;
-  }catch(e){}
+  const r=await fetch('/api/messages/'+telActual); const msgs=await r.json();
+  if(!forzar && msgs.length===ultimo) return;
+  ultimo=msgs.length;
+  const box=document.getElementById('msgs');
+  const cercaAbajo = box.scrollTop + box.clientHeight >= box.scrollHeight - 120;
+  box.innerHTML = msgs.map(m=>`<div class="b ${m.tipo==='enviado'?'me':''}">${m.texto}</div>`).join('');
+  if(cercaAbajo) box.scrollTop=box.scrollHeight;
 }
-
 async function abrir(tel){
-  telActual=tel; 
-  ultimoConteo=0;
-  document.getElementById('header').innerText=tel; 
+  telActual=tel; ultimo=0;
+  document.getElementById('header').innerText=tel;
   document.getElementById('msgs').innerHTML='';
-  await loadContacts(true);
-  await loadMessages();
+  await cargarMensajes(true);
+  cargarContactos();
 }
-
 async function enviar(){
-  const input=document.getElementById('texto');
-  const t=input.value.trim(); 
-  if(!t||!telActual) return;
-  
-  // 1. MOSTRAR AL INSTANTE - no espera al servidor
-  const c=document.getElementById('msgs');
-  c.innerHTML += `<div class="b me">${t}</div>`;
-  c.scrollTop=c.scrollHeight;
-  input.value='';
-  ultimoConteo++;
-
-  // 2. ENVIAR AL SERVIDOR EN SEGUNDO PLANO
-  try{
-    await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:telActual,texto:t})});
-  }catch(e){ console.log(e) }
+  const inp=document.getElementById('texto'); const t=inp.value.trim(); if(!t||!telActual) return;
+  const box=document.getElementById('msgs');
+  box.innerHTML+=`<div class="b me">${t}</div>`; box.scrollTop=box.scrollHeight;
+  inp.value=''; ultimo++;
+  await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:telActual,texto:t})});
+  cargarContactos();
 }
-
-document.getElementById('texto').addEventListener('keydown', e=>{ if(e.key==='Enter') enviar(); });
-
-// TIEMPO REAL: solo mensajes cada 1.5 seg, contactos cada 5 seg
-setInterval(loadMessages, 1500);
-setInterval(()=>loadContacts(true), 5000);
-loadContacts();
+document.getElementById('texto').addEventListener('keydown',e=>{ if(e.key==='Enter') enviar(); });
+setInterval(()=>cargarMensajes(false),1500);
+setInterval(cargarContactos,2500);
+cargarContactos();
 </script></body></html>
