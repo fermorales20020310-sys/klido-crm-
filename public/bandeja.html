@@ -1,57 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO AVANZA</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-*{font-family:'Inter',sans-serif;box-sizing:border-box}
-body{margin:0;height:100vh;display:flex;flex-direction:column;background:#f8fafc}
-.top{height:68px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
-.tabs{padding:12px 20px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;gap:10px;align-items:center}
-.tab{padding:7px 16px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:13px;font-weight:600}
-.tab.active{background:#111827;color:#fff}
-.dot{width:8px;height:8px;background:#ef4444;border-radius:50%;display:inline-block;animation:pulse 1s infinite}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
-.main{display:flex;flex:1;overflow:hidden}
-.left{width:360px;background:#fff;border-right:1px solid #e5e7eb;overflow-y:auto}
-.item{padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:12px;cursor:pointer;align-items:center}
-.item.yellow{background:#fffbeb;border-left:4px solid #f59e0b}
-.chat{flex:1;display:flex;flex-direction:column;background:#eef2ff}
-.bubble{padding:10px 14px;border-radius:18px;max-width:68%;font-size:14px}
-.me{background:#2563eb;color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
-.client{background:#fff;align-self:flex-start;border-bottom-left-radius:6px}
-.bar{padding:12px 20px;background:#fff;border-top:1px solid #e5e7eb;display:flex;gap:10px}
-.bar input{flex:1;padding:12px 18px;border-radius:999px;border:1px solid #e5e7eb;outline:none}
-</style>
-</head>
-<body>
-<script>if(!localStorage.getItem('klido_auth')) location.href='/';</script>
-<div class="top">
-<div style="display:flex;align-items:center;gap:12px"><img src="logo.png" style="height:44px;object-fit:contain"><div><div style="font-weight:700">KLIDO AVANZA</div><div style="font-size:11px;color:#6b7280">CRM DE REDES Y WHATSAPP · API 2000/día · Tiempo real</div></div></div>
-<div style="display:flex;gap:8px"><button onclick="location.href='/campanas'" style="background:#111827;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:600;cursor:pointer">Campaña</button><button onclick="localStorage.clear();location.href='/'" style="padding:9px 12px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;cursor:pointer">Salir</button></div>
-</div>
-<div class="tabs">
-<div class="tab active" id="t-all" onclick="setF('all')">Todos (<span id="c-all">0</span>)</div>
-<div class="tab" id="t-camp" onclick="setF('camp')">🟧 Campaña (<span id="c-camp">0</span>)</div>
-<div class="tab" id="t-hot" onclick="setF('hot')">🔥 Hot (<span id="c-hot">0</span>) <span id="hdot" style="display:none"><span class="dot"></span></span></div>
-<input id="q" placeholder="🔍 Buscar..." style="margin-left:auto;padding:7px 14px;border-radius:999px;border:1px solid #e5e7eb;font-size:13px" oninput="render()">
-<button onclick="window.open('/api/export','_blank')" style="padding:7px 12px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;cursor:pointer">Exportar</button>
-</div>
-<div class="main">
-<div class="left" id="list"></div>
-<div class="chat"><div id="msgs" style="flex:1;padding:24px;overflow:auto;display:flex;flex-direction:column;gap:10px"></div>
-<div class="bar"><input id="txt" placeholder="Responder..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()" style="background:#111827;color:#fff;border:none;width:42px;height:42px;border-radius:50%;font-size:18px;cursor:pointer">↑</button></div>
-</div>
-</div>
 <script>
-let contacts=[],filter='all',cur=null;
-function setF(f){filter=f;document.querySelectorAll('.tab').forEach(p=>p.classList.remove('active'));document.getElementById('t-'+f).classList.add('active');render();}
-async function load(){let r=await fetch('/api/contacts');contacts=await r.json();document.getElementById('c-all').innerText=contacts.length;document.getElementById('c-camp').innerText=contacts.filter(c=>c.tag==='alion_co'||c.fromCampaign).length;let h=contacts.filter(c=>c.hot).length;document.getElementById('c-hot').innerText=h;document.getElementById('hdot').style.display=h>0?'inline-block':'none';render();}
-function render(){let f=contacts;if(filter==='hot')f=contacts.filter(c=>c.hot);if(filter==='camp')f=contacts.filter(c=>c.tag==='alion_co'||c.fromCampaign);let q=document.getElementById('q').value.toLowerCase();if(q)f=f.filter(c=>c.wa_id.includes(q));document.getElementById('list').innerHTML=f.map(c=>`<div class="item ${c.fromCampaign?'yellow':''}" onclick="openChat('${c.wa_id}')"><img src="logo.png" style="width:36px;height:36px;object-fit:contain;border-radius:8px"><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${c.name||c.wa_id} ${c.fromCampaign?'<span style=background:#ffedd5;color:#c2410c;padding:2px 6px;border-radius:4px;font-size:10px>alion_co · '+c.campaignName+'</span>':''}</div><div style="font-size:11px;color:#6b7280">${c.wa_id}</div><div style="font-size:12px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.lastMessage||''}</div></div><div>${c.unread>0?`<span style=background:#ef4444;color:#fff;border-radius:12px;padding:3px 7px;font-size:11px><span class=dot></span> ${c.unread}</span>`:''}</div></div>`).join('')||'<div style="padding:30px;text-align:center;color:#9ca3af">Sin mensajes</div>';}
-async function openChat(id){cur=id;let r=await fetch('/api/messages/'+id);let m=await r.json();document.getElementById('msgs').innerHTML=m.map(x=>`<div class="bubble ${x.from==='me'?'me':'client'}">${x.text}</div>`).join('');}
-async function send(){let t=document.getElementById('txt').value.trim();if(!t||!cur)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:cur,text:t})});document.getElementById('txt').value='';openChat(cur);setTimeout(load,600);}
-setInterval(load,2000);load();
+// dentro de renderContacts() usa esto para el color:
+let tagColor = '';
+let tagText = c.tag || c.campaignName || '';
+if(tagText.toLowerCase().includes('alion')){ tagColor='background:#fef08a;color:#854d0e;border:1px solid #facc15'; }
+else if(c.fromCampaign){ tagColor='background:#dbeafe;color:#1e40af;border:1px solid #93c5fd'; }
 </script>
-</body>
-</html>
