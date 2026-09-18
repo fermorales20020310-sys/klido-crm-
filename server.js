@@ -12,17 +12,12 @@ function getData(){ try{ return JSON.parse(fs.readFileSync(DATA_FILE)); }catch(e
 function saveData(d){ fs.writeFileSync(DATA_FILE, JSON.stringify(d, null, 2)); }
 
 app.get('/bandeja', (req,res) => res.sendFile(path.join(__dirname, 'public', 'bandeja.html')));
-
 app.get('/api/contacts', (req,res) => {
   const data = getData();
   data.contacts.sort((a,b) => (b.isNew?1:0) - (a.isNew?1:0) || new Date(b.lastTime) - new Date(a.lastTime));
   res.json(data.contacts);
 });
-
-app.get('/api/messages/:tel', (req,res) => {
-  res.json(getData().messages[req.params.tel] || []);
-});
-
+app.get('/api/messages/:tel', (req,res) => res.json(getData().messages[req.params.tel] || []));
 app.post('/api/send', async (req,res) => {
   const { to, texto } = req.body;
   const data = getData();
@@ -37,13 +32,9 @@ app.post('/api/send', async (req,res) => {
       headers:{'Authorization':`Bearer ${process.env.WHATSAPP_TOKEN}`,'Content-Type':'application/json'},
       body:JSON.stringify({messaging_product:'whatsapp', to:to, type:'text', text:{body:texto}})
     });
-    const j = await r.json();
-    console.log('RESPUESTA META:', j);
-    res.json(j);
-  }catch(e){ res.json({ok:false, error:e.message}) }
+    res.json(await r.json());
+  }catch(e){ res.json({ok:false}) }
 });
-
-// WEBHOOK QUE RECIBE MENSAJES
 app.post('/webhook', (req,res) => {
   try{
     const value = req.body.entry?.[0]?.changes?.[0]?.value;
@@ -59,26 +50,19 @@ app.post('/webhook', (req,res) => {
         c={telefono:from, nombre:nombre, unread:1, isNew:true, lastMsg:text, lastTime:new Date()};
         data.contacts.push(c);
       }else{
-        c.unread = (c.unread||0)+1;
-        c.isNew=true;
-        c.lastMsg=text;
-        c.lastTime=new Date();
+        c.unread=(c.unread||0)+1; c.isNew=true; c.lastMsg=text; c.lastTime=new Date();
       }
       if(!data.messages[from]) data.messages[from]=[];
       data.messages[from].push({texto:text, tipo:'recibido', fecha:new Date()});
       saveData(data);
-      console.log('NUEVO MENSAJE DE:', from);
     }
-  }catch(e){ console.log(e) }
+  }catch(e){}
   res.sendStatus(200);
 });
-
 app.get('/webhook', (req,res) => {
   if(req.query['hub.verify_token'] === process.env.VERIFY_TOKEN) res.send(req.query['hub.challenge']);
   else res.sendStatus(403);
 });
-
-// RUTA DE PRUEBA PARA VER EL PUNTO ROJO
 app.get('/api/test', (req,res)=>{
   const data=getData();
   const tel='573001234567';
@@ -87,7 +71,10 @@ app.get('/api/test', (req,res)=>{
     data.messages[tel]=[{texto:'Hola, me interesa una casa', tipo:'recibido', fecha:new Date()}];
     saveData(data);
   }
-  res.json({ok:true});
+  res.redirect('/bandeja');
 });
-
+app.get('/api/clear', (req,res)=>{
+  saveData({contacts:[], messages:{}});
+  res.redirect('/bandeja');
+});
 app.listen(process.env.PORT || 3000, ()=>console.log('LISTO'));
