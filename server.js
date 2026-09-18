@@ -11,7 +11,7 @@ app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ========== DB ==========
+// ------ DB ------
 const DATA_FILE = path.join(__dirname, 'data.json');
 let db = { contacts: {}, messages: {}, campaigns: {} };
 
@@ -22,174 +22,124 @@ try {
     db.messages = raw.messages || {};
     db.campaigns = raw.campaigns || {};
   }
-} catch (e) {
-  console.log('Error DB', e.message);
+} catch(e){ console.log("Error leyendo DB", e) }
+
+function saveDB(){
+  fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
 }
 
-function saveDB() {
-  try { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); } catch (e) {}
+// ------ ESTO ARREGLA TU HISTORIAL ------
+function normalizarTel(tel){
+  if(!tel) return '';
+  let t = tel.toString().replace(/\D/g,'');
+  // quita 57 si viene con 00 o + ya lo quitamos arriba
+  if(t.length == 10) t = '57' + t; // si es 311... le pone 57
+  if(t.startsWith('0057')) t = t.substring(2);
+  return t;
 }
 
-if (!db.campaigns['alion_co']) {
-  db.campaigns['alion_co'] = { name: 'alion_co', welcome: 'Hola vengo de alion_co', totalMessages: 0, totalContacts: 0, createdAt: Date.now(), lastSeen: Date.now() };
-  saveDB();
-}
-
-// ========== API CONTACTS Y MENSAJES ==========
-app.get('/api/contacts', (req, res) => {
-  const list = Object.values(db.contacts).sort((a, b) => (b.lastTimestamp || 0) - (a.lastTimestamp || 0));
-  res.json(list);
-});
-
-app.get('/api/messages/:wa_id', (req, res) => {
-  res.json(db.messages[req.params.wa_id] || []);
-});
-
-app.post('/api/send', async (req, res) => {
-  const { wa_id, text } = req.body;
-  if (!wa_id ||!text) return res.status(400).json({ error: 'Falta wa_id o text' });
-
-  if (!db.messages[wa_id]) db.messages[wa_id] = [];
-  db.messages[wa_id].push({ from: 'me', text, timestamp: Date.now() });
-
-  if (db.contacts[wa_id]) {
-    db.contacts[wa_id].lastMessage = text;
-    db.contacts[wa_id].lastTimestamp = Date.now();
-    db.contacts[wa_id].hot = false; // CLAVE: al responder se va de HOY a Bandeja normal
-    db.contacts[wa_id].unread = 0;
-  }
-  saveDB();
-
-  try {
-    const axios = require('axios');
-    if (process.env.PHONE_NUMBER_ID && process.env.WHATSAPP_TOKEN) {
-      await axios.post(`https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`, {
-        messaging_product: "whatsapp",
-        to: wa_id,
-        type: "text",
-        text: { body: text }
-      }, { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` } });
-    }
-  } catch (e) {
-    console.log('Error WA send', e.response?.data || e.message);
-  }
-  res.json({ ok: true });
-});
-
-// ========== API CAMPAÑAS CON SEGUIMIENTO ==========
-app.get('/api/campaigns', (req, res) => {
-  // Recalcular contadores en tiempo real
-  Object.keys(db.campaigns).forEach(cName => {
-    const related = Object.values(db.contacts).filter(c => (c.campaignName||'').toLowerCase() === cName.toLowerCase());
-    db.campaigns[cName].totalContacts = related.length;
-    db.campaigns[cName].totalMessages = related.reduce((acc, c) => {
-      const msgs = db.messages[c.wa_id]? db.messages[c.wa_id].filter(m=>m.from==='client').length : 0;
-      return acc + msgs;
-    }, 0);
-  });
-  saveDB();
-  res.json(Object.values(db.campaigns).sort((a,b)=>b.createdAt-a.createdAt));
-});
-
-app.post('/api/campaigns', (req, res) => {
-  const { name, welcome } = req.body;
-  if (!name) return res.status(400).json({ error: 'Falta nombre' });
-  const key = name.toLowerCase().trim();
-  db.campaigns[key] = {
-    name: key,
-    welcome: welcome || `Hola vengo de la campaña ${key}`,
-    totalContacts: db.campaigns[key]?.totalContacts || 0,
-    totalMessages: db.campaigns[key]?.totalMessages || 0,
-    createdAt: db.campaigns[key]?.createdAt || Date.now(),
-    lastSeen: Date.now()
-  };
-  saveDB();
-  res.json({ ok: true, campaign: db.campaigns[key] });
-});
-
-// ========== WEBHOOK ==========
+// ------ WEBHOOK: RECIBIR MENSAJES ------
 app.get('/webhook', (req, res) => {
-  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === process.env.VERIFY_TOKEN) {
-    return res.status(200).send(req.query['hub.challenge']);
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+  // pon el mismo verify_token que pusiste en Meta
+  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+    return res.status(200).send(challenge);
   }
   res.sendStatus(403);
 });
 
 app.post('/webhook', (req, res) => {
-  const body = req.body;
-  if (body.object === 'whatsapp_business_account') {
-    body.entry?.forEach(entry => {
-      entry.changes?.forEach(change => {
-        const value = change.value;
-        value.messages?.forEach(m => {
-          const wa_id = m.from;
-          let text = '';
-          if (m.type === 'text') text = m.text.body;
-          else if (m.type === 'image') text = '[image] ' + (m.image?.caption || '');
-          else text = `[${m.type}]`;
+  try {
+    const entry = req.body.entry?.[0]?.changes?.[0]?.value;
+    if (!entry ||!entry.messages) return res.sendStatus(200);
 
-          const name = value.contacts?.[0]?.profile?.name || wa_id;
+    const msg = entry.messages[0];
+    const telefonoRaw = msg.from;
+    const telefono = normalizarTel(telefonoRaw);
+    const texto = msg.text?.body || msg.button?.text || '[Otro tipo de mensaje]';
 
-          // Detectar campaña por [nombre] en el texto
-          let campName = 'alion_co';
-          const tagMatch = text.match(/\[(.*?)\]/);
-          if (tagMatch) campName = tagMatch[1].toLowerCase().trim();
-          else if (text.toLowerCase().includes('alion')) campName = 'alion_co';
+    // Busca o crea contacto SIEMPRE por telefono normalizado
+    if (!db.contacts[telefono]) {
+      db.contacts[telefono] = { telefono, nombre: entry.contacts?.[0]?.profile?.name || telefono, creado: new Date().toISOString() };
+    }
+    if (!db.messages[telefono]) db.messages[telefono] = [];
 
-          if (!db.campaigns[campName]) {
-            db.campaigns[campName] = { name: campName, welcome: '', totalContacts: 0, totalMessages: 0, createdAt: Date.now(), lastSeen: Date.now() };
-          }
-          db.campaigns[campName].totalMessages = (db.campaigns[campName].totalMessages || 0) + 1;
-          db.campaigns[campName].lastSeen = Date.now();
-
-          if (!db.contacts[wa_id]) {
-            db.contacts[wa_id] = {
-              wa_id,
-              name,
-              lastMessage: text,
-              lastTimestamp: Date.now(),
-              hot: true, // CLAVE: entra a HOY con punto rojo
-              unread: 1,
-              fromCampaign: true,
-              campaignName: campName,
-              tag: campName
-            };
-            db.campaigns[campName].totalContacts = (db.campaigns[campName].totalContacts || 0) + 1;
-          } else {
-            db.contacts[wa_id].lastMessage = text;
-            db.contacts[wa_id].lastTimestamp = Date.now();
-            db.contacts[wa_id].hot = true;
-            db.contacts[wa_id].unread = (db.contacts[wa_id].unread || 0) + 1;
-            db.contacts[wa_id].fromCampaign = true;
-            db.contacts[wa_id].campaignName = campName;
-            db.contacts[wa_id].tag = campName;
-          }
-
-          if (!db.messages[wa_id]) db.messages[wa_id] = [];
-          db.messages[wa_id].push({ from: 'client', text, timestamp: Date.now() });
-          saveDB();
-        });
-      });
+    db.messages[telefono].push({
+      id: msg.id,
+      telefono,
+      tipo: 'recibido',
+      texto,
+      fecha: new Date().toISOString()
     });
-    res.sendStatus(200);
-  } else {
-    res.sendStatus(404);
+
+    saveDB();
+    console.log(`Mensaje guardado de ${telefono}: ${texto}`);
+  } catch(e){ console.error(e) }
+  res.sendStatus(200);
+});
+
+// ------ API PARA TU BANDEJA.HTML ------
+app.get('/api/contacts', (req, res) => {
+  res.json(Object.values(db.contacts));
+});
+
+app.get('/api/messages/:telefono', (req, res) => {
+  const tel = normalizarTel(req.params.telefono);
+  res.json(db.messages[tel] || []);
+});
+
+// ------ API PARA RESPONDER - ESTO ARREGLA QUE NO LES LLEGA ------
+app.post('/api/send', async (req, res) => {
+  try {
+    let { to, texto } = req.body;
+    const telefono = normalizarTel(to);
+
+    const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+    const TOKEN = process.env.WHATSAPP_TOKEN;
+
+    if(!PHONE_NUMBER_ID ||!TOKEN){
+      return res.status(500).json({ error: "Falta PHONE_NUMBER_ID o WHATSAPP_TOKEN en env" });
+    }
+
+    const resp = await fetch(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: telefono,
+        type: "text",
+        text: { body: texto }
+      })
+    });
+
+    const data = await resp.json();
+
+    if(!resp.ok){
+      console.error("Error Meta:", data);
+      return res.status(400).json(data);
+    }
+
+    // Guardar mi respuesta en el MISMO historial
+    if (!db.messages[telefono]) db.messages[telefono] = [];
+    db.messages[telefono].push({
+      id: data.messages?.[0]?.id || Date.now().toString(),
+      telefono,
+      tipo: 'enviado',
+      texto,
+      fecha: new Date().toISOString()
+    });
+    saveDB();
+
+    res.json({ ok: true, data });
+  } catch(e){
+    console.error(e);
+    res.status(500).json({ error: e.message });
   }
 });
 
-// ========== FRONT ==========
-app.get('/campanas', (req, res) => {
-  const fp = path.join(__dirname, 'public', 'campanas.html');
-  if (fs.existsSync(fp)) return res.sendFile(fp);
-  return res.status(404).send('Sube public/campanas.html');
-});
-app.get('/campanas.html', (req, res) => {
-  const fp = path.join(__dirname, 'public', 'campanas.html');
-  if (fs.existsSync(fp)) return res.sendFile(fp);
-  return res.status(404).send('Sube public/campanas.html');
-});
-app.get('/bandeja', (req, res) => res.sendFile(path.join(__dirname, 'public', 'bandeja.html')));
-app.get('/bandeja.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'bandeja.html')));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
-app.listen(PORT, () => console.log('KLIDO AVANZA OK - Seguimiento activo en ' + PORT));
+app.listen(PORT, () => console.log(`CRM corriendo en puerto ${PORT}`));
