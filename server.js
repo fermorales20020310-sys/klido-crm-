@@ -1,117 +1,88 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const app = express();
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const { Pool } = require('pg');
+const axios = require('axios');
 
-app.use(express.json());
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// --- CONFIGURACION CON TU CLAVE ---
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "klido123";
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_ID = process.env.PHONE_NUMBER_ID;
-const DATA_FILE = path.join(__dirname, 'data.json');
-
-if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({ chats: {} }, null, 2));
-}
-
-function getData() {
-  try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  } catch { return { chats: {} }; }
-}
-function saveData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
-// --- 1. VERIFICACION WEBHOOK META ---
-app.get('/webhook', (req, res) => {
-  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) {
-    console.log('WEBHOOK VERIFICADO CORRECTAMENTE');
-    return res.status(200).send(req.query['hub.challenge']);
-  }
-  res.sendStatus(403);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL? { rejectUnauthorized: false } : false
 });
 
-// --- 2. RECIBE Y HACE COPIA DEL HISTORIAL ---
-app.post('/webhook', (req, res) => {
-  try {
-    const value = req.body.entry?.[0]?.changes?.[0]?.value;
-    const msg = value?.messages?.[0];
-    const contact = value?.contacts?.[0];
+async function initDB(){
+  if(!process.env.DATABASE_URL) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS contacts (
+      phone TEXT PRIMARY KEY, name TEXT, last_message TEXT,
+      unread INT DEFAULT 0, updated_at TIMESTAMP DEFAULT NOW()
+    );`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY, phone TEXT, text TEXT,
+      direction TEXT, timestamp TIMESTAMP DEFAULT NOW()
+    );`);
+  console.log('DB KLIDO PRO lista');
+}
+initDB();
 
-    if (msg) {
-      const data = getData();
-      const wa_id = msg.from;
-      const name = contact?.profile?.name || wa_id;
+let memory = { contacts: [], messages: {} };
 
-      if (!data.chats[wa_id]) {
-        data.chats[wa_id] = { name: name, wa_id: wa_id, messages: [] };
-      }
+async function saveMessage(phone, name, text, direction){
+  if(!process.env.DATABASE_URL){
+    if(!memory.messages[phone]) memory.messages[phone]=[];
+    memory.messages[phone].push({text, direction, timestamp:new Date()});
+    let c=memory.contacts.find(x=>x.phone===phone);
+    if(!c) memory.contacts.unshift({phone, name, lastMessage:text, unread: direction==='in'?1:0, time:'ahora'});
+    else { c.lastMessage=text; if(direction==='in') c.unread++; }
+    return;
+  }
+  await pool.query(`INSERT INTO contacts(phone,name,last_message,unread,updated_at) VALUES($1,$2,$3,$4,NOW()) ON CONFLICT(phone) DO UPDATE SET last_message=$3, unread = CASE WHEN $4=1 THEN contacts.unread+1 ELSE contacts.unread END, updated_at=NOW()`, [phone, name, text, direction==='in'?1:0]);
+  await pool.query('INSERT INTO messages(phone,text,direction) VALUES($1,$2,$3)', [phone,text,direction]);
+}
 
-      data.chats[wa_id].messages.push({
-        id: msg.id,
-        text: msg.text?.body || `[${msg.type}]`,
-        direction: 'inbound',
-        timestamp: new Date().toISOString(),
-        raw: msg
-      });
-      data.chats[wa_id].name = name;
-      data.chats[wa_id].last_message = msg.text?.body || msg.type;
-
-      saveData(data);
-      console.log(`COPIA GUARDADA -> ${wa_id}: ${msg.text?.body}`);
-    }
-  } catch (err) {
-    console.log('Error guardando copia:', err.message);
+// WEBHOOK
+app.get('/webhook', (req,res)=>{
+  if(req.query['hub.verify_token']===process.env.VERIFY_TOKEN) res.send(req.query['hub.challenge']);
+  else res.sendStatus(403);
+});
+app.post('/webhook', async (req,res)=>{
+  const msg = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+  const contact = req.body.entry?.[0]?.changes?.[0]?.value?.contacts?.[0];
+  if(msg){
+    await saveMessage(msg.from, contact?.profile?.name||msg.from, msg.text?.body||'[archivo]', 'in');
   }
   res.sendStatus(200);
 });
 
-// --- 3. APIS PARA TU BANDEJA ---
-app.get('/api/chats', (req, res) => {
-  const data = getData();
-  const chats = Object.values(data.chats).sort((a,b) => {
-    const lastA = a.messages[a.messages.length-1]?.timestamp || 0;
-    const lastB = b.messages[b.messages.length-1]?.timestamp || 0;
-    return new Date(lastB) - new Date(lastA);
-  });
-  res.json(chats);
+app.get('/api/contacts', async (req,res)=>{
+  if(!process.env.DATABASE_URL) return res.json(memory.contacts);
+  const {rows}=await pool.query('SELECT * FROM contacts ORDER BY updated_at DESC');
+  res.json(rows.map(r=>({phone:r.phone, name:r.name, lastMessage:r.last_message, unread:r.unread, time:new Date(r.updated_at).toLocaleTimeString()})));
+});
+app.get('/api/messages/:phone', async (req,res)=>{
+  if(!process.env.DATABASE_URL) return res.json(memory.messages[req.params.phone]||[]);
+  const {rows}=await pool.query('SELECT * FROM messages WHERE phone=$1 ORDER BY timestamp ASC',[req.params.phone]);
+  res.json(rows.map(r=>({text:r.text, direction:r.direction, timestamp:r.timestamp})));
+});
+app.post('/api/read/:phone', async (req,res)=>{
+  if(process.env.DATABASE_URL) await pool.query('UPDATE contacts SET unread=0 WHERE phone=$1',[req.params.phone]);
+  else { let c=memory.contacts.find(x=>x.phone===req.params.phone); if(c) c.unread=0; }
+  res.json({ok:true});
+});
+app.post('/api/send', async (req,res)=>{
+  const {phone, message}=req.body;
+  try{
+    await axios.post(`https://graph.facebook.com/v20.0/${process.env.PHONE_NUMBER_ID}/messages`, {
+      messaging_product:'whatsapp', to:phone, type:'text', text:{body:message}
+    }, {headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+    await saveMessage(phone, phone, message, 'out');
+    res.json({ok:true});
+  }catch(e){ console.log(e.response?.data); res.status(500).json({error:'Error enviando'}); }
 });
 
-app.get('/api/chats/:wa_id', (req, res) => {
-  const data = getData();
-  res.json(data.chats[req.params.wa_id] || null);
-});
-
-app.post('/api/send', async (req, res) => {
-  const { to, text } = req.body;
-  if (!to ||!text) return res.status(400).json({ error: 'Falta to y text' });
-  try {
-    const r = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messaging_product: "whatsapp", to: to, type: "text", text: { body: text } })
-    });
-    const result = await r.json();
-
-    if (result.messages) {
-      const data = getData();
-      if (!data.chats[to]) data.chats[to] = { name: to, wa_id: to, messages: [] };
-      data.chats[to].messages.push({ text: text, direction: 'outbound', timestamp: new Date().toISOString() });
-      data.chats[to].last_message = text;
-      saveData(data);
-    }
-    res.json(result);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`KLIDO CRM OK - Puerto ${PORT} - Clave: ${VERIFY_TOKEN}`));
+app.listen(process.env.PORT||3000, ()=>console.log('KLIDO PRO corriendo'));
