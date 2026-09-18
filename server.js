@@ -1,103 +1,78 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-app.use(express.json());
+
+app.use(bodyParser.json());
 app.use(express.static('public'));
 
-const DATA_FILE = path.join(__dirname, 'data.json');
+const DATA_FILE = './data.json';
+if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, JSON.stringify({contacts:[], messages:{}}));
 
-function normalizar(tel){
-  if(!tel) return null;
-  let t = tel.toString().replace(/\D/g,'');
-  if(t.length < 8) return null; // evita contactos como "Gabriela" sin numero
-  return t;
-}
+function getData(){ return JSON.parse(fs.readFileSync(DATA_FILE)); }
+function saveData(d){ fs.writeFileSync(DATA_FILE, JSON.stringify(d, null, 2)); }
 
-function leerData(){
-  try{
-    if(!fs.existsSync(DATA_FILE)) return {contacts:[], messages:{}};
-    const d = JSON.parse(fs.readFileSync(DATA_FILE,'utf8'));
-    if(!d.contacts) d.contacts = [];
-    if(!d.messages) d.messages = {};
-    // Limpia contactos sin telefono
-    d.contacts = d.contacts.filter(c => c.telefono && normalizar(c.telefono));
-    return d;
-  }catch(e){ return {contacts:[], messages:{}} }
-}
-function guardarData(data){
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
+// ESTO ARREGLA TU ERROR DE LA CAPTURA
+app.get('/bandeja', (req,res) => {
+  res.sendFile(path.join(__dirname, 'public', 'bandeja.html'));
+});
 
-// API CONTACTOS
-app.get('/api/contacts', (req,res)=>{
-  const data = leerData();
+app.get('/api/contacts', (req,res) => {
+  const data = getData();
   res.json(data.contacts);
 });
 
-// API MENSAJES
-app.get('/api/messages/:tel', (req,res)=>{
-  const data = leerData();
-  const tel = normalizar(req.params.tel);
-  res.json(data.messages[tel] || []);
+app.get('/api/messages/:tel', (req,res) => {
+  const data = getData();
+  res.json(data.messages[req.params.tel] || []);
 });
 
-// WEBHOOK VERIFICACION
-app.get('/webhook', (req,res)=>{
-  const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'klido123';
-  if(req.query['hub.verify_token'] === VERIFY_TOKEN) res.send(req.query['hub.challenge']);
-  else res.sendStatus(403);
-});
+app.post('/api/send', async (req,res) => {
+  const { to, texto } = req.body;
+  const data = getData();
 
-// WEBHOOK MENSAJES ENTRANTES
-app.post('/webhook', (req,res)=>{
-  const data = leerData();
-  try{
-    const entry = req.body.entry?.[0]?.changes?.[0]?.value;
-    const msg = entry?.messages?.[0];
-    const contact = entry?.contacts?.[0];
-    if(msg && contact){
-      const tel = normalizar(msg.from);
-      const nombre = contact.profile?.name || tel;
-      if(!tel) return res.sendStatus(200);
+  // Guardar mensaje enviado
+  if(!data.messages[to]) data.messages[to] = [];
+  data.messages[to].push({ texto, tipo: 'enviado', fecha: new Date() });
+  saveData(data);
 
-      if(!data.contacts.find(c=>c.telefono===tel)){
-        data.contacts.unshift({telefono: tel, nombre: nombre});
-      }
-      if(!data.messages[tel]) data.messages[tel]=[];
-      data.messages[tel].push({
-        texto: msg.text?.body || '[archivo]',
-        tipo: 'recibido',
-        fecha: new Date().toISOString()
+  // Enviar por API de WhatsApp
+  try {
+    const token = process.env.WHATSAPP_TOKEN;
+    const phoneId = process.env.PHONE_NUMBER_ID;
+    if(token && phoneId){
+      await fetch(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'text', text: { body: texto } })
       });
-      guardarData(data);
     }
-  }catch(e){ console.log(e) }
+  } catch(e){ console.log(e) }
+  res.json({ok:true});
+});
+
+// WEBHOOK PARA RECIBIR MENSAJES
+app.post('/webhook', (req,res) => {
+  try{
+    const entry = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    if(entry){
+      const from = entry.from;
+      const text = entry.text?.body || '';
+      const data = getData();
+      if(!data.contacts.find(c=>c.telefono===from)) data.contacts.push({ telefono: from, nombre: from });
+      if(!data.messages[from]) data.messages[from] = [];
+      data.messages[from].push({ texto: text, tipo: 'recibido', fecha: new Date() });
+      saveData(data);
+    }
+  }catch(e){}
   res.sendStatus(200);
 });
 
-// ENVIAR MENSAJE
-app.post('/api/send', async (req,res)=>{
-  const {to, texto} = req.body;
-  const tel = normalizar(to);
-  if(!tel ||!texto) return res.status(400).json({error:'faltan datos'});
-
-  const TOKEN = process.env.WHATSAPP_TOKEN;
-  const PHONE_ID = process.env.PHONE_NUMBER_ID;
-
-  try{
-    await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{
-      method:'POST',
-      headers:{'Authorization':`Bearer ${TOKEN}`,'Content-Type':'application/json'},
-      body: JSON.stringify({messaging_product:'whatsapp', to: tel, text:{body:texto}})
-    });
-    const data = leerData();
-    if(!data.messages[tel]) data.messages[tel]=[];
-    data.messages[tel].push({texto, tipo:'enviado', fecha: new Date().toISOString()});
-    guardarData(data);
-    res.json({ok:true});
-  }catch(e){ res.status(500).json({error:e.message}) }
+app.get('/webhook', (req,res) => {
+  if(req.query['hub.verify_token'] === process.env.VERIFY_TOKEN) res.send(req.query['hub.challenge']);
+  else res.sendStatus(403);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=>console.log('Corriendo en '+PORT));
+app.listen(PORT, ()=> console.log('KLIDO listo en puerto '+PORT));
