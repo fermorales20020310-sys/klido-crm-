@@ -1,5 +1,142 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO AVANZA</title>
-<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');*{font-family:Inter}body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#2563eb}.card{background:#fff;padding:32px;border-radius:18px;width:360px;box-shadow:0 20px 40px rgba(0,0,0,.2);text-align:center}input{width:100%;padding:12px;margin:8px 0;border:1px solid #e2e8f0;border-radius:10px;box-sizing:border-box}button{width:100%;padding:12px;background:#111827;color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;margin-top:10px}</style>
-</head><body><div class="card"><img src="logo.png" style="height:50px"><h2>KLIDO AVANZA</h2><input id="u" placeholder="Usuario"><input id="p" type="password" placeholder="Clave"><button onclick="login()">Entrar</button><p id="e" style="color:red;font-size:12px"></p></div>
-<script>function login(){if(u.value==='admin'&&p.value==='alion2025'){localStorage.setItem('klido_auth','1');location.href='/bandeja'}else e.innerText='Credenciales incorrectas'}</script></body></html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO CRM Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+  body{background:#080F1E; color:#E2E8F0; font-family: Inter, system-ui}
+ .card{background:#111A2E; border:1px solid #1E2A45}
+ .msg-in{background:#1A2540; border-radius:18px 18px 18px 4px}
+ .msg-out{background:#3B82F6; color:white; border-radius:18px 18px 4px 18px}
+  ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:#1E2A45}
+</style>
+</head>
+<body class="h-screen overflow-hidden">
+<div class="flex h-screen p-3 gap-3">
+  <!-- Sidebar -->
+  <div class="w-[240px] card rounded-[20px] flex flex-col p-4">
+    <div class="flex items-center gap-3 mb-8 px-2">
+      <div class="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center"><i class="fa-solid fa-bolt text-white"></i></div>
+      <div><p class="font-bold text-white leading-none">KLIDO CRM Pro</p><span class="text-[10px] bg-blue-500 px-2 py-0.5 rounded-full">Pro Plan</span></div>
+    </div>
+    <p class="text-[11px] text-slate-500 font-bold tracking-widest mb-3 px-2">MENU</p>
+    <div class="space-y-1">
+      <div class="bg-blue-500 text-white px-3 py-2.5 rounded-xl flex gap-3 items-center"><i class="fa-regular fa-message"></i> Inbox</div>
+      <div class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white cursor-pointer"><i class="fa-regular fa-user"></i> Contacts</div>
+      <div class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white cursor-pointer"><i class="fa-solid fa-bullhorn"></i> Campaigns</div>
+      <div class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white cursor-pointer"><i class="fa-solid fa-wand-magic-sparkles"></i> Automation</div>
+      <div class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white cursor-pointer"><i class="fa-solid fa-chart-simple"></i> Analytics</div>
+      <div class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white cursor-pointer"><i class="fa-regular fa-file-lines"></i> Templates</div>
+    </div>
+    <div class="mt-auto card rounded-xl p-3">
+      <p class="text-xs text-slate-400">Trial • 12 days left</p>
+      <button class="w-full mt-2 bg-blue-500 text-white text-sm py-2 rounded-lg font-bold">Upgrade now</button>
+    </div>
+  </div>
+
+  <!-- Inbox List -->
+  <div class="w-[320px] card rounded-[20px] flex flex-col overflow-hidden">
+    <div class="p-4 flex justify-between items-center">
+      <h2 class="font-bold text-lg text-white">Inbox</h2>
+      <div class="flex gap-2"><button class="w-7 h-7 card rounded-full"><i class="fa-solid fa-filter text-xs"></i></button><button class="w-7 h-7 bg-blue-500 rounded-full"><i class="fa-solid fa-plus text-xs text-white"></i></button></div>
+    </div>
+    <div class="px-4 pb-3"><div class="bg-[#0B1220] rounded-full flex items-center px-4 py-2.5 gap-2 border border-[#1E2A45]"><i class="fa-solid fa-magnifying-glass text-slate-500 text-sm"></i><input id="searchConv" placeholder="Search conversations..." class="bg-transparent outline-none text-sm w-full"></div></div>
+    <div id="convList" class="flex-1 overflow-y-auto px-2 space-y-1"></div>
+  </div>
+
+  <!-- Chat Center -->
+  <div class="flex-1 card rounded-[20px] flex flex-col overflow-hidden">
+    <div class="p-4 border-b border-[#1E2A45] flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-[#2A3A5C] flex items-center justify-center font-bold text-blue-300" id="headerAvatar">SN</div>
+        <div><p class="font-bold text-white" id="headerName">Selecciona un chat</p><p class="text-xs text-green-400" id="headerStatus">Online • WhatsApp</p></div>
+      </div>
+      <div class="flex gap-4 text-slate-400"><i class="fa-solid fa-phone"></i><i class="fa-solid fa-ellipsis-vertical"></i><i class="fa-solid fa-volume-high text-blue-400"></i></div>
+    </div>
+    <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3 bg-[#0D1528]"></div>
+    <div class="p-4 border-t border-[#1E2A45] flex gap-3 items-center">
+      <i class="fa-solid fa-paperclip text-slate-400 text-xl"></i><i class="fa-regular fa-face-smile text-slate-400 text-xl"></i>
+      <input id="msgInput" placeholder="Type a message..." class="flex-1 bg-[#0B1220] border border-[#1E2A45] rounded-full px-5 py-3 outline-none text-sm">
+      <button id="sendBtn" class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- Customer Profile -->
+  <div class="w-[320px] card rounded-[20px] flex flex-col p-5 overflow-y-auto">
+    <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-white">Customer Profile</h3><i class="fa-solid fa-xmark text-slate-400"></i></div>
+    <div class="card rounded-2xl p-4 bg-[#0D1528] mb-4">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center font-bold text-white" id="profileAvatar">SN</div>
+        <div><p class="font-bold text-white" id="profileName">Sofia Nguyen</p><p class="text-xs text-slate-400">Customer • WhatsApp</p></div>
+      </div>
+      <div class="flex gap-2"><span class="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold">VIP</span><span class="text-[10px] px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">Hot Lead</span><span class="text-[10px] px-2.5 py-1 rounded-full bg-slate-700 text-slate-300">E-commerce</span></div>
+    </div>
+    <p class="text-[11px] tracking-widest text-slate-500 font-bold mb-3">Details</p>
+    <div class="space-y-3 mb-6">
+      <div class="flex items-center gap-3 text-sm"><div class="w-8 h-8 card rounded-full flex items-center justify-center"><i class="fa-regular fa-envelope text-xs"></i></div><span id="profileEmail" class="text-slate-300">sofia.n@naturagoods.com</span></div>
+      <div class="flex items-center gap-3 text-sm"><div class="w-8 h-8 card rounded-full flex items-center justify-center"><i class="fa-solid fa-phone text-xs"></i></div><span id="profilePhone" class="text-slate-300">+62 812-3456-7890</span></div>
+      <div class="flex items-center gap-3 text-sm"><div class="w-8 h-8 card rounded-full flex items-center justify-center"><i class="fa-solid fa-building text-xs"></i></div><span class="text-slate-300">Natura Goods</span></div>
+      <div class="flex items-center gap-3 text-sm"><div class="w-8 h-8 card rounded-full flex items-center justify-center"><i class="fa-solid fa-location-dot text-xs"></i></div><span class="text-slate-300">Jakarta, Indonesia</span></div>
+    </div>
+    <p class="text-[11px] tracking-widest text-slate-500 font-bold mb-3">Notes</p>
+    <div class="card rounded-xl p-3 text-xs text-slate-400 leading-relaxed bg-[#0D1528]">
+      Interested in team plan. Follow up scheduled for tomorrow at 10:00 AM. Wants Shopify integration demo.
+      <p class="mt-3 text-[11px] text-slate-500">Created • 12 Oct 2024</p>
+    </div>
+    <div class="flex gap-2 mt-4"><button class="flex-1 border border-[#1E2A45] rounded-full py-2.5 text-sm font-bold">Add note</button><button class="flex-1 bg-blue-500 text-white rounded-full py-2.5 text-sm font-bold">Edit profile</button></div>
+  </div>
+</div>
+<audio id="notifSound" src="https://cdn.freesound.org/previews/219/219244_3242240-lq.mp3"></audio>
+<script>
+let contacts=[], selected=null;
+async function load(){let r=await fetch('/api/contacts'); contacts=await r.json(); renderList();}
+function renderList(){
+  let q=document.getElementById('searchConv').value.toLowerCase();
+  let list=document.getElementById('convList'); list.innerHTML='';
+  contacts.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q)).forEach(c=>{
+    let d=document.createElement('div');
+    d.className=`p-3 rounded-2xl cursor-pointer flex gap-3 items-center ${selected===c.phone?'bg-[#1A2540] border border-blue-500/30':''}`;
+    d.innerHTML=`<div class="w-10 h-10 rounded-full bg-[#2A3A5C] flex items-center justify-center font-bold text-blue-300 text-sm">${c.name.slice(0,2).toUpperCase()}</div><div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${c.name}</p><p class="text-xs text-slate-400 truncate">${c.lastMessage||'Nuevo contacto'}</p></div><div class="text-right"><p class="text-[10px] text-slate-500">${c.time||''}</p>${c.unread?`<span class="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">${c.unread}</span>`:''}</div>`;
+    d.onclick=()=>openChat(c); list.appendChild(d);
+  });
+}
+async function openChat(c){
+  selected=c.phone;
+  document.getElementById('headerName').innerText=c.name;
+  document.getElementById('profileName').innerText=c.name;
+  document.getElementById('profilePhone').innerText=c.phone;
+  document.getElementById('headerAvatar').innerText=c.name.slice(0,2).toUpperCase();
+  document.getElementById('profileAvatar').innerText=c.name.slice(0,2).toUpperCase();
+  renderList();
+  let r=await fetch('/api/messages/'+c.phone); let msgs=await r.json();
+  let box=document.getElementById('messages'); box.innerHTML='';
+  msgs.forEach(m=>{
+    let isOut=m.direction==='out';
+    let div=document.createElement('div'); div.className=`max-w-[75%] px-4 py-3 text-[13px] leading-relaxed ${isOut?'msg-out ml-auto':'msg-in'}`;
+    div.innerHTML=`${m.text}<span class="block text-[10px] mt-1 opacity-70 text-right">${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`;
+    box.appendChild(div);
+  });
+  box.scrollTop=box.scrollHeight;
+  fetch('/api/read/'+c.phone,{method:'POST'});
+}
+async function send(){
+  let input=document.getElementById('msgInput'); let text=input.value.trim(); if(!text||!selected) return;
+  input.value='';
+  let box=document.getElementById('messages'); let div=document.createElement('div'); div.className='max-w-[75%] px-4 py-3 text-[13px] msg-out ml-auto'; div.innerText=text; box.appendChild(div); box.scrollTop=box.scrollHeight;
+  await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:selected,message:text})});
+}
+document.getElementById('sendBtn').onclick=send;
+document.getElementById('msgInput').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+document.getElementById('searchConv').addEventListener('input',renderList);
+setInterval(async()=>{
+  let oldLen=contacts.length; await load();
+  if(contacts.length>oldLen || contacts.some(c=>c.unread>0)){document.getElementById('notifSound').play().catch(()=>{});}
+  if(selected){let c=contacts.find(x=>x.phone===selected); if(c) openChat(c);}
+},3000);
+load();
+</script>
+</body>
+</html>
