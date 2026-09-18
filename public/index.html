@@ -1,162 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KLIDO CRM Pro</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO AVANZA CRM</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-<style>
-  body{background:#080F1E; color:#E2E8F0; font-family: Inter, system-ui}
- .card{background:#111A2E; border:1px solid #1E2A45}
- .msg-in{background:#1A2540; border-radius:18px 18px 18px 4px}
- .msg-out{background:#3B82F6; color:white; border-radius:18px 18px 4px 18px}
-  ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:#1E2A45}
-</style>
+<style>body{background:#080F1E;color:#E2E8F0;font-family:Inter,system-ui}.card{background:#111A2E;border:1px solid #1E2A45}.msg-in{background:#1A2540;border-radius:18px 18px 18px 4px}.msg-out{background:#3B82F6;color:white;border-radius:18px 18px 4px 18px}</style>
 </head>
 <body class="h-screen overflow-hidden">
 <div class="flex h-screen p-3 gap-3">
-  <!-- Sidebar -->
   <div class="w-[240px] card rounded-[20px] flex flex-col p-4">
     <div class="flex items-center gap-3 mb-8 px-2">
-      <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20"><i class="fa-solid fa-bolt text-white"></i></div>
-      <div><p class="font-bold text-white leading-none tracking-tight">KLIDO CRM</p><span class="text-[10px] bg-blue-500 px-2 py-0.5 rounded-full font-bold">PRO</span></div>
+      <img src="/logo_klido_icon.png" onerror="this.src='/logo.png'" class="w-10 h-10 rounded-xl object-contain bg-white p-1">
+      <div><p class="font-black text-white text-[13px] leading-none">KLIDO AVANZA</p><p class="text-[9px] text-slate-400">CRM REDES & WA</p></div>
     </div>
-    <p class="text-[11px] text-slate-500 font-bold tracking-widest mb-3 px-2">MENU</p>
-    <div class="space-y-1" id="menu">
-      <div data-page="inbox" class="menu-item bg-blue-500 text-white px-3 py-2.5 rounded-xl flex gap-3 items-center cursor-pointer font-medium"><i class="fa-regular fa-message"></i> Inbox</div>
-      <div data-page="contacts" class="menu-item text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white hover:bg-[#1A2540] rounded-xl cursor-pointer transition"><i class="fa-regular fa-user"></i> Contacts</div>
-      <div data-page="campaigns" class="menu-item text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white hover:bg-[#1A2540] rounded-xl cursor-pointer transition"><i class="fa-solid fa-bullhorn"></i> Campaigns</div>
-      <div data-page="automation" class="menu-item text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white hover:bg-[#1A2540] rounded-xl cursor-pointer transition"><i class="fa-solid fa-wand-magic-sparkles"></i> Automation</div>
-      <div data-page="analytics" class="menu-item text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white hover:bg-[#1A2540] rounded-xl cursor-pointer transition"><i class="fa-solid fa-chart-simple"></i> Analytics</div>
-      <div data-page="templates" class="menu-item text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:text-white hover:bg-[#1A2540] rounded-xl cursor-pointer transition"><i class="fa-regular fa-file-lines"></i> Templates</div>
+    <div class="space-y-1">
+      <div id="btn-inbox" class="bg-blue-500 text-white px-3 py-2.5 rounded-xl flex gap-3 items-center cursor-pointer"><i class="fa-regular fa-message"></i> Inbox</div>
+      <div id="btn-contacts" class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:bg-[#1A2540] hover:text-white rounded-xl cursor-pointer"><i class="fa-regular fa-user"></i> Contacts</div>
+      <div id="btn-campaigns" class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:bg-[#1A2540] hover:text-white rounded-xl cursor-pointer"><i class="fa-solid fa-bullhorn"></i> Campaigns</div>
+      <div id="btn-automation" class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:bg-[#1A2540] hover:text-white rounded-xl cursor-pointer"><i class="fa-solid fa-wand-magic-sparkles"></i> Automation</div>
+      <div id="btn-analytics" class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:bg-[#1A2540] hover:text-white rounded-xl cursor-pointer"><i class="fa-solid fa-chart-simple"></i> Analytics</div>
+      <div id="btn-templates" class="text-slate-400 px-3 py-2.5 flex gap-3 items-center hover:bg-[#1A2540] hover:text-white rounded-xl cursor-pointer"><i class="fa-regular fa-file-lines"></i> Templates</div>
     </div>
-    <div class="mt-auto card rounded-xl p-3 bg-[#0D1528]">
-      <p class="text-xs text-slate-400">Trial • 12 days left</p>
-      <div class="w-full h-1 bg-[#1E2A45] rounded-full mt-2 mb-2"><div class="w-2/3 h-1 bg-blue-500 rounded-full"></div></div>
-      <button class="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-2 rounded-lg font-bold transition">Upgrade now</button>
-    </div>
+    <div class="mt-auto card rounded-xl p-3 text-center"><img src="/logo_klido_full.png" onerror="this.style.display='none'" class="w-full bg-white rounded-lg p-2 mb-2"><button class="w-full bg-blue-500 text-white text-sm py-2 rounded-lg font-bold">Upgrade Pro</button></div>
   </div>
 
-  <!-- Inbox List -->
-  <div class="w-[340px] card rounded-[20px] flex flex-col overflow-hidden">
-    <div class="p-4 flex justify-between items-center">
-      <h2 class="font-bold text-lg text-white">Inbox</h2>
-      <div class="flex gap-2"><button class="w-8 h-8 card rounded-full flex items-center justify-center hover:bg-[#1A2540]"><i class="fa-solid fa-filter text-xs"></i></button><button class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center"><i class="fa-solid fa-plus text-xs text-white"></i></button></div>
-    </div>
-    <div class="px-4 pb-3"><div class="bg-[#0B1220] rounded-full flex items-center px-4 py-2.5 gap-2 border border-[#1E2A45]"><i class="fa-solid fa-magnifying-glass text-slate-500 text-sm"></i><input id="searchConv" placeholder="Search conversations..." class="bg-transparent outline-none text-sm w-full text-white"></div></div>
-    <div id="convList" class="flex-1 overflow-y-auto px-2 space-y-1 pb-2"></div>
-  </div>
+  <div class="w-[340px] card rounded-[20px] flex flex-col"><div class="p-4 flex justify-between"><h2 class="font-bold text-white">Inbox</h2><span class="bg-blue-500 text-white text-[10px] px-2 py-1 rounded-full" id="count">0 chats</span></div><div class="px-4 pb-3"><div class="bg-[#0B1220] rounded-full flex items-center px-4 py-2.5 gap-2 border border-[#1E2A45]"><i class="fa-solid fa-magnifying-glass text-slate-500"></i><input id="searchConv" placeholder="Buscar..." class="bg-transparent outline-none text-sm w-full"></div></div><div id="convList" class="flex-1 overflow-y-auto px-2"></div></div>
 
-  <!-- Chat Center -->
-  <div class="flex-1 card rounded-[20px] flex flex-col overflow-hidden">
-    <div class="p-4 border-b border-[#1E2A45] flex justify-between items-center bg-[#111A2E]">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-[#2A3A5C] flex items-center justify-center font-bold text-blue-300" id="headerAvatar">KL</div>
-        <div><p class="font-bold text-white" id="headerName">Selecciona un chat</p><p class="text-xs text-green-400" id="headerStatus">● Online • WhatsApp Connected</p></div>
-      </div>
-      <div class="flex gap-4 text-slate-400 items-center"><i class="fa-solid fa-phone cursor-pointer hover:text-white"></i><i class="fa-solid fa-video cursor-pointer hover:text-white"></i><i class="fa-solid fa-ellipsis-vertical cursor-pointer hover:text-white"></i><i class="fa-solid fa-volume-high text-blue-400"></i></div>
-    </div>
-    <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3 bg-[#0D1528] flex flex-col"></div>
-    <div class="p-4 border-t border-[#1E2A45] flex gap-3 items-center bg-[#111A2E]">
-      <i class="fa-solid fa-paperclip text-slate-400 text-xl cursor-pointer hover:text-white"></i><i class="fa-regular fa-face-smile text-slate-400 text-xl cursor-pointer hover:text-white"></i>
-      <input id="msgInput" placeholder="Type a message..." class="flex-1 bg-[#0B1220] border border-[#1E2A45] rounded-full px-5 py-3 outline-none text-sm text-white focus:border-blue-500 transition">
-      <button id="sendBtn" class="w-11 h-11 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white transition shadow-lg shadow-blue-500/20"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
-  </div>
+  <div class="flex-1 card rounded-[20px] flex flex-col"><div class="p-4 border-b border-[#1E2A45] flex justify-between items-center"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-[#2A3A5C] flex items-center justify-center font-bold text-blue-300" id="headerAvatar">K</div><div><p class="font-bold text-white" id="headerName">Selecciona un chat</p><p class="text-xs text-green-400">WhatsApp Conectado</p></div></div></div><div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3 bg-[#0D1528]"></div><div class="p-4 border-t border-[#1E2A45] flex gap-3 items-center"><input id="msgInput" placeholder="Escribe un mensaje..." class="flex-1 bg-[#0B1220] border border-[#1E2A45] rounded-full px-5 py-3 outline-none text-sm"><button id="sendBtn" class="w-11 h-11 bg-blue-500 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-paper-plane"></i></button></div></div>
 
-  <!-- Customer Profile -->
-  <div class="w-[320px] card rounded-[20px] flex flex-col p-5 overflow-y-auto">
-    <div class="flex justify-between items-center mb-6"><h3 class="font-bold text-white">Customer Profile</h3><i class="fa-solid fa-xmark text-slate-400 cursor-pointer"></i></div>
-    <div class="card rounded-2xl p-4 bg-[#0D1528] mb-4">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-bold text-white" id="profileAvatar">KL</div>
-        <div><p class="font-bold text-white" id="profileName">Selecciona un chat</p><p class="text-xs text-slate-400">Customer • WhatsApp</p></div>
-      </div>
-      <div class="flex gap-2 flex-wrap"><span class="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold">VIP</span><span class="text-[10px] px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">Hot Lead</span><span class="text-[10px] px-2.5 py-1 rounded-full bg-slate-700 text-slate-300">E-commerce</span></div>
-    </div>
-    <p class="text-[11px] tracking-widest text-slate-500 font-bold mb-3">DETAILS</p>
-    <div class="space-y-3 mb-6">
-      <div class="flex items-center gap-3 text-sm"><div class="w-8 h-8 card rounded-full flex items-center justify-center"><i class="fa-regular fa-envelope text-xs"></i></div><span id="profileEmail" class="text-slate-300">-</span></div>
-      <div class="flex items-center gap-3 text-sm"><div class="w-8 h-8 card rounded-full flex items-center justify-center"><i class="fa-solid fa-phone text-xs"></i></div><span id="profilePhone" class="text-slate-300">-</span></div>
-      <div class="flex items-center gap-3 text-sm"><div class="w-8 h-8 card rounded-full flex items-center justify-center"><i class="fa-solid fa-building text-xs"></i></div><span class="text-slate-300">Natura Goods</span></div>
-      <div class="flex items-center gap-3 text-sm"><div class="w-8 h-8 card rounded-full flex items-center justify-center"><i class="fa-solid fa-location-dot text-xs"></i></div><span class="text-slate-300">Jakarta, Indonesia</span></div>
-    </div>
-    <p class="text-[11px] tracking-widest text-slate-500 font-bold mb-3">NOTES</p>
-    <div class="card rounded-xl p-3 text-xs text-slate-400 leading-relaxed bg-[#0D1528]">
-      Interested in team plan. Follow up scheduled for tomorrow at 10:00 AM. Wants Shopify integration demo.
-      <p class="mt-3 text-[11px] text-slate-500">Created • 12 Oct 2024</p>
-    </div>
-    <div class="flex gap-2 mt-4"><button onclick="toast('Nota guardada')" class="flex-1 border border-[#1E2A45] hover:bg-[#1A2540] rounded-full py-2.5 text-sm font-bold transition">Add note</button><button onclick="toast('Perfil editado')" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full py-2.5 text-sm font-bold transition">Edit profile</button></div>
-  </div>
+  <div class="w-[320px] card rounded-[20px] p-5"><h3 class="font-bold text-white mb-6">Customer Profile</h3><div class="card rounded-2xl p-4 bg-[#0D1528]"><div class="flex items-center gap-3"><div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center font-bold text-white" id="profileAvatar">K</div><div><p class="font-bold text-white" id="profileName">-</p><p class="text-xs text-slate-400" id="profilePhone">-</p></div></div></div><div class="mt-4 space-y-2"><button onclick="alert('Función de notas próximamente')" class="w-full border border-[#1E2A45] rounded-full py-2.5 text-sm">+ Add note</button><button onclick="alert('Editar perfil próximamente')" class="w-full bg-blue-500 rounded-full py-2.5 text-sm text-white font-bold">Edit profile</button></div></div>
 </div>
-<audio id="notifSound" src="https://cdn.freesound.org/previews/219/219244_3242240-lq.mp3"></audio>
 <script>
-let contacts=[], selected=null;
-function toast(msg){
-  let t=document.createElement('div');
-  t.className='fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111A2E] border border-blue-500/30 text-white px-5 py-3 rounded-full text-sm shadow-2xl z-50';
-  t.innerHTML=`<i class="fa-solid fa-check text-green-400 mr-2"></i> ${msg}`;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2500);
-}
-async function load(){let r=await fetch('/api/contacts'); contacts=await r.json(); renderList();}
-function renderList(){
-  let q=document.getElementById('searchConv').value.toLowerCase();
-  let list=document.getElementById('convList'); list.innerHTML='';
-  contacts.filter(c=>(c.name||'').toLowerCase().includes(q)||c.phone.includes(q)).forEach(c=>{
-    let d=document.createElement('div');
-    d.className=`p-3 rounded-2xl cursor-pointer flex gap-3 items-center transition ${selected===c.phone?'bg-[#1A2540] border border-blue-500/30':'hover:bg-[#1A2540]/60 border-transparent'}`;
-    d.innerHTML=`<div class="w-10 h-10 rounded-full bg-[#2A3A5C] flex items-center justify-center font-bold text-blue-300 text-sm shrink-0">${(c.name||c.phone).slice(0,2).toUpperCase()}</div><div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${c.name||c.phone}</p><p class="text-xs text-slate-400 truncate">${c.lastMessage||'Nuevo contacto'}</p></div><div class="text-right shrink-0"><p class="text-[10px] text-slate-500">${c.time||''}</p>${c.unread?`<span class="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">${c.unread}</span>`:''}</div>`;
-    d.onclick=()=>openChat(c); list.appendChild(d);
-  });
-}
-async function openChat(c){
-  selected=c.phone;
-  document.getElementById('headerName').innerText=c.name||c.phone;
-  document.getElementById('profileName').innerText=c.name||c.phone;
-  document.getElementById('profilePhone').innerText=c.phone;
-  document.getElementById('profileEmail').innerText=c.name? c.name.toLowerCase().replace(/ /g,'.')+'@gmail.com' : '-';
-  document.getElementById('headerAvatar').innerText=(c.name||c.phone).slice(0,2).toUpperCase();
-  document.getElementById('profileAvatar').innerText=(c.name||c.phone).slice(0,2).toUpperCase();
-  renderList();
-  let r=await fetch('/api/messages/'+c.phone); let msgs=await r.json();
-  let box=document.getElementById('messages'); box.innerHTML='';
-  if(msgs.length===0){ box.innerHTML='<p class="text-center text-slate-500 text-sm mt-20">No hay mensajes aún. ¡Empieza la conversación!</p>'; }
-  msgs.forEach(m=>{
-    let isOut=m.direction==='out';
-    let div=document.createElement('div'); div.className=`max-w-[75%] px-4 py-3 text-[13px] leading-relaxed ${isOut?'msg-out ml-auto':'msg-in'}`;
-    div.innerHTML=`${m.text}<span class="block text-[10px] mt-1 opacity-70 text-right">${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`;
-    box.appendChild(div);
-  });
-  box.scrollTop=box.scrollHeight;
-  fetch('/api/read/'+c.phone,{method:'POST'});
-}
-async function send(){
-  let input=document.getElementById('msgInput'); let text=input.value.trim(); if(!text||!selected) return;
-  input.value='';
-  let box=document.getElementById('messages'); let div=document.createElement('div'); div.className='max-w-[75%] px-4 py-3 text-[13px] msg-out ml-auto'; div.innerText=text; box.appendChild(div); box.scrollTop=box.scrollHeight;
-  await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:selected,message:text})});
-}
-document.getElementById('sendBtn').onclick=send;
-document.getElementById('msgInput').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
-document.getElementById('searchConv').addEventListener('input',renderList);
-// MENU LOGIC
-document.querySelectorAll('.menu-item').forEach(item=>{
-  item.addEventListener('click', ()=>{
-    document.querySelectorAll('.menu-item').forEach(i=>{
-      i.classList.remove('bg-blue-500','text-white'); i.classList.add('text-slate-400');
-    });
-    item.classList.add('bg-blue-500','text-white'); item.classList.remove('text-slate-400');
-    let page=item.dataset.page;
-    if(page!=='inbox'){ toast(page.charAt(0).toUpperCase()+page.slice(1)+' - Próximamente en KLIDO PRO'); }
-  });
-});
-setInterval(async()=>{
-  let old=JSON.stringify(contacts); await load();
-  if(JSON.stringify(contacts)!==old && contacts.some(c=>c.unread>0)){document.getElementById('notifSound').play().catch(()=>{});}
-},3000);
-load();
+let contacts=[],selected=null;
+function showToast(t){let d=document.createElement('div');d.className='fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#111A2E] border border-blue-500/30 text-white px-5 py-3 rounded-full text-sm z-50';d.innerHTML=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3000);}
+async function load(){let r=await fetch('/api/contacts');contacts=await r.json();document.getElementById('count').innerText=contacts.length+' chats';renderList();}
+function renderList(){let q=document.getElementById('searchConv').value.toLowerCase();let list=document.getElementById('convList');list.innerHTML='';contacts.filter(c=>(c.name||'').toLowerCase().includes(q)||c.phone.includes(q)).forEach(c=>{let d=document.createElement('div');d.className=`p-3 rounded-2xl cursor-pointer flex gap-3 items-center ${selected===c.phone?'bg-[#1A2540] border border-blue-500/30':''}`;d.innerHTML=`<div class="w-10 h-10 rounded-full bg-[#2A3A5C] flex items-center justify-center font-bold text-blue-300">${(c.name||c.phone).slice(0,2).toUpperCase()}</div><div class="flex-1 min-w-0"><p class="font-bold text-sm text-white truncate">${c.name||c.phone}</p><p class="text-xs text-slate-400 truncate">${c.lastMessage||'Nuevo'}</p></div>`;d.onclick=()=>openChat(c);list.appendChild(d);});}
+async function openChat(c){selected=c.phone;document.getElementById('headerName').innerText=c.name||c.phone;document.getElementById('profileName').innerText=c.name||c.phone;document.getElementById('profilePhone').innerText=c.phone;document.getElementById('headerAvatar').innerText=(c.name||'K').slice(0,2).toUpperCase();document.getElementById('profileAvatar').innerText=(c.name||'K').slice(0,2).toUpperCase();renderList();let r=await fetch('/api/messages/'+c.phone);let msgs=await r.json();let box=document.getElementById('messages');box.innerHTML='';msgs.forEach(m=>{let div=document.createElement('div');div.className=`max-w-[75%] px-4 py-3 text-[13px] ${m.direction==='out'?'msg-out ml-auto':'msg-in'}`;div.innerText=m.text;box.appendChild(div);});box.scrollTop=box.scrollHeight;fetch('/api/read/'+c.phone,{method:'POST'});}
+async function send(){let input=document.getElementById('msgInput');let text=input.value.trim();if(!text||!selected)return;input.value='';let box=document.getElementById('messages');let div=document.createElement('div');div.className='max-w-[75%] px-4 py-3 text-[13px] msg-out ml-auto';div.innerText=text;box.appendChild(div);box.scrollTop=box.scrollHeight;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:selected,message:text})});}
+document.getElementById('sendBtn').onclick=send;document.getElementById('msgInput').addEventListener('keydown',e=>{if(e.key==='Enter')send()});document.getElementById('searchConv').addEventListener('input',renderList);
+document.getElementById('btn-contacts').onclick=()=>showToast('Contacts - Próximamente en KLIDO PRO');
+document.getElementById('btn-campaigns').onclick=()=>showToast('Campaigns - Próximamente');
+document.getElementById('btn-automation').onclick=()=>showToast('Automation - Próximamente');
+document.getElementById('btn-analytics').onclick=()=>showToast('Analytics - Próximamente');
+document.getElementById('btn-templates').onclick=()=>showToast('Templates - Próximamente');
+document.getElementById('btn-inbox').onclick=()=>{document.querySelectorAll('[id^=btn-]').forEach(b=>b.classList.remove('bg-blue-500','text-white'));document.getElementById('btn-inbox').classList.add('bg-blue-500','text-white');showToast('Ya estás en Inbox');}
+setInterval(load,3000);load();
 </script>
 </body>
 </html>
