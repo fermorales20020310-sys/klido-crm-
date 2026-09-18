@@ -1,31 +1,73 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO - Bandeja</title>
-<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');*{font-family:Inter;box-sizing:border-box}body{margin:0;height:100vh;display:flex;background:#f1f5f9;overflow:hidden}
-.left{width:380px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column}
-.header{height:62px;background:#2563eb;display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#fff}
-.header img{height:30px;background:#fff;border-radius:8px;padding:3px}
-.btn-black{background:#111827;color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:800;cursor:pointer;font-size:12px}
-.tabs{display:flex;gap:8px;padding:12px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
-.tab{flex:1;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-weight:700;font-size:12px}
-.tab.active{background:#111827;color:#fff;border-color:#111827}
-.contact{padding:14px;border-bottom:1px solid #f1f5f9;cursor:pointer}
-.badge-yellow{background:#fef08a;color:#78350f;border:1px solid #facc15;font-size:10px;padding:4px 8px;border-radius:99px;font-weight:800;display:inline-block;margin-top:6px}
-.dot-red{width:10px;height:10px;background:#ef4444;border-radius:50%;display:inline-block;box-shadow:0 0 0 4px #fee2e2}
-.right{flex:1;display:flex;flex-direction:column;background:#eef2ff}
-.top-chat{height:62px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 18px}
-.msgs{flex:1;overflow:auto;padding:22px}
-.bubble{max-width:68%;padding:12px 14px;border-radius:16px;margin:7px 0;font-size:13.5px}
-.me{margin-left:auto;background:#2563eb;color:#fff;border-bottom-right-radius:5px}
-.client{background:#fff;border:1px solid #e2e8f0;color:#0f172a;border-bottom-left-radius:5px}
-.input-bar{padding:14px;background:#fff;border-top:1px solid #e2e8f0;display:flex;gap:10px}
-.input-bar input{flex:1;padding:13px;border:1px solid #cbd5e1;border-radius:12px}
-.input-bar button{background:#111827;color:#fff;border:none;padding:13px 20px;border-radius:12px;font-weight:800;cursor:pointer}
-</style></head><body>
-<script>if(!localStorage.getItem('klido_auth')) location.href='/';</script>
-<div class="left"><div class="header"><div style="display:flex;gap:10px;align-items:center"><img src="logo.png"><b>KLIDO AVANZA</b></div><button class="btn-black" onclick="location.href='/campanas'">+ Campaña</button></div>
-<div class="tabs"><button id="tHoy" class="tab active" onclick="setFilter('hoy')">HOY <span id="cHoy"></span></button><button id="tAll" class="tab" onclick="setFilter('all')">Bandeja</button></div><div id="list" style="flex:1;overflow:auto"></div></div>
-<div class="right"><div class="top-chat"><b id="cname">Selecciona un chat</b><div id="campTag"></div></div><div id="msgs" class="msgs"></div><div class="input-bar"><input id="txt" placeholder="Escribe..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Enviar</button></div></div>
-<script>let filter='hoy',sel=null;function setFilter(f){filter=f;tHoy.className=f==='hoy'?'tab active':'tab';tAll.className=f==='all'?'tab active':'tab';load();}
-async function load(){let cs=await (await fetch('/api/contacts')).json();cHoy.innerText=cs.filter(c=>c.hot).length?`(${cs.filter(c=>c.hot).length})`:'';let filtered=filter==='hoy'?cs.filter(c=>c.hot):cs;list.innerHTML=filtered.map(c=>{let yellow=c.fromCampaign||c.campaignName;let tag=yellow?`<span class=badge-yellow>Escribió por campaña: ${c.campaignName||c.tag||'alion_co'}</span>`:'';let dot=c.hot?`<span class=dot-red></span>`:'';return `<div class=contact onclick="openChat('${c.wa_id}')"><div style="display:flex;justify-content:space-between"><b>${c.name||c.wa_id}</b>${dot}</div>${tag}<div style="color:#64748b;font-size:12px;margin-top:6px">${(c.lastMessage||'').slice(0,35)}</div></div>`}).join('')||`<div style="padding:20px;color:#94a3b8;text-align:center">No hay chats</div>`;}
-async function openChat(id){sel=id;let cs=await (await fetch('/api/contacts')).json();let c=cs.find(x=>x.wa_id===id);cname.innerText=c.name;campTag.innerHTML=c.fromCampaign?`<span class=badge-yellow>Escribió por campaña: ${c.campaignName}</span>`:'';let m=await (await fetch('/api/messages/'+id)).json();msgs.innerHTML=m.map(x=>`<div class="bubble ${x.from==='me'?'me':'client'}">${x.text}</div>`).join('');}
-async function send(){let t=txt.value;if(!t||!sel)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:sel,text:t})});txt.value='';openChat(sel);load();}setInterval(load,3000);load();</script></body></html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bandeja</title>
+<style>
+body{margin:0;font-family:sans-serif;display:flex;height:100vh}
+.sidebar{width:300px;border-right:1px solid #ddd;display:flex;flex-direction:column}
+.lista{flex:1;overflow-y:auto}
+.chat-item{padding:12px;border-bottom:1px solid #eee;cursor:pointer}
+.chat-item:hover{background:#f5f5f5}
+.chat-item b{display:block}
+.main{flex:1;display:flex;flex-direction:column;background:#e5ddd5}
+.mensajes{flex:1;padding:20px;overflow-y:auto}
+.burbuja{background:white;padding:8px 12px;border-radius:8px;margin:5px 0;max-width:70%}
+.burbuja.enviado{background:#dcf8c6;margin-left:auto}
+.input-area{display:flex;padding:10px;background:white;gap:10px}
+.input-area input{flex:1;padding:12px;border-radius:20px;border:1px solid #ddd}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div style="padding:10px;background:#0b5ed7;color:white;font-weight:bold">KLIDO AVANZA - Bandeja</div>
+  <div id="lista" class="lista">Cargando...</div>
+</div>
+<div class="main">
+  <div id="header" style="padding:15px;background:white;border-bottom:1px solid #ddd;font-weight:bold">Selecciona un chat</div>
+  <div id="mensajes" class="mensajes"></div>
+  <div class="input-area">
+    <input id="texto" placeholder="Escribe...">
+    <button onclick="enviar()" style="background:#0b141a;color:white;border:none;padding:10px 20px;border-radius:20px;cursor:pointer">Enviar</button>
+  </div>
+</div>
+
+<script>
+let telefonoActual = null;
+async function cargarContactos(){
+  const r = await fetch('/api/contacts');
+  const contactos = await r.json();
+  const lista = document.getElementById('lista');
+  if(contactos.length===0){ lista.innerHTML='<div style="padding:20px;color:#888">No hay chats. Escríbete a tu número para probar.</div>'; return; }
+  lista.innerHTML = contactos.map(c => `
+    <div class="chat-item" onclick="abrirChat('${c.telefono}')">
+      <b>${c.nombre || c.telefono}</b>
+      <small>${c.telefono}</small>
+    </div>
+  `).join('');
+}
+async function abrirChat(tel){
+  telefonoActual = tel;
+  document.getElementById('header').innerText = tel;
+  const r = await fetch('/api/messages/'+tel);
+  const msgs = await r.json();
+  const cont = document.getElementById('mensajes');
+  cont.innerHTML = msgs.map(m => `
+    <div class="burbuja ${m.tipo==='enviado'?'enviado':''}">
+      ${m.texto}<br><small style="font-size:10px;color:#888">${new Date(m.fecha).toLocaleString()}</small>
+    </div>
+  `).join('');
+  cont.scrollTop = cont.scrollHeight;
+}
+async function enviar(){
+  const txt = document.getElementById('texto').value;
+  if(!txt || !telefonoActual) return;
+  await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:telefonoActual,texto:txt})});
+  document.getElementById('texto').value='';
+  abrirChat(telefonoActual);
+}
+cargarContactos();
+setInterval(cargarContactos, 5000);
+</script>
+</body>
+</html>
