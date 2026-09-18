@@ -1,15 +1,14 @@
-<!-- en campanas.html agrega esto en el card 2 -->
-<div class="card">
-<h3>📄 Tus Plantillas Aprobadas (API Oficial - No Spam)</h3>
-<button class="btn" onclick="loadTemplates()">Cargar Plantillas</button>
-<div id="templatesList" style="margin-top:12px"></div>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Campañas</title><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}body{background:#0a101f;color:white;display:flex;height:100vh}.sidebar{width:260px;background:#111a2f;padding:24px}.sidebar button{width:100%;background:transparent;border:none;color:#94a3b8;padding:12px;border-radius:10px;text-align:left;cursor:pointer;margin-bottom:6px}.sidebar button.active{background:#1a2744;color:white}.main{flex:1;padding:30px;overflow-y:auto}.card{background:#111a2f;border:1px solid #1e2a45;border-radius:16px;padding:24px;margin-bottom:20px}input,textarea,select{width:100%;background:#16233f;border:1px solid #1e2a45;padding:12px;border-radius:10px;color:white;margin-top:8px}.btn{padding:12px 20px;background:#0ea5e9;border:none;border-radius:10px;color:white;font-weight:700;cursor:pointer;margin-top:12px}.progress{height:8px;background:#16233f;border-radius:10px;overflow:hidden;margin-top:12px}.bar{height:100%;background:#0ea5e9;width:0%}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{padding:8px;border-bottom:1px solid #1e2a45}</style></head><body>
+<div class="sidebar"><img src="logo.png" style="width:48px;border-radius:12px;margin-bottom:16px"><h2 style="font-size:14px;margin-bottom:20px">KLIDO AVANZA</h2><button onclick="location.href='index.html'">💬 Inbox</button><button class="active">📢 Campaigns</button></div>
+<div class="main"><h1>📢 Campañas Anti-Spam</h1>
+<div class="card"><h3>1. Subir Excel (telefono, nombre)</h3><input type="file" id="excelFile" accept=".xlsx,.xls,.csv"><div id="preview"></div></div>
+<div class="card"><h3>2. Mensaje con {nombre}</h3><textarea id="msgTemplate" rows="4">Hola {nombre} 👋, te saluda KLIDO AVANZA</textarea>
+<select id="interval"><option value="30">30-60 seg (seguro)</option><option value="60">60-120 seg (muy seguro)</option></select>
+<button class="btn" id="btnSend" onclick="iniciarEnvio()" disabled>🚀 Iniciar Envío Seguro</button><div class="progress"><div class="bar" id="bar"></div></div><p id="status" style="margin-top:10px;font-size:13px;color:#94a3b8"></p></div>
+<div class="card"><h3>3. Plantillas Aprobadas (no van a spam)</h3><button class="btn" onclick="loadTemplates()">🔄 Cargar mis plantillas</button><div id="templatesList" style="margin-top:12px"></div></div>
 </div>
-<script>
-async function loadTemplates(){
- let r=await fetch('/api/templates'); let t=await r.json();
- if(t.error) return alert(t.error);
- let h=t.map(x=>`<div style="border:1px solid #1e2a45;padding:10px;border-radius:10px;margin-bottom:8px"><b>${x.name}</b> - ${x.status} - ${x.language}<br><small>${x.components?.[0]?.text||''}</small><br><button class="btn" onclick="useTemplate('${x.name}')">Usar</button></div>`).join('');
- document.getElementById('templatesList').innerHTML=h||'No tienes plantillas aprobadas aún. Créalas en Business Manager > Plantillas';
-}
-function useTemplate(name){ document.getElementById('msgTemplate').value=`Plantilla: ${name}`; alert('Plantilla seleccionada: '+name+' - Se enviará por API oficial'); }
-</script>
+<script>let contacts=[];document.getElementById('excelFile').addEventListener('change',e=>{let file=e.target.files[0];let reader=new FileReader();reader.onload=ev=>{let data=new Uint8Array(ev.target.result);let wb=XLSX.read(data,{type:'array'});let json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);contacts=json.map(r=>({telefono:String(r.telefono||r.Phone||r.phone||'').replace(/\D/g,''),nombre:r.nombre||r.Nombre||''})).filter(c=>c.telefono.length>=10);document.getElementById('preview').innerHTML=`<table><tr><th>Tel</th><th>Nombre</th></tr>${contacts.map(c=>`<tr><td>${c.telefono}</td><td>${c.nombre}</td></tr>`).join('')}</table><p style="color:#22c55e;margin-top:8px">${contacts.length} contactos</p>`;document.getElementById('btnSend').disabled=false;};reader.readAsArrayBuffer(file);});
+async function iniciarEnvio(){let tpl=document.getElementById('msgTemplate').value;let base=parseInt(document.getElementById('interval').value);let bar=document.getElementById('bar');let st=document.getElementById('status');for(let i=0;i<contacts.length;i++){let c=contacts[i];let msg=tpl.replace(/{nombre}/g,c.nombre||'');st.textContent=`${i+1}/${contacts.length} enviando a ${c.telefono}...`;bar.style.width=Math.round((i/contacts.length)*100)+'%';await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:c.telefono,message:msg})});let wait=base*1000+Math.random()*base*1000;st.textContent+=` esperando ${Math.round(wait/1000)}s anti-spam`;await new Promise(r=>setTimeout(r,wait));}bar.style.width='100%';st.textContent=`✅ Terminado ${contacts.length} envíos`;}
+async function loadTemplates(){let r=await fetch('/api/templates');let t=await r.json();if(t.error)return alert(t.error);if(t.length==0)return document.getElementById('templatesList').innerHTML='No tienes plantillas aprobadas. Crea en Business Manager';document.getElementById('templatesList').innerHTML=t.map(x=>`<div style="border:1px solid #1e2a45;padding:10px;border-radius:10px;margin-bottom:8px"><b>${x.name}</b> (${x.language})<br><small>${x.components?.[0]?.text||''}</small></div>`).join('');}
+</script></body></html>
