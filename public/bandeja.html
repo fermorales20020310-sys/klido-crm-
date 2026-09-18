@@ -12,7 +12,7 @@ body{margin:0;font-family:sans-serif;display:flex;height:100vh}
 .chat-item b{display:block}
 .main{flex:1;display:flex;flex-direction:column;background:#e5ddd5}
 .mensajes{flex:1;padding:20px;overflow-y:auto}
-.burbuja{background:white;padding:8px 12px;border-radius:8px;margin:5px 0;max-width:70%}
+.burbuja{background:white;padding:8px 12px;border-radius:8px;margin:5px 0;max-width:70%;word-break:break-word}
 .burbuja.enviado{background:#dcf8c6;margin-left:auto}
 .input-area{display:flex;padding:10px;background:white;gap:10px}
 .input-area input{flex:1;padding:12px;border-radius:20px;border:1px solid #ddd}
@@ -38,8 +38,9 @@ async function cargarContactos(){
   const r = await fetch('/api/contacts');
   const contactos = await r.json();
   const lista = document.getElementById('lista');
-  if(contactos.length===0){ lista.innerHTML='<div style="padding:20px;color:#888">No hay chats. Escríbete a tu número para probar.</div>'; return; }
-  lista.innerHTML = contactos.map(c => `
+  const validos = contactos.filter(c => c.telefono && c.telefono.length > 5);
+  if(validos.length===0){ lista.innerHTML='<div style="padding:20px;color:#888">No hay chats válidos.</div>'; return; }
+  lista.innerHTML = validos.map(c => `
     <div class="chat-item" onclick="abrirChat('${c.telefono}')">
       <b>${c.nombre || c.telefono}</b>
       <small>${c.telefono}</small>
@@ -52,16 +53,13 @@ async function abrirChat(tel){
   const r = await fetch('/api/messages/'+tel);
   const msgs = await r.json();
   const cont = document.getElementById('mensajes');
-  cont.innerHTML = msgs.map(m => `
-    <div class="burbuja ${m.tipo==='enviado'?'enviado':''}">
-      ${m.texto}<br><small style="font-size:10px;color:#888">${new Date(m.fecha).toLocaleString()}</small>
-    </div>
-  `).join('');
+  if(msgs.length===0) cont.innerHTML = '<div style="color:#888">No hay mensajes en este chat.</div>';
+  else cont.innerHTML = msgs.map(m => `<div class="burbuja ${m.tipo==='enviado'?'enviado':''}">${m.texto}<br><small style="font-size:10px;color:#888">${new Date(m.fecha).toLocaleString()}</small></div>`).join('');
   cont.scrollTop = cont.scrollHeight;
 }
 async function enviar(){
   const txt = document.getElementById('texto').value;
-  if(!txt || !telefonoActual) return;
+  if(!txt || !telefonoActual) return alert('Selecciona un chat primero');
   await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:telefonoActual,texto:txt})});
   document.getElementById('texto').value='';
   abrirChat(telefonoActual);
