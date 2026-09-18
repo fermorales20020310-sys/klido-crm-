@@ -1,14 +1,75 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Campañas</title><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}body{background:#0a101f;color:white;display:flex;height:100vh}.sidebar{width:260px;background:#111a2f;padding:24px}.sidebar button{width:100%;background:transparent;border:none;color:#94a3b8;padding:12px;border-radius:10px;text-align:left;cursor:pointer;margin-bottom:6px}.sidebar button.active{background:#1a2744;color:white}.main{flex:1;padding:30px;overflow-y:auto}.card{background:#111a2f;border:1px solid #1e2a45;border-radius:16px;padding:24px;margin-bottom:20px}input,textarea,select{width:100%;background:#16233f;border:1px solid #1e2a45;padding:12px;border-radius:10px;color:white;margin-top:8px}.btn{padding:12px 20px;background:#0ea5e9;border:none;border-radius:10px;color:white;font-weight:700;cursor:pointer;margin-top:12px}.progress{height:8px;background:#16233f;border-radius:10px;overflow:hidden;margin-top:12px}.bar{height:100%;background:#0ea5e9;width:0%}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{padding:8px;border-bottom:1px solid #1e2a45}</style></head><body>
-<div class="sidebar"><img src="logo.png" style="width:48px;border-radius:12px;margin-bottom:16px"><h2 style="font-size:14px;margin-bottom:20px">KLIDO AVANZA</h2><button onclick="location.href='index.html'">💬 Inbox</button><button class="active">📢 Campaigns</button></div>
-<div class="main"><h1>📢 Campañas Anti-Spam</h1>
-<div class="card"><h3>1. Subir Excel (telefono, nombre)</h3><input type="file" id="excelFile" accept=".xlsx,.xls,.csv"><div id="preview"></div></div>
-<div class="card"><h3>2. Mensaje con {nombre}</h3><textarea id="msgTemplate" rows="4">Hola {nombre} 👋, te saluda KLIDO AVANZA</textarea>
-<select id="interval"><option value="30">30-60 seg (seguro)</option><option value="60">60-120 seg (muy seguro)</option></select>
-<button class="btn" id="btnSend" onclick="iniciarEnvio()" disabled>🚀 Iniciar Envío Seguro</button><div class="progress"><div class="bar" id="bar"></div></div><p id="status" style="margin-top:10px;font-size:13px;color:#94a3b8"></p></div>
-<div class="card"><h3>3. Plantillas Aprobadas (no van a spam)</h3><button class="btn" onclick="loadTemplates()">🔄 Cargar mis plantillas</button><div id="templatesList" style="margin-top:12px"></div></div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campañas - KLIDO</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}
+body{background:#0a0f1e;color:white;display:flex;height:100vh}
+.sidebar{width:260px;background:#101a30;border-right:1px solid #1d2b4a;padding:20px}
+.nav a{padding:11px 12px;border-radius:10px;color:#8da0c3;text-decoration:none;display:block;margin-bottom:6px}
+.nav a.active{background:#182848;color:white}
+.main{flex:1;padding:30px;overflow-y:auto}
+.card{background:#101a30;border:1px solid #1d2b4a;border-radius:16px;padding:24px;margin-bottom:20px}
+input,textarea{width:100%;background:#162447;border:1px solid #1d2b4a;color:white;padding:12px;border-radius:10px;margin-top:8px;outline:none}
+button{background:#facc15;color:#000;border:none;padding:12px 22px;border-radius:10px;font-weight:800;cursor:pointer;margin-top:12px}
+button:disabled{opacity:.5}
+.progress{height:8px;background:#162447;border-radius:10px;overflow:hidden;margin-top:12px}
+.bar{height:100%;background:#facc15;width:0%;transition:.3s}
+table{width:100%;margin-top:12px;border-collapse:collapse;font-size:12px}
+td,th{padding:8px;border-bottom:1px solid #1d2b4a;text-align:left}
+.tag{background:#facc15;color:#000;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="sidebar"><div style="font-weight:800;margin-bottom:20px">🚀 KLIDO AVANZA</div><div class="nav"><a href="index.html">💬 Inbox</a><a class="active">📢 Campaigns</a></div></div>
+<div class="main">
+<h1 style="margin-bottom:6px">Campañas PRO <span class="tag">AMARILLO TRACKING</span></h1>
+<p style="color:#6b7da0;margin-bottom:20px">Sube Excel y los contactos quedarán con distintivo amarillo en el Inbox</p>
+
+<div class="card">
+<label>Nombre de la campaña (aparecerá en amarillo)</label>
+<input id="campName" placeholder="Ej: Promo Septiembre - Sedes Bogotá">
+<label style="margin-top:14px;display:block">Mensaje</label>
+<textarea id="msg" rows="4" placeholder="Hola {nombre}, te saluda KLIDO..."></textarea>
+<label style="margin-top:14px;display:block">Excel (.xlsx) con columna phone / telefono / celular</label>
+<input type="file" id="file" accept=".xlsx,.xls">
+<div id="preview"></div>
+<button id="btnSend" onclick="sendCamp()" disabled>🚀 Enviar campaña y marcar en amarillo</button>
+<div class="progress" id="prog" style="display:none"><div class="bar" id="bar"></div></div>
+<div id="log" style="margin-top:12px;color:#6b7da0;font-size:12px"></div>
 </div>
-<script>let contacts=[];document.getElementById('excelFile').addEventListener('change',e=>{let file=e.target.files[0];let reader=new FileReader();reader.onload=ev=>{let data=new Uint8Array(ev.target.result);let wb=XLSX.read(data,{type:'array'});let json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);contacts=json.map(r=>({telefono:String(r.telefono||r.Phone||r.phone||'').replace(/\D/g,''),nombre:r.nombre||r.Nombre||''})).filter(c=>c.telefono.length>=10);document.getElementById('preview').innerHTML=`<table><tr><th>Tel</th><th>Nombre</th></tr>${contacts.map(c=>`<tr><td>${c.telefono}</td><td>${c.nombre}</td></tr>`).join('')}</table><p style="color:#22c55e;margin-top:8px">${contacts.length} contactos</p>`;document.getElementById('btnSend').disabled=false;};reader.readAsArrayBuffer(file);});
-async function iniciarEnvio(){let tpl=document.getElementById('msgTemplate').value;let base=parseInt(document.getElementById('interval').value);let bar=document.getElementById('bar');let st=document.getElementById('status');for(let i=0;i<contacts.length;i++){let c=contacts[i];let msg=tpl.replace(/{nombre}/g,c.nombre||'');st.textContent=`${i+1}/${contacts.length} enviando a ${c.telefono}...`;bar.style.width=Math.round((i/contacts.length)*100)+'%';await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:c.telefono,message:msg})});let wait=base*1000+Math.random()*base*1000;st.textContent+=` esperando ${Math.round(wait/1000)}s anti-spam`;await new Promise(r=>setTimeout(r,wait));}bar.style.width='100%';st.textContent=`✅ Terminado ${contacts.length} envíos`;}
-async function loadTemplates(){let r=await fetch('/api/templates');let t=await r.json();if(t.error)return alert(t.error);if(t.length==0)return document.getElementById('templatesList').innerHTML='No tienes plantillas aprobadas. Crea en Business Manager';document.getElementById('templatesList').innerHTML=t.map(x=>`<div style="border:1px solid #1e2a45;padding:10px;border-radius:10px;margin-bottom:8px"><b>${x.name}</b> (${x.language})<br><small>${x.components?.[0]?.text||''}</small></div>`).join('');}
-</script></body></html>
+
+<div class="card"><h3>Historial de campañas</h3><div id="hist"></div></div>
+</div>
+
+<script>
+let phones=[];
+document.getElementById('file').addEventListener('change',async(e)=>{
+  let f=e.target.files[0]; if(!f) return;
+  let data=await f.arrayBuffer(); let wb=XLSX.read(data); let ws=wb.Sheets[wb.SheetNames[0]];
+  let json=XLSX.utils.sheet_to_json(ws);
+  phones=json.map(r=>String(r.phone||r.Phone||r.telefono||r.Telefono||r.celular||r.Celular||'')).filter(Boolean);
+  document.getElementById('preview').innerHTML=`<table><tr><th>Detectados</th><th>${phones.length} contactos</th></tr>${phones.slice(0,5).map(p=>`<tr><td>${p}</td><td><span class="tag">📢 SE MARCARÁ AMARILLO</span></td></tr>`).join('')}${phones.length>5?`<tr><td>...y ${phones.length-5} más</td></tr>`:''}</table>`;
+  document.getElementById('btnSend').disabled=false;
+});
+
+async function sendCamp(){
+  let campName=document.getElementById('campName').value||'Campaña '+new Date().toLocaleDateString();
+  let message=document.getElementById('msg').value.trim();
+  if(!message||!phones.length) return alert('Falta mensaje o excel');
+  document.getElementById('prog').style.display='block'; document.getElementById('btnSend').disabled=true;
+  document.getElementById('bar').style.width='30%'; document.getElementById('log').innerText='Enviando y marcando amarillo...';
+  let r=await fetch('/api/campaign/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phones,message,campaignName:campName})});
+  let d=await r.json();
+  document.getElementById('bar').style.width='100%';
+  document.getElementById('log').innerHTML=`✅ <b>${phones.length} contactos marcados con <span class="tag">📢 ${campName}</span></b> - Ya aparecen amarillos en Inbox <a href="index.html" style="color:#facc15">Ver Inbox</a>`;
+  loadHist();
+}
+
+async function loadHist(){ let r=await fetch('/api/campaigns'); let h=await r.json(); document.getElementById('hist').innerHTML=`<table><tr><th>Nombre</th><th>Total</th><th>Fecha</th></tr>${h.map(c=>`<tr><td><span class="tag">📢</span> ${c.name}</td><td>${c.total}</td><td>${new Date(c.created_at).toLocaleString()}</td></tr>`).join('')}</table>`; }
+loadHist();
+</script>
+</body>
+</html>
