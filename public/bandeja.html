@@ -1,16 +1,18 @@
-<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO Bandeja</title>
-<style>body{margin:0;font-family:Arial;display:flex;height:100vh}.side{width:320px;border-right:1px solid #ddd;display:flex;flex-direction:column;background:#fff}.list{flex:1;overflow:auto}.item{padding:12px;border-bottom:1px solid #eee;cursor:pointer}.item.active{background:#e6f4ff}.main{flex:1;display:flex;flex-direction:column;background:#e5ddd5}.msgs{flex:1;padding:20px;overflow:auto;display:flex;flex-direction:column}.b{background:#fff;padding:8px 12px;border-radius:8px;margin:6px 0;max-width:70%;word-break:break-word}.b.me{background:#dcf8c6;margin-left:auto}.top{padding:15px;background:#f0f0f0;font-weight:bold;border-bottom:1px solid #ddd}.input{display:flex;padding:10px;background:#f0f0f0;gap:8px}.input input{flex:1;padding:12px;border-radius:20px;border:1px solid #ccc;outline:none}</style>
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO</title>
+<style>body{margin:0;font-family:Arial;display:flex;height:100vh}.side{width:320px;border-right:1px solid #ddd;background:#fff;display:flex;flex-direction:column}.list{flex:1;overflow:auto}.item{padding:12px;border-bottom:1px solid #eee;cursor:pointer}.item.active{background:#e6f4ff}.main{flex:1;display:flex;flex-direction:column;background:#e5ddd5}.msgs{flex:1;padding:20px;overflow:auto;display:flex;flex-direction:column}.b{background:#fff;padding:8px 12px;border-radius:8px;margin:6px 0;max-width:70%}.b.me{background:#dcf8c6;margin-left:auto}.top{padding:15px;background:#f0f0f0;font-weight:bold;border-bottom:1px solid #ddd}.input{display:flex;padding:10px;background:#f0f0f0;gap:8px}input{flex:1;padding:12px;border-radius:20px;border:1px solid #ccc}</style>
 </head><body>
 <div class="side"><div style="padding:15px;background:#111;color:#fff;font-weight:bold">KLIDO - Chats</div><div id="lista" class="list"></div></div>
-<div class="main"><div id="header" class="top">Selecciona un chat</div><div id="msgs" class="msgs"></div><div class="input"><input id="texto" placeholder="Escribe y presiona Enter..." onkeydown="if(event.key==='Enter')enviar()"><button onclick="enviar()" style="background:#25D366;color:#fff;border:0;padding:10px 20px;border-radius:20px;cursor:pointer;font-weight:bold">Enviar</button></div></div>
+<div class="main"><div id="header" class="top">Selecciona un chat</div><div id="msgs" class="msgs"></div><div class="input"><input id="texto" placeholder="Escribe..." onkeydown="if(event.key==='Enter')enviar()"><button onclick="enviar()" style="background:#25D366;color:#fff;border:0;padding:10px 20px;border-radius:20px;font-weight:bold">Enviar</button></div></div>
 <script>
 let telActual=null;
 async function loadContacts(){
-  try{
-    const r=await fetch('/api/contacts'); const data=await r.json();
-    document.getElementById('lista').innerHTML=data.map(c=>`<div class="item ${telActual===c.telefono?'active':''}" onclick="abrir('${c.telefono}')"><b>${c.nombre||c.telefono}</b><br><small>${c.telefono}</small></div>`).join('') || '<div style="padding:20px;color:#999">Aún no hay chats. Escríbele a tu número de WhatsApp API para probar.</div>';
-  }catch(e){}
+  const r=await fetch('/api/contacts'); const data=await r.json();
+  document.getElementById('lista').innerHTML=data.map(c=>{
+    const tel = c.telefono || c.id || c.wa_id || '';
+    const nom = c.nombre || c.name || tel;
+    if(!tel) return '';
+    return `<div class="item ${telActual===tel?'active':''}" onclick="abrir('${tel}')"><b>${nom}</b><br><small>${tel}</small></div>`;
+  }).join('') || '<div style="padding:20px">Sin chats aún</div>';
 }
 async function abrir(tel){
   telActual=tel; document.getElementById('header').innerText=tel; loadContacts();
@@ -20,9 +22,11 @@ async function abrir(tel){
   c.scrollTop=c.scrollHeight;
 }
 async function enviar(){
-  const t=document.getElementById('texto').value; if(!t||!telActual) return;
+  const t=document.getElementById('texto').value; if(!t||!telActual) return alert('Selecciona un chat primero');
   document.getElementById('texto').value='';
-  await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:telActual,texto:t})});
+  const resp = await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:telActual,texto:t})});
+  const j = await resp.json(); console.log(j);
+  if(j.error){ alert('Error de Meta: '+ JSON.stringify(j.error)); }
   abrir(telActual);
 }
 loadContacts(); setInterval(()=>{ loadContacts(); if(telActual) abrir(telActual); },3000);
