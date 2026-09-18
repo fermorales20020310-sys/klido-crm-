@@ -1,85 +1,115 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KLIDO - CRM</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO AVANZA - CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0f172a;color:white;font-family:Inter,sans-serif;display:flex;height:100vh}
-.sidebar{width:250px;background:#1e293b;padding:20px;display:flex;flex-direction:column;gap:10px}
-.sidebar img{width:80px;margin:0 auto 10px;display:block}
-.sidebar h2{text-align:center;font-size:18px;margin-bottom:20px}
-.btn{padding:12px;background:#334155;border:none;color:white;border-radius:8px;cursor:pointer;text-align:left}
-.btn.active{background:#0ea5e9}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#0a101f;color:#e2e8f0;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:260px;background:#111a2f;border-right:1px solid #1e2a45;padding:24px;display:flex;flex-direction:column}
+.logo-wrap{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.logo-wrap img{width:48px;height:48px;border-radius:12px;background:#0e172c;object-fit:contain;padding:6px}
+.logo-wrap h1{font-size:14px;line-height:1.1}.logo-wrap h1 span{color:#38bdf8;font-size:11px;font-weight:400}
+.status{font-size:12px;background:#132036;padding:6px 10px;border-radius:20px;display:flex;align-items:center;gap:6px;margin-bottom:24px;width:fit-content}
+.dot{width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 8px #22c55e}
+.nav{display:flex;flex-direction:column;gap:6px;flex:1}
+.nav button{background:transparent;border:none;color:#94a3b8;padding:12px 14px;border-radius:10px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px}
+.nav button.active,.nav button:hover{background:#1a2744;color:white}
 .main{flex:1;display:flex}
-.contacts{width:300px;background:#1e293b;border-right:1px solid #334155;overflow-y:auto}
-.contact{padding:15px;border-bottom:1px solid #334155;cursor:pointer}
-.contact:hover{background:#334155}
-.chat{flex:1;display:flex;flex-direction:column}
-.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:70%;padding:10px 15px;border-radius:15px}
-.msg.in{background:#334155;align-self:flex-start}
-.msg.out{background:#0ea5e9;align-self:flex-end}
-.input-area{display:flex;padding:15px;gap:10px;background:#1e293b}
-.input-area input{flex:1;padding:12px;border-radius:8px;border:none;background:#334155;color:white}
-.input-area button{padding:12px 20px;background:#0ea5e9;border:none;border-radius:8px;color:white;cursor:pointer}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0ea5e9;padding:10px 20px;border-radius:20px;display:none}
+.list{width:380px;background:#0f1a30;border-right:1px solid #1e2a45;display:flex;flex-direction:column}
+.list-head{padding:20px;border-bottom:1px solid #1e2a45}
+.list-head h2{font-size:18px;margin-bottom:12px}
+.search{width:100%;background:#16233f;border:1px solid #1e2a45;padding:10px 14px;border-radius:10px;color:white;outline:none}
+.filters{display:flex;gap:8px;margin-top:12px}
+.filters button{padding:6px 12px;border-radius:20px;border:1px solid #1e2a45;background:transparent;color:#94a3b8;cursor:pointer;font-size:12px}
+.filters button.active{background:#0ea5e9;color:white;border-color:#0ea5e9}
+.contacts{flex:1;overflow-y:auto}
+.contact{padding:16px 20px;border-bottom:1px solid #16233f;cursor:pointer;display:flex;justify-content:space-between}
+.contact:hover{background:#16233f}
+.contact b{font-size:14px}.contact small{color:#64748b;font-size:12px}
+.unread{background:#0ea5e9;color:white;font-size:11px;padding:2px 7px;border-radius:50%}
+.chat{flex:1;display:flex;flex-direction:column;background:#0a101f;position:relative}
+.chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0.6}
+.chat-empty img{width:80px;margin-bottom:16px;opacity:0.5}
+.msgs{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:68%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4}
+.msg.in{background:#1a2744;align-self:flex-start;border-bottom-left-radius:4px}
+.msg.out{background:#0ea5e9;align-self:flex-end;border-bottom-right-radius:4px;color:white}
+.input-bar{padding:16px;background:#111a2f;border-top:1px solid #1e2a45;display:flex;gap:10px}
+.input-bar input{flex:1;background:#16233f;border:1px solid #1e2a45;padding:12px 16px;border-radius:12px;color:white;outline:none}
+.input-bar button{background:#0ea5e9;border:none;padding:12px 18px;border-radius:12px;color:white;cursor:pointer;font-weight:600}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0ea5e9;padding:10px 20px;border-radius:24px;display:none;z-index:99}
 </style>
 </head>
 <body>
 <div class="sidebar">
-<img src="logo.png" alt="K">
-<h2>KLIDO AVANZA</h2>
-<button class="btn active" onclick="location.href='index.html'">💬 Bandeja</button>
-<button class="btn" onclick="location.href='campanas.html'">📢 Campañas</button>
-<button class="btn" onclick="location.href='bandeja.html'">📥 Mensajes</button>
-<button class="btn" onclick="showToast('Próximamente')">⚙️ Configuración</button>
+<div class="logo-wrap"><img src="logo.png"><h1>KLIDO<br>AVANZA<br><span>CRM WHATSAPP</span></h1></div>
+<div class="status"><div class="dot"></div> WhatsApp Conectado</div>
+<div class="nav">
+<button onclick="location.href='index.html'" class="active">📊 Dashboard</button>
+<button onclick="location.href='index.html'" class="active">💬 Bandeja de entrada</button>
+<button onclick="location.href='campanas.html'">📢 Campañas</button>
+<button onclick="showToast('Enlaces Bio - Próximamente')">🔗 Enlaces Bio</button>
+<button onclick="showToast('Ajustes - Próximamente')">⚙️ Ajustes</button>
+</div>
 </div>
 <div class="main">
-<div class="contacts" id="contacts">Cargando...</div>
-<div class="chat">
-<div class="messages" id="messages"><p style="text-align:center;margin-top:100px;opacity:0.5">Selecciona un chat</p></div>
-<div class="input-area">
+<div class="list">
+<div class="list-head">
+<h2 id="count">0 chats</h2>
+<input class="search" placeholder="Buscar contactos...">
+<div class="filters"><button class="active">Todos</button><button>No leídos</button><button>Archivados</button></div>
+</div>
+<div class="contacts" id="contacts"></div>
+</div>
+<div class="chat" id="chatArea">
+<div class="chat-empty" id="empty">
+<img src="logo.png">
+<h3>Selecciona una conversación</h3>
+<p>Elige un contacto para ver los mensajes</p>
+</div>
+<div class="msgs" id="msgs" style="display:none"></div>
+<div class="input-bar" id="inputBar" style="display:none">
 <input id="msgInput" placeholder="Escribe un mensaje...">
-<button onclick="sendMsg()">Enviar</button>
+<button onclick="sendMsg()">Enviar ➤</button>
 </div>
 </div>
 </div>
-<div class="toast" id="toast">Próximamente</div>
+<div class="toast" id="toast"></div>
 <script>
-let currentPhone=null;
-function showToast(t){let el=document.getElementById('toast');el.textContent=t;el.style.display='block';setTimeout(()=>el.style.display='none',2000)}
+let current=null;
+function showToast(t){let e=document.getElementById('toast');e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',2000)}
 async function loadContacts(){
-  try{
-    let r=await fetch('/api/contacts'); let data=await r.json();
-    let html='';
-    if(data.length==0) html='<p style="padding:20px;opacity:0.6">0 chats</p>';
-    data.forEach(c=>{
-      html+=`<div class="contact" onclick="openChat('${c.phone}')"><b>${c.name||c.phone}</b><br><small>${c.lastMessage||''}</small> ${c.unread?'<span style="background:#0ea5e9;border-radius:50%;padding:2px 6px;float:right">'+c.unread+'</span>':''}</div>`;
-    });
-    document.getElementById('contacts').innerHTML=html;
-  }catch(e){console.log(e)}
+ let r=await fetch('/api/contacts'); let d=await r.json();
+ document.getElementById('count').textContent=d.length+' chats';
+ let h=''; d.forEach(c=>{
+  h+=`<div class="contact" onclick="openChat('${c.phone}')"><div><b>${c.name||c.phone}</b><br><small>${(c.lastMessage||'').substring(0,35)}</small></div>${c.unread?`<span class="unread">${c.unread}</span>`:''}</div>`;
+ }); if(d.length==0) h='<p style="padding:20px;opacity:0.5">No hay conversaciones aún</p>';
+ document.getElementById('contacts').innerHTML=h;
 }
 async function openChat(phone){
-  currentPhone=phone;
-  fetch('/api/read/'+phone,{method:'POST'});
-  loadMessages();
+ current=phone;
+ document.getElementById('empty').style.display='none';
+ document.getElementById('msgs').style.display='flex';
+ document.getElementById('inputBar').style.display='flex';
+ fetch('/api/read/'+phone,{method:'POST'});
+ loadMsgs();
 }
-async function loadMessages(){
-  if(!currentPhone) return;
-  let r=await fetch('/api/messages/'+currentPhone); let data=await r.json();
-  let html=''; data.forEach(m=>{html+=`<div class="msg ${m.direction}">${m.text}</div>`});
-  document.getElementById('messages').innerHTML=html;
-  document.getElementById('messages').scrollTop=99999;
+async function loadMsgs(){
+ if(!current) return;
+ let r=await fetch('/api/messages/'+current); let d=await r.json();
+ let h=''; d.forEach(m=>h+=`<div class="msg ${m.direction}">${m.text}</div>`);
+ document.getElementById('msgs').innerHTML=h;
+ document.getElementById('msgs').scrollTop=999999;
 }
 async function sendMsg(){
-  let txt=document.getElementById('msgInput').value; if(!txt||!currentPhone) return;
-  document.getElementById('msgInput').value='';
-  await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:currentPhone,message:txt})});
-  loadMessages(); loadContacts();
+ let t=document.getElementById('msgInput').value; if(!t||!current) return;
+ document.getElementById('msgInput').value='';
+ await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:current,message:t})});
+ loadMsgs(); loadContacts();
 }
-setInterval(()=>{loadContacts(); if(currentPhone) loadMessages()},3000);
+setInterval(()=>{loadContacts(); if(current) loadMsgs()},3000);
 loadContacts();
 document.getElementById('msgInput').addEventListener('keypress',e=>{if(e.key==='Enter') sendMsg()});
 </script>
