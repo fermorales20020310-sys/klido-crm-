@@ -1,7 +1,53 @@
-<!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas KLIDO</title>
-<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');*{font-family:Inter}body{margin:0;background:#f1f5f9}.h{height:62px;background:#2563eb;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff}.h img{height:30px;background:#fff;border-radius:8px;padding:3px}.b{background:#111827;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}.card{max-width:800px;margin:24px auto;background:#fff;padding:24px;border-radius:16px;border:1px solid #e2e8f0}input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;margin:8px 0}</style></head>
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - KLIDO</title>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');*{font-family:Inter;box-sizing:border-box}body{margin:0;background:#f1f5f9}
+.h{height:62px;background:#2563eb;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff}
+.btn-black{background:#111827;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}
+.card{max-width:1000px;margin:20px auto;background:#fff;padding:22px;border-radius:16px;border:1px solid #e2e8f0}
+input,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;margin:6px 0}
+table{width:100%;border-collapse:collapse;margin-top:14px}
+th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:13px}
+.badge-yellow{background:#fef08a;color:#78350f;border:1px solid #facc15;padding:4px 8px;border-radius:99px;font-weight:800;font-size:11px}
+.link-box{background:#f8fafc;border:1px dashed #94a3b8;padding:10px;border-radius:10px;word-break:break-all;font-size:12px;margin-top:8px}
+</style></head>
 <body>
-<div class="h"><div style="display:flex;gap:10px;align-items:center"><img src="logo.png"><b>KLIDO AVANZA</b></div><button class="b" onclick="location.href='/bandeja'">← Bandeja</button></div>
-<div class="card"><h2>Campaña alion_co</h2><p>Activa esta campaña para que en la bandeja salga el distintivo amarillo <b>Escribió por campaña: alion_co</b></p><input id="n" value="alion_co"><button class="b" style="width:100%;margin-top:12px;padding:14px" onclick="localStorage.setItem('klido_camp',n.value);alert('Campaña '+n.value+' activada');location.href='/bandeja'">Activar Campaña</button></div>
+<div class="h"><div style="display:flex;gap:10px;align-items:center"><img src="logo.png" style="height:30px;background:#fff;border-radius:8px;padding:3px"><b>KLIDO AVANZA</b></div><button class="btn-black" onclick="location.href='/bandeja'">← Bandeja</button></div>
+
+<div class="card">
+<h2 style="margin:0">Crear Campaña con Seguimiento</h2>
+<p style="color:#64748b;font-size:13px">Cada campaña genera un link con tag. Cuando escriban por ese link, en la bandeja sale <span class="badge-yellow">Escribió por campaña: NOMBRE</span> y cae en HOY con 🔴</p>
+<label>Nombre campaña (ej: alion_co)</label>
+<input id="name" value="alion_co">
+<label>Mensaje de bienvenida</label>
+<textarea id="msg" rows="2">Hola! Vengo de la campaña alion_co, quiero info de KLIDO</textarea>
+<button class="btn-black" style="width:100%;padding:14px;margin-top:10px" onclick="createCamp()">Crear Campaña y Generar Link de Seguimiento</button>
+<div id="linkArea"></div>
+</div>
+
+<div class="card">
+<h3 style="margin:0">Seguimiento de Campañas</h3>
+<table><thead><tr><th>Campaña</th><th>Link</th><th>Contactos</th><th>Mensajes</th><th>Último</th></tr></thead><tbody id="tbody"></tbody></table>
+</div>
+
+<script>
+async function createCamp(){
+  const name=document.getElementById('name').value.trim();
+  const welcome=document.getElementById('msg').value.trim();
+  if(!name) return alert('Pon nombre');
+  await fetch('/api/campaigns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,welcome})});
+  const waNumber = '573001234567'; // CAMBIA por tu numero sin + ni espacios
+  const link = `https://wa.me/${waNumber}?text=${encodeURIComponent(welcome + ' ['+name+']')}`;
+  document.getElementById('linkArea').innerHTML = `<div class="link-box"><b>Link de seguimiento generado:</b><br>${link}<br><br><span class="badge-yellow">Tag: Escribió por campaña: ${name}</span><br><button class="btn-black" style="margin-top:8px" onclick="navigator.clipboard.writeText('${link}');alert('Link copiado')">Copiar Link</button></div>`;
+  load();
+}
+async function load(){
+  const camps = await (await fetch('/api/campaigns')).json();
+  const contacts = await (await fetch('/api/contacts')).json();
+  document.getElementById('tbody').innerHTML = camps.map(c=>{
+    const related = contacts.filter(x=> (x.campaignName||'').toLowerCase() === c.name.toLowerCase() || (x.tag||'').toLowerCase()===c.name.toLowerCase());
+    const msgs = related.reduce((a,b)=>a+(b.unread||0)+1,0);
+    return `<tr><td><span class="badge-yellow">${c.name}</span></td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">wa.me/...${c.name}</td><td><b>${related.length}</b></td><td>${c.totalMessages||related.length}</td><td>${c.lastSeen?new Date(c.lastSeen).toLocaleString():''}</td></tr>`;
+  }).join('') || '<tr><td colspan=5 style="color:#94a3b8;text-align:center">No hay campañas aún</td></tr>';
+}
+load();
+</script>
 </body></html>
