@@ -1,120 +1,103 @@
 const express = require('express');
-const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+app.use(express.static('public'));
 
 const DATA_FILE = path.join(__dirname, 'data.json');
-let db = { contacts: {}, messages: {}, campaigns: {} };
 
-try {
-  if (fs.existsSync(DATA_FILE)) {
-    const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    db.contacts = raw.contacts || {};
-    db.messages = raw.messages || {};
-    db.campaigns = raw.campaigns || {};
-  }
-} catch(e){}
-
-function saveDB(){
-  fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
-}
-
-function normalizarTel(tel){
-  if(!tel) return '';
+function normalizar(tel){
+  if(!tel) return null;
   let t = tel.toString().replace(/\D/g,'');
-  if(t.length == 10) t = '57' + t;
-  if(t.startsWith('0057')) t = t.substring(2);
+  if(t.length < 8) return null; // evita contactos como "Gabriela" sin numero
   return t;
 }
 
-app.get('/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-    return res.status(200).send(challenge);
-  }
-  res.sendStatus(403);
+function leerData(){
+  try{
+    if(!fs.existsSync(DATA_FILE)) return {contacts:[], messages:{}};
+    const d = JSON.parse(fs.readFileSync(DATA_FILE,'utf8'));
+    if(!d.contacts) d.contacts = [];
+    if(!d.messages) d.messages = {};
+    // Limpia contactos sin telefono
+    d.contacts = d.contacts.filter(c => c.telefono && normalizar(c.telefono));
+    return d;
+  }catch(e){ return {contacts:[], messages:{}} }
+}
+function guardarData(data){
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+// API CONTACTOS
+app.get('/api/contacts', (req,res)=>{
+  const data = leerData();
+  res.json(data.contacts);
 });
 
-app.post('/webhook', (req, res) => {
-  try {
+// API MENSAJES
+app.get('/api/messages/:tel', (req,res)=>{
+  const data = leerData();
+  const tel = normalizar(req.params.tel);
+  res.json(data.messages[tel] || []);
+});
+
+// WEBHOOK VERIFICACION
+app.get('/webhook', (req,res)=>{
+  const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'klido123';
+  if(req.query['hub.verify_token'] === VERIFY_TOKEN) res.send(req.query['hub.challenge']);
+  else res.sendStatus(403);
+});
+
+// WEBHOOK MENSAJES ENTRANTES
+app.post('/webhook', (req,res)=>{
+  const data = leerData();
+  try{
     const entry = req.body.entry?.[0]?.changes?.[0]?.value;
-    if (!entry ||!entry.messages) return res.sendStatus(200);
-    const msg = entry.messages[0];
-    const telefono = normalizarTel(msg.from);
-    const texto = msg.text?.body || msg.button?.text || '[Mensaje no texto]';
+    const msg = entry?.messages?.[0];
+    const contact = entry?.contacts?.[0];
+    if(msg && contact){
+      const tel = normalizar(msg.from);
+      const nombre = contact.profile?.name || tel;
+      if(!tel) return res.sendStatus(200);
 
-    if (!db.contacts[telefono]) {
-      db.contacts[telefono] = { telefono, nombre: entry.contacts?.[0]?.profile?.name || telefono, creado: new Date().toISOString() };
+      if(!data.contacts.find(c=>c.telefono===tel)){
+        data.contacts.unshift({telefono: tel, nombre: nombre});
+      }
+      if(!data.messages[tel]) data.messages[tel]=[];
+      data.messages[tel].push({
+        texto: msg.text?.body || '[archivo]',
+        tipo: 'recibido',
+        fecha: new Date().toISOString()
+      });
+      guardarData(data);
     }
-    if (!db.messages[telefono]) db.messages[telefono] = [];
-
-    db.messages[telefono].push({
-      id: msg.id,
-      telefono,
-      tipo: 'recibido',
-      texto,
-      fecha: new Date().toISOString()
-    });
-    saveDB();
-  } catch(e){ console.error(e) }
+  }catch(e){ console.log(e) }
   res.sendStatus(200);
 });
 
-app.get('/api/contacts', (req, res) => {
-  res.json(Object.values(db.contacts));
-});
+// ENVIAR MENSAJE
+app.post('/api/send', async (req,res)=>{
+  const {to, texto} = req.body;
+  const tel = normalizar(to);
+  if(!tel ||!texto) return res.status(400).json({error:'faltan datos'});
 
-app.get('/api/messages/:telefono', (req, res) => {
-  const tel = normalizarTel(req.params.telefono);
-  res.json(db.messages[tel] || []);
-});
+  const TOKEN = process.env.WHATSAPP_TOKEN;
+  const PHONE_ID = process.env.PHONE_NUMBER_ID;
 
-app.post('/api/send', async (req, res) => {
-  try {
-    let { to, texto } = req.body;
-    const telefono = normalizarTel(to);
-    const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-    const TOKEN = process.env.WHATSAPP_TOKEN;
-
-    const resp = await fetch(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: telefono,
-        type: "text",
-        text: { body: texto }
-      })
+  try{
+    await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${TOKEN}`,'Content-Type':'application/json'},
+      body: JSON.stringify({messaging_product:'whatsapp', to: tel, text:{body:texto}})
     });
-    const data = await resp.json();
-    if(!resp.ok) return res.status(400).json(data);
-
-    if (!db.messages[telefono]) db.messages[telefono] = [];
-    db.messages[telefono].push({
-      id: data.messages?.[0]?.id || Date.now().toString(),
-      telefono,
-      tipo: 'enviado',
-      texto,
-      fecha: new Date().toISOString()
-    });
-    saveDB();
-    res.json({ ok: true, data });
-  } catch(e){ res.status(500).json({ error: e.message }); }
+    const data = leerData();
+    if(!data.messages[tel]) data.messages[tel]=[];
+    data.messages[tel].push({texto, tipo:'enviado', fecha: new Date().toISOString()});
+    guardarData(data);
+    res.json({ok:true});
+  }catch(e){ res.status(500).json({error:e.message}) }
 });
 
-// ESTO QUITA EL CANNOT GET /bandeja
-app.get('/bandeja', (req,res) => res.sendFile(path.join(__dirname,'public','bandeja.html')));
-app.get('/campanas', (req,res) => res.sendFile(path.join(__dirname,'public','campanas.html')));
-app.get('/campañas', (req,res) => res.sendFile(path.join(__dirname,'public','campanas.html')));
-
-app.listen(PORT, () => console.log(`CRM corriendo en ${PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, ()=>console.log('Corriendo en '+PORT));
