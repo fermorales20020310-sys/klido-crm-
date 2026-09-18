@@ -1,3 +1,62 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Campañas</title></head><body style="background:#0f172a;color:white;padding:40px;font-family:sans-serif">
-<h1>📢 Campañas</h1><p>Próximamente sistema de campañas masivas</p><a href="index.html" style="color:#0ea5e9">← Volver</a>
-</body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campañas - KLIDO</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}
+body{background:#0a101f;color:white;display:flex;height:100vh}
+.sidebar{width:260px;background:#111a2f;border-right:1px solid #1e2a45;padding:24px;display:flex;flex-direction:column}
+.logo-wrap{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.logo-wrap img{width:48px;height:48px;border-radius:12px;background:#0e172c;padding:6px}
+.nav button{background:transparent;border:none;color:#94a3b8;padding:12px 14px;border-radius:10px;text-align:left;cursor:pointer;width:100%;margin-bottom:6px}
+.nav button.active{background:#1a2744;color:white}
+.main{flex:1;padding:40px;overflow-y:auto}
+.card{background:#111a2f;border:1px solid #1e2a45;border-radius:16px;padding:24px;margin-bottom:20px}
+input,textarea{width:100%;background:#16233f;border:1px solid #1e2a45;padding:12px;border-radius:10px;color:white;margin-top:8px;outline:none}
+.btn{padding:12px 20px;background:#0ea5e9;border:none;border-radius:10px;color:white;cursor:pointer;font-weight:600;margin-top:12px}
+.tag{background:#16233f;padding:6px 12px;border-radius:20px;font-size:12px;display:inline-block;margin:4px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+<div class="logo-wrap"><img src="logo.png"><h1 style="font-size:14px">KLIDO AVANZA</h1></div>
+<div class="nav">
+<button onclick="location.href='index.html'">💬 Bandeja de entrada</button>
+<button class="active" onclick="location.href='campanas.html'">📢 Campañas</button>
+<button onclick="location.href='index.html'">📊 Dashboard</button>
+</div>
+</div>
+<div class="main">
+<h1 style="margin-bottom:20px">📢 Campañas</h1>
+<div class="card">
+<h3>Nueva Campaña</h3>
+<input id="campName" placeholder="Nombre de campaña (ej: Promo Febrero)">
+<textarea id="campMsg" rows="4" placeholder="Mensaje de la campaña... Hola {nombre}..."></textarea>
+<button class="btn" onclick="crearCampana()">Crear Campaña</button>
+</div>
+<div class="card">
+<h3>Campañas Creadas</h3>
+<div id="lista">No hay campañas aún. Crea la primera arriba.</div>
+</div>
+</div>
+<script>
+let campanas = JSON.parse(localStorage.getItem('klido_camp')||'[]');
+function render(){
+ let h=''; campanas.forEach((c,i)=>{
+  h+=`<div class="tag">${c.nombre} - ${c.mensaje.substring(0,30)}... <button onclick="borrar(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;margin-left:8px">X</button></div>`;
+ }); if(h) document.getElementById('lista').innerHTML=h;
+}
+function crearCampana(){
+ let n=document.getElementById('campName').value;
+ let m=document.getElementById('campMsg').value;
+ if(!n||!m) return alert('Llena todo');
+ campanas.push({nombre:n,mensaje:m}); localStorage.setItem('klido_camp',JSON.stringify(campanas));
+ document.getElementById('campName').value=''; document.getElementById('campMsg').value='';
+ render(); alert('Campaña creada ✅');
+}
+function borrar(i){campanas.splice(i,1); localStorage.setItem('klido_camp',JSON.stringify(campanas)); render();}
+render();
+</script>
+</body>
+</html>
