@@ -3,78 +3,112 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const app = express();
+
 app.use(bodyParser.json());
-app.use(express.static('public'));
+app.use(express.static(__dirname));
 
-const DATA_FILE = './data.json';
-if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, JSON.stringify({contacts:[], messages:{}}));
-function getData(){ try{ return JSON.parse(fs.readFileSync(DATA_FILE)); }catch(e){ return {contacts:[], messages:{}} } }
-function saveData(d){ fs.writeFileSync(DATA_FILE, JSON.stringify(d, null, 2)); }
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'klido123';
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
+const DATA_FILE = path.join(__dirname, 'data.json');
 
-app.get('/bandeja', (req,res) => res.sendFile(path.join(__dirname, 'public', 'bandeja.html')));
-app.get('/api/contacts', (req,res) => {
-  const data = getData();
-  data.contacts.sort((a,b) => (b.isNew?1:0) - (a.isNew?1:0) || new Date(b.lastTime) - new Date(a.lastTime));
-  res.json(data.contacts);
+if (!fs.existsSync(DATA_FILE)) {
+  fs.writeFileSync(DATA_FILE, '[]');
+}
+
+function leerHistorial() {
+  try { return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } 
+  catch(e) { return []; }
+}
+
+function guardarMensaje(phone, text, from) {
+  const historial = leerHistorial();
+  historial.push({
+    phone: phone,
+    text: text,
+    from: from,
+    time: new Date().toLocaleString('es-CO', {timeZone: 'America/Bogota'}),
+    timestamp: Date.now()
+  });
+  fs.writeFileSync(DATA_FILE, JSON.stringify(historial, null, 2));
+  console.log(`MENSAJE GUARDADO [${from}] ${phone}: ${text}`);
+}
+
+// Verificacion para Meta
+app.get('/webhook', (req, res) => {
+  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === VERIFY_TOKEN) {
+    console.log('WEBHOOK VERIFICADO');
+    res.status(200).send(req.query['hub.challenge']);
+  } else {
+    res.sendStatus(403);
+  }
 });
-app.get('/api/messages/:tel', (req,res) => res.json(getData().messages[req.params.tel] || []));
-app.post('/api/send', async (req,res) => {
-  const { to, texto } = req.body;
-  const data = getData();
-  if(!data.messages[to]) data.messages[to] = [];
-  data.messages[to].push({ texto, tipo: 'enviado', fecha: new Date() });
-  let c = data.contacts.find(x=>x.telefono===to);
-  if(c){ c.unread=0; c.isNew=false; c.lastMsg=texto; c.lastTime=new Date(); }
-  saveData(data);
-  try{
-    const r = await fetch(`https://graph.facebook.com/v19.0/${process.env.PHONE_NUMBER_ID}/messages`, {
-      method:'POST',
-      headers:{'Authorization':`Bearer ${process.env.WHATSAPP_TOKEN}`,'Content-Type':'application/json'},
-      body:JSON.stringify({messaging_product:'whatsapp', to:to, type:'text', text:{body:texto}})
+
+// Donde llegan los mensajes
+app.post('/webhook', (req, res) => {
+  const body = req.body;
+  if (body.object === 'whatsapp_business_account') {
+    body.entry?.forEach(entry => {
+      entry.changes?.forEach(change => {
+        const messages = change.value?.messages;
+        if (messages) {
+          messages.forEach(msg => {
+            const phone = msg.from;
+            const text = msg.text?.body || `[${msg.type}]`;
+            guardarMensaje(phone, text, 'cliente');
+          });
+        }
+      });
     });
-    res.json(await r.json());
-  }catch(e){ res.json({ok:false}) }
-});
-app.post('/webhook', (req,res) => {
-  try{
-    const value = req.body.entry?.[0]?.changes?.[0]?.value;
-    const msg = value?.messages?.[0];
-    const contact = value?.contacts?.[0];
-    if(msg){
-      const from = msg.from;
-      const text = msg.text?.body || 'Mensaje nuevo';
-      const nombre = contact?.profile?.name || from;
-      const data = getData();
-      let c = data.contacts.find(x=>x.telefono===from);
-      if(!c){
-        c={telefono:from, nombre:nombre, unread:1, isNew:true, lastMsg:text, lastTime:new Date()};
-        data.contacts.push(c);
-      }else{
-        c.unread=(c.unread||0)+1; c.isNew=true; c.lastMsg=text; c.lastTime=new Date();
-      }
-      if(!data.messages[from]) data.messages[from]=[];
-      data.messages[from].push({texto:text, tipo:'recibido', fecha:new Date()});
-      saveData(data);
-    }
-  }catch(e){}
+  }
   res.sendStatus(200);
 });
-app.get('/webhook', (req,res) => {
-  if(req.query['hub.verify_token'] === process.env.VERIFY_TOKEN) res.send(req.query['hub.challenge']);
-  else res.sendStatus(403);
-});
-app.get('/api/test', (req,res)=>{
-  const data=getData();
-  const tel='573001234567';
-  if(!data.contacts.find(c=>c.telefono===tel)){
-    data.contacts.push({telefono:tel, nombre:'Cliente Prueba', unread:3, isNew:true, lastMsg:'Hola, me interesa una casa', lastTime:new Date()});
-    data.messages[tel]=[{texto:'Hola, me interesa una casa', tipo:'recibido', fecha:new Date()}];
-    saveData(data);
+
+// APIs para la bandeja
+app.get('/api/historial', (req, res) => {
+  let historial = leerHistorial();
+  if (req.query.phone) {
+    historial = historial.filter(m => m.phone === req.query.phone);
   }
-  res.redirect('/bandeja');
+  res.json(historial);
 });
-app.get('/api/clear', (req,res)=>{
-  saveData({contacts:[], messages:{}});
-  res.redirect('/bandeja');
+
+app.get('/api/conversaciones', (req, res) => {
+  const historial = leerHistorial();
+  const conv = {};
+  historial.forEach(m => {
+    if (!conv[m.phone]) conv[m.phone] = { phone: m.phone, ultimo: m.text, time: m.time, timestamp: m.timestamp, total: 0 };
+    conv[m.phone].ultimo = m.text;
+    conv[m.phone].time = m.time;
+    conv[m.phone].timestamp = m.timestamp;
+    conv[m.phone].total++;
+  });
+  res.json(Object.values(conv).sort((a,b) => b.timestamp - a.timestamp));
 });
-app.listen(process.env.PORT || 3000, ()=>console.log('LISTO'));
+
+app.post('/api/enviar', async (req, res) => {
+  const { phone, text } = req.body;
+  try {
+    const r = await fetch(`https://graph.facebook.com/v22.0/${PHONE_NUMBER_ID}/messages`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', to: phone, text: { body: text } })
+    });
+    const data = await r.json();
+    if (data.error) {
+      console.log('ERROR ENVIANDO:', data.error);
+      return res.status(400).json(data);
+    }
+    guardarMensaje(phone, text, 'yo');
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'bandeja.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log('LISTO en puerto ' + PORT));
