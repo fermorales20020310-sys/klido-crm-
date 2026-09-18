@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas KLIDO</title>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');*{font-family:Inter}body{margin:0;background:#f1f5f9}.h{height:62px;background:#2563eb;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff}.h img{height:30px;background:#fff;border-radius:8px;padding:3px}.b{background:#111827;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}.card{max-width:800px;margin:24px auto;background:#fff;padding:24px;border-radius:16px;border:1px solid #e2e8f0}input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;margin:8px 0}</style></head>
+<body>
+<div class="h"><div style="display:flex;gap:10px;align-items:center"><img src="logo.png"><b>KLIDO AVANZA</b></div><button class="b" onclick="location.href='/bandeja'">← Bandeja</button></div>
+<div class="card"><h2>Campaña alion_co</h2><p>Activa esta campaña para que en la bandeja salga el distintivo amarillo <b>Escribió por campaña: alion_co</b></p><input id="n" value="alion_co"><button class="b" style="width:100%;margin-top:12px;padding:14px" onclick="localStorage.setItem('klido_camp',n.value);alert('Campaña '+n.value+' activada');location.href='/bandeja'">Activar Campaña</button></div>
+</body></html>
