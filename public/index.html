@@ -1,34 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klido CRM - Bandeja</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto}
+body{background:#f0f2f5;display:flex;height:100vh}
+#sidebar{width:380px;background:white;border-right:1px solid #e9edef;display:flex;flex-direction:column}
+#header{padding:16px;background:#f0f2f5;display:flex;justify-content:space-between;align-items:center}
+#header h2{font-size:18px}
+#filters{display:flex;gap:6px;padding:10px;background:white;border-bottom:1px solid #e9edef}
+.filter{padding:6px 12px;border-radius:20px;border:1px solid #ddd;background:white;cursor:pointer;font-size:12px;font-weight:600}
+.filter.active{background:#25D366;color:white;border-color:#25D366}
+#search{padding:10px}
+#search input{width:100%;padding:10px 14px;border-radius:8px;border:none;background:#f0f2f5;outline:none}
+#chats{flex:1;overflow-y:auto}
+.chat{padding:12px 14px;border-bottom:1px solid #f0f2f5;cursor:pointer;display:flex;gap:10px}
+.chat:hover{background:#f5f6f6}
+.chat.active{background:#f0f2f5}
+.chat.unanswered{background:#fff8f8}
+.avatar{width:45px;height:45px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.info{flex:1;overflow:hidden}
+.top{display:flex;justify-content:space-between;align-items:center}
+.name{font-weight:600;font-size:14px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.time{font-size:11px;color:#667781}
+.last{font-size:13px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.badge-campaign{background:#FFD700;color:#000;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:800;letter-spacing:0.3px}
+.badge-unanswered{background:#FF3B30;color:white;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:800;animation:pulse 1.5s infinite}
+@keyframes pulse{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
+#main{flex:1;display:flex;flex-direction:column;background:#efeae2}
+#mainHeader{padding:14px 16px;background:#f0f2f5;border-bottom:1px solid #e9edef;display:flex;justify-content:space-between;align-items:center}
+#messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:8px;background-image:url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')}
+.msg{max-width:65%;padding:8px 10px;border-radius:8px;font-size:14px;position:relative;box-shadow:0 1px 0.5px rgba(0,0,0,0.13)}
+.msg.in{background:white;align-self:flex-start;border-top-left-radius:0}
+.msg.out{background:#d9fdd3;align-self:flex-end;border-top-right-radius:0}
+.meta{font-size:10px;color:#667781;margin-top:4px;display:flex;gap:4px;justify-content:flex-end}
+.tag{font-size:9px;padding:2px 5px;border-radius:4px;font-weight:700}
+.tag-campaign{background:#FFD700;color:#000}
+#inputArea{padding:10px 16px;background:#f0f2f5;display:flex;gap:10px;align-items:center}
+#inputArea input{flex:1;padding:12px 14px;border-radius:8px;border:none;outline:none}
+#inputArea button{background:#25D366;color:white;border:none;padding:10px 18px;border-radius:8px;font-weight:700;cursor:pointer}
+.empty{display:flex;flex:1;align-items:center;justify-content:center;color:#667781;flex-direction:column}
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div id="header"><h2>Klido CRM</h2><a href="/campaigns.html" style="text-decoration:none;background:#25D366;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700">📢 CAMPAÑAS</a></div>
+  <div id="filters">
+    <div class="filter active" data-f="all" onclick="setFilter('all')">Todos</div>
+    <div class="filter" data-f="unanswered" onclick="setFilter('unanswered')">🔴 Sin contestar</div>
+    <div class="filter" data-f="campaign" onclick="setFilter('campaign')">🟡 Campaña</div>
+  </div>
+  <div id="search"><input id="q" placeholder="Buscar chat..." oninput="render()"></div>
+  <div id="chats">Cargando historial...</div>
+</div>
+<div id="main">
+  <div id="mainHeader"><div><b id="currentName">Selecciona un chat</b><div id="currentSub" style="font-size:12px;color:#667781"></div></div></div>
+  <div id="messages"><div class="empty"><h3>👋 Bienvenido a Klido CRM</h3><p>Historial eterno + plantillas dinámicas + marquillas</p><p style="margin-top:10px;font-size:12px">🔴 = sin contestar | 🟡 = viene de campaña</p></div></div>
+  <div id="inputArea" style="display:none"><input id="msgInput" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Enviar</button></div>
+</div>
+
+<script>
+let allChats=[], currentWa=null, filter='all';
+
 async function loadChats(){
- const r=await fetch('/api/chats');
- const chats=await r.json();
- const list=document.getElementById('chatsList'); // tu div de chats
- if(!list) return;
- 
- list.innerHTML=chats.map(c=>{
-  const isUnanswered = c.direction === 'in' || (c.source !== 'inbox' && c.text?.includes && !c.lastOutgoing);
-  // LOGICA REAL: si el último mensaje es entrante = sin contestar
-  const lastIsIncoming = c.source === 'inbox' ? false : true; // mejor lo calculamos abajo
-  
-  const isFromCampaign = c.source === 'campaign';
-  const isIncoming = c.direction === 'in' || c.status === 'delivered'; // depende de tu DB
-  
-  // Para tu server actual la forma 100% correcta:
-  const sinContestar = c.direction === 'in' || (c.text && c.source !== 'inbox' && c.source !== undefined && c.direction !== 'out');
-  // Usaremos la consulta mejorada abajo
-  return `
-  <div class="chat-item ${sinContestar?'unanswered':''}" onclick="openChat('${c.wa_id}')">
-    <div style="display:flex;justify-content:space-between">
-      <b>${c.name||c.wa_id}</b>
-      <div>
-        ${c.source==='campaign'?'<span style="background:#FFD700;color:#000;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold">📢 CAMPAÑA</span>':''}
-        ${c.direction==='in'?'<span style="background:#ff4444;color:white;padding:3px 8px;border-radius:12px;font-size:11px;margin-left:4px">● SIN CONTESTAR</span>':''}
-      </div>
-    </div>
-    <small>${c.text?.slice(0,60)||''}</small>
-    <small style="float:right">${new Date(c.created_at).toLocaleTimeString()}</small>
-  </div>`;
- }).join('');
+ try{
+  const r=await fetch('/api/chats');
+  const data=await r.json();
+  allChats=data;
+  render();
+ }catch(e){ document.getElementById('chats').innerHTML='Error cargando chats'; }
 }
 
-// LOGICA 100% REAL PARA SIN CONTESTAR - necesita saber ultimo mensaje
-// Tu server ya lo hace, pero para que sea perfecto usa esto en /api/chats:
+function setFilter(f){
+ filter=f;
+ document.querySelectorAll('.filter').forEach(el=>el.classList.toggle('active', el.dataset.f===f));
+ render();
+}
+
+function render(){
+ const q=(document.getElementById('q').value||'').toLowerCase();
+ let list=allChats.filter(c=>{
+  if(filter==='unanswered' && !c.unanswered) return false;
+  if(filter==='campaign' && c.source!=='campaign' && c.template_name==null) return false;
+  if(q && !(c.wa_id.includes(q) || (c.name||'').toLowerCase().includes(q) || (c.text||'').toLowerCase().includes(q))) return false;
+  return true;
+ });
+ const html=list.map(c=>{
+  const isCamp = c.source==='campaign' || !!c.template_name;
+  const unanswered = c.unanswered===true || c.direction==='in';
+  const time = new Date(c.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const active = c.wa_id===currentWa?'active':'';
+  const unClass = unanswered?'unanswered':'';
+  return `<div class="chat ${active} ${unClass}" onclick="openChat('${c.wa_id}')">
+    <div class="avatar">${(c.name||c.wa_id).slice(0,2).toUpperCase()}</div>
+    <div class="info">
+      <div class="top"><div class="name">${(c.name||c.wa_id).slice(0,18)} ${isCamp?'<span class="badge-campaign">CAMPAÑA</span>':''} ${unanswered?'<span class="badge-unanswered">SIN CONTESTAR</span>':''}</div><div class="time">${time}</div></div>
+      <div class="last">${(c.text||'').slice(0,45)}</div>
+    </div>
+  </div>`;
+ }).join('');
+ document.getElementById('chats').innerHTML=html||'<div style="padding:20px;color:#667781">Sin chats en este filtro</div>';
+}
+
+async function openChat(wa){
+ currentWa=wa;
+ const chat=allChats.find(c=>c.wa_id===wa);
+ document.getElementById('currentName').textContent=chat?.name||wa;
+ document.getElementById('currentSub').textContent=wa + (chat?.source==='campaign'?' • Viene de campaña 🟡':'');
+ document.getElementById('inputArea').style.display='flex';
+ render();
+ const r=await fetch(`/api/messages/${wa}`);
+ const msgs=await r.json();
+ const box=document.getElementById('messages');
+ box.innerHTML=msgs.map(m=>{
+  const isIn=m.direction==='in';
+  const isCamp=m.source==='campaign';
+  return `<div class="msg ${isIn?'in':'out'}">
+    ${m.text}
+    <div class="meta">
+      ${isCamp?'<span class="tag tag-campaign">CAMPAÑA: '+ (m.template_name||'') +'</span>':''}
+      <span>${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+      ${!isIn?'<span>✓✓</span>':''}
+    </div>
+  </div>`;
+ }).join('');
+ box.scrollTop=box.scrollHeight;
+}
+
+async function send(){
+ const input=document.getElementById('msgInput');
+ const text=input.value.trim();
+ if(!text||!currentWa) return;
+ input.value='';
+ const box=document.getElementById('messages');
+ box.innerHTML+=`<div class="msg out">${text}<div class="meta"><span>Enviando...</span></div></div>`;
+ box.scrollTop=box.scrollHeight;
+ const r=await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:currentWa,message:text})});
+ const j=await r.json();
+ if(j.ok) openChat(currentWa); else alert('Error enviando');
+}
+
+loadChats();
+setInterval(loadChats,3000);
+</script>
+</body>
+</html>
