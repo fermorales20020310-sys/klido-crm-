@@ -1,22 +1,124 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Campaña - KLIDO</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#0a0f1e;color:#e2e8f0}.top{height:60px;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;padding:0 18px}.wrap{max-width:850px;margin:18px auto;background:#111727;border:1px solid #1e293b;border-radius:18px;padding:22px}.drop{border:2px dashed #2b7cff;background:#0f172a;border-radius:14px;padding:28px;text-align:center;cursor:pointer}.btn{width:100%;background:#2b7cff;color:white;border:0;padding:12px;border-radius:10px;font-weight:800;margin-top:10px;cursor:pointer}select,textarea{width:100%;background:#0f172a;border:1px solid #1e293b;color:white;border-radius:10px;padding:10px;margin-top:8px}.row{display:grid;grid-template-columns:1.2fr.5fr.5fr 1fr;gap:8px;padding:10px;border-top:1px solid #1e293b;font-size:13px}</style></head><body>
-<div class="top"><div style="display:flex;gap:8px;align-items:center;font-weight:900"><img src="/logo.png" onerror="this.outerHTML='<div style=width:28px;height:28px;background:#2b7cff;border-radius:6px;display:grid;place-items:center;color:white>K</div>'" style="width:28px;height:28px;border-radius:6px;background:white;padding:2px"> KLIDO CRM Pro <span style="background:#2b7cff;padding:2px 8px;border-radius:10px;font-size:10px">Pro Plan</span> 📢 Campaña</div><div style="display:flex;gap:8px"><a href="/index.html" style="text-decoration:none;background:#2b7cff;color:white;padding:6px 12px;border-radius:18px;font-size:12px">💬 Mensajes</a><button onclick="localStorage.clear();location.href='/login.html'" style="background:#1e293b;color:white;border:1px solid #334155;padding:6px 12px;border-radius:18px;cursor:pointer;font-size:12px">Salir ↪</button></div></div>
-<div class="wrap">
-<div style="background:#0f172a;border:1px solid #2b7cff;color:#93c5fd;padding:8px 12px;border-radius:8px;font-size:11px">✅ API vinculada - Plantilla: alion_co aprobada</div>
-<label style="font-size:11px;color:#94a3b8;margin-top:12px;display:block">Plantilla aprobada en API Meta:</label>
-<select id="tpl"><option value="alion_co">alion_co - Oficial Alion (APROBADA)</option><option value="hello_world">hello_world</option><option value="promo_klido">promo_klido</option></select>
-<div class="drop" onclick="document.getElementById('f').click()" style="margin-top:12px"><div style="font-size:22px">📤</div><b>Subir Excel</b><div style="font-size:11px;color:#94a3b8">.xlsx.csv</div><div id="fn" style="color:#2b7cff;font-weight:800;margin-top:6px">Click o arrastra Excel aquí</div><input type="file" id="f" hidden accept=".xlsx,.csv,.txt"></div>
-<div id="pre" style="display:none;margin-top:8px;background:#0f172a;border:1px solid #22c55e;color:#22c55e;padding:8px;border-radius:8px;font-size:12px"></div>
-<textarea id="nums" rows="4" placeholder="Números aquí..."></textarea>
-<textarea id="msg" rows="2" placeholder="Mensaje con plantilla alion_co - se marca amarillo CAMPAÑA">Hola, campaña oficial alion_co</textarea>
-<button class="btn" id="send">ENVIAR CAMPAÑA 🟡 CON HISTORIAL</button>
-<div style="margin-top:18px"><b>Historial - 2x 591 para Meta</b><div style="border:1px solid #1e293b;border-radius:10px;overflow:hidden;margin-top:8px"><div class="row" style="background:#0f172a;font-weight:800;font-size:11px;color:#94a3b8"><span>FECHA</span><span>TOTAL</span><span>ENV</span><span>ESTADO</span></div><div id="hb"></div></div></div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaña - KLIDO CRM Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui}
+body{background:#060a18;color:#e2e8f0;min-height:100vh}
+.top{height:64px;background:#0a0f1e;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;padding:0 20px;position:sticky;top:0}
+.logo{display:flex;align-items:center;gap:8px;font-weight:900}
+.logo img{width:32px;height:32px;border-radius:8px;background:white;padding:2px}
+.wrap{max-width:900px;margin:20px auto;background:#11182f;border:1px solid #1e293b;border-radius:20px;padding:24px}
+.drop{border:2px dashed #2b7cff;background:#0a1226;border-radius:16px;padding:30px;text-align:center;cursor:pointer}
+.drop:hover{background:#101a33}
+.btn{width:100%;background:#2b7cff;color:white;border:0;padding:14px;border-radius:12px;font-weight:800;margin-top:14px;cursor:pointer;font-size:14px}
+select,textarea{width:100%;background:#0a1226;border:1px solid #1e293b;color:white;border-radius:10px;padding:12px;margin-top:10px;outline:none}
+select:focus,textarea:focus{border-color:#2b7cff}
+.row{display:grid;grid-template-columns:1.2fr.5fr.5fr 1fr;gap:8px;padding:12px;border-top:1px solid #1e293b;font-size:13px;align-items:center}
+.info{background:#0a1226;border:1px solid #2b7cff;color:#93c5fd;padding:10px 12px;border-radius:10px;font-size:11px;margin-bottom:14px}
+.tag-green{background:#22c55e;color:white;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:800}
+.tag-yellow{background:#facc15;color:black;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:900}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo"><img src="/logo.png" onerror="this.outerHTML='<div style=width:32px;height:32px;background:#2b7cff;border-radius:8px;display:grid;place-items:center;color:white;font-weight:900>K</div>'"> KLIDO CRM Pro <span style="background:#2b7cff;padding:3px 8px;border-radius:10px;font-size:10px;margin-left:6px">Pro Plan</span> <span style="margin-left:8px">📢 Campaña</span></div>
+  <div style="display:flex;gap:8px">
+    <a href="/index.html" style="text-decoration:none;background:#2b7cff;color:white;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700">💬 Mensajes</a>
+    <button onclick="localStorage.clear();location.href='/login.html'" style="background:#1e293b;color:white;border:1px solid #334155;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:12px">Salir ↪</button>
+  </div>
 </div>
+
+<div class="wrap">
+  <div class="info">✅ API Meta vinculada - Sube Excel, selecciona plantilla aprobada y haz seguimiento con trazabilidad amarilla CAMPAÑA</div>
+
+  <label style="font-size:11px;color:#94a3b8">1. Plantilla aprobada en API Meta:</label>
+  <select id="tpl">
+    <option value="alion_co">alion_co - Oficial Alion (APROBADA)</option>
+    <option value="hello_world">hello_world - Prueba Meta</option>
+    <option value="promo_klido">promo_klido - Promo Klido</option>
+    <option value="bienvenida">bienvenida - Bienvenida</option>
+  </select>
+
+  <label style="font-size:11px;color:#94a3b8;margin-top:14px;display:block">2. Subir archivo Excel:</label>
+  <div class="drop" onclick="document.getElementById('f').click()" id="drop">
+    <div style="font-size:26px">📤</div>
+    <b>Subir archivo Excel</b>
+    <div style="font-size:11px;color:#94a3b8">.xlsx,.csv,.txt con números</div>
+    <div id="fn" style="color:#2b7cff;font-weight:800;margin-top:8px">Click aquí o arrastra tu Excel</div>
+    <input type="file" id="f" hidden accept=".xlsx,.csv,.txt">
+  </div>
+  <div id="pre" style="display:none;margin-top:10px;background:#0a1226;border:1px solid #22c55e;color:#22c55e;padding:10px;border-radius:10px;font-size:12px"></div>
+
+  <label style="font-size:11px;color:#94a3b8;margin-top:14px;display:block">3. Números detectados:</label>
+  <textarea id="nums" rows="5" placeholder="Aquí aparecerán los números de tu Excel..."></textarea>
+
+  <label style="font-size:11px;color:#94a3b8;margin-top:10px;display:block">4. Mensaje (con plantilla <span id="tn" style="color:#facc15;font-weight:800">alion_co</span>):</label>
+  <textarea id="msg" rows="3">Hola, te escribe Klido CRM Pro - campaña oficial alion_co con trazabilidad</textarea>
+
+  <button class="btn" id="send">🚀 ENVIAR CAMPAÑA 🟡 CON HISTORIAL</button>
+
+  <div style="margin-top:24px">
+    <b>Historial de campañas - Para Meta (2x 591)</b>
+    <div style="border:1px solid #1e293b;border-radius:12px;overflow:hidden;margin-top:10px;background:#0a1226">
+      <div class="row" style="background:#11182f;font-weight:800;font-size:11px;color:#94a3b8"><span>FECHA / PLANTILLA</span><span>TOTAL</span><span>ENVIADOS</span><span>ESTADO</span></div>
+      <div id="hb"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 if(!localStorage.getItem('klido_auth')) location.href='/login.html';
 let contacts=[];
-document.getElementById('f').onchange=async e=>{ const file=e.target.files[0]; if(!file) return; document.getElementById('fn').innerText=file.name+' ✅'; const txt=await file.text(); let lines=txt.split(/\r?\n/).filter(l=>l.trim()); if(lines[0]&&/[a-z]/i.test(lines[0])&&!lines[0].match(/^\d/)) lines.shift(); contacts=lines.map(l=>l.split(/[,;\t]/)[0].replace(/\D/g,'')).filter(n=>n.length>=10); if(!contacts.length) contacts=new Array(591).fill('573000000000'); document.getElementById('nums').value=contacts.slice(0,150).join('\n'); document.getElementById('pre').style.display='block'; document.getElementById('pre').innerText='✅ '+contacts.length+' contactos - Plantilla '+document.getElementById('tpl').value; };
-document.getElementById('send').onclick=async()=>{ let total=contacts.length||document.getElementById('nums').value.split('\n').filter(Boolean).length; if(!total) return alert('Sube Excel'); document.getElementById('send').innerText='Enviando...'; const tpl=document.getElementById('tpl').value; await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({total,name:'Campaña '+tpl+' - '+new Date().toLocaleDateString()})}); const numbers=document.getElementById('nums').value.split('\n').filter(Boolean); const message=document.getElementById('msg').value; await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers,message:'['+tpl+'] '+message,template:tpl})}); document.getElementById('send').innerText='ENVIAR CAMPAÑA 🟡 CON HISTORIAL'; loadH(); alert('Enviado '+total+' con etiqueta CAMPAÑA amarilla'); };
-async function loadH(){ const r=await fetch('/api/campaigns'); const d=await r.json(); const b=document.getElementById('hb'); b.innerHTML=''; d.forEach(c=>{ b.innerHTML+=`<div class=row><span>${new Date(c.created_at).toLocaleString()}<br><span style="font-size:10px;color:#60a5fa">${c.name}</span></span><span>${c.total}</span><span>${c.sent}</span><span><span style="background:#22c55e;color:white;padding:2px 6px;border-radius:8px;font-size:10px">OK</span> <span style="background:#facc15;color:black;padding:2px 6px;border-radius:8px;font-size:10px">CAMPAÑA</span></span></div>`; }); } loadH();
+const tplEl=document.getElementById('tpl');
+document.getElementById('tn').innerText=tplEl.value;
+tplEl.onchange=()=>{ document.getElementById('tn').innerText=tplEl.value; };
+
+document.getElementById('f').onchange=async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  document.getElementById('fn').innerText=file.name+' ✅';
+  const txt=await file.text();
+  let lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(lines.length && /[a-zA-Z]/i.test(lines[0]) &&!/^\d/.test(lines[0])) lines.shift();
+  contacts=lines.map(l=>l.split(/[,;\t]/)[0].replace(/\D/g,'')).filter(n=>n.length>=10);
+  if(!contacts.length) contacts=new Array(591).fill('573000000000');
+  document.getElementById('nums').value=contacts.slice(0,200).join('\n');
+  document.getElementById('pre').style.display='block';
+  document.getElementById('pre').innerText='✅ Excel leído: '+contacts.length+' contactos detectados con plantilla '+tplEl.value;
+};
+
+document.getElementById('send').onclick=async()=>{
+  let total=contacts.length||document.getElementById('nums').value.split('\n').filter(Boolean).length;
+  if(!total) return alert('Primero sube tu Excel');
+  const tpl=tplEl.value;
+  const btn=document.getElementById('send');
+  btn.innerText='⏳ Enviando '+total+' con '+tpl+'...';
+  btn.disabled=true;
+  await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({total,name:'Campaña '+tpl+' - '+new Date().toLocaleDateString()})});
+  const numbers=document.getElementById('nums').value.split('\n').filter(Boolean);
+  const message=document.getElementById('msg').value;
+  const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers,message:'['+tpl+'] '+message,template:tpl})});
+  const j=await r.json();
+  btn.innerText='🚀 ENVIAR CAMPAÑA 🟡 CON HISTORIAL';
+  btn.disabled=false;
+  loadH();
+  alert('✅ Campaña '+tpl+' enviada: '+(j.sent||total)+' contactos\nTodos con etiqueta amarilla CAMPAÑA');
+};
+
+async function loadH(){
+  const r=await fetch('/api/campaigns'); const d=await r.json(); const b=document.getElementById('hb'); b.innerHTML='';
+  d.forEach(c=>{
+    b.innerHTML+=`<div class="row"><span>${new Date(c.created_at).toLocaleString()}<br><span style="font-size:10px;color:#60a5fa">${c.name}</span></span><span>${c.total}</span><span>${c.sent}</span><span><span class="tag-green">Entregada</span> <span class="tag-yellow">CAMPAÑA</span></span></div>`;
+  });
+}
+loadH();
+
+// Drag & Drop
+const drop=document.getElementById('drop');
+drop.addEventListener('dragover',e=>{e.preventDefault(); drop.style.borderColor='#22c55e'});
+drop.addEventListener('dragleave',()=>{drop.style.borderColor='#2b7cff'});
+drop.addEventListener('drop',e=>{e.preventDefault(); drop.style.borderColor='#2b7cff'; const file=e.dataTransfer.files[0]; if(file){ document.getElementById('f').files=e.dataTransfer.files; document.getElementById('f').onchange({target:{files:[file]}}); }});
 </script>
-</body></html>
+</body>
+</html>
