@@ -1,21 +1,80 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - Klido</title>
 <script>if(localStorage.getItem('klido_auth')!=='ok')location.href='/login.html';</script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE;--bg:#E8F0FE}*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI'}body{background:var(--bg);min-height:100vh}
-#top{background:linear-gradient(135deg,var(--dark),#1a3a6b);padding:14px 24px;display:flex;align-items:center;gap:12px;color:white}
-#top b{font-size:16px}#top a{margin-left:auto;color:white;text-decoration:none;background:rgba(255,255,255,.15);padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700}
-.wrap{max-width:900px;margin:24px auto;padding:0 16px;display:grid;gap:16px}
-.card{background:var(--light);border-radius:16px;padding:22px;box-shadow:0 4px 20px rgba(10,25,49,.06);border:1px solid #c9d8f5}
-.card h3{color:var(--dark);font-size:16px}label{font-size:12px;font-weight:800;color:var(--dark);margin-top:14px;display:block}
-select,textarea{width:100%;padding:13px;margin-top:6px;border-radius:12px;border:1.5px solid #b9ccf0;background:#fff;outline:none}
+#top{background:linear-gradient(135deg,var(--dark),#1a3a6b);padding:14px 20px;display:flex;align-items:center;color:white}
+#top b{font-size:16px;flex:1}
+#top a{color:white;text-decoration:none;background:rgba(255,255,255,.15);padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700}
+#top button{background:#ff3b30;border:none;color:#fff;padding:8px 16px;border-radius:10px;font-weight:800;cursor:pointer;margin-left:10px}
+.wrap{max-width:900px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
+.card{background:var(--light);border-radius:16px;padding:22px;border:1px solid #c9d8f5;box-shadow:0 4px 20px rgba(10,25,49,.06)}
+.card h3{color:var(--dark);margin-bottom:8px}
+label{font-size:12px;font-weight:800;color:var(--dark);margin-top:14px;display:block}
+select,textarea{width:100%;padding:13px;margin-top:6px;border-radius:12px;border:1.5px solid #b9ccf0;background:#fff;outline:none;font-size:14px}
+.drop{margin-top:8px;border:2px dashed #185ADB;border-radius:12px;padding:20px;text-align:center;background:#fff;cursor:pointer;color:#0A1931;font-size:14px}
 .btn{width:100%;padding:15px;margin-top:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--dark),var(--mid));color:white;font-weight:800;font-size:15px;cursor:pointer}
-#log{margin-top:12px;font-size:13px;color:var(--mid);font-weight:700}</style></head><body>
-<div id="top"><b>📢 CAMPAÑAS</b><a href="/index.html">← Bandeja</a></div>
-<div class="wrap"><div class="card"><h3>Nueva campaña</h3>
-<label>Plantilla</label><select id="tpl"></select>
-<label>Números (uno por línea)</label><textarea id="nums" rows="5" placeholder="573001234567"></textarea>
-<button class="btn" onclick="sendBulk()">🚀 ENVIAR</button><div id="log"></div></div>
-<div class="card"><h3>Historial</h3><div id="list"></div></div></div>
-<script>async function load(){const r=await fetch('/api/templates');const t=await r.json();document.getElementById('tpl').innerHTML=t.map(x=>`<option value="${x.name}">${x.name}</option>`).join('');}
-async function sendBulk(){const nums=document.getElementById('nums').value.split('\n').map(s=>s.replace(/\D/g,'')).filter(n=>n.length>=10);const tpl=document.getElementById('tpl').value;if(!nums.length)return alert('Agrega números');document.getElementById('log').textContent='Enviando...';const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:nums,templateName:tpl})});const j=await r.json();document.getElementById('log').textContent=j.ok?'✅ Enviada':'❌ Error';loadC();}
-async function loadC(){const r=await fetch('/api/campaigns');const c=await r.json();document.getElementById('list').innerHTML=c.map(x=>`<div style="padding:10px;border-bottom:1px solid #d0ddf7"><b style="color:#0A1931">${x.name}</b> - ${x.total} contactos - ${x.status}</div>`).join('');}
-load();loadC();</script></body></html>
+#log{margin-top:12px;font-size:13px;color:var(--mid);font-weight:700}
+.hist{padding:12px;border-bottom:1px solid #d0ddf7;display:flex;justify-content:space-between;align-items:center}
+.hist b{color:#0A1931}
+.badge{background:#ffcc00;color:#0A1931;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800}
+</style></head><body>
+<div id="top"><b>📢 CAMPAÑAS KLIDO</b><a href="/index.html">← Bandeja</a><button onclick="localStorage.removeItem('klido_auth');location.href='/login.html'">Salir</button></div>
+
+<div class="wrap">
+<div class="card"><h3>Nueva campaña</h3>
+<label>1. Plantilla de tu API</label><select id="tpl"><option>Cargando plantillas...</option></select>
+<label>2. Sube Excel con números (primera columna)</label>
+<div class="drop" onclick="document.getElementById('file').click()">📎 Click para subir.xlsx /.xls /.csv<div id="fname" style="font-size:12px;color:#5a6a85;margin-top:6px"></div></div>
+<input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
+<label>O pega números manualmente (uno por línea)</label><textarea id="nums" rows="4" placeholder="573001234567"></textarea>
+<div id="count" style="font-size:12px;color:#0A1931;font-weight:700;margin-top:6px"></div>
+<button class="btn" onclick="sendBulk()">🚀 ENVIAR CAMPAÑA</button><div id="log"></div>
+</div>
+
+<div class="card"><h3>Historial de campañas</h3><div id="list"><div style="color:#5a6a85;font-size:13px">Cargando...</div></div></div>
+</div>
+
+<script>
+let excelNums=[];
+document.getElementById('file').addEventListener('change', e=>{
+ const f=e.target.files[0]; if(!f) return;
+ document.getElementById('fname').textContent='📄 '+f.name;
+ const r=new FileReader();
+ r.onload=function(ev){
+  const wb=XLSX.read(ev.target.result,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const data=XLSX.utils.sheet_to_json(ws,{header:1});
+  excelNums=data.map(row=>String(row[0]||'').replace(/\D/g,'')).filter(n=>n.length>=10);
+  updateCount();
+ };
+ r.readAsArrayBuffer(f);
+});
+function updateCount(){
+ const manual=document.getElementById('nums').value.split('\n').map(s=>s.replace(/\D/g,'')).filter(n=>n.length>=10);
+ const total=[...new Set([...excelNums,...manual])];
+ document.getElementById('count').textContent='Total números listos: '+total.length+(excelNums.length?' ('+excelNums.length+' del Excel)':'');
+ return total;
+}
+document.getElementById('nums').addEventListener('input',updateCount);
+
+async function loadTpl(){
+ try{
+  const r=await fetch('/api/templates');const t=await r.json();
+  document.getElementById('tpl').innerHTML=t.length?t.map(x=>`<option value="${x.name}">${x.name} (${x.language})</option>`).join(''):'<option value="">No hay plantillas aprobadas</option>';
+ }catch(e){document.getElementById('tpl').innerHTML='<option>Error cargando</option>';}
+}
+async function sendBulk(){
+ const nums=updateCount();const tpl=document.getElementById('tpl').value;
+ if(!tpl) return alert('Selecciona plantilla'); if(!nums.length) return alert('Sube Excel o pega números');
+ document.getElementById('log').textContent='⏳ Enviando '+nums.length+'...';
+ const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:nums,templateName:tpl})});
+ const j=await r.json();
+ document.getElementById('log').textContent=j.ok?'✅ Campaña lanzada: '+nums.length:'❌ Error';
+ loadHist();
+}
+async function loadHist(){
+ const r=await fetch('/api/campaigns');const c=await r.json();
+ document.getElementById('list').innerHTML=c.map(x=>`<div class="hist"><div><b>🟡 ${x.name}</b><div style="font-size:12px;color:#5a6a85">${new Date(x.created_at).toLocaleString()} - ${x.total} nums</div></div><div><span class="badge">${x.status}</span><div style="font-size:12px;margin-top:4px">✅ ${x.sent} | ❌ ${x.failed}</div></div></div>`).join('')||'<div style="color:#5a6a85">Sin campañas aún</div>';
+}
+loadTpl();loadHist();
+</script></body></html>
