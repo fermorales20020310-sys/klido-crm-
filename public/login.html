@@ -1,12 +1,11 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Klido CRM - Login</title>
 <style>:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE}*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI'}body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--dark),#1a3a6b 50%,var(--mid));padding:20px}
 .box{background:var(--light);border-radius:20px;padding:36px 30px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.box img{width:70px;height:70px;border-radius:18px;background:white;padding:6px;margin-bottom:12px}
 .box h2{color:var(--dark);margin-bottom:4px}.box p{color:#5a6a85;font-size:13px;margin-bottom:20px}
-input{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1.5px solid #b9ccf0;outline:none;font-size:14px;background:white}
-button{width:100%;padding:15px;margin-top:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--dark),var(--mid));color:white;font-weight:800;font-size:15px;cursor:pointer}
+input{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1.5px solid #b9ccf0;outline:none;background:white}
+button{width:100%;padding:15px;margin-top:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--dark),var(--mid));color:white;font-weight:800;cursor:pointer}
 #err{color:#d63031;font-size:13px;margin-top:10px;display:none}</style></head><body>
-<div class="box"><img src="/logo.png" onerror="this.style.display='none'"><h2>KLIDO CRM</h2><p>Azul oscuro • Azul claro</p>
+<div class="box"><h2>KLIDO CRM</h2><p>Azul oscuro • Azul claro</p>
 <input id="email" type="email" placeholder="Correo"><input id="pass" type="password" placeholder="Contraseña">
-<button onclick="login()">Ingresar</button><div id="err">❌ Correo o contraseña incorrectos</div></div>
+<button onclick="login()">Ingresar</button><div id="err">❌ Datos incorrectos</div></div>
 <script>async function login(){const email=document.getElementById('email').value;const password=document.getElementById('pass').value;const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(j.ok){localStorage.setItem('klido_auth','ok');location.href='/index.html';}else document.getElementById('err').style.display='block';}</script></body></html>
