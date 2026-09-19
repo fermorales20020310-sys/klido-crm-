@@ -1,11 +1,35 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Klido CRM - Login</title>
-<style>:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE}*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI'}body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--dark),#1a3a6b 50%,var(--mid));padding:20px}
-.box{background:var(--light);border-radius:20px;padding:36px 30px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.box h2{color:var(--dark);margin-bottom:4px}.box p{color:#5a6a85;font-size:13px;margin-bottom:20px}
-input{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1.5px solid #b9ccf0;outline:none;background:white}
-button{width:100%;padding:15px;margin-top:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--dark),var(--mid));color:white;font-weight:800;cursor:pointer}
-#err{color:#d63031;font-size:13px;margin-top:10px;display:none}</style></head><body>
-<div class="box"><h2>KLIDO CRM</h2><p>Azul oscuro • Azul claro</p>
-<input id="email" type="email" placeholder="Correo"><input id="pass" type="password" placeholder="Contraseña">
-<button onclick="login()">Ingresar</button><div id="err">❌ Datos incorrectos</div></div>
-<script>async function login(){const email=document.getElementById('email').value;const password=document.getElementById('pass').value;const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(j.ok){localStorage.setItem('klido_auth','ok');location.href='/index.html';}else document.getElementById('err').style.display='block';}</script></body></html>
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Klido CRM - Acceso</title>
+<style>
+:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Segoe UI',system-ui}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(1200px 600px at 20% 10%, #1a3a6b 0%, var(--dark) 55%, #060f24 100%);padding:20px}
+.card{background:var(--light);border-radius:24px;padding:40px 36px;width:100%;max-width:400px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.6)}
+.logo{width:88px;height:88px;border-radius:22px;background:#fff;padding:8px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(10,25,49,.15)}
+.logo img{width:100%;height:100%;object-fit:contain;border-radius:14px}
+h1{color:var(--dark);font-size:22px;letter-spacing:2px} .sub{color:#5a6a85;font-size:13px;margin:6px 0 22px}
+input{width:100%;padding:14px 16px;margin:8px 0;border-radius:14px;border:1.5px solid #b9ccf0;background:#fff;outline:none;font-size:14px;transition:.2s}
+input:focus{border-color:var(--mid);box-shadow:0 0 0 4px rgba(24,90,219,.15)}
+button{width:100%;padding:15px;margin-top:14px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--dark),var(--mid));color:#fff;font-weight:800;font-size:15px;cursor:pointer;letter-spacing:.5px}
+button:hover{filter:brightness(1.1)} #err{color:#d63031;font-size:13px;margin-top:10px;display:none}
+.badge{display:inline-block;margin-top:16px;font-size:11px;color:var(--dark);background:#fff;border:1px solid #c9d8f5;padding:6px 12px;border-radius:20px;font-weight:700}
+</style></head><body>
+<div class="card">
+<div class="logo"><img src="/logo.png" alt="Klido" onerror="this.parentElement.innerHTML='K'"></div>
+<h1>KLIDO CRM</h1><div class="sub">Plataforma profesional de WhatsApp Business</div>
+<input id="email" type="email" placeholder="Correo corporativo">
+<input id="pass" type="password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+<button onclick="login()">INGRESAR AL PANEL</button>
+<div id="err">❌ Credenciales incorrectas</div>
+<div class="badge">🔒 Azul oscuro • Azul claro • Seguro</div>
+</div>
+<script>
+async function login(){
+const email=document.getElementById('email').value.trim();
+const password=document.getElementById('pass').value;
+const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+const j=await r.json();
+if(j.ok){localStorage.setItem('klido_auth','ok');location.href='/index.html';}
+else document.getElementById('err').style.display='block';
+}
+</script></body></html>
