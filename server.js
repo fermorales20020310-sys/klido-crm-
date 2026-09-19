@@ -1,102 +1,119 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+const { Pool } = require('pg');
+const fetch = require('node-fetch');
+const fs = require('fs');
 const path = require('path');
-let pool = null;
-
-async function initDB(){
-  const { Pool } = require('pg');
-  if(!process.env.DATABASE_URL) return;
-  pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-  try{
-    await pool.query(`CREATE TABLE IF NOT EXISTS contacts (phone TEXT PRIMARY KEY);`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY);`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS campaigns (id SERIAL PRIMARY KEY, name TEXT, total INT DEFAULT 0, sent INT DEFAULT 0, created_at TIMESTAMP DEFAULT NOW());`);
-
-    await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS name TEXT;`);
-    await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS last_message TEXT;`);
-    await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS lastMessage TEXT;`);
-    await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS unread INT DEFAULT 0;`);
-    await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();`);
-    await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'inbox';`);
-    await pool.query(`ALTER TABLE contacts ADD COLUMN IF NOT EXISTS campaign_name TEXT;`);
-
-    await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS phone TEXT;`);
-    await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS text TEXT;`);
-    await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS body TEXT;`);
-    await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS direction TEXT;`);
-    await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS timestamp TIMESTAMP DEFAULT NOW();`);
-    console.log('✅ DB PRO REPARADA');
-  }catch(e){ console.log(e.message); }
-}
-initDB();
-
 const app = express();
-app.use(cors());
-app.use(bodyParser.json({limit:'10mb'}));
-app.use(express.static(path.join(__dirname,'public')));
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'klido123';
 
-app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']==VERIFY_TOKEN) return res.send(req.query['hub.challenge']); res.sendStatus(403); });
+app.use(express.json());
+app.use(express.static('public'));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+
+const TOKEN = process.env.WHATSAPP_TOKEN;
+const PHONE_ID = process.env.PHONE_NUMBER_ID;
+
+// Crear carpeta uploads si no existe
+if (!fs.existsSync('public/uploads')) fs.mkdirSync('public/uploads', { recursive: true });
+
+// FUNCION CLAVE PARA BAJAR ARCHIVOS
+async function descargarMedia(mediaId, fileName) {
+  try {
+    const info = await fetch(`https://graph.facebook.com/v20.0/${mediaId}`, {
+      headers: { Authorization: `Bearer ${TOKEN}` }
+    }).then(r=>r.json());
+
+    if(!info.url) return null;
+
+    const file = await fetch(info.url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const filePath = path.join(__dirname, 'public/uploads', fileName);
+    fs.writeFileSync(filePath, buffer);
+    return `/uploads/${fileName}`;
+  } catch(e) {
+    console.log('Error bajando media', e);
+    return null;
+  }
+}
+
+// VERIFICACION WEBHOOK
+app.get('/webhook', (req,res)=>{
+  if(req.query['hub.verify_token'] === process.env.VERIFY_TOKEN){
+    res.send(req.query['hub.challenge']);
+  } else res.sendStatus(403);
+});
+
+// RECIBIR MENSAJES
 app.post('/webhook', async(req,res)=>{
-  res.sendStatus(200);
-  try{
-    const val=req.body.entry?.[0]?.changes?.[0]?.value;
-    const msg=val?.messages?.[0];
-    if(!msg||!pool) return;
-    const phone=msg.from; const text=msg.text?.body||'📎'; const name=val.contacts?.[0]?.profile?.name||phone;
-    await pool.query('INSERT INTO messages(phone,text,body,direction) VALUES($1,$2,$2,$3)',[phone,text,'in']);
-    await pool.query(`INSERT INTO contacts(phone,name,last_message,unread,updated_at,source) VALUES($1,$2,$3,1,NOW(),'inbox') ON CONFLICT(phone) DO UPDATE SET last_message=$3, unread=contacts.unread+1, updated_at=NOW()`,[phone,name,text]);
-  }catch(e){}
-});
+  try {
+    const entry = req.body.entry?.[0]?.changes?.[0]?.value;
+    const msg = entry?.messages?.[0];
+    if(!msg) return res.sendStatus(200);
 
-app.get('/api/contacts', async(_,res)=>{
-  try{
-    let r=await pool.query(`SELECT phone, COALESCE(name,phone) as name, COALESCE(last_message,lastMessage,'') as "lastMessage", COALESCE(unread,0) as unread, COALESCE(source,'inbox') as source, campaign_name FROM contacts ORDER BY updated_at DESC`);
-    res.json(r.rows);
-  }catch(e){ res.json([]); }
-});
+    const from = msg.from;
+    let texto = '';
+    let archivoUrl = null;
+    let tipo = msg.type;
 
-app.get('/api/messages/:phone', async(req,res)=>{
-  try{
-    let p=req.params.phone.replace(/\D/g,'').slice(-10);
-    let r=await pool.query(`SELECT COALESCE(text,body,'') as text, direction FROM messages WHERE phone LIKE '%'||$1||'%' ORDER BY id ASC`,[p]);
-    res.json(r.rows);
-  }catch(e){ res.json([]); }
-});
-
-app.post('/api/send', async(req,res)=>{
-  try{
-    const {phone,message}=req.body;
-    await pool.query('INSERT INTO messages(phone,text,direction) VALUES($1,$2,$3)',[phone,message,'out']);
-    await pool.query(`INSERT INTO contacts(phone,last_message,updated_at) VALUES($1,$2,NOW()) ON CONFLICT(phone) DO UPDATE SET last_message=$2, updated_at=NOW()`,[phone,message]);
-    if(process.env.WHATSAPP_TOKEN && process.env.PHONE_NUMBER_ID){
-      await fetch(`https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,{method:'POST',headers:{'Authorization':`Bearer ${process.env.WHATSAPP_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:phone.replace(/\D/g,''),type:'text',text:{body:message}})});
+    if (msg.type === 'text') {
+      texto = msg.text.body;
     }
-    res.json({ok:true});
-  }catch(e){ res.json({ok:true}); }
-});
-
-app.post('/api/campaign/send', async(req,res)=>{
-  try{
-    const {phones,message,campaignName}=req.body;
-    await pool.query('INSERT INTO campaigns(name,total,sent) VALUES($1,$2,$2)',[campaignName,phones.length]);
-    for(let phone of phones){
-      let clean=phone.replace(/\D/g,'');
-      await pool.query(`INSERT INTO contacts(phone,name,source,campaign_name,last_message,updated_at) VALUES($1,$1,'campaign',$2,$3,NOW()) ON CONFLICT(phone) DO UPDATE SET source='campaign', campaign_name=$2, last_message=$3, updated_at=NOW()`,[clean,campaignName,message]);
-      await pool.query('INSERT INTO messages(phone,text,direction) VALUES($1,$2,$3)',[clean,message,'out']);
-      if(process.env.WHATSAPP_TOKEN && process.env.PHONE_NUMBER_ID){
-        try{ await fetch(`https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,{method:'POST',headers:{'Authorization':`Bearer ${process.env.WHATSAPP_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:clean,type:'text',text:{body:message}})}); await new Promise(r=>setTimeout(r,1200));
-        }catch(e){}
+    else if (msg.type === 'image') {
+      const fileName = `${msg.image.id}.jpg`;
+      archivoUrl = await descargarMedia(msg.image.id, fileName);
+      texto = msg.image.caption || '📷 Imagen recibida';
+    }
+    else if (msg.type === 'document') {
+      const fileName = msg.document.filename || `${msg.document.id}.pdf`;
+      archivoUrl = await descargarMedia(msg.document.id, fileName);
+      texto = `📄 ${msg.document.filename || 'Documento'}`;
+    }
+    else if (msg.type === 'audio') {
+      const fileName = `${msg.audio.id}.ogg`;
+      archivoUrl = await descargarMedia(msg.audio.id, fileName);
+      texto = `🎤 Audio recibido`;
+    }
+    else {
+      texto = `📎 Archivo recibido (${msg.type})`;
+      if(msg[msg.type]?.id){
+        archivoUrl = await descargarMedia(msg[msg.type].id, `${msg[msg.type].id}`);
       }
     }
-    res.json({ok:true});
-  }catch(e){ res.json({ok:false, error:e.message}); }
+
+    await pool.query(
+      `INSERT INTO messages (wa_id, text, file_url, type, direction, created_at) VALUES ($1,$2,$3,$4,'in', NOW()) ON CONFLICT DO NOTHING`,
+      [from, texto, archivoUrl, tipo]
+    );
+
+    // actualizar contactos
+    await pool.query(`INSERT INTO contacts (wa_id, name) VALUES ($1,$2) ON CONFLICT (wa_id) DO NOTHING`, [from, from]);
+
+    res.sendStatus(200);
+  } catch(e){ console.log(e); res.sendStatus(200); }
 });
 
-app.get('/api/campaigns', async(_,res)=>{
-  try{ let r=await pool.query('SELECT * FROM campaigns ORDER BY id DESC'); res.json(r.rows); }catch(e){ res.json([]); }
+// ENVIAR MENSAJES
+app.post('/api/send', async(req,res)=>{
+  const { to, message } = req.body;
+  await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{
+    method:'POST',
+    headers:{ 'Authorization':`Bearer ${TOKEN}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ messaging_product:'whatsapp', to, type:'text', text:{body:message} })
+  });
+  await pool.query(`INSERT INTO messages (wa_id, text, direction, created_at) VALUES ($1,$2,'out',NOW())`,[to, message]);
+  res.json({ok:true});
 });
-app.post('/api/read/:phone', async(req,res)=>{ try{ await pool.query(`UPDATE contacts SET unread=0 WHERE phone LIKE '%'||$1||'%'`,[req.params.phone.slice(-10)]); }catch(e){} res.json({ok:true}); });
-app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(process.env.PORT||3000,()=>console.log('🚀 KLIDO PRO AMARILLO'));
+
+// INBOX
+app.get('/api/chats', async(_,res)=>{
+  const { rows } = await pool.query(`SELECT DISTINCT ON (wa_id) * FROM messages ORDER BY wa_id, created_at DESC`);
+  res.json(rows);
+});
+app.get('/api/messages/:wa_id', async(req,res)=>{
+  const { rows } = await pool.query(`SELECT * FROM messages WHERE wa_id=$1 ORDER BY created_at ASC`,[req.params.wa_id]);
+  res.json(rows);
+});
+
+app.listen(process.env.PORT || 3000, ()=> console.log('KLIDO listo'));
