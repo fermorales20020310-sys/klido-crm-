@@ -12,23 +12,23 @@ app.use('/uploads',express.static(uploadDir));
 const VERIFY_TOKEN=(process.env.VERIFY_TOKEN||'klido123').trim();
 let WABA_ID=(process.env.WABA_ID||'').trim();
 if(WABA_ID.startsWith('EAAT')||WABA_ID.length>50) WABA_ID='';
-const META_TOKEN=process.env.WHATSAPP_TOKEN;
-const PHONE_ID=process.env.PHONE_NUMBER_ID;
+const META_TOKEN=(process.env.WHATSAPP_TOKEN||'').trim();
+const PHONE_ID=(process.env.PHONE_NUMBER_ID||'').trim();
 
 console.log('=== KLIDO CRM PRO 100% META FINAL ===');
+console.log(`VERIFY:${VERIFY_TOKEN} PHONE:${PHONE_ID} WABA MANUAL:${WABA_ID||'NO - AUTO'} TOKEN:${!!META_TOKEN}`);
 
 let memMessages=[], memContacts={}, memCampaigns=[], cacheTemplates=[];
 let pool=null;
 
-// DB CON AUTO-FIX wa_id
 async function initDB(){
- if(!process.env.DATABASE_URL){ console.log('⚠️ Sin DATABASE_URL - historial en memoria'); return; }
+ if(!process.env.DATABASE_URL) return;
  try{
   const {Pool}=require('pg');
   pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
   try{ await pool.query(`SELECT wa_id FROM messages LIMIT 1`); }catch(e){
    if(e.message.includes('wa_id')){
-    console.log('🛠️ FIX DB: recreando tablas wa_id...');
+    console.log('🛠️ FIX wa_id - recreando tablas...');
     await pool.query(`DROP TABLE IF EXISTS messages CASCADE`);
     await pool.query(`DROP TABLE IF EXISTS contacts CASCADE`);
     await pool.query(`DROP TABLE IF EXISTS campaigns CASCADE`);
@@ -46,26 +46,54 @@ async function initDB(){
 }
 initDB();
 
+// DISCOVERY 100% META - 3 INTENTOS
 async function discoverWABA(){
- if(WABA_ID) return WABA_ID;
- if(!META_TOKEN||!PHONE_ID) return null;
+ if(WABA_ID && /^\d{10,20}$/.test(WABA_ID)) return WABA_ID;
+ if(!META_TOKEN) return null;
+ console.log('🔍 Buscando WABA_ID por API META...');
+
+ // Intento 1: me/whatsapp_business_accounts
  try{
-  const r=await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}?fields=whatsapp_business_account{id}`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});
+  const r=await fetch(`https://graph.facebook.com/v20.0/me/whatsapp_business_accounts?fields=id`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});
   const j=await r.json();
-  console.log('WABA discovery resp:', JSON.stringify(j));
-  if(j.whatsapp_business_account?.id){ WABA_ID=j.whatsapp_business_account.id; console.log(`✅ WABA_ID AUTO-DESCUBIERTO: ${WABA_ID}`); return WABA_ID; }
-  if(j.error) console.log('WABA discovery error:', j.error.message);
- }catch(e){ console.log('discover err',e.message); }
- return null;
+  console.log('INTENTO 1 me/waba:', JSON.stringify(j).slice(0,300));
+  if(j.data && j.data[0]?.id){ WABA_ID=j.data[0].id; console.log(`✅ WABA ENCONTRADO INTENTO 1: ${WABA_ID}`); return WABA_ID; }
+ }catch(e){ console.log('int1 err',e.message); }
+
+ // Intento 2: me/owned_whatsapp_business_accounts
+ try{
+  const r=await fetch(`https://graph.facebook.com/v20.0/me/owned_whatsapp_business_accounts?fields=id`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});
+  const j=await r.json();
+  console.log('INTENTO 2 owned:', JSON.stringify(j).slice(0,300));
+  if(j.data && j.data[0]?.id){ WABA_ID=j.data[0].id; console.log(`✅ WABA ENCONTRADO INTENTO 2: ${WABA_ID}`); return WABA_ID; }
+ }catch(e){ console.log('int2 err',e.message); }
+
+ // Intento 3: via businesses
+ try{
+  const r=await fetch(`https://graph.facebook.com/v20.0/me/businesses?fields=id`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});
+  const j=await r.json();
+  console.log('INTENTO 3 businesses:', JSON.stringify(j).slice(0,300));
+  if(j.data){
+   for(const b of j.data){
+    const r2=await fetch(`https://graph.facebook.com/v20.0/${b.id}/owned_whatsapp_business_accounts?fields=id`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});
+    const j2=await r2.json();
+    console.log(`Business ${b.id} waba:`, JSON.stringify(j2).slice(0,300));
+    if(j2.data && j2.data[0]?.id){ WABA_ID=j2.data[0].id; console.log(`✅ WABA ENCONTRADO INTENTO 3: ${WABA_ID}`); return WABA_ID; }
+   }
+  }
+ }catch(e){ console.log('int3 err',e.message); }
+
+ console.log('⚠️ NO SE PUDO AUTO-DESCUBRIR WABA - PON WABA_ID MANUAL EN RAILWAY');
+ return WABA_ID||null;
 }
 
 async function fetchMetaTemplates(){
  try{
   let waba= WABA_ID || await discoverWABA();
-  if(!waba||!META_TOKEN) return cacheTemplates;
+  if(!waba||!META_TOKEN){ console.log('Sin WABA_ID para templates'); return cacheTemplates; }
   const r=await fetch(`https://graph.facebook.com/v20.0/${waba}/message_templates?fields=name,status,language,category,components&limit=100`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});
   const j=await r.json();
-  if(j.error){ console.log('Templates API error:', j.error.message); return cacheTemplates; }
+  if(j.error){ console.log('❌ Templates error:', j.error.message, '- Revisa que WABA_ID sea correcto'); return cacheTemplates; }
   if(j.data){
    cacheTemplates=j.data.filter(t=>t.status==='APPROVED').map(t=>{
     const h=t.components.find(c=>c.type==='HEADER');
@@ -73,12 +101,13 @@ async function fetchMetaTemplates(){
     const btn=t.components.find(c=>c.type==='BUTTONS');
     return {name:t.name,status:t.status,language:t.language,category:t.category,hasImage:h?.format==='IMAGE',bodyText:b?.text||'',buttons:btn?.buttons||[],components:t.components};
    });
-   if(cacheTemplates.length) console.log(`✅ TEMPLATES API META: ${cacheTemplates.map(t=>t.name).join(', ')}`);
+   if(cacheTemplates.length) console.log(`✅ ${cacheTemplates.length} PLANTILLAS API META: ${cacheTemplates.map(t=>t.name).join(', ')}`);
+   else console.log('⚠️ 0 plantillas aprobadas en este WABA - crea alion_co en Meta');
   }
   return cacheTemplates;
- }catch(e){ console.log('fetch tpl err',e.message); return cacheTemplates; }
+ }catch(e){ console.log('tpl err',e.message); return cacheTemplates; }
 }
-setTimeout(fetchMetaTemplates,3000);
+setTimeout(fetchMetaTemplates,2500);
 setInterval(fetchMetaTemplates,10000);
 
 function saveHistory(msg){
@@ -108,14 +137,11 @@ app.post('/webhook',async(req,res)=>{
  if(v.statuses){
   const st=v.statuses[0];
   console.log(`📊 STATUS ${st.recipient_id} -> ${st.status}`);
-  const last=memCampaigns[0];
-  if(last){ if(st.status==='sent') last.sent++; if(st.status==='delivered') last.delivered++; if(st.status==='read') last.read++; if(st.status==='failed') last.failed++; }
-  if(pool){ try{ await pool.query(`UPDATE campaigns SET ${st.status==='delivered'?'delivered=delivered+1':st.status==='read'?'read=read+1':st.status==='failed'?'failed=failed+1':'sent=sent+1'} WHERE id=(SELECT id FROM campaigns ORDER BY created_at DESC LIMIT 1)`); }catch{} }
+  if(memCampaigns.length){ const last=memCampaigns[0]; if(st.status==='sent') last.sent++; if(st.status==='delivered') last.delivered++; if(st.status==='read') last.read++; if(st.status==='failed') last.failed++; }
  }
  if(v.messages){
   const m=v.messages[0]; const contact=v.contacts?.[0];
-  const wa_id=m.from; const name=contact?.profile?.name||wa_id;
-  const txt=m.type==='text'?m.text.body:`[${m.type}]`;
+  const wa_id=m.from; const txt=m.type==='text'?m.text.body:`[${m.type}]`;
   saveHistory({wa_id,text:txt,type:m.type,direction:'in',source:'inbox',created_at:new Date(),status:'delivered'});
   console.log(`💬 IN: ${wa_id} ${txt}`);
  }
@@ -125,7 +151,8 @@ app.post('/webhook',async(req,res)=>{
 app.get('/api/templates',async(_,res)=>{ const d=await fetchMetaTemplates(); res.json(d); });
 app.get('/api/templates/stream',(req,res)=>{
  res.setHeader('Content-Type','text/event-stream'); res.setHeader('Cache-Control','no-cache'); res.setHeader('Connection','keep-alive');
- const iv=setInterval(async()=>{ const data=await fetchMetaTemplates(); res.write(`data: ${JSON.stringify(data)}\n\n`); },3000);
+ res.write(`data: ${JSON.stringify(cacheTemplates)}\n\n`);
+ const iv=setInterval(async()=>{ const data=await fetchMetaTemplates(); res.write(`data: ${JSON.stringify(data)}\n\n`); },4000);
  req.on('close',()=>clearInterval(iv));
 });
 
@@ -147,7 +174,7 @@ app.post('/api/send',async(req,res)=>{
  try{
   const r=await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${META_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to,type:'text',text:{body:message}})});
   const j=await r.json();
-  console.log('SEND:', JSON.stringify(j).slice(0,200));
+  console.log('SEND INBOX:', JSON.stringify(j).slice(0,300));
   saveHistory({wa_id:to,text:message,type:'text',direction:'out',source:'inbox',created_at:new Date(),status:j.messages?'sent':'failed'});
   res.json({ok:!!j.messages,data:j});
  }catch(e){ res.json({ok:false,error:e.message}); }
@@ -167,18 +194,17 @@ app.post('/api/campaigns/send-bulk',async(req,res)=>{
  const camp={id,name:tpl,total:numbers.length,sent:0,delivered:0,read:0,failed:0,status:'enviando API META',created_at:new Date().toISOString()};
  memCampaigns.unshift(camp);
  if(pool) try{ await pool.query(`INSERT INTO campaigns(id,name,total,sent,status) VALUES($1,$2,$3,0,$4)`,[id,tpl,numbers.length,'enviando']); }catch{}
- console.log(`🚀 CAMPAÑA 100% META ${tpl} -> ${numbers.length} contactos`);
+ console.log(`🚀 CAMPAÑA ${tpl} -> ${numbers.length} contactos - 100% API META`);
  (async()=>{
   for(const raw of numbers){
    const to=String(raw).replace(/\D/g,'');
    try{
-    const payload={messaging_product:'whatsapp',to,type:'template',template:{name:tpl,language:{code:'es_CO'}}};
-    const r=await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${META_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const r=await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${META_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to,type:'template',template:{name:tpl,language:{code:'es_CO'}}} )});
     const j=await r.json();
-    if(j.messages){ camp.sent++; saveHistory({wa_id:to,text:`[Plantilla ${tpl}]`,type:'template',direction:'out',source:'campaign',template_name:tpl,status:'sent',created_at:new Date()}); console.log(`✅ ${to} sent`); }
-    else{ camp.failed++; console.log(`❌ ${to} fail`, JSON.stringify(j.error||j).slice(0,250)); }
-   }catch(e){ camp.failed++; console.log(`❌ ${to} exc`,e.message); }
-   await new Promise(r=>setTimeout(r,500));
+    if(j.messages){ camp.sent++; saveHistory({wa_id:to,text:`[Plantilla ${tpl}]`,type:'template',direction:'out',source:'campaign',template_name:tpl,status:'sent',created_at:new Date()}); console.log(`✅ ${to} OK`); }
+    else{ camp.failed++; console.log(`❌ ${to} FAIL:`, JSON.stringify(j.error||j).slice(0,300)); }
+   }catch(e){ camp.failed++; console.log(`❌ ${to} EXC:`,e.message); }
+   await new Promise(r=>setTimeout(r,600));
   }
   camp.status='completada';
   if(pool) try{ await pool.query(`UPDATE campaigns SET sent=$1, failed=$2, status='completada' WHERE id=$3`,[camp.sent,camp.failed,id]); }catch{}
@@ -190,7 +216,7 @@ app.post('/api/campaigns/send-bulk',async(req,res)=>{
 app.use(express.static(publicPath));
 app.get('/health',async(_,res)=>{
  const waba= WABA_ID || await discoverWABA();
- res.json({ok:true,api:'KLIDO 100% META FINAL',verify:VERIFY_TOKEN,phone:PHONE_ID,waba:waba||'NO REGISTRADO - revisa token',hasToken:!!META_TOKEN,templates:cacheTemplates.map(t=>t.name),messages:memMessages.length,chats:Object.keys(memContacts).length,campaigns:memCampaigns.length,hasDB:!!pool,autoUpdate:true});
+ res.json({ok:true,api:'KLIDO 100% META FINAL',verify:VERIFY_TOKEN,phone:PHONE_ID,waba:waba||'NO REGISTRADO',hasToken:!!META_TOKEN,templates:cacheTemplates.map(t=>t.name),messages:memMessages.length,chats:Object.keys(memContacts).length,hasDB:!!pool,autoUpdate:true});
 });
 app.get('/',(req,res)=>res.sendFile(path.join(publicPath,'login.html')));
-app.listen(process.env.PORT||3000,()=>console.log(`🚀 KLIDO FINAL LISTO - VERIFY:${VERIFY_TOKEN} PHONE:${PHONE_ID} WABA:${WABA_ID||'AUTO'}`));
+app.listen(process.env.PORT||3000,()=>console.log(`🚀 KLIDO FINAL LISTO`));
