@@ -1,41 +1,21 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - Klido CRM Pro</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - Klido</title>
 <script>if(localStorage.getItem('klido_auth')!=='ok')location.href='/login.html';</script>
-<style>:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE;--bg:#F4F6FB}*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto}body{background:var(--bg);min-height:100vh}
+<style>:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE;--bg:#E8F0FE}*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI'}body{background:var(--bg);min-height:100vh}
 #top{background:linear-gradient(135deg,var(--dark),#1a3a6b);padding:14px 24px;display:flex;align-items:center;gap:12px;color:white}
-#top img{width:40px;height:40px;border-radius:12px;background:white;padding:4px}
-#top b{font-size:16px;letter-spacing:.5px}#top a{margin-left:auto;color:white;text-decoration:none;background:rgba(255,255,255,.15);padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700}
+#top b{font-size:16px}#top a{margin-left:auto;color:white;text-decoration:none;background:rgba(255,255,255,.15);padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700}
 .wrap{max-width:900px;margin:24px auto;padding:0 16px;display:grid;gap:16px}
-.card{background:white;border-radius:16px;padding:22px;box-shadow:0 4px 20px rgba(10,25,49,.06);border:1px solid #e6ebf3}
-.card h3{color:var(--dark);font-size:16px;margin-bottom:4px}.card small{color:#6b7a90;font-size:12px}
-label{font-size:12px;font-weight:800;color:var(--dark);margin-top:14px;display:block}
-select,textarea,input{width:100%;padding:13px 14px;margin-top:6px;border-radius:12px;border:1.5px solid #dbe2ef;background:#f8fafd;outline:none;font-size:14px}
-select:focus,textarea:focus{border-color:var(--mid);background:white}
+.card{background:var(--light);border-radius:16px;padding:22px;box-shadow:0 4px 20px rgba(10,25,49,.06);border:1px solid #c9d8f5}
+.card h3{color:var(--dark);font-size:16px}label{font-size:12px;font-weight:800;color:var(--dark);margin-top:14px;display:block}
+select,textarea{width:100%;padding:13px;margin-top:6px;border-radius:12px;border:1.5px solid #b9ccf0;background:#fff;outline:none}
 .btn{width:100%;padding:15px;margin-top:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--dark),var(--mid));color:white;font-weight:800;font-size:15px;cursor:pointer}
-.btn:disabled{opacity:.5}
-#log{margin-top:12px;font-size:13px;color:var(--mid);font-weight:700}
-.drop{border:2px dashed #b9ccf0;background:var(--light);border-radius:12px;padding:20px;text-align:center;margin-top:6px;cursor:pointer;color:var(--dark);font-size:13px;font-weight:700}
-.hist-item{padding:12px;border-bottom:1px solid #f1f4f9;display:flex;justify-content:space-between;align-items:center}
-.hist-item b{color:var(--dark);font-size:14px}.pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800}.pill-ok{background:#d4edda;color:#155724}.pill-send{background:var(--light);color:var(--mid)}
-#tplInfo{background:var(--light);border-radius:10px;padding:10px 14px;margin-top:10px;font-size:12px;color:var(--dark)}
-</style></head><body>
-<div id="top"><img src="/logo.png" onerror="this.style.display='none'"><b>📢 CAMPAÑAS PRO</b><a href="/index.html">← Bandeja</a></div>
-<div class="wrap">
-<div class="card"><h3>Nueva campaña</h3><small>Plantillas aprobadas en Meta • se actualizan solas</small>
-<div id="tplInfo">Cargando plantillas...</div>
-<label>Plantilla de WhatsApp</label><select id="tpl"></select>
-<label>Subir Excel / CSV con números</label><div class="drop" onclick="document.getElementById('file').click()">📁 Clic para subir Excel (.xlsx,.csv)<br><span style="font-weight:400;font-size:11px">Extraemos los números automáticamente</span></div><input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="uploadFile(this)">
-<label>O pega números (uno por línea)</label><textarea id="nums" rows="5" placeholder="573001234567&#10;573009876543"></textarea>
-<div id="count" style="font-size:12px;color:#6b7a90;margin-top:6px;font-weight:700">0 números listos</div>
-<button class="btn" id="btnSend" onclick="sendBulk()">🚀 ENVIAR CAMPAÑA</button><div id="log"></div></div>
-<div class="card"><h3>Historial de campañas</h3><small>Enviadas desde Klido</small><div id="list" style="margin-top:10px"></div></div>
-</div>
-<script>
-let numbers=[];
-async function load(){const r=await fetch('/api/templates');const t=await r.json();document.getElementById('tpl').innerHTML=t.map(x=>`<option value="${x.name}">${x.name} [${x.language}]</option>`).join('')||'<option>Sin plantillas aprobadas</option>';document.getElementById('tplInfo').textContent=t.length?`✅ ${t.length} plantillas activas: `+t.map(x=>x.name).join(', '):'⏳ No hay plantillas aprobadas aún en Meta';}
-async function uploadFile(el){const f=el.files[0];if(!f)return;const fd=new FormData();fd.append('file',f);document.getElementById('log').textContent='Subiendo...';const r=await fetch('/api/campaigns/upload',{method:'POST',body:fd});const j=await r.json();if(j.ok){numbers=j.numbers;updateCount();document.getElementById('log').textContent=`✅ ${j.total} números cargados`;}else document.getElementById('log').textContent='❌ Error al subir';}
-function updateCount(){const manual=document.getElementById('nums').value.split('\n').map(s=>s.replace(/\D/g,'')).filter(n=>n.length>=10);const all=[...new Set([...numbers,...manual])];document.getElementById('count').textContent=all.length+' números listos';return all;}
-document.getElementById('nums').addEventListener('input',()=>updateCount());
-async function sendBulk(){const all=updateCount();const tpl=document.getElementById('tpl').value;if(!tpl||!all.length)return alert('Selecciona plantilla y agrega números');document.getElementById('btnSend').disabled=true;document.getElementById('log').textContent='🚀 Enviando '+all.length+'...';const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:all,templateName:tpl})});const j=await r.json();document.getElementById('log').textContent=j.ok?`✅ Campaña lanzada: ${j.total} mensajes`:'❌ Error';document.getElementById('btnSend').disabled=false;loadC();}
-async function loadC(){const r=await fetch('/api/campaigns');const c=await r.json();document.getElementById('list').innerHTML=c.map(x=>`<div class="hist-item"><div><b>${x.name}</b><div style="font-size:12px;color:#6b7a90">${x.total} contactos • env:${x.sent||0} • fallidos:${x.failed||0}</div></div><span class="pill ${x.status==='completada'?'pill-ok':'pill-send'}">${x.status}</span></div>`).join('')||'<div style="color:#8a9ab5;font-size:13px">Sin campañas aún</div>';}
-load();loadC();setInterval(()=>{load();loadC();},8000);
-</script></body></html>
+#log{margin-top:12px;font-size:13px;color:var(--mid);font-weight:700}</style></head><body>
+<div id="top"><b>📢 CAMPAÑAS</b><a href="/index.html">← Bandeja</a></div>
+<div class="wrap"><div class="card"><h3>Nueva campaña</h3>
+<label>Plantilla</label><select id="tpl"></select>
+<label>Números (uno por línea)</label><textarea id="nums" rows="5" placeholder="573001234567"></textarea>
+<button class="btn" onclick="sendBulk()">🚀 ENVIAR</button><div id="log"></div></div>
+<div class="card"><h3>Historial</h3><div id="list"></div></div></div>
+<script>async function load(){const r=await fetch('/api/templates');const t=await r.json();document.getElementById('tpl').innerHTML=t.map(x=>`<option value="${x.name}">${x.name}</option>`).join('');}
+async function sendBulk(){const nums=document.getElementById('nums').value.split('\n').map(s=>s.replace(/\D/g,'')).filter(n=>n.length>=10);const tpl=document.getElementById('tpl').value;if(!nums.length)return alert('Agrega números');document.getElementById('log').textContent='Enviando...';const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:nums,templateName:tpl})});const j=await r.json();document.getElementById('log').textContent=j.ok?'✅ Enviada':'❌ Error';loadC();}
+async function loadC(){const r=await fetch('/api/campaigns');const c=await r.json();document.getElementById('list').innerHTML=c.map(x=>`<div style="padding:10px;border-bottom:1px solid #d0ddf7"><b style="color:#0A1931">${x.name}</b> - ${x.total} contactos - ${x.status}</div>`).join('');}
+load();loadC();</script></body></html>
