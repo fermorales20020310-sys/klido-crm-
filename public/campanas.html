@@ -1,46 +1,85 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Campaña - KLIDO</title>
-<style>body{background:#0a0f1e;color:#e2e8f0;font-family:Inter;margin:0}.top{height:64px;background:#0a0f1e;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;padding:0 22px}.wrap{max-width:900px;margin:20px auto;background:#111727;border:1px solid #1e293b;border-radius:20px;padding:24px}
-.drop{border:2px dashed #2b7cff;background:#0f172a;border-radius:16px;padding:32px;text-align:center;cursor:pointer}.btn{width:100%;background:#2b7cff;color:white;border:0;padding:14px;border-radius:12px;font-weight:800;margin-top:12px;cursor:pointer}select,textarea,input{width:100%;background:#0f172a;border:1px solid #1e293b;color:white;border-radius:10px;padding:12px;margin-top:10px}.row{display:grid;grid-template-columns:1.5fr 0.5fr 0.5fr 1.2fr;gap:10px;padding:12px;border-top:1px solid #1e293b;font-size:13px}</style></head><body>
-<div class="top"><div style="font-weight:900">📢 Campaña - KLIDO CRM Pro</div><div style="display:flex;gap:10px"><button onclick="location.href='/index.html'" style="background:#1e293b;color:white;border:0;padding:8px 14px;border-radius:20px;cursor:pointer">💬 Mensajes</button><button onclick="localStorage.clear();location.href='/login'" style="background:#1e293b;color:white;border:0;padding:8px 14px;border-radius:20px;cursor:pointer">Salir ↪</button></div></div>
-<div class="wrap">
-<div style="background:#0f172a;border:1px solid #2b7cff;color:#93c5fd;padding:10px;border-radius:10px;font-size:12px">✅ API Meta vinculada - Plantilla aprobada</div>
-
-<label style="font-size:12px;margin-top:14px;display:block;color:#94a3b8">Selecciona plantilla aprobada en API Meta:</label>
-<select id="templateSel"><option value="alion_co">alion_co - Plantilla oficial Alion (APROBADA)</option><option value="hello_world">hello_world - Prueba</option><option value="promo_klido">promo_klido - Promoción Klido</option></select>
-
-<div class="drop" onclick="document.getElementById('file').click()" style="margin-top:16px"><div style="font-size:24px">📤</div><b>Subir archivo Excel</b><br><span style="font-size:11px;color:#94a3b8">.xlsx, .csv con columna de números</span><div id="fname" style="color:#2b7cff;font-weight:800;margin-top:8px">Click aquí o arrastra tu Excel</div><input type="file" id="file" hidden accept=".xlsx,.csv,.txt"></div>
-<div id="preview" style="display:none;margin-top:10px;background:#0f172a;padding:10px;border-radius:10px;font-size:12px;color:#22c55e"></div>
-
-<textarea id="nums" rows="4" placeholder="Los números aparecerán aquí después de subir Excel...&#10;573001112233&#10;573002223344"></textarea>
-<textarea id="msgT" rows="2" placeholder="Mensaje con plantilla alion_co - se enviará con etiqueta amarilla CAMPAÑA"></textarea>
-
-<button class="btn" id="sendBtn">ENVIAR CAMPAÑA 🟡 CON HISTORIAL</button>
-
-<div style="margin-top:24px"><h4>Historial de campañas - Para Meta</h4><div style="border:1px solid #1e293b;border-radius:12px;overflow:hidden;margin-top:10px"><div class="row" style="background:#0f172a;font-weight:800;font-size:11px"><span>FECHA</span><span>TOTAL</span><span>ENVIADOS</span><span>ESTADO / TRAZABILIDAD</span></div><div id="hbody"></div></div></div>
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KLIDO CRM Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui}
+body{background:#0a0f1e;color:#e2e8f0;height:100vh;overflow:hidden}
+.header{height:64px;background:#0a0f1e;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px}
+.logo img{width:36px;height:36px;border-radius:8px;object-fit:contain;background:white;padding:2px}
+.badge{background:#2b7cff;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;margin-left:8px}
+.app{max-width:1600px;margin:16px auto;height:calc(100vh - 80px);background:#111727;border:1px solid #1e293b;border-radius:20px;display:grid;grid-template-columns:220px 360px 1fr 320px;overflow:hidden}
+.menu{background:#0f172a;border-right:1px solid #1e293b;padding:16px 12px;display:flex;flex-direction:column;gap:10px}
+.btn-menu{padding:14px 16px;border-radius:12px;border:0;width:100%;text-align:left;font-size:14px;cursor:pointer;display:flex;gap:10px;text-decoration:none}
+.btn-menu.active{background:#2b7cff;color:white;font-weight:800}
+.btn-menu.idle{background:transparent;color:#94a3b8;border:1px solid #1e293b}
+.btn-menu.idle:hover{background:#172340;color:white}
+.inbox{background:#0f172a;border-right:1px solid #1e293b;display:flex;flex-direction:column}
+.search{margin:12px;padding:10px 14px;background:#111c33;border:1px solid #1e293b;border-radius:12px;display:flex;gap:8px}
+.search input{background:transparent;border:0;color:#fff;outline:none;width:100%}
+.chatlist{overflow-y:auto;flex:1}
+.chat-row{padding:14px;border-bottom:1px solid #162032;display:flex;gap:10px;cursor:pointer}
+.chat-row.active{background:#172340;border-left:3px solid #2b7cff}
+.avatar{width:40px;height:40px;border-radius:50%;background:#2b7cff;display:grid;place-items:center;font-weight:800;color:white}
+.dot{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block;margin-left:4px;box-shadow:0 0 0 3px rgba(34,197,94,.3)}
+.tag-yellow{background:#facc15;color:#000;font-size:10px;font-weight:900;padding:3px 8px;border-radius:10px;margin-left:6px}
+.chat-main{display:flex;flex-direction:column;background:#0b1222}
+.chat-head{height:64px;border-bottom:1px solid #1e293b;padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:#0f172a}
+.bubble{max-width:70%;padding:12px 14px;border-radius:16px;font-size:13px;margin:6px 0}
+.bubble.in{background:#1e293b}.bubble.out{background:#93c5fd;color:#0f172a;align-self:flex-end}
+.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;background:radial-gradient(circle at center,#111d35 0%,#0b1222 100%)}
+.input-bar{padding:12px;border-top:1px solid #1e293b;display:flex;gap:10px;background:#0f172a}
+.input-bar input{flex:1;background:#111c33;border:1px solid #1e293b;padding:12px 16px;border-radius:24px;color:white;outline:none}
+.btn-send{width:44px;height:44px;background:#2b7cff;border-radius:50%;border:0;color:white;cursor:pointer}
+</style></head>
+<body>
+<div class="header">
+  <div class="logo"><img src="/logo.png" onerror="this.src='https://via.placeholder.com/36x36/2b7cff/ffffff?text=K'"><span>KLIDO CRM Pro</span><span class="badge">Pro Plan</span></div>
+  <button onclick="localStorage.clear();location.href='/login'" style="background:#1e293b;color:white;border:1px solid #334155;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:12px">Salir ↪</button>
 </div>
+
+<div class="app">
+  <div class="menu">
+    <div class="btn-menu active">💬 Mensajes</div>
+    <!-- BOTON CAMPAÑA 100% FUNCIONAL CON HREF REAL -->
+    <a href="/campaigns.html" style="text-decoration:none"><div class="btn-menu idle">📢 Campaña</div></a>
+  </div>
+
+  <div class="inbox"><div style="padding:16px;font-weight:800;border-bottom:1px solid #1e293b">Inbox</div><div class="search"><span>🔍</span><input id="searchBox" placeholder="Buscar..."></div><div class="chatlist" id="chatList"></div></div>
+  <div class="chat-main"><div class="chat-head"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="hAvatar">KL</div><div><div id="hName" style="font-weight:800">Selecciona un chat</div><div id="hStatus" style="font-size:11px;color:#94a3b8">WhatsApp • Online <span class="dot"></span></div></div></div></div><div class="msgs" id="msgs"></div><div class="input-bar"><input id="msgInput" placeholder="Escribe un mensaje..."><button class="btn-send" onclick="sendMsg()">➤</button></div></div>
+  <div class="profile" style="background:#0f172a;border-left:1px solid #1e293b;padding:16px"><b>Customer Profile</b><div style="margin-top:12px;background:#111c33;padding:12px;border-radius:12px;border:1px solid #1e293b"><div id="pName">Selecciona chat</div><div id="pPhone" style="font-size:11px;color:#94a3b8"></div><div id="campaignTag" style="display:none;margin-top:8px"><span class="tag-yellow">CAMPAÑA</span></div></div></div>
+</div>
+
+<audio id="notif" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 <script>
 if(!localStorage.getItem('klido_auth')) location.href='/login';
-let contacts=[];
-document.getElementById('file').onchange=async e=>{
-  const f=e.target.files[0]; if(!f) return; document.getElementById('fname').innerText=f.name+' ✅';
-  const txt=await f.text(); let lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
-  if(lines.length>0 && lines[0].match(/[a-zA-Z]/)) lines.shift();
-  contacts=lines.map(l=>l.split(/[,;\t]/)[0].replace(/\D/g,'')).filter(n=>n.length>=10);
-  if(contacts.length===0) contacts=new Array(591).fill('573000000000');
-  document.getElementById('nums').value=contacts.slice(0,100).join('\n');
-  document.getElementById('preview').style.display='block'; document.getElementById('preview').innerText=`Excel leído: ${contacts.length} contactos detectados ✅`;
-};
-document.getElementById('sendBtn').onclick=async()=>{
-  let total=contacts.length||document.getElementById('nums').value.split('\n').filter(Boolean).length;
-  if(!total) return alert('Primero sube tu Excel');
-  const template=document.getElementById('templateSel').value;
-  document.getElementById('sendBtn').innerText='Enviando...';
-  await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({total,name:`Campaña ${template} - ${new Date().toLocaleDateString()}`})});
-  const msg=document.getElementById('msgT').value||`Hola, plantilla ${template} oficial - alion_co`;
-  const numbers=document.getElementById('nums').value.split('\n').filter(Boolean);
-  const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers,message:`[${template}] ${msg}`,template})});
-  const j=await r.json(); document.getElementById('sendBtn').innerText='ENVIAR CAMPAÑA 🟡 CON HISTORIAL'; loadHist(); alert(`Campaña ${template} enviada: ${j.sent||total} contactos con etiqueta amarilla CAMPAÑA`);
-};
-async function loadHist(){ const r=await fetch('/api/campaigns'); const data=await r.json(); const b=document.getElementById('hbody'); b.innerHTML=''; data.forEach(c=>{ b.innerHTML+=`<div class="row"><span>${new Date(c.created_at).toLocaleString()}</span><span>${c.total}</span><span>${c.sent}</span><span><span style="background:#22c55e;color:white;padding:3px 8px;border-radius:10px;font-size:10px">Entregada</span> <span style="background:#facc15;color:black;padding:3px 8px;border-radius:10px;font-size:10px">CAMPAÑA</span></span></div>`; }); }
-loadHist();
-</script></body></html>
+let activeWa=null,lastCount=0;
+async function loadChats(){
+  const r=await fetch('/api/chats'); const data=await r.json(); const list=document.getElementById('chatList'); list.innerHTML='';
+  const s=document.getElementById('searchBox').value.toLowerCase();
+  data.filter(c=> (c.wa_id+(c.text||'')).toLowerCase().includes(s)).forEach(c=>{
+    const isOnline=(Date.now()-new Date(c.created_at).getTime())<10*60*1000;
+    const div=document.createElement('div'); div.className='chat-row'+(c.wa_id===activeWa?' active':''); div.onclick=()=>openChat(c.wa_id,c.name||c.wa_id,c.source);
+    div.innerHTML=`<div class="avatar">${(c.name||c.wa_id).slice(0,2).toUpperCase()}</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${(c.name||c.wa_id).slice(0,16)} ${isOnline?'<span class="dot"></span>':''} ${c.source==='campaign'?'<span class="tag-yellow">CAMPAÑA</span>':''}</div><div style="font-size:11px;color:#94a3b8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${c.text||''}</div></div>`;
+    list.appendChild(div);
+  });
+  if(data.length>lastCount && lastCount>0) document.getElementById('notif').play().catch(()=>{});
+  lastCount=data.length;
+}
+async function openChat(wa_id,name,source){
+  activeWa=wa_id; document.getElementById('hName').innerText=name; document.getElementById('pName').innerText=name; document.getElementById('pPhone').innerText=wa_id;
+  document.getElementById('hAvatar').innerText=name.slice(0,2).toUpperCase(); document.getElementById('campaignTag').style.display=source==='campaign'?'block':'none';
+  const r=await fetch('/api/messages/'+wa_id); const msgs=await r.json(); const box=document.getElementById('msgs'); box.innerHTML='';
+  msgs.forEach(m=>{
+    const d=document.createElement('div'); d.className='bubble '+(m.direction==='out'?'out':'in');
+    let f=''; if(m.file_url){ if(m.file_url.match(/jpg|png|jpeg|webp/i)) f=`<div style="margin-top:6px"><img src="${m.file_url}" style="max-width:200px;border-radius:8px"></div>`; else f=`<div><a href="${m.file_url}" target="_blank" style="color:#93c5fd">📎 Ver archivo</a></div>`; }
+    d.innerHTML=`${m.source==='campaign'?'<span class="tag-yellow" style="font-size:9px">CAMPAÑA - alion_co</span><br>':''}${m.text||''}${f}<div style="font-size:9px;opacity:0.5;text-align:right;margin-top:4px">${new Date(m.created_at).toLocaleTimeString()}</div>`;
+    box.appendChild(d);
+  }); box.scrollTop=box.scrollHeight;
+}
+async function sendMsg(){ const i=document.getElementById('msgInput'); if(!i.value||!activeWa) return; const t=i.value; i.value=''; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:activeWa,message:t,source:'inbox'})}); openChat(activeWa,document.getElementById('hName').innerText,'inbox'); }
+document.getElementById('msgInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg()});
+setInterval(loadChats,3000); loadChats();
+</script>
+</body>
+</html>
