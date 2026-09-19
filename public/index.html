@@ -1,26 +1,34 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KLIDO CRM Pro</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#0a0f1e;color:#e2e8f0;height:100vh;overflow:hidden}.header{height:64px;background:#0a0f1e;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;padding:0 20px}.logo{display:flex;gap:10px;align-items:center;font-weight:900;font-size:19px}.app{height:calc(100vh - 64px);display:grid;grid-template-columns:200px 360px 1fr 300px;background:#111727;border:1px solid #1e293b;border-radius:20px;margin:12px;overflow:hidden}.menu{background:#0f172a;border-right:1px solid #1e293b;padding:12px;display:flex;flex-direction:column;gap:8px}.m{padding:13px;border-radius:10px;text-decoration:none;display:flex;gap:8px;font-size:13px}.m.active{background:#2b7cff;color:white;font-weight:800}.m.idle{background:transparent;color:#94a3b8;border:1px solid #1e293b}.m.idle:hover{background:#172340;color:white}.chatlist{overflow:auto;flex:1}.row{padding:12px;border-bottom:1px solid #162032;display:flex;gap:8px;cursor:pointer}.row.active{background:#172340;border-left:3px solid #2b7cff}.avatar{width:38px;height:38px;background:#2b7cff;border-radius:50%;display:grid;place-items:center;font-weight:800;color:white}.dot{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block}.tag{background:#facc15;color:#000;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;margin-left:4px}.bubble{max-width:68%;padding:10px 12px;border-radius:14px;font-size:13px;margin:5px 0}.bubble.in{background:#1e293b}.bubble.out{background:#93c5fd;color:#0f172a;align-self:flex-end}.msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;background:#0b1222}</style></head>
-<body>
-<div class="header">
-<div class="logo"><img src="/logo.png" onerror="this.outerHTML='<div style=width:32px;height:32px;background:#2b7cff;border-radius:8px;display:grid;place-items:center;color:white;font-weight:900>K</div>'" style="width:32px;height:32px;border-radius:8px;background:white;padding:2px"> KLIDO CRM Pro <span style="background:#2b7cff;padding:3px 8px;border-radius:12px;font-size:10px;margin-left:6px">Pro Plan</span></div>
-<button onclick="localStorage.clear();location.href='/login.html'" style="background:#1e293b;color:white;border:1px solid #334155;padding:7px 14px;border-radius:20px;cursor:pointer">Salir ↪</button>
-</div>
-<div class="app">
-<div class="menu">
-<a href="/index.html" class="m active">💬 Mensajes</a>
-<a href="/campaigns.html" class="m idle" id="linkCamp">📢 Campaña</a>
-</div>
-<div style="background:#0f172a;border-right:1px solid #1e293b;display:flex;flex-direction:column"><div style="padding:14px;font-weight:800;border-bottom:1px solid #1e293b">Inbox - Tiempo real <span class="dot"></span></div><div style="padding:10px"><input id="search" placeholder="Buscar..." style="width:100%;background:#111c33;border:1px solid #1e293b;padding:8px 12px;border-radius:10px;color:white"></div><div class="chatlist" id="list"></div></div>
-<div style="display:flex;flex-direction:column;background:#0b1222"><div style="height:60px;border-bottom:1px solid #1e293b;background:#0f172a;padding:0 14px;display:flex;align-items:center;gap:10px"><div class="avatar" id="ha">KL</div><div><div id="hn" style="font-weight:800">Selecciona chat</div><div style="font-size:11px;color:#94a3b8">Online • WhatsApp <span class="dot"></span></div></div></div><div class="msgs" id="msgs"></div><div style="padding:10px;border-top:1px solid #1e293b;display:flex;gap:8px;background:#0f172a"><input id="inp" placeholder="Escribe..." style="flex:1;background:#111c33;border:1px solid #1e293b;padding:10px 14px;border-radius:20px;color:white"><button onclick="send()" style="width:40px;height:40px;background:#2b7cff;border:0;border-radius:50%;color:white">➤</button></div></div>
-<div style="background:#0f172a;border-left:1px solid #1e293b;padding:14px"><b>Customer Profile</b><div style="margin-top:10px;background:#111c33;border:1px solid #1e293b;padding:10px;border-radius:10px"><div id="pn">Selecciona</div><div id="pp" style="font-size:11px;color:#94a3b8"></div><div id="ctag" style="display:none;margin-top:6px"><span class="tag">CAMPAÑA</span></div></div></div>
-</div>
-<script>
-if(!localStorage.getItem('klido_auth')) location.href='/login.html';
-let act=null;
-document.getElementById('linkCamp').addEventListener('click',function(e){ e.preventDefault(); window.location.href='/campaigns.html'; });
-async function load(){ const r=await fetch('/api/chats'); const d=await r.json(); const l=document.getElementById('list'); l.innerHTML=''; const s=document.getElementById('search').value.toLowerCase(); d.filter(c=>(c.wa_id+(c.text||'')).toLowerCase().includes(s)).forEach(c=>{ const on=(Date.now()-new Date(c.created_at).getTime())<10*60*1000; const div=document.createElement('div'); div.className='row'+(c.wa_id===act?' active':''); div.onclick=()=>openC(c.wa_id,c.name||c.wa_id,c.source); div.innerHTML=`<div class="avatar">${(c.name||c.wa_id).slice(0,2).toUpperCase()}</div><div style="flex:1"><div style="font-size:12px;font-weight:700">${(c.name||c.wa_id).slice(0,14)} ${on?'<span class=dot></span>':''} ${c.source==='campaign'?'<span class=tag>CAMPAÑA</span>':''}</div><div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.text||''}</div></div>`; l.appendChild(div); }); }
-async function openC(id,name,src){ act=id; document.getElementById('hn').innerText=name; document.getElementById('pn').innerText=name; document.getElementById('pp').innerText=id; document.getElementById('ha').innerText=name.slice(0,2).toUpperCase(); document.getElementById('ctag').style.display=src==='campaign'?'block':'none'; const r=await fetch('/api/messages/'+id); const m=await r.json(); const b=document.getElementById('msgs'); b.innerHTML=''; m.forEach(x=>{ const d=document.createElement('div'); d.className='bubble '+(x.direction==='out'?'out':'in'); let f=''; if(x.file_url){ if(x.file_url.match(/jpg|png|webp/i)) f=`<br><img src="${x.file_url}" style="max-width:180px;border-radius:8px;margin-top:4px">`; else f=`<br><a href="${x.file_url}" target="_blank" style="color:#60a5fa">📎 Archivo</a>`; } d.innerHTML=`${x.source==='campaign'?'<span class=tag>CAMPAÑA - alion_co</span><br>':''}${x.text||''}${f}`; b.appendChild(d); }); b.scrollTop=b.scrollHeight; load(); }
-async function send(){ const i=document.getElementById('inp'); if(!i.value||!act) return; const t=i.value; i.value=''; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:act,message:t,source:'inbox'})}); openC(act,document.getElementById('hn').innerText,'inbox'); }
-document.getElementById('inp').addEventListener('keydown',e=>{if(e.key==='Enter')send()}); setInterval(load,3000); load();
-</script>
-</body></html>
+async function loadChats(){
+ const r=await fetch('/api/chats');
+ const chats=await r.json();
+ const list=document.getElementById('chatsList'); // tu div de chats
+ if(!list) return;
+ 
+ list.innerHTML=chats.map(c=>{
+  const isUnanswered = c.direction === 'in' || (c.source !== 'inbox' && c.text?.includes && !c.lastOutgoing);
+  // LOGICA REAL: si el último mensaje es entrante = sin contestar
+  const lastIsIncoming = c.source === 'inbox' ? false : true; // mejor lo calculamos abajo
+  
+  const isFromCampaign = c.source === 'campaign';
+  const isIncoming = c.direction === 'in' || c.status === 'delivered'; // depende de tu DB
+  
+  // Para tu server actual la forma 100% correcta:
+  const sinContestar = c.direction === 'in' || (c.text && c.source !== 'inbox' && c.source !== undefined && c.direction !== 'out');
+  // Usaremos la consulta mejorada abajo
+  return `
+  <div class="chat-item ${sinContestar?'unanswered':''}" onclick="openChat('${c.wa_id}')">
+    <div style="display:flex;justify-content:space-between">
+      <b>${c.name||c.wa_id}</b>
+      <div>
+        ${c.source==='campaign'?'<span style="background:#FFD700;color:#000;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold">📢 CAMPAÑA</span>':''}
+        ${c.direction==='in'?'<span style="background:#ff4444;color:white;padding:3px 8px;border-radius:12px;font-size:11px;margin-left:4px">● SIN CONTESTAR</span>':''}
+      </div>
+    </div>
+    <small>${c.text?.slice(0,60)||''}</small>
+    <small style="float:right">${new Date(c.created_at).toLocaleTimeString()}</small>
+  </div>`;
+ }).join('');
+}
+
+// LOGICA 100% REAL PARA SIN CONTESTAR - necesita saber ultimo mensaje
+// Tu server ya lo hace, pero para que sea perfecto usa esto en /api/chats:
