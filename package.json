@@ -1,7 +1,7 @@
 {
   "name": "klido-crm",
-  "version": "2.0.0",
-  "description": "KLIDO CRM - 100% API META + Plantillas dinámicas + Historial permanente",
+  "version": "3.0.0",
+  "description": "KLIDO CRM FINAL - Historial eterno + sin contestar + campaña",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
