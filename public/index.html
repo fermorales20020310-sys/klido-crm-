@@ -1,60 +1,40 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KLIDO - CRM PRO</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>body{font-family:Inter,system-ui}</style>
-</head>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KLIDO - CRM PRO</title><script src="https://cdn.tailwindcss.com"></script></head>
 <body class="h-screen flex bg-white text-slate-800">
-<div class="w-[280px] bg-white border-r border-slate-200 p-5 flex flex-col">
-  <div class="flex items-center gap-3 mb-2"><img src="/logo.png" class="h-12 w-12 object-contain"><div><div class="font-black text-[#0a4de3] text-[17px] leading-none">KLIDO</div><div class="font-bold text-[#0a4de3] text-[10px] tracking-widest">CRM PRO</div></div></div>
-  <div class="text-[11px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full w-fit mt-3">● WhatsApp Conectado</div>
-  <div class="mt-6 flex flex-col gap-1">
-    <a class="bg-[#eef3ff] text-[#0a4de3] font-bold px-4 py-3 rounded-xl text-sm">💬 Inbox</a>
-    <a href="/campaigns.html" class="text-slate-500 px-4 py-3 rounded-xl text-sm hover:bg-slate-50">📢 Campaigns</a>
-    <a class="text-slate-400 px-4 py-3 rounded-xl text-sm">📄 Templates</a>
-  </div>
-  <div class="mt-auto text-[10px] text-slate-400">Meta Tech Provider - Compliant 2026</div>
+<div class="w-[300px] bg-white border-r border-slate-200 p-5 flex flex-col">
+  <div class="flex items-center gap-3"><img src="/logo.png" onerror="this.style.display='none'" class="h-14 w-14 object-contain"><div><div class="font-black text-[#0a4de3] text-[18px] leading-none">KLIDO</div><div class="font-black text-[#0a4de3] text-[11px] tracking-[2px]">CRM PRO</div></div></div>
+  <div class="mt-4 text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full w-fit">● API Conectada - Tiempo real</div>
+  <div class="mt-6 flex flex-col gap-1"><a class="bg-[#eef3ff] text-[#0a4de3] font-bold px-4 py-3 rounded-xl text-sm">💬 Inbox</a><a href="/campaigns.html" class="text-slate-500 px-4 py-3 rounded-xl text-sm hover:bg-slate-50">📢 Campaigns</a></div>
 </div>
-
-<div class="w-[380px] bg-[#f8fafc] border-r border-slate-200 flex flex-col">
-  <div class="p-4 flex justify-between items-center"><h3 class="font-bold text-slate-700 text-sm" id="chatCount">0 chats</h3><span class="text-[11px] text-slate-400">Tiempo real</span></div>
-  <div class="mx-3 bg-white border border-slate-200 rounded-xl px-3 py-2 mb-3"><input id="search" placeholder="Buscar contacto..." class="w-full bg-transparent outline-none text-sm"></div>
-  <div id="chatList" class="flex-1 overflow-y-auto"></div>
-</div>
-
-<div class="flex-1 flex flex-col bg-white">
-  <div class="h-[68px] border-b border-slate-200 flex items-center gap-3 px-6"><div id="avatarLetter" class="h-9 w-9 bg-[#0a4de3] text-white rounded-full flex items-center justify-center font-bold">K</div><div><div id="chatName" class="font-bold text-sm text-[#0a4de3]">Selecciona un chat</div><div id="chatPhone" class="text-[11px] text-slate-400">Mensajes en tiempo real activados</div></div></div>
-  <div id="messages" class="flex-1 overflow-y-auto p-6 flex flex-col gap-3 bg-[#fbfdff]"></div>
-  <div class="p-4 border-t border-slate-200 flex gap-3 bg-white"><input id="msgInput" placeholder="Escribe un mensaje..." class="flex-1 border border-slate-200 rounded-full px-5 py-3 outline-none text-sm focus:border-[#0a4de3]"><button onclick="sendMessage()" class="bg-[#0a4de3] text-white px-6 py-3 rounded-full font-bold text-sm">Enviar</button></div>
-</div>
+<div class="w-[380px] bg-[#f8fafc] border-r border-slate-200 flex flex-col"><div class="p-4 flex justify-between"><h3 id="chatCount" class="font-bold text-[#0a4de3] text-sm">0 chats</h3><span class="text-[10px] bg-[#0a4de3] text-white px-2 py-1 rounded-full">REAL TIME</span></div><div class="mx-3 bg-white border border-slate-200 rounded-xl px-3 py-2 mb-3"><input id="search" placeholder="Buscar..." class="w-full bg-transparent outline-none text-sm"></div><div id="chatList" class="flex-1 overflow-y-auto"></div></div>
+<div class="flex-1 flex flex-col bg-white"><div class="h-[70px] border-b border-slate-200 flex items-center gap-3 px-6"><div id="avatarLetter" class="h-10 w-10 bg-[#0a4de3] text-white rounded-full flex items-center justify-center font-bold">K</div><div><div id="chatName" class="font-black text-[#0a4de3] text-sm">Selecciona un chat</div><div id="chatPhone" class="text-[11px] text-slate-400">Historial completo + archivos</div></div></div><div id="messages" class="flex-1 overflow-y-auto p-6 flex flex-col gap-3 bg-[#fbfdff]"></div><div class="p-4 border-t flex gap-3"><input id="msgInput" placeholder="Escribe..." class="flex-1 border border-slate-200 rounded-full px-5 py-3 text-sm outline-none focus:border-[#0a4de3]"><button onclick="sendMessage()" class="bg-[#0a4de3] text-white px-7 py-3 rounded-full font-bold text-sm">Enviar</button></div></div>
+<audio id="notifSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8d6e28a57d.mp3?filename=notification-bell-1047.mp3" preload="auto"></audio>
 <script>
-let currentWa=null, allChats=[];
+let currentWa=null, allChats=[], lastCount=0;
 async function loadChats(){
-  const r=await fetch('/api/chats'); const d=await r.json(); allChats=Array.isArray(d)?d:[]; document.getElementById('chatCount').innerText=`${allChats.length} chats`; renderChats(allChats);
+  try{ const r=await fetch('/api/chats'); const d=await r.json(); allChats=Array.isArray(d)?d:[]; document.getElementById('chatCount').innerText=`${allChats.length} chats`; if(allChats.length>lastCount && lastCount>0){ document.getElementById('notifSound').play().catch(()=>{}); } lastCount=allChats.length; renderChats(allChats);}catch{}
 }
 function renderChats(chats){
   const list=document.getElementById('chatList'); list.innerHTML='';
   chats.forEach(c=>{
+    const isCamp = (c.source==='campaign' || (c.text&&c.text.toLowerCase().includes('alion')));
     const div=document.createElement('div'); div.className=`p-4 border-b border-slate-100 cursor-pointer hover:bg-white ${c.wa_id===currentWa?'bg-white border-l-4 border-l-[#0a4de3]':''}`;
-    div.innerHTML=`<div class="font-bold text-[13px] text-slate-700">${c.name||c.wa_id}</div><div class="text-[12px] text-slate-400 truncate">${c.text||''}</div>`;
+    div.innerHTML=`<div class="flex justify-between"><div class="font-bold text-[13px] text-slate-700">${c.name||c.wa_id}</div>${isCamp?'<span class="bg-yellow-300 text-yellow-900 text-[9px] font-black px-2 py-0.5 rounded-full">CAMPAÑA</span>':''}</div><div class="text-[12px] text-slate-400 truncate">${c.text||''}</div>`;
     div.onclick=()=>openChat(c.wa_id,c.name||c.wa_id); list.appendChild(div);
   });
 }
 async function openChat(id,name){
-  currentWa=id; document.getElementById('chatName').innerText=name; document.getElementById('chatPhone').innerText=id; document.getElementById('avatarLetter').innerText=name[0].toUpperCase();
+  currentWa=id; document.getElementById('chatName').innerText=name; document.getElementById('chatPhone').innerText=id;
   const r=await fetch(`/api/messages/${id}`); const msgs=await r.json(); const box=document.getElementById('messages'); box.innerHTML='';
   msgs.forEach(m=>{
-    const d=document.createElement('div'); d.className=`max-w-[70%] p-3 rounded-2xl text-[13px] ${m.direction==='out'?'self-end bg-[#0a4de3] text-white rounded-br-sm':'self-start bg-white border border-slate-200 rounded-bl-sm'}`;
-    let c=m.text||''; if(m.file_url){ if(m.type==='image') c+=`<br><img src="${m.file_url}" class="mt-2 rounded-xl max-w-[220px]">`; else if(m.type==='document') c=`📄 <a href="${m.file_url}" target="_blank" class="underline">Ver PDF - ${m.text}</a>`; else if(m.type==='audio') c=`<audio controls src="${m.file_url}" class="mt-1"></audio>`; }
+    const isCamp = m.source==='campaign';
+    const d=document.createElement('div'); d.className=`max-w-[72%] p-3.5 rounded-2xl text-[13px] relative ${m.direction==='out'?'self-end bg-[#0a4de3] text-white rounded-br-sm':'self-start bg-white border border-slate-200 rounded-bl-sm shadow-sm'}`;
+    let c=m.text||''; if(isCamp) c=`<span class="bg-yellow-300 text-yellow-900 text-[9px] font-black px-2 py-0.5 rounded-full absolute -top-2 -right-2">CAMPAÑA</span>`+c;
+    if(m.file_url){ if(m.type==='image') c+=`<br><img src="${m.file_url}" class="mt-2 rounded-xl max-w-[240px]">`; else if(m.type==='document') c=`📄 <a href="${m.file_url}" target="_blank" class="underline text-[#0a4de3]">Ver PDF - ${m.text}</a>`; else if(m.type==='audio') c+=`<br><audio controls src="${m.file_url}" class="mt-2 w-[200px]"></audio>`; }
     d.innerHTML=c+`<div class="text-[10px] opacity-60 mt-1 text-right">${new Date(m.created_at).toLocaleTimeString()}</div>`; box.appendChild(d);
   }); box.scrollTop=box.scrollHeight;
 }
-async function sendMessage(){ const i=document.getElementById('msgInput'); if(!i.value||!currentWa) return; const t=i.value; i.value=''; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:currentWa,message:t})}); openChat(currentWa,document.getElementById('chatName').innerText); }
+async function sendMessage(){ const i=document.getElementById('msgInput'); if(!i.value||!currentWa) return; const t=i.value; i.value=''; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:currentWa,message:t,source:'inbox'})}); openChat(currentWa,document.getElementById('chatName').innerText); }
 document.getElementById('msgInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendMessage()});
-setInterval(()=>{ if(currentWa) fetch(`/api/messages/${currentWa}`).then(r=>r.json()).then(ms=>{ if(ms.length>document.getElementById('messages').children.length) openChat(currentWa,document.getElementById('chatName').innerText); }); loadChats(); },2000);
+setInterval(()=>{ if(currentWa) fetch(`/api/messages/${currentWa}`).then(r=>r.json()).then(ms=>{ const box=document.getElementById('messages'); if(ms.length>box.children.length){ document.getElementById('notifSound').play().catch(()=>{}); openChat(currentWa,document.getElementById('chatName').innerText); } }); loadChats(); },2500);
 loadChats();
-</script>
-</body>
-</html>
+</script></body></html>
