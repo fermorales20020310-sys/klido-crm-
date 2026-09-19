@@ -1,4 +1,5 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - Klido CRM Pro</title>
+<script>if(localStorage.getItem('klido_auth')!=='ok')location.href='/login.html';</script>
 <style>:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE;--bg:#F4F6FB}*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto}body{background:var(--bg);min-height:100vh}
 #top{background:linear-gradient(135deg,var(--dark),#1a3a6b);padding:14px 24px;display:flex;align-items:center;gap:12px;color:white}
 #top img{width:40px;height:40px;border-radius:12px;background:white;padding:4px}
@@ -10,14 +11,14 @@ label{font-size:12px;font-weight:800;color:var(--dark);margin-top:14px;display:b
 select,textarea,input{width:100%;padding:13px 14px;margin-top:6px;border-radius:12px;border:1.5px solid #dbe2ef;background:#f8fafd;outline:none;font-size:14px}
 select:focus,textarea:focus{border-color:var(--mid);background:white}
 .btn{width:100%;padding:15px;margin-top:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--dark),var(--mid));color:white;font-weight:800;font-size:15px;cursor:pointer}
-.btn:hover{opacity:.95}.btn:disabled{opacity:.5}
+.btn:disabled{opacity:.5}
 #log{margin-top:12px;font-size:13px;color:var(--mid);font-weight:700}
 .drop{border:2px dashed #b9ccf0;background:var(--light);border-radius:12px;padding:20px;text-align:center;margin-top:6px;cursor:pointer;color:var(--dark);font-size:13px;font-weight:700}
 .hist-item{padding:12px;border-bottom:1px solid #f1f4f9;display:flex;justify-content:space-between;align-items:center}
 .hist-item b{color:var(--dark);font-size:14px}.pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800}.pill-ok{background:#d4edda;color:#155724}.pill-send{background:var(--light);color:var(--mid)}
 #tplInfo{background:var(--light);border-radius:10px;padding:10px 14px;margin-top:10px;font-size:12px;color:var(--dark)}
 </style></head><body>
-<div id="top"><img src="/logo.png" onerror="this.style.display='none'"><b>📢 CAMPAÑAS PRO</b><a href="/">← Bandeja</a></div>
+<div id="top"><img src="/logo.png" onerror="this.style.display='none'"><b>📢 CAMPAÑAS PRO</b><a href="/index.html">← Bandeja</a></div>
 <div class="wrap">
 <div class="card"><h3>Nueva campaña</h3><small>Plantillas aprobadas en Meta • se actualizan solas</small>
 <div id="tplInfo">Cargando plantillas...</div>
@@ -31,10 +32,10 @@ select:focus,textarea:focus{border-color:var(--mid);background:white}
 <script>
 let numbers=[];
 async function load(){const r=await fetch('/api/templates');const t=await r.json();document.getElementById('tpl').innerHTML=t.map(x=>`<option value="${x.name}">${x.name} [${x.language}]</option>`).join('')||'<option>Sin plantillas aprobadas</option>';document.getElementById('tplInfo').textContent=t.length?`✅ ${t.length} plantillas activas: `+t.map(x=>x.name).join(', '):'⏳ No hay plantillas aprobadas aún en Meta';}
-async function uploadFile(el){const f=el.files[0];if(!f)return;const fd=new FormData();fd.append('file',f);document.getElementById('log').textContent='Subiendo...';const r=await fetch('/api/campaigns/upload',{method:'POST',body:fd});const j=await r.json();if(j.ok){numbers=j.numbers;updateCount();document.getElementById('log').textContent=`✅ ${j.total} números cargados del archivo`;}else document.getElementById('log').textContent='❌ Error al subir';}
+async function uploadFile(el){const f=el.files[0];if(!f)return;const fd=new FormData();fd.append('file',f);document.getElementById('log').textContent='Subiendo...';const r=await fetch('/api/campaigns/upload',{method:'POST',body:fd});const j=await r.json();if(j.ok){numbers=j.numbers;updateCount();document.getElementById('log').textContent=`✅ ${j.total} números cargados`;}else document.getElementById('log').textContent='❌ Error al subir';}
 function updateCount(){const manual=document.getElementById('nums').value.split('\n').map(s=>s.replace(/\D/g,'')).filter(n=>n.length>=10);const all=[...new Set([...numbers,...manual])];document.getElementById('count').textContent=all.length+' números listos';return all;}
 document.getElementById('nums').addEventListener('input',()=>updateCount());
 async function sendBulk(){const all=updateCount();const tpl=document.getElementById('tpl').value;if(!tpl||!all.length)return alert('Selecciona plantilla y agrega números');document.getElementById('btnSend').disabled=true;document.getElementById('log').textContent='🚀 Enviando '+all.length+'...';const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:all,templateName:tpl})});const j=await r.json();document.getElementById('log').textContent=j.ok?`✅ Campaña lanzada: ${j.total} mensajes`:'❌ Error';document.getElementById('btnSend').disabled=false;loadC();}
-async function loadC(){const r=await fetch('/api/campaigns');const c=await r.json();document.getElementById('list').innerHTML=c.map(x=>`<div class="hist-item"><div><b>${x.name}</b><div style="font-size:12px;color:#6b7a90">${x.total} contactos • env:${x.sent||0} • leídos:${x.read||0} • fallidos:${x.failed||0}</div></div><span class="pill ${x.status==='completada'?'pill-ok':'pill-send'}">${x.status}</span></div>`).join('')||'<div style="color:#8a9ab5;font-size:13px">Sin campañas aún</div>';}
-load();loadC();setInterval(()=>{load();loadC();},5000);
+async function loadC(){const r=await fetch('/api/campaigns');const c=await r.json();document.getElementById('list').innerHTML=c.map(x=>`<div class="hist-item"><div><b>${x.name}</b><div style="font-size:12px;color:#6b7a90">${x.total} contactos • env:${x.sent||0} • fallidos:${x.failed||0}</div></div><span class="pill ${x.status==='completada'?'pill-ok':'pill-send'}">${x.status}</span></div>`).join('')||'<div style="color:#8a9ab5;font-size:13px">Sin campañas aún</div>';}
+load();loadC();setInterval(()=>{load();loadC();},8000);
 </script></body></html>
