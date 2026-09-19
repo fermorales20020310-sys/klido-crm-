@@ -1,9 +1,19 @@
 {
+  "name": "klido-crm",
+  "version": "3.0.0",
+  "description": "Klido CRM Azul Oscuro",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "pg": "^8.11.3",
+    "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
+    "pg": "^8.11.3",
     "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
