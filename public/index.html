@@ -1,21 +1,172 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Klido CRM</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,Roboto}body{display:flex;height:100vh;background:#f0f2f5}#sidebar{width:360px;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column}#header{padding:12px;display:flex;justify-content:space-between;align-items:center;background:#fff;border-bottom:1px solid #eee}#header b{font-size:16px}#filters{display:flex;gap:6px;padding:10px}.filter{padding:6px 10px;border-radius:20px;border:1px solid #ddd;font-size:12px;cursor:pointer;font-weight:600}.filter.active{background:#25D366;color:#fff;border-color:#25D366}#search{padding:0 10px 10px}#search input{width:100%;padding:10px 12px;border-radius:8px;border:none;background:#f0f2f5;outline:none}#chats{flex:1;overflow:auto}#main{flex:1;display:flex;flex-direction:column;background:#efeae2 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')}#mainHeader{padding:12px;background:#f0f2f5;border-left:1px solid #ddd}#messages{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:6px}.msg{max-width:65%;padding:8px 10px;border-radius:8px;font-size:14px;box-shadow:0 1px 0.5px rgba(0,0,0,.2)}.msg.in{background:#fff;align-self:flex-start;border-top-left-radius:0}.msg.out{background:#d9fdd3;align-self:flex-end;border-top-right-radius:0}.meta{font-size:10px;color:#667781;display:flex;gap:4px;justify-content:flex-end;margin-top:4px}#inputArea{padding:10px;background:#f0f2f5;display:flex;gap:8px}#inputArea input{flex:1;padding:12px;border-radius:21px;border:none;outline:none}#inputArea button{background:#25D366;color:#fff;border:none;padding:0 18px;border-radius:50%;width:45px;height:45px;cursor:pointer;font-size:18px}</style></head><body>
-<div id="sidebar"><div id="header"><b>Klido CRM</b><a href="/campaigns.html" style="background:#25D366;color:#fff;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:800">📢 CAMPAÑAS</a></div><div id="filters"><div class="filter active" data-f="all" onclick="setFilter('all')">Todos</div><div class="filter" data-f="unanswered" onclick="setFilter('unanswered')">🔴 Sin contestar</div><div class="filter" data-f="campaign" onclick="setFilter('campaign')">🟡 Campaña</div></div><div id="search"><input id="q" placeholder="Buscar chat..." oninput="render()"></div><div id="chats"></div></div>
-<div id="main"><div id="mainHeader"><b id="cName">Selecciona un chat</b><div id="cSub" style="font-size:12px;color:#666"></div></div><div id="messages"><div style="margin:auto;text-align:center;color:#667781;margin-top:20%"><h3>👋 Bienvenido a Klido CRM</h3><p>Historial eterno + plantillas dinámicas + marquillas</p><p style="margin-top:10px">🔴 = sin contestar | 🟡 = viene de campaña</p></div></div><div id="inputArea" style="display:none"><input id="msgInput" placeholder="Escribe un mensaje" onkeydown="if(event.key==='Enter')send()"><button onclick="send()">➤</button></div></div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klido CRM</title>
+<style>
+:root{ --blue-dark:#0A1931; --blue-mid:#185ADB; --blue-light:#E8F0FE; --blue-hover:#122954; }
+*{margin:0;padding:0;box-sizing:border-box;font-family: 'Segoe UI',Roboto, sans-serif}
+body{display:flex;height:100vh;background:#f5f7fb;overflow:hidden}
+
+#sidebar{width:380px;background:white;display:flex;flex-direction:column;border-right:1px solid #e3e8ef;box-shadow:2px 0 10px rgba(10,25,49,0.05)}
+#topbar{background:var(--blue-dark);padding:12px 16px;display:flex;align-items:center;gap:12px}
+#topbar img{width:38px;height:38px;border-radius:8px;background:white;object-fit:contain;padding:3px}
+#topbar b{color:white;font-size:16px;letter-spacing:0.3px}
+#topbar a{margin-left:auto;background:var(--blue-mid);color:white;padding:6px 14px;border-radius:20px;text-decoration:none;font-size:12px;font-weight:800;transition:0.2s}
+#topbar a:hover{background:#2a6af0}
+
+#filters{display:flex;gap:8px;padding:12px 12px 8px;background:white}
+.filter{padding:7px 14px;border-radius:20px;border:1.5px solid #dbe2ef;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--blue-dark);background:white;transition:0.2s}
+.filter.active{background:var(--blue-dark);color:white;border-color:var(--blue-dark)}
+.filter:hover{border-color:var(--blue-mid)}
+
+#search{padding:0 12px 12px;background:white;border-bottom:1px solid #eef2f7}
+#search input{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #e3e8ef;background:#f8fafd;outline:none;font-size:13px;transition:0.2s}
+#search input:focus{border-color:var(--blue-mid);background:white}
+
+#chats{flex:1;overflow:auto}
+.chat{padding:12px 14px;border-bottom:1px solid #f3f6fb;cursor:pointer;display:flex;gap:11px;transition:0.15s}
+.chat:hover{background:var(--blue-light)}
+.chat.active{background:#e8eefc;border-left:4px solid var(--blue-mid)}
+.chat.unread{background:#fff5f5;border-left:4px solid #FF3B30}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue-dark),var(--blue-mid));color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.info{flex:1;overflow:hidden}
+.row1{display:flex;justify-content:space-between;align-items:center}
+.name{font-weight:700;font-size:14px;color:var(--blue-dark);display:flex;align-items:center;gap:5px}
+.time{font-size:11px;color:#7a8aa0}
+.preview{font-size:13px;color:#6b7a90;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.badges{display:flex;gap:5px;margin-top:5px}
+.badge-camp{background:#FFD700;color:#000;padding:2px 8px;border-radius:12px;font-size:9.5px;font-weight:900;letter-spacing:0.3px}
+.badge-unread{background:#FF3B30;color:white;padding:2px 8px;border-radius:12px;font-size:9.5px;font-weight:800}
+
+#main{flex:1;display:flex;flex-direction:column;background:#eef2f9}
+#mainHeader{background:var(--blue-dark);padding:14px 20px;display:flex;align-items:center;gap:14px;color:white}
+#mainHeader img{width:40px;height:40px;border-radius:50%;background:white;padding:2px}
+#mainHeader b{font-size:15px}
+#mainHeader span{font-size:12px;color:#a8b9d6}
+
+#messages{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:8px;background: radial-gradient(circle at top, #e8eefc 0%, #eef2f9 100%)}
+.msg{max-width:62%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4;box-shadow:0 1px 3px rgba(10,25,49,0.1);position:relative}
+.msg.in{background:white;color:#1a2a44;align-self:flex-start;border-bottom-left-radius:4px}
+.msg.out{background:linear-gradient(135deg,var(--blue-mid),#2a6af0);color:white;align-self:flex-end;border-bottom-right-radius:4px}
+.meta{font-size:10px;margin-top:5px;display:flex;gap:6px;justify-content:flex-end;opacity:0.8}
+.tag-camp{background:#FFD700;color:#000;padding:2px 6px;border-radius:6px;font-weight:800;font-size:9px}
+
+#inputArea{padding:12px 16px;background:white;border-top:1px solid #e3e8ef;display:flex;gap:10px;align-items:center}
+#inputArea input{flex:1;padding:13px 18px;border-radius:24px;border:1.5px solid #e3e8ef;background:#f8fafd;outline:none;font-size:14px}
+#inputArea input:focus{border-color:var(--blue-mid);background:white}
+#inputArea button{width:46px;height:46px;border-radius:50%;border:none;background:var(--blue-dark);color:white;font-size:18px;cursor:pointer;transition:0.2s;display:flex;align-items:center;justify-content:center}
+#inputArea button:hover{background:var(--blue-mid);transform:scale(1.05)}
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div id="topbar">
+    <img src="/logo.png" alt="Klido" onerror="this.style.display='none'">
+    <b>KLIDO CRM</b>
+    <a href="/campaigns.html">📢 CAMPAÑAS</a>
+  </div>
+  <div id="filters">
+    <div class="filter active" data-f="all" onclick="setFilter('all')">Todos</div>
+    <div class="filter" data-f="unread" onclick="setFilter('unread')">🔴 Sin leer</div>
+    <div class="filter" data-f="camp" onclick="setFilter('camp')">🟡 Campaña</div>
+  </div>
+  <div id="search"><input id="q" placeholder="🔍 Buscar número o nombre..." oninput="render()"></div>
+  <div id="chats">Cargando historial...</div>
+</div>
+
+<div id="main">
+  <div id="mainHeader">
+    <img id="hAvatar" src="/logo.png" style="display:none">
+    <div>
+      <b id="cName">Selecciona un chat</b><br>
+      <span id="cSub">Historial eterno activo • Azul oscuro Klido</span>
+    </div>
+  </div>
+  <div id="messages">
+    <div style="margin:auto;text-align:center;color:#8a9ab5;margin-top:18%">
+      <img src="/logo.png" style="width:80px;height:80px;border-radius:16px;margin-bottom:16px;background:white;padding:8px" onerror="this.style.display='none'">
+      <h3 style="color:var(--blue-dark)">Bienvenido a Klido CRM</h3>
+      <p style="margin-top:8px;font-size:13px">🔵 Tema azul oscuro • 🟡 Campaña • 🔴 Sin contestar</p>
+    </div>
+  </div>
+  <div id="inputArea" style="display:none">
+    <input id="msgInput" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')send()">
+    <button onclick="send()">➤</button>
+  </div>
+</div>
+
 <script>
 let allChats=[], currentWa=null, filter='all';
-async function loadChats(){const r=await fetch('/api/chats'); allChats=await r.json(); render();}
+async function loadChats(){ try{const r=await fetch('/api/chats'); allChats=await r.json(); render();}catch{} }
 function setFilter(f){filter=f; document.querySelectorAll('.filter').forEach(e=>e.classList.toggle('active',e.dataset.f===f)); render();}
+
 function render(){
  const q=(document.getElementById('q').value||'').toLowerCase();
- let list=allChats.filter(c=>{if(filter==='unanswered'&&!c.unanswered) return false; if(filter==='campaign'&&c.source!=='campaign'&&!c.template_name) return false; if(q&&!c.wa_id.includes(q)) return false; return true;});
+ let list=allChats.filter(c=>{
+  if(filter==='unread'&&!c.unanswered) return false;
+  if(filter==='camp'&&(c.source!=='campaign'&&!c.template_name)) return false;
+  if(q&&!c.wa_id.includes(q)&&!(c.name||'').toLowerCase().includes(q)) return false;
+  return true;
+ });
  document.getElementById('chats').innerHTML=list.map(c=>{
-  const isCamp=c.source==='campaign'||!!c.template_name; const sin=c.unanswered;
+  const isCamp=c.source==='campaign'||!!c.template_name;
+  const isUnread=c.unanswered||c.unread_count>0;
   const time=new Date(c.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  return `<div onclick="openChat('${c.wa_id}')" style="padding:10px 12px;border-bottom:1px solid #f0f2f5;cursor:pointer;display:flex;gap:10px;${sin?'background:#fff1f1':''};${currentWa===c.wa_id?'background:#f0f2f5':''}"><div style="width:42px;height:42px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">57</div><div style="flex:1;overflow:hidden"><div style="display:flex;justify-content:space-between"><b style="font-size:14px">${c.wa_id}</b><span style="font-size:11px;color:#667781">${time}</span></div><div style="font-size:13px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(c.text||'').slice(0,40)}</div><div style="margin-top:3px;display:flex;gap:4px">${isCamp?'<span style="background:#FFD700;color:#000;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:800">CAMPAÑA</span>':''}${sin?'<span style="background:#FF3B30;color:#fff;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:800">● SIN CONTESTAR</span>':''}</div></div></div>`;
- }).join('');
+  const initial=(c.name||c.wa_id).slice(-2);
+  return `<div class="chat ${isUnread?'unread':''} ${currentWa===c.wa_id?'active':''}" onclick="openChat('${c.wa_id}')">
+    <div class="avatar">${initial}</div>
+    <div class="info">
+      <div class="row1"><div class="name">${c.wa_id}</div><div class="time">${time} ${isUnread&&c.unread_count?`• ${c.unread_count}`:''}</div></div>
+      <div class="preview">${(c.text||'').slice(0,38)}</div>
+      <div class="badges">${isCamp?'<span class="badge-camp">CAMPAÑA</span>':''}${isUnread?'<span class="badge-unread">● SIN LEER</span>':''}</div>
+    </div>
+  </div>`;
+ }).join('')||'<div style="padding:30px;text-align:center;color:#8a9ab5;font-size:13px">No hay chats en este filtro</div>';
 }
-async function openChat(wa){currentWa=wa; document.getElementById('inputArea').style.display='flex'; document.getElementById('cName').textContent=wa; const ch=allChats.find(c=>c.wa_id===wa); document.getElementById('cSub').textContent=ch?.source==='campaign'?'🟡 Viene de campaña':ch?.unanswered?'🔴 Sin contestar':''; render(); const r=await fetch('/api/messages/'+wa); const msgs=await r.json(); const box=document.getElementById('messages'); box.innerHTML=msgs.map(m=>`<div class="msg ${m.direction==='in'?'in':'out'}">${m.text}<div class="meta">${m.source==='campaign'?'<span style="background:#FFD700;padding:1px 4px;border-radius:4px;font-size:9px;font-weight:800">CAMPAÑA ${m.template_name||''}</span>':''}<span>${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div></div>`).join(''); box.scrollTop=box.scrollHeight;}
-async function send(){const i=document.getElementById('msgInput'); if(!i.value.trim()||!currentWa) return; const t=i.value; i.value=''; document.getElementById('messages').innerHTML+=`<div class="msg out">${t}</div>`; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:currentWa,message:t})}); openChat(currentWa);}
-loadChats(); setInterval(loadChats,3000);
-</script></body></html>
+
+async function openChat(wa){
+ currentWa=wa;
+ document.getElementById('inputArea').style.display='flex';
+ document.getElementById('cName').textContent=wa;
+ const ch=allChats.find(c=>c.wa_id===wa);
+ document.getElementById('cSub').textContent=(ch?.source==='campaign'?'🟡 Viene de campaña • ':'')+(ch?.unread_count?`🔴 ${ch.unread_count} sin leer`:'En línea');
+ document.getElementById('hAvatar').style.display='block';
+ render();
+ // MARCAR COMO LEIDO - quita el rojo
+ fetch(`/api/chats/${wa}/read`,{method:'PUT'}).then(()=>{ if(ch){ch.unanswered=false; ch.unread_count=0;} });
+ const r=await fetch(`/api/messages/${wa}`);
+ const msgs=await r.json();
+ const box=document.getElementById('messages');
+ box.innerHTML=msgs.map(m=>{
+  const isIn=m.direction==='in';
+  return `<div class="msg ${isIn?'in':'out'}">
+    ${m.text}
+    <div class="meta">
+      ${m.source==='campaign'?`<span class="tag-camp">CAMPAÑA ${m.template_name||''}</span>`:''}
+      <span>${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+      ${!isIn?'<span>✓✓</span>':''}
+    </div>
+  </div>`;
+ }).join('');
+ box.scrollTop=box.scrollHeight;
+}
+
+async function send(){
+ const input=document.getElementById('msgInput');
+ const t=input.value.trim();
+ if(!t||!currentWa) return;
+ input.value='';
+ const box=document.getElementById('messages');
+ box.innerHTML+=`<div class="msg out">${t}<div class="meta"><span>Enviando...</span></div></div>`;
+ box.scrollTop=box.scrollHeight;
+ await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:currentWa,message:t})});
+ openChat(currentWa);
+ loadChats();
+}
+
+loadChats();
+setInterval(loadChats,3000);
+</script>
+</body>
+</html>
