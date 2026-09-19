@@ -1,167 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KLIDO AVANZA - CRM PRO</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
-body{display:flex;height:100vh;background:#0f172a;color:#fff;overflow:hidden}
-.sidebar{width:260px;background:#111c30;border-right:1px solid #1e293b;padding:18px;display:flex;flex-direction:column}
-.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:16px;letter-spacing:0.3px;margin-bottom:18px}
-.logo img{height:28px}
-.logo span{font-size:10px;color:#94a3b8;font-weight:600;background:#1e293b;padding:3px 7px;border-radius:5px;margin-left:4px}
-.badge{font-size:11px;background:#132a1e;color:#4ade80;padding:7px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:7px;border:1px solid #1a3a26;width:fit-content}
-.dot{width:8px;height:8px;background:#22c55e;border-radius:50%;box-shadow:0 0 8px #22c55e}
-.menu{margin-top:22px;display:flex;flex-direction:column;gap:6px}
-.menu a{padding:12px 14px;border-radius:10px;color:#94a3b8;text-decoration:none;display:flex;gap:10px;font-size:14px;align-items:center}
-.menu a.active{background:#1a2b4a;color:#fff;font-weight:600}
-.chats{width:360px;background:#162032;border-right:1px solid #1e293b;display:flex;flex-direction:column}
-.chats h3{padding:16px;font-size:14px;font-weight:700}
-.search{margin:0 12px 12px 12px;background:#0f172a;border-radius:10px;padding:10px 12px;border:1px solid #1e293b}
-.search input{width:100%;background:transparent;border:0;color:#fff;outline:none;font-size:13px}
-.chat-item{padding:12px 16px;border-bottom:1px solid rgba(30,41,59,0.4);cursor:pointer;transition:0.15s}
-.chat-item:hover,.chat-item.active{background:#1a2b4a}
-.chat-item b{font-size:13px;display:block}
-.chat-item p{font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
-.main{flex:1;display:flex;flex-direction:column;background:#0f172a}
-.header{padding:12px 20px;background:#111c30;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:12px;height:62px}
-.avatar{width:36px;height:36px;background:#1e3a8a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px}
-.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;background:#0f172a}
-.msg{max-width:65%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.4;word-break:break-word}
-.recibido{background:#1e293b;align-self:flex-start;border-bottom-left-radius:4px}
-.enviado{background:#0ea5e9;align-self:flex-end;border-bottom-right-radius:4px}
-.msg a{color:#7dd3fc;text-decoration:underline}
-.msg img{max-width:240px;border-radius:10px;margin-top:8px;display:block;cursor:pointer}
-.footer{padding:12px 16px;display:flex;gap:10px;background:#111c30;border-top:1px solid #1e293b;align-items:center}
-.footer input{flex:1;background:#0f172a;border:1px solid #1e293b;border-radius:24px;padding:12px 18px;color:#fff;outline:none;font-size:14px}
-.footer button{background:#0ea5e9;border:0;color:#fff;padding:11px 22px;border-radius:24px;cursor:pointer;font-weight:700;font-size:14px}
-</style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO - CRM PRO</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:Inter,system-ui}</style>
 </head>
-<body>
-
-<div class="sidebar">
-  <div class="logo">🐙 KLIDO AVANZA <span>CRM PRO</span></div>
-  <div class="badge"><span class="dot"></span> WhatsApp Conectado</div>
-  <div class="menu">
-    <a class="active">💬 Inbox</a>
-    <a href="/campaigns.html">📢 Campaigns</a>
-    <a href="/templates.html">📄 Templates</a>
+<body class="h-screen flex bg-white text-slate-800">
+<div class="w-[280px] bg-white border-r border-slate-200 p-5 flex flex-col">
+  <div class="flex items-center gap-3 mb-2"><img src="/logo.png" class="h-12 w-12 object-contain"><div><div class="font-black text-[#0a4de3] text-[17px] leading-none">KLIDO</div><div class="font-bold text-[#0a4de3] text-[10px] tracking-widest">CRM PRO</div></div></div>
+  <div class="text-[11px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full w-fit mt-3">● WhatsApp Conectado</div>
+  <div class="mt-6 flex flex-col gap-1">
+    <a class="bg-[#eef3ff] text-[#0a4de3] font-bold px-4 py-3 rounded-xl text-sm">💬 Inbox</a>
+    <a href="/campaigns.html" class="text-slate-500 px-4 py-3 rounded-xl text-sm hover:bg-slate-50">📢 Campaigns</a>
+    <a class="text-slate-400 px-4 py-3 rounded-xl text-sm">📄 Templates</a>
   </div>
+  <div class="mt-auto text-[10px] text-slate-400">Meta Tech Provider - Compliant 2026</div>
 </div>
 
-<div class="chats">
-  <h3 id="chatCount">0 chats</h3>
-  <div class="search"><input id="search" placeholder="Buscar contacto..."></div>
-  <div id="chatList"></div>
+<div class="w-[380px] bg-[#f8fafc] border-r border-slate-200 flex flex-col">
+  <div class="p-4 flex justify-between items-center"><h3 class="font-bold text-slate-700 text-sm" id="chatCount">0 chats</h3><span class="text-[11px] text-slate-400">Tiempo real</span></div>
+  <div class="mx-3 bg-white border border-slate-200 rounded-xl px-3 py-2 mb-3"><input id="search" placeholder="Buscar contacto..." class="w-full bg-transparent outline-none text-sm"></div>
+  <div id="chatList" class="flex-1 overflow-y-auto"></div>
 </div>
 
-<div class="main">
-  <div class="header">
-    <div class="avatar" id="avatarLetter">K</div>
-    <div>
-      <b id="chatName" style="font-size:14px">Selecciona un chat</b>
-      <div style="font-size:11px;color:#94a3b8" id="chatPhone">Elige una conversación para ver archivos</div>
-    </div>
-  </div>
-  <div class="messages" id="messages">
-    <div style="color:#475569;text-align:center;margin-top:120px;font-size:14px">👋 Selecciona un chat<br><small>Ahora sí verás PDFs, fotos y audios</small></div>
-  </div>
-  <div class="footer">
-    <input id="msgInput" placeholder="Escribe un mensaje...">
-    <button onclick="sendMessage()">Enviar</button>
-  </div>
+<div class="flex-1 flex flex-col bg-white">
+  <div class="h-[68px] border-b border-slate-200 flex items-center gap-3 px-6"><div id="avatarLetter" class="h-9 w-9 bg-[#0a4de3] text-white rounded-full flex items-center justify-center font-bold">K</div><div><div id="chatName" class="font-bold text-sm text-[#0a4de3]">Selecciona un chat</div><div id="chatPhone" class="text-[11px] text-slate-400">Mensajes en tiempo real activados</div></div></div>
+  <div id="messages" class="flex-1 overflow-y-auto p-6 flex flex-col gap-3 bg-[#fbfdff]"></div>
+  <div class="p-4 border-t border-slate-200 flex gap-3 bg-white"><input id="msgInput" placeholder="Escribe un mensaje..." class="flex-1 border border-slate-200 rounded-full px-5 py-3 outline-none text-sm focus:border-[#0a4de3]"><button onclick="sendMessage()" class="bg-[#0a4de3] text-white px-6 py-3 rounded-full font-bold text-sm">Enviar</button></div>
 </div>
-
 <script>
-let currentWa = null;
-let allChats = [];
-
+let currentWa=null, allChats=[];
 async function loadChats(){
-  try{
-    const res = await fetch('/api/chats');
-    const data = await res.json();
-    allChats = Array.isArray(data) ? data : (data.rows || []);
-    document.getElementById('chatCount').innerText = `${allChats.length} chats`;
-    renderChats(allChats);
-  }catch(e){
-    console.log(e);
-    document.getElementById('chatCount').innerText = `0 chats`;
-  }
+  const r=await fetch('/api/chats'); const d=await r.json(); allChats=Array.isArray(d)?d:[]; document.getElementById('chatCount').innerText=`${allChats.length} chats`; renderChats(allChats);
 }
-
 function renderChats(chats){
-  const list = document.getElementById('chatList');
-  list.innerHTML = '';
-  if(chats.length===0){
-    list.innerHTML='<div style="padding:20px;color:#64748b;font-size:13px">No hay chats aún. Manda un mensaje de prueba.</div>';
-    return;
-  }
+  const list=document.getElementById('chatList'); list.innerHTML='';
   chats.forEach(c=>{
-    const div = document.createElement('div');
-    div.className = 'chat-item' + (c.wa_id===currentWa?' active':'');
-    const nombre = c.name || c.wa_id || 'Sin nombre';
-    const preview = (c.text||'').substring(0,38);
-    div.innerHTML = `<b>${nombre}</b><p>${preview}</p>`;
-    div.onclick = ()=> openChat(c.wa_id, nombre);
-    list.appendChild(div);
+    const div=document.createElement('div'); div.className=`p-4 border-b border-slate-100 cursor-pointer hover:bg-white ${c.wa_id===currentWa?'bg-white border-l-4 border-l-[#0a4de3]':''}`;
+    div.innerHTML=`<div class="font-bold text-[13px] text-slate-700">${c.name||c.wa_id}</div><div class="text-[12px] text-slate-400 truncate">${c.text||''}</div>`;
+    div.onclick=()=>openChat(c.wa_id,c.name||c.wa_id); list.appendChild(div);
   });
 }
-
-async function openChat(wa_id, name){
-  currentWa = wa_id;
-  document.getElementById('chatName').innerText = name;
-  document.getElementById('chatPhone').innerText = wa_id;
-  document.getElementById('avatarLetter').innerText = (name[0]||'V').toUpperCase();
-  
-  const res = await fetch(`/api/messages/${wa_id}`);
-  const msgs = await res.json();
-  const box = document.getElementById('messages');
-  box.innerHTML = '';
-  
+async function openChat(id,name){
+  currentWa=id; document.getElementById('chatName').innerText=name; document.getElementById('chatPhone').innerText=id; document.getElementById('avatarLetter').innerText=name[0].toUpperCase();
+  const r=await fetch(`/api/messages/${id}`); const msgs=await r.json(); const box=document.getElementById('messages'); box.innerHTML='';
   msgs.forEach(m=>{
-    const div = document.createElement('div');
-    div.className = 'msg ' + (m.direction==='out' ? 'enviado' : 'recibido');
-    let contenido = m.text || '';
-    
-    if(m.file_url){
-      if(m.type==='image'){
-        contenido = `${m.text}<br><a href="${m.file_url}" target="_blank"><img src="${m.file_url}"></a>`;
-      } else if(m.type==='document'){
-        contenido = `📄 <a href="${m.file_url}" target="_blank" download>${m.text}<br><small>Ver / Descargar PDF</small></a>`;
-      } else if(m.type==='audio'){
-        contenido = `<audio controls src="${m.file_url}" style="width:200px"></audio><br>${m.text}`;
-      } else {
-        contenido = `<a href="${m.file_url}" target="_blank">📎 ${m.text}</a>`;
-      }
-    }
-    
-    const hora = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    div.innerHTML = `${contenido}<div style="font-size:10px;opacity:0.6;margin-top:6px;text-align:right">${hora}</div>`;
-    box.appendChild(div);
-  });
-  box.scrollTop = box.scrollHeight;
-  renderChats(allChats);
+    const d=document.createElement('div'); d.className=`max-w-[70%] p-3 rounded-2xl text-[13px] ${m.direction==='out'?'self-end bg-[#0a4de3] text-white rounded-br-sm':'self-start bg-white border border-slate-200 rounded-bl-sm'}`;
+    let c=m.text||''; if(m.file_url){ if(m.type==='image') c+=`<br><img src="${m.file_url}" class="mt-2 rounded-xl max-w-[220px]">`; else if(m.type==='document') c=`📄 <a href="${m.file_url}" target="_blank" class="underline">Ver PDF - ${m.text}</a>`; else if(m.type==='audio') c=`<audio controls src="${m.file_url}" class="mt-1"></audio>`; }
+    d.innerHTML=c+`<div class="text-[10px] opacity-60 mt-1 text-right">${new Date(m.created_at).toLocaleTimeString()}</div>`; box.appendChild(d);
+  }); box.scrollTop=box.scrollHeight;
 }
-
-async function sendMessage(){
-  const input = document.getElementById('msgInput');
-  const text = input.value.trim();
-  if(!text || !currentWa) return alert('Selecciona un chat primero');
-  input.value='';
-  await fetch('/api/send',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({to:currentWa, message:text}) });
-  openChat(currentWa, document.getElementById('chatName').innerText);
-}
-
-document.getElementById('msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
-document.getElementById('search').addEventListener('input', e=>{
-  const q = e.target.value.toLowerCase();
-  const filtered = allChats.filter(c=> (c.wa_id+(c.name||'')+(c.text||'')).toLowerCase().includes(q));
-  renderChats(filtered);
-});
-
+async function sendMessage(){ const i=document.getElementById('msgInput'); if(!i.value||!currentWa) return; const t=i.value; i.value=''; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:currentWa,message:t})}); openChat(currentWa,document.getElementById('chatName').innerText); }
+document.getElementById('msgInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendMessage()});
+setInterval(()=>{ if(currentWa) fetch(`/api/messages/${currentWa}`).then(r=>r.json()).then(ms=>{ if(ms.length>document.getElementById('messages').children.length) openChat(currentWa,document.getElementById('chatName').innerText); }); loadChats(); },2000);
 loadChats();
-setInterval(loadChats, 5000);
 </script>
 </body>
 </html>
