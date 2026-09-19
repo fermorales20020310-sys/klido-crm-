@@ -15,7 +15,6 @@ app.use('/media', express.static(mediaDir));
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_ID = process.env.PHONE_NUMBER_ID;
 const VERIFY = process.env.VERIFY_TOKEN || 'klido123';
-const APP_SECRET = process.env.APP_SECRET;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
 
@@ -61,47 +60,82 @@ app.post('/webhook', async (req,res)=>{
   }catch(e){ console.error(e.message); }
 });
 
-app.post('/api/login',(req,res)=>{ const {email,password}=req.body; if(email===process.env.ADMIN_EMAIL && password===process.env.ADMIN_PASSWORD) res.json({ok:true}); else res.status(401).json({ok:false}); });
+app.post('/api/login',(req,res)=>{
+  const {email,password}=req.body;
+  if(email===process.env.ADMIN_EMAIL && password===process.env.ADMIN_PASSWORD) res.json({ok:true});
+  else res.status(401).json({ok:false});
+});
 
 app.get('/api/chats', async (req,res)=>{
-  const r=await pool.query(`SELECT c.wa_id, c.last_message as text, c.unread_count, c.updated_at as created_at FROM conversations c ORDER BY c.updated_at DESC LIMIT 200`);
-  res.json(r.rows);
+  try{
+    const r=await pool.query(`SELECT c.wa_id, c.last_message as text, c.unread_count, c.updated_at as created_at FROM conversations c ORDER BY c.updated_at DESC LIMIT 200`);
+    res.json(r.rows);
+  }catch(e){ res.status(500).json([]); }
 });
+
 app.get('/api/messages/:wa_id', async (req,res)=>{
-  const r=await pool.query(`SELECT * FROM messages WHERE wa_id=$1 ORDER BY created_at ASC LIMIT 1000`,[req.params.wa_id]);
-  res.json(r.rows);
+  try{
+    const r=await pool.query(`SELECT * FROM messages WHERE wa_id=$1 ORDER BY created_at ASC LIMIT 1000`,[req.params.wa_id]);
+    res.json(r.rows);
+  }catch(e){ res.status(500).json([]); }
 });
-app.put('/api/chats/:wa_id/read', async (req,res)=>{ await pool.query(`UPDATE conversations SET unread_count=0 WHERE wa_id=$1`,[req.params.wa_id]); res.json({ok:true}); });
+
+app.put('/api/chats/:wa_id/read', async (req,res)=>{
+  try{ await pool.query(`UPDATE conversations SET unread_count=0 WHERE wa_id=$1`,[req.params.wa_id]); res.json({ok:true}); }
+  catch(e){ res.status(500).json({ok:false}); }
+});
 
 app.post('/api/send', async (req,res)=>{
   const {to,message}=req.body;
-  await axios.post(`https://graph.facebook.com/v22.0/${PHONE_ID}/messages`,{messaging_product:'whatsapp',to,text:{body:message}},{headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'}});
-  await pool.query(`INSERT INTO messages(wa_id,direction,text,source) VALUES($1,'out',$2,'chat')`,[to,message]);
-  await pool.query(`INSERT INTO conversations(wa_id,last_message,unread_count) VALUES($1,$2,0) ON CONFLICT(wa_id) DO UPDATE SET last_message=EXCLUDED.last_message, updated_at=NOW()`,[to,message]);
-  res.json({ok:true});
+  if(!to ||!message) return res.status(400).json({ok:false, error:'Faltan datos'});
+  try{
+    await axios.post(`https://graph.facebook.com/v22.0/${PHONE_ID}/messages`,{messaging_product:'whatsapp',to,text:{body:message}},{headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'}});
+    await pool.query(`INSERT INTO messages(wa_id,direction,text,source) VALUES($1,'out',$2,'chat')`,[to,message]);
+    await pool.query(`INSERT INTO conversations(wa_id,last_message,unread_count) VALUES($1,$2,0) ON CONFLICT(wa_id) DO UPDATE SET last_message=EXCLUDED.last_message, updated_at=NOW()`,[to,message]);
+    res.json({ok:true});
+  }catch(e){
+    console.error('send error', e.response?.data || e.message);
+    res.status(500).json({ok:false, error:e.response?.data?.error?.message || 'Error enviando'});
+  }
 });
 
 app.get('/api/templates', async (req,res)=>{
-  try{ const r=await axios.get(`https://graph.facebook.com/v22.0/${PHONE_ID}/message_templates?limit=100`,{headers:{Authorization:`Bearer ${TOKEN}`}}); res.json(r.data.data||[]); }
+  try{
+    const r=await axios.get(`https://graph.facebook.com/v22.0/${PHONE_ID}/message_templates?limit=100`,{headers:{Authorization:`Bearer ${TOKEN}`}});
+    res.json(r.data.data||[]);
+  }catch(e){ console.error('templates err', e.message); res.json([]); }
+});
+
+app.get('/api/campaigns', async (req,res)=>{
+  try{ const r=await pool.query(`SELECT * FROM campaigns ORDER BY created_at DESC LIMIT 50`); res.json(r.rows); }
   catch(e){ res.json([]); }
 });
-app.get('/api/campaigns', async (req,res)=>{ const r=await pool.query(`SELECT * FROM campaigns ORDER BY created_at DESC LIMIT 50`); res.json(r.rows); });
 
 app.post('/api/campaigns/send-bulk', async (req,res)=>{
-  const {numbers,templateName}=req.body; if(!numbers?.length||!templateName) return res.status(400).json({ok:false});
-  const cr=await pool.query(`INSERT INTO campaigns(name,template,total,status) VALUES($1,$2,$3,'enviando') RETURNING id`,[templateName,templateName,numbers.length]);
-  const cid=cr.rows[0].id; let sent=0,failed=0;
-  for(const num of numbers){
-    try{
-      await axios.post(`https://graph.facebook.com/v22.0/${PHONE_ID}/messages`,{messaging_product:'whatsapp',to:num,type:'template',template:{name:templateName,language:{code:'es'}}},{headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'}});
-      await pool.query(`INSERT INTO messages(wa_id,direction,text,source) VALUES($1,'out',$2,'campaign')`,[num,`[Plantilla ${templateName}]`]);
-      sent++;
-    }catch(e){ failed++; }
-    await new Promise(r=>setTimeout(r,300));
+  const {numbers,templateName}=req.body;
+  if(!numbers?.length||!templateName) return res.status(400).json({ok:false, error:'Faltan números o plantilla'});
+  try{
+    const cr=await pool.query(`INSERT INTO campaigns(name,template,total,status) VALUES($1,$2,$3,'enviando') RETURNING id`,[templateName,templateName,numbers.length]);
+    const cid=cr.rows[0].id; let sent=0,failed=0;
+    for(const num of numbers){
+      try{
+        await axios.post(`https://graph.facebook.com/v22.0/${PHONE_ID}/messages`,{messaging_product:'whatsapp',to:num,type:'template',template:{name:templateName,language:{code:'es'}}},{headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'}});
+        await pool.query(`INSERT INTO messages(wa_id,direction,text,source) VALUES($1,'out',$2,'campaign')`,[num,`[Plantilla ${templateName}]`]);
+        sent++;
+      }catch(e){ failed++; console.error('bulk fail',num, e.response?.data?.error?.message || e.message); }
+      await new Promise(r=>setTimeout(r,400));
+    }
+    await pool.query(`UPDATE campaigns SET sent=$1, failed=$2, status='enviada' WHERE id=$3`,[sent,failed,cid]);
+    res.json({ok:true,sent,failed});
+  }catch(e){
+    console.error('bulk error', e.message);
+    res.status(500).json({ok:false, error:'Error en campaña'});
   }
-  await pool.query(`UPDATE campaigns SET sent=$1, failed=$2, status='enviada' WHERE id=$3`,[sent,failed,cid]);
-  res.json({ok:true,sent,failed});
 });
 
-app.get('/health', async (req,res)=>{ const r=await pool.query('SELECT COUNT(*) FROM messages'); res.json({ok:true,totalMensajes:r.rows[0].count}); });
+app.get('/health', async (req,res)=>{
+  try{ const r=await pool.query('SELECT COUNT(*) FROM messages'); res.json({ok:true,totalMensajes:r.rows[0].count}); }
+  catch(e){ res.status(500).json({ok:false}); }
+});
+
 app.listen(process.env.PORT||3000,()=>console.log('KLIDO CRM ON'));
