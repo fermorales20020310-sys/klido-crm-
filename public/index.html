@@ -1,85 +1,26 @@
-<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KLIDO CRM Pro</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui}
-body{background:#0a0f1e;color:#e2e8f0;height:100vh;overflow:hidden}
-.header{height:64px;background:#0a0f1e;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px}
-.logo .icon{width:32px;height:32px;background:#2b7cff;border-radius:8px;display:grid;place-items:center}
-.badge{background:#2b7cff;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;margin-left:8px}
-.app{max-width:1600px;margin:16px auto;height:calc(100vh - 80px);background:#111727;border:1px solid #1e293b;border-radius:20px;display:grid;grid-template-columns:220px 360px 1fr 320px;overflow:hidden}
-.menu{background:#0f172a;border-right:1px solid #1e293b;padding:16px 12px;display:flex;flex-direction:column;gap:10px}
-.btn-menu{padding:14px 16px;border-radius:12px;border:0;width:100%;text-align:left;font-size:14px;cursor:pointer;display:flex;gap:10px;align-items:center}
-.btn-menu.active{background:#2b7cff;color:white;font-weight:800}
-.btn-menu.idle{background:transparent;color:#94a3b8;border:1px solid #1e293b}
-.btn-menu.idle:hover{background:#172340;color:white}
-.inbox{background:#0f172a;border-right:1px solid #1e293b;display:flex;flex-direction:column}
-.search{margin:12px;padding:10px 14px;background:#111c33;border:1px solid #1e293b;border-radius:12px;display:flex;gap:8px}
-.search input{background:transparent;border:0;color:#fff;outline:none;width:100%}
-.chatlist{overflow-y:auto;flex:1}
-.chat-row{padding:14px;border-bottom:1px solid #162032;display:flex;gap:10px;cursor:pointer}
-.chat-row.active{background:#172340;border-left:3px solid #2b7cff}
-.avatar{width:40px;height:40px;border-radius:50%;background:#2b7cff;display:grid;place-items:center;font-weight:800;color:white}
-.dot{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block;margin-left:4px}
-.tag-yellow{background:#facc15;color:#000;font-size:10px;font-weight:900;padding:3px 8px;border-radius:10px}
-.chat-main{display:flex;flex-direction:column;background:#0b1222}
-.chat-head{height:64px;border-bottom:1px solid #1e293b;padding:0 16px;display:flex;align-items:center;justify-content:space-between;background:#0f172a}
-.bubble{max-width:70%;padding:12px 14px;border-radius:16px;font-size:13px;margin:6px 0}
-.bubble.in{background:#1e293b}
-.bubble.out{background:#93c5fd;color:#0f172a;align-self:flex-end}
-.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;background:radial-gradient(circle at center,#111d35 0%,#0b1222 100%)}
-.input-bar{padding:12px;border-top:1px solid #1e293b;display:flex;gap:10px;background:#0f172a}
-.input-bar input{flex:1;background:#111c33;border:1px solid #1e293b;padding:12px 16px;border-radius:24px;color:white;outline:none}
-.btn-send{width:44px;height:44px;background:#2b7cff;border-radius:50%;border:0;color:white;cursor:pointer}
-.profile{background:#0f172a;border-left:1px solid #1e293b;padding:16px}
-.file-preview img{width:100%;border-radius:8px;margin-top:6px;max-width:220px}
-</style></head>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>KLIDO CRM Pro</title>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#0a0f1e;color:#e2e8f0;height:100vh;overflow:hidden}.header{height:64px;background:#0a0f1e;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;padding:0 20px}.logo{display:flex;gap:10px;align-items:center;font-weight:900;font-size:19px}.app{height:calc(100vh - 64px);display:grid;grid-template-columns:200px 360px 1fr 300px;background:#111727;border:1px solid #1e293b;border-radius:20px;margin:12px;overflow:hidden}.menu{background:#0f172a;border-right:1px solid #1e293b;padding:12px;display:flex;flex-direction:column;gap:8px}.m{padding:13px;border-radius:10px;text-decoration:none;display:flex;gap:8px;font-size:13px}.m.active{background:#2b7cff;color:white;font-weight:800}.m.idle{background:transparent;color:#94a3b8;border:1px solid #1e293b}.m.idle:hover{background:#172340;color:white}.chatlist{overflow:auto;flex:1}.row{padding:12px;border-bottom:1px solid #162032;display:flex;gap:8px;cursor:pointer}.row.active{background:#172340;border-left:3px solid #2b7cff}.avatar{width:38px;height:38px;background:#2b7cff;border-radius:50%;display:grid;place-items:center;font-weight:800;color:white}.dot{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block}.tag{background:#facc15;color:#000;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;margin-left:4px}.bubble{max-width:68%;padding:10px 12px;border-radius:14px;font-size:13px;margin:5px 0}.bubble.in{background:#1e293b}.bubble.out{background:#93c5fd;color:#0f172a;align-self:flex-end}.msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;background:#0b1222}</style></head>
 <body>
 <div class="header">
-  <div class="logo"><div class="icon">K</div> KLIDO CRM Pro <span class="badge">Pro Plan</span></div>
-  <button onclick="localStorage.clear();location.href='/login'" style="background:#1e293b;color:white;border:1px solid #334155;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:12px">Salir ↪</button>
+<div class="logo"><img src="/logo.png" onerror="this.outerHTML='<div style=width:32px;height:32px;background:#2b7cff;border-radius:8px;display:grid;place-items:center;color:white;font-weight:900>K</div>'" style="width:32px;height:32px;border-radius:8px;background:white;padding:2px"> KLIDO CRM Pro <span style="background:#2b7cff;padding:3px 8px;border-radius:12px;font-size:10px;margin-left:6px">Pro Plan</span></div>
+<button onclick="localStorage.clear();location.href='/login.html'" style="background:#1e293b;color:white;border:1px solid #334155;padding:7px 14px;border-radius:20px;cursor:pointer">Salir ↪</button>
 </div>
 <div class="app">
-  <div class="menu">
-    <button class="btn-menu active">💬 Mensajes</button>
-    <button id="btnCampaign" class="btn-menu idle">📢 Campaña</button>
-  </div>
-  <div class="inbox"><div style="padding:16px;font-weight:800;border-bottom:1px solid #1e293b">Inbox</div><div class="search"><span>🔍</span><input id="searchBox" placeholder="Buscar..."></div><div class="chatlist" id="chatList"></div></div>
-  <div class="chat-main"><div class="chat-head"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="hAvatar">KL</div><div><div id="hName" style="font-weight:800">Selecciona un chat</div><div id="hStatus" style="font-size:11px;color:#94a3b8">WhatsApp</div></div></div></div><div class="msgs" id="msgs"></div><div class="input-bar"><input id="msgInput" placeholder="Escribe un mensaje..."><button class="btn-send" onclick="sendMsg()">➤</button></div></div>
-  <div class="profile"><b>Customer Profile</b><div style="margin-top:12px;background:#111c33;padding:12px;border-radius:12px;border:1px solid #1e293b"><div id="pName">Selecciona chat</div><div id="pPhone" style="font-size:11px;color:#94a3b8"></div><div id="campaignTag" style="display:none;margin-top:8px"><span class="tag-yellow">CAMPAÑA</span></div></div></div>
+<div class="menu">
+<a href="/index.html" class="m active">💬 Mensajes</a>
+<a href="/campaigns.html" class="m idle" id="linkCamp">📢 Campaña</a>
 </div>
-<audio id="notif" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+<div style="background:#0f172a;border-right:1px solid #1e293b;display:flex;flex-direction:column"><div style="padding:14px;font-weight:800;border-bottom:1px solid #1e293b">Inbox - Tiempo real <span class="dot"></span></div><div style="padding:10px"><input id="search" placeholder="Buscar..." style="width:100%;background:#111c33;border:1px solid #1e293b;padding:8px 12px;border-radius:10px;color:white"></div><div class="chatlist" id="list"></div></div>
+<div style="display:flex;flex-direction:column;background:#0b1222"><div style="height:60px;border-bottom:1px solid #1e293b;background:#0f172a;padding:0 14px;display:flex;align-items:center;gap:10px"><div class="avatar" id="ha">KL</div><div><div id="hn" style="font-weight:800">Selecciona chat</div><div style="font-size:11px;color:#94a3b8">Online • WhatsApp <span class="dot"></span></div></div></div><div class="msgs" id="msgs"></div><div style="padding:10px;border-top:1px solid #1e293b;display:flex;gap:8px;background:#0f172a"><input id="inp" placeholder="Escribe..." style="flex:1;background:#111c33;border:1px solid #1e293b;padding:10px 14px;border-radius:20px;color:white"><button onclick="send()" style="width:40px;height:40px;background:#2b7cff;border:0;border-radius:50%;color:white">➤</button></div></div>
+<div style="background:#0f172a;border-left:1px solid #1e293b;padding:14px"><b>Customer Profile</b><div style="margin-top:10px;background:#111c33;border:1px solid #1e293b;padding:10px;border-radius:10px"><div id="pn">Selecciona</div><div id="pp" style="font-size:11px;color:#94a3b8"></div><div id="ctag" style="display:none;margin-top:6px"><span class="tag">CAMPAÑA</span></div></div></div>
+</div>
 <script>
-if(!localStorage.getItem('klido_auth')) location.href='/login';
-let activeWa=null,lastCount=0;
-document.getElementById('btnCampaign').onclick = function(){ window.location.href='/campaigns.html'; };
-async function loadChats(){
-  const r=await fetch('/api/chats'); const data=await r.json(); const list=document.getElementById('chatList'); list.innerHTML='';
-  const s=document.getElementById('searchBox').value.toLowerCase();
-  data.filter(c=> (c.wa_id+(c.text||'')).toLowerCase().includes(s)).forEach(c=>{
-    const isOnline=(Date.now()-new Date(c.created_at).getTime())<10*60*1000;
-    const div=document.createElement('div'); div.className='chat-row'+(c.wa_id===activeWa?' active':''); div.onclick=()=>openChat(c.wa_id,c.name||c.wa_id,c.source);
-    div.innerHTML=`<div class="avatar">${(c.name||c.wa_id).slice(0,2).toUpperCase()}</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${(c.name||c.wa_id).slice(0,16)} ${isOnline?'<span class="dot"></span>':''} ${c.source==='campaign'?'<span class="tag-yellow">CAMPAÑA</span>':''}</div><div style="font-size:11px;color:#94a3b8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${c.text||''}</div></div>`;
-    list.appendChild(div);
-  });
-  if(data.length>lastCount && lastCount>0) document.getElementById('notif').play().catch(()=>{});
-  lastCount=data.length;
-}
-async function openChat(wa_id,name,source){
-  activeWa=wa_id; document.getElementById('hName').innerText=name; document.getElementById('pName').innerText=name; document.getElementById('pPhone').innerText=wa_id;
-  document.getElementById('hAvatar').innerText=name.slice(0,2).toUpperCase(); document.getElementById('campaignTag').style.display=source==='campaign'?'block':'none';
-  const r=await fetch('/api/messages/'+wa_id); const msgs=await r.json(); const box=document.getElementById('msgs'); box.innerHTML='';
-  msgs.forEach(m=>{
-    const d=document.createElement('div'); d.className='bubble '+(m.direction==='out'?'out':'in');
-    let f=''; if(m.file_url){ if(m.file_url.match(/jpg|png|jpeg|webp/i)) f=`<div class="file-preview"><img src="${m.file_url}"></div>`; else f=`<div><a href="${m.file_url}" target="_blank" style="color:#93c5fd">📎 Ver archivo</a></div>`; }
-    d.innerHTML=`${m.source==='campaign'?'<span class="tag-yellow" style="font-size:9px">CAMPAÑA - alion_co</span><br>':''}${m.text||''}${f}<div style="font-size:9px;opacity:0.5;text-align:right;margin-top:4px">${new Date(m.created_at).toLocaleTimeString()}</div>`;
-    box.appendChild(d);
-  }); box.scrollTop=box.scrollHeight;
-}
-async function sendMsg(){ const i=document.getElementById('msgInput'); if(!i.value||!activeWa) return; const t=i.value; i.value=''; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:activeWa,message:t,source:'inbox'})}); openChat(activeWa,document.getElementById('hName').innerText,'inbox'); }
-document.getElementById('msgInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg()});
-setInterval(loadChats,3000); loadChats();
+if(!localStorage.getItem('klido_auth')) location.href='/login.html';
+let act=null;
+document.getElementById('linkCamp').addEventListener('click',function(e){ e.preventDefault(); window.location.href='/campaigns.html'; });
+async function load(){ const r=await fetch('/api/chats'); const d=await r.json(); const l=document.getElementById('list'); l.innerHTML=''; const s=document.getElementById('search').value.toLowerCase(); d.filter(c=>(c.wa_id+(c.text||'')).toLowerCase().includes(s)).forEach(c=>{ const on=(Date.now()-new Date(c.created_at).getTime())<10*60*1000; const div=document.createElement('div'); div.className='row'+(c.wa_id===act?' active':''); div.onclick=()=>openC(c.wa_id,c.name||c.wa_id,c.source); div.innerHTML=`<div class="avatar">${(c.name||c.wa_id).slice(0,2).toUpperCase()}</div><div style="flex:1"><div style="font-size:12px;font-weight:700">${(c.name||c.wa_id).slice(0,14)} ${on?'<span class=dot></span>':''} ${c.source==='campaign'?'<span class=tag>CAMPAÑA</span>':''}</div><div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.text||''}</div></div>`; l.appendChild(div); }); }
+async function openC(id,name,src){ act=id; document.getElementById('hn').innerText=name; document.getElementById('pn').innerText=name; document.getElementById('pp').innerText=id; document.getElementById('ha').innerText=name.slice(0,2).toUpperCase(); document.getElementById('ctag').style.display=src==='campaign'?'block':'none'; const r=await fetch('/api/messages/'+id); const m=await r.json(); const b=document.getElementById('msgs'); b.innerHTML=''; m.forEach(x=>{ const d=document.createElement('div'); d.className='bubble '+(x.direction==='out'?'out':'in'); let f=''; if(x.file_url){ if(x.file_url.match(/jpg|png|webp/i)) f=`<br><img src="${x.file_url}" style="max-width:180px;border-radius:8px;margin-top:4px">`; else f=`<br><a href="${x.file_url}" target="_blank" style="color:#60a5fa">📎 Archivo</a>`; } d.innerHTML=`${x.source==='campaign'?'<span class=tag>CAMPAÑA - alion_co</span><br>':''}${x.text||''}${f}`; b.appendChild(d); }); b.scrollTop=b.scrollHeight; load(); }
+async function send(){ const i=document.getElementById('inp'); if(!i.value||!act) return; const t=i.value; i.value=''; await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:act,message:t,source:'inbox'})}); openC(act,document.getElementById('hn').innerText,'inbox'); }
+document.getElementById('inp').addEventListener('keydown',e=>{if(e.key==='Enter')send()}); setInterval(load,3000); load();
 </script>
-</body>
-</html>
+</body></html>
