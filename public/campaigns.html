@@ -1,47 +1,18 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - Klido CRM Pro</title>
-<script>if(localStorage.getItem('klido_auth')!=='ok')location.href='/login.html';</script>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - KLIDO</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<style>
-:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE;--bg:#eef3ff}
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Segoe UI',system-ui}body{background:var(--bg);min-height:100vh}
-#top{background:linear-gradient(135deg,var(--dark),#143a7a);padding:14px 22px;display:flex;align-items:center;gap:12px;color:#fff}
-#top img{width:40px;height:40px;border-radius:12px;background:#fff;padding:4px}
-#top b{flex:1;letter-spacing:1.5px}
-.btn-top{color:#fff;text-decoration:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700}
-.btn-salir{background:rgba(255,59,48,.2);border:1px solid rgba(255,59,48,.5);color:#ff8a80;padding:9px 16px;border-radius:10px;font-weight:800;cursor:pointer}
-.btn-salir:hover{background:#ff3b30;color:#fff}
-.wrap{max-width:920px;margin:24px auto;padding:0 18px;display:grid;gap:18px}
-.card{background:var(--light);border-radius:20px;padding:26px;border:1px solid #c9d8f5;box-shadow:0 10px 30px rgba(10,25,49,.07)}
-.card h3{color:var(--dark);font-size:17px;display:flex;align-items:center;gap:8px}
-label{font-size:12px;font-weight:800;color:var(--dark);margin-top:16px;display:block;letter-spacing:.3px}
-select,textarea{width:100%;padding:14px;margin-top:8px;border-radius:14px;border:1.5px solid #b9ccf0;background:#fff;outline:none;font-size:14px}
-.drop{margin-top:8px;border:2px dashed var(--mid);border-radius:14px;padding:24px;text-align:center;background:#fff;cursor:pointer;color:var(--dark);transition:.2s}
-.drop:hover{background:#f0f5ff}
-.btn-send{width:100%;padding:16px;margin-top:18px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--dark),var(--mid));color:#fff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 25px rgba(24,90,219,.35)}
-#log{margin-top:12px;font-weight:700;color:var(--mid);font-size:13px}
-.hist{padding:14px 4px;border-bottom:1px solid #d0ddf7;display:flex;justify-content:space-between;align-items:center}
-.badge{background:#ffcc00;color:var(--dark);padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800}
-</style></head><body>
-<div id="top"><img src="/logo.png" onerror="this.style.display='none'"><b>KLIDO CRM • CAMPAÑAS</b><a class="btn-top" href="/index.html">← Bandeja</a><button class="btn-salir" onclick="localStorage.removeItem('klido_auth');location.href='/login.html'">Salir</button></div>
-<div class="wrap">
-<div class="card"><h3>🚀 Nueva campaña profesional</h3>
-<label>1. PLANTILLA APROBADA DE TU API</label><select id="tpl"><option>Cargando plantillas...</option></select>
-<label>2. SUBE EXCEL CON NÚMEROS</label>
-<div class="drop" onclick="document.getElementById('file').click()"><div style="font-size:32px">📊</div><div style="font-weight:800;margin-top:6px">Click para subir .xlsx / .xls / .csv</div><div style="font-size:12px;color:#5a6a85">Primera columna = números con código país</div><div id="fname" style="font-size:12px;color:var(--mid);margin-top:6px;font-weight:700"></div></div>
-<input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
-<label>O PEGA MANUALMENTE</label><textarea id="nums" rows="4" placeholder="573001234567&#10;573009876543"></textarea>
-<div id="count" style="font-size:13px;font-weight:800;color:var(--dark);margin-top:8px"></div>
-<button class="btn-send" onclick="sendBulk()">🚀 LANZAR CAMPAÑA AHORA</button><div id="log"></div>
-</div>
-<div class="card"><h3>� history Historial de campañas</h3><div id="list" style="margin-top:12px"></div></div>
-</div>
-<script>
-let excelNums=[];
-document.getElementById('file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;document.getElementById('fname').textContent='📄 '+f.name;const r=new FileReader();r.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const d=XLSX.utils.sheet_to_json(ws,{header:1});excelNums=d.map(row=>String(row[0]||'').replace(/\D/g,'')).filter(n=>n.length>=10);upd();};r.readAsArrayBuffer(f);});
-function upd(){const man=document.getElementById('nums').value.split('\n').map(s=>s.replace(/\D/g,'')).filter(n=>n.length>=10);const t=[...new Set([...excelNums,...man])];document.getElementById('count').textContent='✅ Total números listos: '+t.length+(excelNums.length?' ('+excelNums.length+' del Excel)':'');return t;}
-document.getElementById('nums').addEventListener('input',upd);
-async function loadTpl(){try{const r=await fetch('/api/templates');const t=await r.json();document.getElementById('tpl').innerHTML=t.map(x=>`<option value="${x.name}">${x.name} (${x.language||'es'})</option>`).join('')||'<option value="">Sin plantillas</option>';}catch(e){document.getElementById('tpl').innerHTML='<option>Error</option>';}}
-async function sendBulk(){const nums=upd();const tpl=document.getElementById('tpl').value;if(!tpl)return alert('Selecciona plantilla');if(!nums.length)return alert('Sube Excel o pega números');document.getElementById('log').textContent='⏳ Enviando a '+nums.length+' contactos...';const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:nums,templateName:tpl})});const j=await r.json();document.getElementById('log').textContent=j.ok?`✅ Campaña lanzada: ${j.sent} enviados, ${j.failed} fallidos`:'❌ Error';loadH();}
-async function loadH(){const r=await fetch('/api/campaigns');const c=await r.json();document.getElementById('list').innerHTML=c.map(x=>`<div class="hist"><div><b style="color:#0A1931">🟡 ${x.name}</b><div style="font-size:12px;color:#5a6a85">${new Date(x.created_at).toLocaleString()} • ${x.total} contactos</div></div><div style="text-align:right"><span class="badge">${x.status}</span><div style="font-size:12px;margin-top:4px">✅ ${x.sent} | ❌ ${x.failed}</div></div></div>`).join('')||'<div style="color:#5a6a85;font-size:13px">Sin campañas aún</div>';}
-loadTpl();loadH();
-</script></body></html>
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial}body{display:flex;height:100vh;background:#E8F1FF}.side{width:260px;background:#0A1931;color:#fff;padding:20px;display:flex;flex-direction:column}.side img{width:90px;margin:0 auto 20px}.side button{background:transparent;color:#fff;border:1px solid #2a4a7a;padding:12px;border-radius:8px;margin:6px 0;cursor:pointer;text-align:left}.side button.active{background:#1E3A8A}.top{position:fixed;top:0;right:0;left:260px;height:60px;background:#fff;display:flex;justify-content:flex-end;align-items:center;padding:0 20px}.top button{background:#0A1931;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer}.main{flex:1;margin:80px 20px;background:#fff;border-radius:12px;padding:25px;overflow-y:auto}select,input{width:100%;padding:12px;margin:8px 0;border:2px solid #E8F1FF;border-radius:8px}.btn{background:#0A1931;color:#fff;border:none;padding:12px 25px;border-radius:8px;cursor:pointer;font-weight:700}.card{border:1px solid #E8F1FF;border-radius:8px;padding:15px;margin:10px 0}</style></head>
+<body>
+<div class="side"><img src="/logo.png"><button onclick="location.href='/index.html'">💬 Mensajes</button><button class="active">📢 Campañas</button></div>
+<div class="top"><button onclick="localStorage.clear();location.href='/login.html'">Salir</button></div>
+<div class="main"><h2 style="color:#0A1931">📢 Nueva Campaña</h2>
+<label>Plantilla aprobada por Meta:</label><select id="tpl"><option>Cargando...</option></select>
+<label>Subir Excel con números (columna A):</label><input type="file" id="xl" accept=".xlsx,.xls,.csv">
+<p id="cnt" style="color:#1E3A8A;font-weight:600"></p>
+<button class="btn" onclick="sendCamp()">Enviar Campaña</button>
+<h3 style="margin-top:30px;color:#0A1931">Historial</h3><div id="hist"></div></div>
+<script>if(!localStorage.getItem('k'))location.href='/login.html';let nums=[];
+async function init(){const r=await fetch('/api/templates');const t=await r.json();const s=document.getElementById('tpl');s.innerHTML=t.length?t.map(x=>`<option value="${x.name}">${x.name} (${x.status})</option>`).join(''):'<option>No hay plantillas</option>';loadHist()}
+document.getElementById('xl').addEventListener('change',e=>{const f=e.target.files[0];const rd=new FileReader();rd.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'binary'});const ws=wb.Sheets[wb.SheetNames[0]];const d=XLSX.utils.sheet_to_json(ws,{header:1});nums=d.flat().map(v=>String(v).replace(/\D/g,'')).filter(v=>v.length>=10);document.getElementById('cnt').textContent=nums.length+' números cargados'};rd.readAsBinaryString(f)});
+async function sendCamp(){const tpl=document.getElementById('tpl').value;if(!nums.length)return alert('Sube Excel primero');if(!confirm(`Enviar a ${nums.length} números?`))return;const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:nums,templateName:tpl})});const j=await r.json();alert(`Enviados: ${j.sent} Fallidos: ${j.failed}`);loadHist()}
+async function loadHist(){const r=await fetch('/api/campaigns');const h=await r.json();document.getElementById('hist').innerHTML=h.map(c=>`<div class="card"><b>${c.name}</b> - Total:${c.total} ✅${c.sent} ❌${c.failed}<br><small>${new Date(c.created_at).toLocaleString()}</small></div>`).join('')}
+init()</script></body></html>
