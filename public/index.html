@@ -3,27 +3,62 @@
 <style>:root{--dark:#0A1931;--mid:#185ADB;--light:#E8F0FE;--bg:#E8F0FE}*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI'}body{display:flex;height:100vh;background:var(--bg)}
 #side{width:360px;background:var(--light);border-right:1px solid #c9d8f5;display:flex;flex-direction:column}
 #topbar{background:linear-gradient(135deg,var(--dark),#1a3a6b);color:#fff;padding:12px;display:flex;align-items:center;gap:10px}
-#topbar img{width:36px;height:36px;border-radius:10px;background:#fff;padding:3px}#topbar b{font-size:15px;flex:1}
-#btnCamp{background:var(--mid);color:#fff;text-decoration:none;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:800}
-#btnSalir{background:#ff3b30;color:#fff;border:none;padding:8px 14px;border-radius:10px;font-weight:800;cursor:pointer;margin-left:auto}
-#filters{display:flex;gap:8px;padding:12px}.f{padding:8px 14px;border-radius:20px;border:1px solid #b9ccf0;background:#fff;font-size:12px;font-weight:700;cursor:pointer;color:var(--dark)}.f.on{background:var(--dark);color:#fff;border-color:var(--dark)}
-#search{margin:0 12px 12px;padding:11px 14px;border-radius:12px;border:1.5px solid #b9ccf0;background:#fff;outline:none}
-#list{flex:1;overflow-y:auto;background:var(--light)}.chat{padding:14px;border-bottom:1px solid #d0ddf7;display:flex;gap:12px;cursor:pointer;background:var(--light);align-items:center}.chat:hover{background:#d6e4ff}.chat.on{background:#d6e4ff;border-left:4px solid var(--mid)}
-.av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--dark),var(--mid));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
-#main{flex:1;display:flex;flex-direction:column;background:var(--bg)}#chead{background:var(--dark);color:#fff;padding:14px 20px}#msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
-.m{max-width:70%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.45}.in{background:#fff;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.06)}.out{background:linear-gradient(135deg,var(--mid),#2f6bff);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
-#box{padding:16px;background:var(--light);display:flex;gap:10px;border-top:1px solid #c9d8f5}#box input{flex:1;padding:14px;border-radius:12px;border:1.5px solid #b9ccf0;outline:none;background:#fff}#box button{padding:14px 22px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--dark),var(--mid));color:#fff;font-weight:800;cursor:pointer}
-#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--dark);text-align:center}</style></head><body>
-<div id="side"><div id="topbar"><img src="/logo.png" onerror="this.style.display='none'"><b>KLIDO CRM</b><a id="btnCamp" href="/campaigns.html">📢 CAMPAÑAS</a><button id="btnSalir" onclick="localStorage.removeItem('klido_auth');location.href='/login.html'">Salir</button></div>
-<div id="filters"><div class="f on" onclick="setF('all',this)">Todos</div><div class="f" onclick="setF('unread',this)">🔴 Sin leer</div></div>
-<input id="search" placeholder="🔍 Buscar número..." oninput="render()"><div id="list"></div></div>
-<div id="main"><div id="chead" style="display:none"><b id="cname"></b></div><div id="msgs"><div id="welcome"><h2>Bienvenido a Klido CRM</h2><p style="color:#4a5a7a;margin-top:8px">🔵 Azul oscuro • Azul claro • Historial eterno</p></div></div>
-<div id="box" style="display:none"><input id="txt" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Enviar</button></div></div>
-<script>let chats=[],cur=null,filter='all';
-async function load(){try{const r=await fetch('/api/chats');chats=await r.json();render();}catch(e){}}
-function setF(f,el){filter=f;document.querySelectorAll('.f').forEach(x=>x.classList.remove('on'));el.classList.add('on');render();}
-function render(){const q=document.getElementById('search').value;const L=document.getElementById('list');let f=chats.filter(c=>!q||c.wa_id.includes(q));if(filter==='unread')f=f.filter(c=>c.unread_count>0);
-L.innerHTML=f.map(c=>`<div class="chat ${cur===c.wa_id?'on':''}" onclick="openC('${c.wa_id}')"><div class="av">${c.wa_id.slice(-2)}</div><div style="flex:1"><div style="display:flex;justify-content:space-between"><b style="color:#0A1931;font-size:14px">${c.wa_id}</b><span style="font-size:11px;color:#5a6a85">${new Date(c.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div><div style="font-size:13px;color:#4a5a7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.text||''}</div></div>${c.unread_count?`<div style="background:#ff3b30;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${c.unread_count}</div>`:''}</div>`).join('')||'<div style="padding:20px;color:#5a6a85;font-size:13px;text-align:center">No hay chats.<br>Envía un WhatsApp para probar.</div>';}
-async function openC(id){cur=id;document.getElementById('chead').style.display='block';document.getElementById('box').style.display='flex';document.getElementById('cname').textContent=id;await fetch('/api/chats/'+id+'/read',{method:'PUT'});const r=await fetch('/api/messages/'+id);const ms=await r.json();const M=document.getElementById('msgs');M.innerHTML=ms.map(m=>`<div class="m ${m.direction==='in'?'in':'out'}">${m.text}<div style="font-size:10px;opacity:.6;margin-top:4px">${new Date(m.created_at).toLocaleString()}</div></div>`).join('');M.scrollTop=M.scrollHeight;load();}
+#topbar b{font-size:15px;flex:1;letter-spacing:.5px}
+#btnSalir{background:#ff3b30;color:#fff;border:none;padding:8px 16px;border-radius:10px;font-weight:800;cursor:pointer;margin-left:auto}
+#search{margin:12px;padding:11px 14px;border-radius:12px;border:1.5px solid #b9ccf0;background:#fff;outline:none}
+#list{flex:1;overflow-y:auto;background:var(--light)}
+.chat{padding:14px;border-bottom:1px solid #d0ddf7;display:flex;gap:12px;cursor:pointer;background:var(--light);align-items:center;position:relative}
+.chat.on{background:#d6e4ff;border-left:4px solid var(--mid)}
+.av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--dark),var(--mid));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+.dot-red{width:12px;height:12px;background:#ff3b30;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px #ffd0d0}
+.dot-yellow{width:12px;height:12px;background:#ffcc00;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px #fff0b3}
+#campBtnWrap{padding:14px;background:var(--light);border-top:1px solid #c9d8f5}
+#campBtn{display:block;text-align:center;background:linear-gradient(135deg,var(--dark),var(--mid));color:#fff;text-decoration:none;padding:14px;border-radius:12px;font-weight:800}
+#main{flex:1;display:flex;flex-direction:column;background:var(--bg)}
+#chead{background:var(--dark);color:#fff;padding:14px 20px}
+#msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.m{max-width:70%;padding:12px 16px;border-radius:16px;font-size:14px}.in{background:#fff;align-self:flex-start}.out{background:linear-gradient(135deg,var(--mid),#2f6bff);color:#fff;align-self:flex-end}
+#box{padding:16px;background:var(--light);display:flex;gap:10px;border-top:1px solid #c9d8f5}
+#box input{flex:1;padding:14px;border-radius:12px;border:1.5px solid #b9ccf0;background:#fff;outline:none}
+#box button{padding:14px 22px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--dark),var(--mid));color:#fff;font-weight:800;cursor:pointer}
+</style></head><body>
+<div id="side">
+<div id="topbar"><b>KLIDO CRM</b><button id="btnSalir" onclick="localStorage.removeItem('klido_auth');location.href='/login.html'">Salir</button></div>
+<input id="search" placeholder="🔍 Buscar..." oninput="render()">
+<div id="list"></div>
+<div id="campBtnWrap"><a id="campBtn" href="/campaigns.html">📢 IR A CAMPAÑAS</a></div>
+</div>
+<div id="main"><div id="chead" style="display:none"><b id="cname"></b></div>
+<div id="msgs"><div style="text-align:center;color:#0A1931;margin-top:40px">Selecciona un chat para ver el historial</div></div>
+<div id="box" style="display:none"><input id="txt" placeholder="Escribe..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Enviar</button></div>
+</div>
+<script>
+let chats=[],cur=null;
+async function load(){const r=await fetch('/api/chats');chats=await r.json();render();}
+function render(){
+ const q=document.getElementById('search').value;
+ const L=document.getElementById('list');
+ let f=chats.filter(c=>!q||c.wa_id.includes(q));
+ // no leídos primero
+ f.sort((a,b)=>(b.unread_count||0)-(a.unread_count||0));
+ L.innerHTML=f.map(c=>{
+  const isCamp = c.text && c.text.includes('[Plantilla');
+  const dot = c.unread_count>0 ? '<div class="dot-red"></div>' : (isCamp ? '<div class="dot-yellow"></div>' : '');
+  return `<div class="chat ${cur===c.wa_id?'on':''}" onclick="openC('${c.wa_id}')">
+   <div class="av">${c.wa_id.slice(-2)}</div>
+   <div style="flex:1;min-width:0"><b style="color:#0A1931;font-size:14px">${c.wa_id}</b>
+   <div style="font-size:13px;color:#4a5a7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.text||''}</div></div>${dot}</div>`
+ }).join('') || '<div style="padding:20px;color:#5a6a85;text-align:center">Sin chats</div>';
+}
+async function openC(id){
+ cur=id;document.getElementById('chead').style.display='block';document.getElementById('box').style.display='flex';
+ document.getElementById('cname').textContent=id;
+ await fetch('/api/chats/'+id+'/read',{method:'PUT'});
+ const r=await fetch('/api/messages/'+id);const ms=await r.json();
+ const M=document.getElementById('msgs');
+ M.innerHTML=ms.map(m=>`<div class="m ${m.direction==='in'?'in':'out'}">${m.text}<div style="font-size:10px;opacity:.6;margin-top:4px">${new Date(m.created_at).toLocaleString()} ${m.source==='campaign'?'• 📢 campaña':''}</div></div>`).join('');
+ M.scrollTop=M.scrollHeight;load();
+}
 async function send(){const t=document.getElementById('txt').value;if(!t||!cur)return;document.getElementById('txt').value='';await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:cur,message:t})});openC(cur);}
-load();setInterval(load,5000);</script></body></html>
+load();setInterval(load,5000);
+</script></body></html>
