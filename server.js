@@ -1,248 +1,35 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const app = express();
-
-app.use(express.json({ limit: '50mb' }));
-app.use(require('cors')());
-
-const publicPath = path.join(__dirname, 'public');
-const uploadDir = path.join(publicPath, 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-app.use('/uploads', express.static(uploadDir));
-app.use(express.static(publicPath));
-
-let upload = null, xlsx = null;
-try { upload = require('multer')({ dest: uploadDir }); } catch(e){}
-try { xlsx = require('xlsx'); } catch(e){}
-
-const VERIFY_TOKEN = (process.env.VERIFY_TOKEN || 'klido123').trim();
-const META_TOKEN = (process.env.WHATSAPP_TOKEN || '').trim();
-const PHONE_ID = (process.env.PHONE_NUMBER_ID || '').trim();
-let WABA_ID = (process.env.WABA_ID || '').trim();
-if (WABA_ID.startsWith('EAAT') || WABA_ID.length > 50) WABA_ID = '';
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'fermorales20020310@gmail.com').toLowerCase().trim();
-const ADMIN_PASS = (process.env.ADMIN_PASS || 'Mafe2002@').trim();
-
-let pool = null;
-let cacheTemplates = [];
-
-// --- DB ---
-async function initDB(){
-  if (!process.env.DATABASE_URL){
-    console.log('⚠️ Sin DATABASE_URL, solo memoria');
-    return;
-  }
-  try{
-    const { Pool } = require('pg');
-    pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{ rejectUnauthorized:false } });
-    await pool.query(`CREATE TABLE IF NOT EXISTS messages(
-      id SERIAL PRIMARY KEY, wa_id TEXT NOT NULL, text TEXT,
-      type TEXT DEFAULT 'text', direction TEXT DEFAULT 'in',
-      source TEXT DEFAULT 'inbox', template_name TEXT,
-      status TEXT DEFAULT 'sent', is_read BOOLEAN DEFAULT false,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    )`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(
-      id TEXT PRIMARY KEY, name TEXT, total INT DEFAULT 0,
-      sent INT DEFAULT 0, delivered INT DEFAULT 0, read INT DEFAULT 0,
-      failed INT DEFAULT 0, status TEXT DEFAULT 'enviando',
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    )`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_wa ON messages(wa_id, created_at)`);
-    const { rows } = await pool.query(`SELECT COUNT(*) as c FROM messages`);
-    console.log(`✅ DB conectada, mensajes guardados: ${rows[0].c}`);
-  }catch(e){
-    console.log('❌ DB error:', e.message);
-    pool = null;
-  }
-}
-
-async function saveMsg({wa_id, text, type='text', direction='in', source='inbox', template_name=null, status='sent', is_read=false}){
-  if(!wa_id ||!text) return;
-  if(!pool) return;
-  try{
-    await pool.query(
-      `INSERT INTO messages(wa_id,text,type,direction,source,template_name,status,is_read) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [wa_id, text, type, direction, source, template_name, status, is_read]
-    );
-  }catch(e){ console.log('save err', e.message); }
-}
-
-// --- TEMPLATES ---
-async function fetchMetaTemplates(){
-  try{
-    if(!WABA_ID && META_TOKEN){
-      const r = await fetch(`https://graph.facebook.com/v20.0/me/whatsapp_business_accounts?fields=id`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});
-      const j = await r.json();
-      if(j.data?.[0]?.id) WABA_ID = j.data[0].id;
-    }
-    if(!WABA_ID ||!META_TOKEN) return cacheTemplates;
-    const r = await fetch(`https://graph.facebook.com/v20.0/${WABA_ID}/message_templates?fields=name,status,language,category&limit=100`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});
-    const j = await r.json();
-    if(j.data){
-      cacheTemplates = j.data.filter(t=>t.status==='APPROVED').map(t=>({name:t.name, language:t.language, category:t.category}));
-      console.log('✅ PLANTILLAS:', cacheTemplates.map(t=>t.name).join(', '));
-    }
-  }catch(e){ console.log('tpl err', e.message); }
-  return cacheTemplates;
-}
-
-// --- ROUTES ---
-app.post('/api/login',(req,res)=>{
-  const em=(req.body.email||'').toLowerCase().trim();
-  const ps=(req.body.password||'').trim();
-  if(em===ADMIN_EMAIL && ps===ADMIN_PASS) return res.json({ok:true});
-  res.json({ok:false});
-});
-
-app.get('/webhook',(req,res)=>{
-  if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY_TOKEN)
-    return res.status(200).send(req.query['hub.challenge']);
-  res.sendStatus(403);
-});
-
-app.post('/webhook', async(req,res)=>{
-  try{
-    const v = req.body.entry?.[0]?.changes?.[0]?.value;
-    if(v?.messages){
-      const m = v.messages[0];
-      const txt = m.type==='text'? m.text.body : `[${m.type}]`;
-      await saveMsg({wa_id:m.from, text:txt, type:m.type, direction:'in', source:'inbox', status:'delivered', is_read:false});
-      console.log('📩 entrante', m.from, txt.slice(0,30));
-    }
-    if(v?.statuses){
-      const st = v.statuses[0];
-      if(pool && st.status){
-        // actualiza última campaña enviando
-        const col = st.status==='sent'?'sent':st.status==='delivered'?'delivered':st.status==='read'?'read':st.status==='failed'?'failed':null;
-        if(col){
-          await pool.query(`UPDATE campaigns SET ${col}=${col}+1 WHERE status='enviando'`).catch(()=>{});
-        }
-      }
-    }
-  }catch(e){ console.log('webhook err', e.message); }
-  res.sendStatus(200);
-});
-
-app.get('/api/templates', async(_,res)=> res.json(await fetchMetaTemplates()));
-
-// HISTORIAL CHATS - entrantes + salientes
-app.get('/api/chats', async(_,res)=>{
-  if(!pool) return res.json([]);
-  try{
-    const { rows } = await pool.query(`
-      SELECT DISTINCT ON (wa_id) wa_id, text, type, direction, source, template_name, created_at,
-      (SELECT COUNT(*)::int FROM messages m2 WHERE m2.wa_id=m.wa_id AND direction='in' AND is_read=false) as unread_count
-      FROM messages m ORDER BY wa_id, created_at DESC LIMIT 500
-    `);
-    const out = rows.map(r=>({
-      wa_id:r.wa_id, text:r.text, type:r.type, direction:r.direction,
-      source:r.source, template_name:r.template_name, created_at:r.created_at,
-      unread_count:r.unread_count||0, unanswered:(r.unread_count||0)>0
-    })).sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
-    return res.json(out);
-  }catch(e){
-    console.log('chats err', e.message);
-    res.json([]);
-  }
-});
-
-// HISTORIAL MENSAJES por contacto - anteriores + actuales
-app.get('/api/messages/:wa_id', async(req,res)=>{
-  if(!pool) return res.json([]);
-  try{
-    const { rows } = await pool.query(
-      `SELECT wa_id,text,type,direction,source,template_name,status,is_read,created_at FROM messages WHERE wa_id=$1 ORDER BY created_at ASC LIMIT 5000`,
-      [req.params.wa_id]
-    );
-    res.json(rows);
-  }catch(e){ res.json([]); }
-});
-
-app.put('/api/chats/:wa_id/read', async(req,res)=>{
-  if(pool) await pool.query(`UPDATE messages SET is_read=true WHERE wa_id=$1 AND direction='in'`,[req.params.wa_id]).catch(()=>{});
-  res.json({ok:true});
-});
-
-app.post('/api/send', async(req,res)=>{
-  const {to,message}=req.body;
-  if(!to||!message) return res.json({ok:false});
-  try{
-    const r = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{
-      method:'POST', headers:{Authorization:`Bearer ${META_TOKEN}`,'Content-Type':'application/json'},
-      body:JSON.stringify({messaging_product:'whatsapp',to,type:'text',text:{body:message}})
-    });
-    const j = await r.json();
-    if(j.messages) await saveMsg({wa_id:to,text:message,direction:'out',source:'inbox',status:'sent',is_read:true});
-    res.json({ok:!!j.messages, data:j});
-  }catch(e){ res.json({ok:false,error:e.message}); }
-});
-
-app.get('/api/campaigns', async(_,res)=>{
-  if(!pool) return res.json([]);
-  try{
-    const { rows } = await pool.query(`SELECT * FROM campaigns ORDER BY created_at DESC LIMIT 100`);
-    res.json(rows);
-  }catch{ res.json([]); }
-});
-
-if(upload){
-  app.post('/api/campaigns/upload', upload.single('file'), (req,res)=>{
-    try{
-      if(!req.file||!xlsx) return res.json({ok:false});
-      const wb = xlsx.readFile(req.file.path);
-      const data = xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
-      const numbers=[...new Set(data.flat().map(v=>String(v||'').replace(/\D/g,'')).filter(n=>n.length>=10))];
-      fs.unlinkSync(req.file.path);
-      res.json({ok:true, numbers, total:numbers.length});
-    }catch(e){ res.json({ok:false,error:e.message}); }
-  });
-}
-
-app.post('/api/campaigns/send-bulk', async(req,res)=>{
-  const {numbers, templateName}=req.body;
-  if(!templateName||!numbers?.length) return res.json({ok:false,error:'faltan datos'});
-  const tpl = cacheTemplates.find(t=>t.name===templateName);
-  const lang = tpl?.language||'es_CO';
-  const id = Date.now().toString();
-  if(pool) await pool.query(`INSERT INTO campaigns(id,name,total,status) VALUES($1,$2,$3,'enviando')`,[id,templateName,numbers.length]).catch(()=>{});
-  (async()=>{
-    let sent=0, failed=0;
-    for(const raw of numbers){
-      const to=String(raw).replace(/\D/g,'');
-      try{
-        const r=await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{
-          method:'POST',headers:{Authorization:`Bearer ${META_TOKEN}`,'Content-Type':'application/json'},
-          body:JSON.stringify({messaging_product:'whatsapp',to,type:'template',template:{name:templateName,language:{code:lang}}})
-        });
-        const j=await r.json();
-        if(j.messages){ sent++; await saveMsg({wa_id:to,text:`[Plantilla ${templateName}]`,type:'template',direction:'out',source:'campaign',template_name:templateName,status:'sent',is_read:true}); }
-        else failed++;
-      }catch{ failed++; }
-      await new Promise(r=>setTimeout(r,600));
-    }
-    if(pool) await pool.query(`UPDATE campaigns SET sent=$1,failed=$2,status='completada' WHERE id=$3`,[sent,failed,id]).catch(()=>{});
-  })();
-  res.json({ok:true,total:numbers.length});
-});
-
-app.get('/health', async(_,res)=>{
-  let c=0, cc=0;
-  if(pool){
-    try{ c=(await pool.query(`SELECT COUNT(*) as c FROM messages`)).rows[0].c; }catch{}
-    try{ cc=(await pool.query(`SELECT COUNT(*) as c FROM campaigns`)).rows[0].c; }catch{}
-  }
-  res.json({ok:true, hasDB:!!pool, totalMensajes:parseInt(c), totalCampañas:parseInt(cc), plantillas:cacheTemplates.map(t=>t.name)});
-});
-
+const express=require('express');const fs=require('fs');const path=require('path');const app=express();
+app.use(express.json({limit:'50mb'}));app.use(require('cors')());
+const publicPath=path.join(__dirname,'public');const uploadDir=path.join(publicPath,'uploads');
+if(!fs.existsSync(uploadDir))fs.mkdirSync(uploadDir,{recursive:true});
+app.use('/uploads',express.static(uploadDir));app.use(express.static(publicPath));
+let upload=null,xlsx=null;try{upload=require('multer')({dest:uploadDir})}catch(e){}try{xlsx=require('xlsx')}catch(e){}
+const VERIFY_TOKEN=(process.env.VERIFY_TOKEN||'klido123').trim();
+const META_TOKEN=(process.env.WHATSAPP_TOKEN||'').trim();const PHONE_ID=(process.env.PHONE_NUMBER_ID||'').trim();
+let WABA_ID=(process.env.WABA_ID||'').trim();if(WABA_ID.startsWith('EAAT')||WABA_ID.length>50)WABA_ID='';
+const ADMIN_EMAIL=(process.env.ADMIN_EMAIL||'fermorales20020310@gmail.com').toLowerCase().trim();
+const ADMIN_PASS=(process.env.ADMIN_PASS||'Mafe2002@').trim();
+let pool=null,cacheTemplates=[];
+async function initDB(){if(!process.env.DATABASE_URL){console.log('⚠️ Sin DATABASE_URL');return;}
+try{const{Pool}=require('pg');pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
+await pool.query(`CREATE TABLE IF NOT EXISTS messages(id SERIAL PRIMARY KEY,wa_id TEXT,text TEXT,type TEXT DEFAULT 'text',direction TEXT DEFAULT 'in',source TEXT DEFAULT 'inbox',template_name TEXT,status TEXT DEFAULT 'sent',is_read BOOLEAN DEFAULT false,created_at TIMESTAMPTZ DEFAULT NOW())`);
+await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id TEXT PRIMARY KEY,name TEXT,total INT DEFAULT 0,sent INT DEFAULT 0,delivered INT DEFAULT 0,read INT DEFAULT 0,failed INT DEFAULT 0,status TEXT DEFAULT 'enviando',created_at TIMESTAMPTZ DEFAULT NOW())`);
+await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_wa ON messages(wa_id,created_at)`);console.log('✅ DB lista');}catch(e){console.log('DB err',e.message);pool=null;}}
+async function saveMsg(o){if(!pool||!o.wa_id||!o.text)return;try{await pool.query(`INSERT INTO messages(wa_id,text,type,direction,source,template_name,status,is_read)VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,[o.wa_id,o.text,o.type||'text',o.direction||'in',o.source||'inbox',o.template_name||null,o.status||'sent',o.is_read||false])}catch(e){}}
+async function fetchTpl(){try{if(!WABA_ID&&META_TOKEN){const r=await fetch(`https://graph.facebook.com/v20.0/me/whatsapp_business_accounts?fields=id`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});const j=await r.json();if(j.data?.[0])WABA_ID=j.data[0].id;}
+if(!WABA_ID||!META_TOKEN)return cacheTemplates;const r=await fetch(`https://graph.facebook.com/v20.0/${WABA_ID}/message_templates?fields=name,status,language&limit=100`,{headers:{Authorization:`Bearer ${META_TOKEN}`}});const j=await r.json();if(j.data)cacheTemplates=j.data.filter(t=>t.status==='APPROVED').map(t=>({name:t.name,language:t.language}));}catch(e){}return cacheTemplates;}
+app.post('/api/login',(req,res)=>{const em=(req.body.email||'').toLowerCase().trim();const ps=(req.body.password||'').trim();res.json({ok:em===ADMIN_EMAIL&&ps===ADMIN_PASS});});
+app.get('/webhook',(req,res)=>{if(req.query['hub.mode']==='subscribe'&&req.query['hub.verify_token']===VERIFY_TOKEN)return res.status(200).send(req.query['hub.challenge']);res.sendStatus(403);});
+app.post('/webhook',async(req,res)=>{try{const v=req.body.entry?.[0]?.changes?.[0]?.value;if(v?.messages){const m=v.messages[0];const txt=m.type==='text'?m.text.body:`[${m.type}]`;await saveMsg({wa_id:m.from,text:txt,type:m.type,direction:'in',status:'delivered',is_read:false});}}catch(e){}res.sendStatus(200);});
+app.get('/api/templates',async(_,res)=>res.json(await fetchTpl()));
+app.get('/api/chats',async(_,res)=>{if(!pool)return res.json([]);try{const{rows}=await pool.query(`SELECT DISTINCT ON (wa_id) wa_id,text,direction,created_at,(SELECT COUNT(*)::int FROM messages m2 WHERE m2.wa_id=m.wa_id AND direction='in' AND is_read=false) as unread FROM messages m ORDER BY wa_id,created_at DESC LIMIT 500`);res.json(rows.map(r=>({wa_id:r.wa_id,text:r.text,direction:r.direction,created_at:r.created_at,unread_count:r.unread||0})).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)));}catch(e){res.json([]);}});
+app.get('/api/messages/:wa_id',async(req,res)=>{if(!pool)return res.json([]);const{rows}=await pool.query(`SELECT * FROM messages WHERE wa_id=$1 ORDER BY created_at ASC LIMIT 5000`,[req.params.wa_id]);res.json(rows);});
+app.put('/api/chats/:wa_id/read',async(req,res)=>{if(pool)await pool.query(`UPDATE messages SET is_read=true WHERE wa_id=$1`,[req.params.wa_id]).catch(()=>{});res.json({ok:true});});
+app.post('/api/send',async(req,res)=>{const{to,message}=req.body;try{const r=await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${META_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to,type:'text',text:{body:message}})});const j=await r.json();if(j.messages)await saveMsg({wa_id:to,text:message,direction:'out',source:'inbox',is_read:true});res.json({ok:!!j.messages});}catch(e){res.json({ok:false});}});
+app.get('/api/campaigns',async(_,res)=>{if(!pool)return res.json([]);const{rows}=await pool.query(`SELECT * FROM campaigns ORDER BY created_at DESC LIMIT 100`);res.json(rows);});
+if(upload){app.post('/api/campaigns/upload',upload.single('file'),(req,res)=>{try{const wb=xlsx.readFile(req.file.path);const d=xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});const nums=[...new Set(d.flat().map(v=>String(v||'').replace(/\D/g,'')).filter(n=>n.length>=10))];fs.unlinkSync(req.file.path);res.json({ok:true,numbers:nums,total:nums.length});}catch(e){res.json({ok:false});}});}
+app.post('/api/campaigns/send-bulk',async(req,res)=>{const{numbers,templateName}=req.body;const tpl=cacheTemplates.find(t=>t.name===templateName);const lang=tpl?.language||'es_CO';const id=Date.now().toString();if(pool)await pool.query(`INSERT INTO campaigns(id,name,total,status)VALUES($1,$2,$3,'enviando')`,[id,templateName,numbers.length]).catch(()=>{});
+(async()=>{let s=0,f=0;for(const to of numbers){try{const r=await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${META_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:String(to).replace(/\D/g,''),type:'template',template:{name:templateName,language:{code:lang}}}});const j=await r.json();if(j.messages){s++;await saveMsg({wa_id:String(to),text:`[Plantilla ${templateName}]`,type:'template',direction:'out',source:'campaign',template_name:templateName,is_read:true});}else f++;}catch{f++;}await new Promise(r=>setTimeout(r,500));}if(pool)await pool.query(`UPDATE campaigns SET sent=$1,failed=$2,status='completada' WHERE id=$3`,[s,f,id]).catch(()=>{});})();res.json({ok:true,total:numbers.length});});
+app.get('/health',async(_,res)=>{let c=0;if(pool){try{c=(await pool.query('SELECT COUNT(*) c FROM messages')).rows[0].c}catch{}}res.json({ok:true,hasDB:!!pool,totalMensajes:parseInt(c),plantillas:cacheTemplates.map(t=>t.name)});});
 app.get('/',(_,res)=>res.sendFile(path.join(publicPath,'login.html')));
-
-(async()=>{
-  await initDB();
-  await fetchMetaTemplates();
-  setInterval(fetchMetaTemplates,15000);
-  const PORT=process.env.PORT||3000;
-  const srv=app.listen(PORT,()=>console.log(`🚀 LISTO puerto ${PORT}`));
-  process.on('SIGTERM',()=>srv.close(()=>process.exit(0)));
-})();
+(async()=>{await initDB();await fetchTpl();setInterval(fetchTpl,15000);app.listen(process.env.PORT||3000,()=>console.log('🚀 listo'));})();
