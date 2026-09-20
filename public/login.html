@@ -1,5 +1,40 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KLIDO CRM - Login</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial}body{background:linear-gradient(135deg,#0A1931,#1E3A8A);height:100vh;display:flex;align-items:center;justify-content:center}.card{background:#fff;padding:40px;border-radius:16px;width:360px;text-align:center}.card img{width:120px;height:120px;object-fit:contain;margin-bottom:15px}input{width:100%;padding:12px;margin:8px 0;border:2px solid #E8F1FF;border-radius:8px}button{width:100%;padding:12px;background:#0A1931;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}</style></head>
-<body><div class="card"><img src="/logo.png" alt="KLIDO" onerror="this.style.display='none'"><h2 style="color:#0A1931;margin-bottom:15px">KLIDO CRM</h2><input id="e" placeholder="Email"><input id="p" type="password" placeholder="Contraseña"><button onclick="login()">Entrar</button><p id="err" style="color:red;margin-top:10px"></p></div>
-<script>async function login(){const email=document.getElementById('e').value,password=document.getElementById('p').value;const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});if(r.ok){localStorage.setItem('k','1');location.href='/index.html'}else document.getElementById('err').textContent='Credenciales inválidas - revisa Variables en Railway'}</script></body></html>
+<style>
+*{box-sizing:border-box;font-family:Inter,Arial}body{margin:0;background:#0f1420;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh}
+.card{background:#151b2d;padding:40px;border-radius:18px;width:380px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.card img{height:48px;margin-bottom:10px;object-fit:contain}
+.card h2{margin:10px 0 20px;font-size:22px}
+input{width:100%;padding:13px;margin:8px 0;border-radius:10px;border:none;background:#1e263f;color:#fff;font-size:15px}
+button{width:100%;padding:13px;margin-top:12px;border:none;border-radius:10px;background:#2f6bff;color:#fff;font-size:16px;font-weight:bold;cursor:pointer}
+button:hover{background:#255fe0}
+.error{color:#ff6b6b;margin-top:10px;font-size:14px;min-height:20px}
+.badge{background:#2f6bff;font-size:11px;padding:3px 8px;border-radius:20px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="card">
+<img src="/logo.png" alt="KLIDO" onerror="this.outerHTML='<h2>KLIDO CRM <span class=badge>Pro</span></h2>'">
+<h2>Bienvenido</h2>
+<input id="email" type="email" placeholder="Correo" value="fermorales20020310@gmail.com">
+<input id="password" type="password" placeholder="Contraseña">
+<button onclick="doLogin()">Ingresar</button>
+<div class="error" id="err"></div>
+</div>
+<script>
+async function doLogin(){
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  document.getElementById('err').innerText='';
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  const j=await r.json();
+  if(j.ok) location.href='/';
+  else document.getElementById('err').innerText=j.error||'Credenciales inválidas';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+</script>
+</body>
+</html>
