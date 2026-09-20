@@ -1,178 +1,182 @@
+// KLIDO CRM - Server completo
 const express = require('express');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const cors = require('cors');
+const session = require('express-session');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const multer = require('multer');
-const XLSX = require('xlsx');
 const { Pool } = require('pg');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
+const xlsx = require('xlsx');
+const axios = require('axios');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-const JWT_SECRET = process.env.JWT_SECRET || 'cambia-esto-en-produccion';
-const upload = multer({ storage: multer.memoryStorage(), limits:{fileSize:5*1024*1024} });
 
-app.use(helmet({contentSecurityPolicy:false}));
-app.use(cors({origin:false}));
+// --- Config ---
+const ADMIN_USER = (process.env.ADMIN_USER || 'fermorales20020310@gmail.com').toLowerCase().trim();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Mafe2002@';
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'klido123';
+const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || '';
+const WABA_ID = process.env.WABA_ID || '';
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID || '';
 
-// Webhook verify Meta
-app.get('/webhook', (req, res) => {
-  if (req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===process.env.VERIFY_TOKEN)
-    return res.status(200).send(req.query['hub.challenge']);
-  res.sendStatus(403);
-});
+const pool = process.env.DATABASE_URL? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }) : null;
 
-// Webhook recibe TODO: texto, imagen, doc, audio, video
-app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+app.use(express.json({limit:'20mb'}));
+app.use(express.urlencoded({extended:true}));
+app.use(session({ secret: process.env.SESSION_SECRET || 'klido-secret-123', resave:false, saveUninitialized:false, cookie:{maxAge: 24*3600*1000} }));
+app.use(express.static(path.join(__dirname,'public')));
+const upload = multer({ dest: '/tmp/', limits:{fileSize: 25*1024*1024} });
+
+// --- DB init ---
+async function initDB(){
+  if(!pool) return;
+  await pool.query(`CREATE TABLE IF NOT EXISTS agencies(id SERIAL PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT, waba_id TEXT, phone_number_id TEXT, wa_token_enc TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS messages(id SERIAL PRIMARY KEY, agency_id INT, wa_id TEXT, body TEXT, direction TEXT, type TEXT DEFAULT 'text', media_url TEXT, is_campaign BOOLEAN DEFAULT false, campaign_id INT, is_read BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT NOW())`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY, agency_id INT, name TEXT, template TEXT, total INT DEFAULT 0, sent INT DEFAULT 0, failed INT DEFAULT 0, status TEXT DEFAULT 'running', created_at TIMESTAMP DEFAULT NOW())`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS agency_id INT`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS wa_id TEXT`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS body TEXT`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS direction TEXT`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'text'`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS media_url TEXT`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_campaign BOOLEAN DEFAULT false`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS campaign_id INT`);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false`);
+  console.log('KLIDO ON - DB ready');
+}
+initDB();
+
+const needAuth = (req,res,next)=>{ if(req.session.user) return next(); res.status(401).json({ok:false}); };
+
+// --- LOGIN ---
+app.post('/api/login', async (req,res)=>{
+  const em=(req.body.email||'').toLowerCase().trim(); const pw=req.body.password||'';
   try{
-    const sig=req.headers['x-hub-signature-256']||'';
-    const exp='sha256='+crypto.createHmac('sha256',process.env.APP_SECRET||'').update(req.body).digest('hex');
-    if(sig.length!==exp.length||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(exp))) return res.sendStatus(401);
-    const data=JSON.parse(req.body.toString());
-    const val=data.entry?.[0]?.changes?.[0]?.value;
-    const msg=val?.messages?.[0];
-    if(msg){
-      const {rows:[ag]}=await pool.query('SELECT id FROM agencies WHERE waba_id=$1',[data.entry[0].id]);
-      if(ag){
-        let body='[no texto]', type=msg.type||'text', media_url=null;
-        if(msg.text) body=msg.text.body;
-        else if(msg.image){ body='📷 Imagen'; media_url=msg.image.id; type='image'; }
-        else if(msg.document){ body='📄 '+(msg.document.filename||'Documento'); media_url=msg.document.id; type='document'; }
-        else if(msg.audio){ body='🎙️ Audio'; media_url=msg.audio.id; type='audio'; }
-        else if(msg.video){ body='🎥 Video'; media_url=msg.video.id; type='video'; }
-        await pool.query(
-          'INSERT INTO messages(agency_id,wa_id,body,direction,type,media_url,is_read) VALUES($1,$2,$3,$4,$5,$6,false)',
-          [ag.id,msg.from,body,'in',type,media_url]
-        );
+    if(pool){
+      const r=await pool.query('SELECT * FROM agencies WHERE email=$1',[em]);
+      if(r.rows.length && r.rows[0].password_hash){
+        if(await bcrypt.compare(pw, r.rows[0].password_hash)){
+          req.session.user={email:em, agency_id:r.rows[0].id}; return res.json({ok:true});
+        }
       }
     }
-  }catch(e){console.error(e.message);}
-  res.sendStatus(200);
+  }catch(e){ console.error(e); }
+  if(em===ADMIN_USER && pw===ADMIN_PASSWORD && ADMIN_PASSWORD){
+    req.session.user={email:em, agency_id:1}; return res.json({ok:true});
+  }
+  res.status(401).json({ok:false, error:'Credenciales inválidas'});
+});
+app.post('/api/logout',(req,res)=>{ req.session.destroy(()=>res.json({ok:true})); });
+app.get('/api/me',(req,res)=>res.json({user:req.session.user||null}));
+
+// --- MENSAJES / HISTORIAL (no se borra) ---
+app.get('/api/chats', needAuth, async (req,res)=>{
+  const r=await pool.query(`SELECT wa_id, MAX(body) as last_msg, MAX(created_at) as last_at, COUNT(*) FILTER (WHERE direction='in' AND is_read=false) as unread FROM messages WHERE agency_id=$1 GROUP BY wa_id ORDER BY last_at DESC`,[req.session.user.agency_id]);
+  res.json(r.rows);
+});
+app.get('/api/messages/:wa_id', needAuth, async (req,res)=>{
+  const r=await pool.query(`SELECT * FROM messages WHERE agency_id=$1 AND wa_id=$2 ORDER BY created_at ASC LIMIT 500`,[req.session.user.agency_id, req.params.wa_id]);
+  res.json(r.rows);
+  pool.query(`UPDATE messages SET is_read=true WHERE agency_id=$1 AND wa_id=$2 AND direction='in'`,[req.session.user.agency_id, req.params.wa_id]);
 });
 
-app.use(express.json({limit:'5mb'}));
-app.use(express.static('public'));
-app.use('/api/login', rateLimit({windowMs:15*60*1000,max:20}));
-
-function auth(req,res,next){
-  const t=(req.headers.authorization||'').replace('Bearer ','');
-  if(!t) return res.status(401).json({ok:false});
-  try{req.agency=jwt.verify(t,JWT_SECRET);next();}catch{return res.status(401).json({ok:false});}
+// --- ENVIAR MENSAJE + ARCHIVOS ---
+async function sendWA(to, text, type='text', media_url=null){
+  const url=`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`;
+  let data={ messaging_product:'whatsapp', to };
+  if(type==='text') data.text={body:text};
+  else if(type==='image') data.image={link:media_url, caption:text||''};
+  else if(type==='document') data.document={link:media_url, caption:text||''};
+  else if(type==='audio') data.audio={link:media_url};
+  const resp=await axios.post(url,data,{headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`}});
+  return resp.data;
 }
-
-app.post('/api/login', async (req,res)=>{
-  const {user,email,password}=req.body||{}; const loginEmail=email||user;
+app.post('/api/send', needAuth, async (req,res)=>{
+  const {wa_id, body, type='text', media_url=null}=req.body;
   try{
-    const {rows:[a]}=await pool.query('SELECT * FROM agencies WHERE email=$1',[loginEmail]);
-    if(a && await bcrypt.compare(password,a.password_hash))
-      return res.json({ok:true,token:jwt.sign({id:a.id,email:a.email},JWT_SECRET,{expiresIn:'8h'})});
-  }catch(e){}
-  if(loginEmail===process.env.ADMIN_USER && process.env.ADMIN_PASSWORD_HASH){
-    if(await bcrypt.compare(password,process.env.ADMIN_PASSWORD_HASH))
-      return res.json({ok:true,token:jwt.sign({id:0,email:loginEmail},JWT_SECRET,{expiresIn:'8h'})});
-  }
-  res.status(401).json({ok:false});
+    await sendWA(wa_id, body, type, media_url);
+    await pool.query(`INSERT INTO messages(agency_id,wa_id,body,direction,type,media_url) VALUES($1,$2,$3,'out',$4,$5)`,[req.session.user.agency_id, wa_id, body, type, media_url]);
+    res.json({ok:true});
+  }catch(e){ console.error(e.response?.data||e.message); res.status(500).json({ok:false, error:'No se pudo enviar'}); }
+});
+app.post('/api/upload', needAuth, upload.single('file'), async (req,res)=>{
+  // Railway: se devuelve ruta temporal, en prod usa S3. Por ahora guardamos en /tmp y servimos
+  const publicUrl = `/uploads/${req.file.filename}-${req.file.originalname}`;
+  fs.renameSync(req.file.path, path.join('/tmp', path.basename(publicUrl)));
+  res.json({ok:true, url: publicUrl});
 });
 
-app.get('/api/chats', auth, async (req,res)=>{
-  if(req.agency.id===0) return res.json({ok:true,chats:[]});
-  const {rows}=await pool.query(`
-    SELECT wa_id,
-    (SELECT body FROM messages m2 WHERE m2.wa_id=m.wa_id AND m2.agency_id=$1 ORDER BY created_at DESC LIMIT 1) as last_msg,
-    MAX(created_at) as at,
-    BOOL_OR(is_campaign) as has_campaign,
-    COUNT(*) FILTER (WHERE direction='in' AND is_read=false) as unread
-    FROM messages m WHERE agency_id=$1 GROUP BY wa_id ORDER BY at DESC LIMIT 100`,[req.agency.id]);
-  res.json({ok:true,chats:rows});
+// --- WEBHOOK ---
+app.get('/webhook',(req,res)=>{
+  if(req.query['hub.verify_token']===VERIFY_TOKEN) return res.send(req.query['hub.challenge']);
+  res.sendStatus(403);
 });
-
-app.get('/api/chats/:wa_id/messages', auth, async (req,res)=>{
-  const {rows}=await pool.query(`SELECT body,direction,type,media_url,is_campaign,created_at FROM messages WHERE agency_id=$1 AND wa_id=$2 ORDER BY created_at ASC LIMIT 200`,[req.agency.id,req.params.wa_id]);
-  res.json({ok:true,messages:rows});
-});
-
-app.post('/api/chats/:wa_id/read', auth, async (req,res)=>{
-  await pool.query(`UPDATE messages SET is_read=true WHERE agency_id=$1 AND wa_id=$2 AND direction='in'`,[req.agency.id, req.params.wa_id]);
-  res.json({ok:true});
-});
-
-app.post('/api/chats/send', auth, async (req,res)=>{
-  const {to,body,type,mediaUrl}=req.body||{};
-  const {rows:[a]}=await pool.query('SELECT * FROM agencies WHERE id=$1',[req.agency.id]);
-  const phone_number_id=a?.phone_number_id||process.env.PHONE_NUMBER_ID;
-  const wa_token=a?.wa_token_enc||process.env.WHATSAPP_TOKEN;
-  let payload;
-  if(type==='image') payload={messaging_product:'whatsapp',to,type:'image',image:{link:mediaUrl,caption:body||''}};
-  else if(type==='document') payload={messaging_product:'whatsapp',to,type:'document',document:{link:mediaUrl,caption:body||''}};
-  else payload={messaging_product:'whatsapp',to,type:'text',text:{body:body||''}};
-  const r=await fetch(`https://graph.facebook.com/v20.0/${phone_number_id}/messages`,{method:'POST',headers:{Authorization:`Bearer ${wa_token}`,'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  const j=await r.json();
-  if(j.error) return res.status(400).json({ok:false,error:j.error});
-  await pool.query('INSERT INTO messages(agency_id,wa_id,body,direction,type,media_url,is_read) VALUES($1,$2,$3,$4,$5,$6,true)',[req.agency.id,to,body||'[media]','out',type||'text',mediaUrl||null]);
-  res.json({ok:true});
-});
-
-app.get('/api/templates', auth, async (req,res)=>{
-  let waba_id,wa_token;
-  if(req.agency.id!==0){
-    const {rows:[a]}=await pool.query('SELECT * FROM agencies WHERE id=$1',[req.agency.id]);
-    waba_id=a.waba_id; wa_token=a.wa_token_enc;
-  }else{ waba_id=process.env.WABA_ID; wa_token=process.env.WHATSAPP_TOKEN; }
+app.post('/webhook', async (req,res)=>{
+  res.sendStatus(200);
   try{
-    const r=await fetch(`https://graph.facebook.com/v20.0/${waba_id}/message_templates?limit=100`,{headers:{Authorization:`Bearer ${wa_token}`}});
-    const j=await r.json();
-    res.json((j.data||[]).filter(t=>t.status==='APPROVED'));
-  }catch{res.json([]);}
+    const entry=req.body.entry?.[0]?.changes?.[0]?.value;
+    const msg=entry?.messages?.[0];
+    if(!msg) return;
+    const wa_id=msg.from; const type=msg.type;
+    let body='', media_url=null;
+    if(type==='text') body=msg.text.body;
+    else if(type==='image'){ body=msg.image?.caption||'[Imagen]'; media_url=msg.image?.id; }
+    else if(type==='document'){ body=msg.document?.caption||'[Documento]'; }
+    else if(type==='audio') body='[Audio]';
+    else body=`[${type}]`;
+    // agency_id 1 por defecto (multi-agencia: buscar por phone_number_id)
+    await pool.query(`INSERT INTO messages(agency_id,wa_id,body,direction,type,media_url) VALUES(1,$1,$2,'in',$3,$4)`,[wa_id,body,type,media_url]);
+  }catch(e){ console.error(e); }
 });
 
-app.post('/api/campaigns/upload-excel', auth, upload.single('file'), (req,res)=>{
+// --- PLANTILLAS APROBADAS AUTO ---
+app.get('/api/templates', needAuth, async (req,res)=>{
   try{
-    const wb=XLSX.read(req.file.buffer,{type:'buffer'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const data=XLSX.utils.sheet_to_json(ws,{header:1});
-    const numbers=[...new Set(data.flat().map(v=>String(v||'').replace(/\D/g,'')).filter(v=>v.length>=10))];
-    res.json({ok:true,numbers,count:numbers.length});
-  }catch(e){res.status(400).json({ok:false,error:'excel invalido'});}
+    const r=await axios.get(`https://graph.facebook.com/v21.0/${WABA_ID}/message_templates?limit=100`,{headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`}});
+    const approved=r.data.data.filter(t=>t.status==='APPROVED');
+    res.json(approved);
+  }catch(e){ res.json([]); }
 });
 
-app.post('/api/campaigns/send-bulk', auth, async (req,res)=>{
-  const {numbers,templateName}=req.body||{};
-  if(!numbers?.length||!templateName) return res.status(400).json({ok:false,error:'faltan datos'});
-  let waba_id, wa_token, phone_number_id;
-  if(req.agency.id!==0){
-    const {rows:[a]}=await pool.query('SELECT * FROM agencies WHERE id=$1',[req.agency.id]);
-    waba_id=a.waba_id; wa_token=a.wa_token_enc; phone_number_id=a.phone_number_id;
-  }else{ waba_id=process.env.WABA_ID; wa_token=process.env.WHATSAPP_TOKEN; phone_number_id=process.env.PHONE_NUMBER_ID; }
-  const {rows:optins}=await pool.query(`SELECT wa_id FROM contacts WHERE agency_id=$1 AND wa_id = ANY($2) AND opt_in=true`,[req.agency.id,numbers]).catch(()=>({rows:numbers.map(wa_id=>({wa_id}))}));
-  const allowed=new Set(optins.map(o=>o.wa_id));
-  const targets=numbers.filter(n=>allowed.has(n));
-  const {rows:[camp]}=await pool.query(`INSERT INTO campaigns(agency_id,name,total,status) VALUES($1,$2,$3,'enviando') RETURNING id`,[req.agency.id,templateName,targets.length]);
-  let sent=0,failed=0;
-  for(const to of targets){
-    try{
-      const r=await fetch(`https://graph.facebook.com/v20.0/${phone_number_id}/messages`,{method:'POST',headers:{Authorization:`Bearer ${wa_token}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to,type:'template',template:{name:templateName,language:{code:'es'}}})});
-      if(r.ok){ sent++; await pool.query(`INSERT INTO messages(agency_id,wa_id,body,direction,type,is_campaign,campaign_id,is_read) VALUES($1,$2,$3,'out','template',true,$4,true)`,[req.agency.id,to,`Campaña: ${templateName}`,camp.id]); }
-      else failed++;
-    }catch{failed++;}
-    await new Promise(r=>setTimeout(r,300));
-  }
-  await pool.query(`UPDATE campaigns SET sent=$1,failed=$2,status='completada' WHERE id=$3`,[sent,failed,camp.id]);
-  res.json({ok:true,sent,failed,skipped:numbers.length-targets.length,campaign_id:camp.id});
+// --- CAMPAÑAS con Excel + anti-spam + historial ---
+app.post('/api/campaigns/excel', needAuth, upload.single('file'), async (req,res)=>{
+  const {template, name}=req.body;
+  const wb=xlsx.readFile(req.file.path); const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=xlsx.utils.sheet_to_json(ws);
+  // auto-detecta columna de numero
+  const numbers=[...new Set(rows.map(r=>String(r.numero||r.Numero||r.phone||r.Phone||r.telefono||'').replace(/\D/g,'')).filter(n=>n.length>=8))];
+  fs.unlinkSync(req.file.path);
+  const c=await pool.query(`INSERT INTO campaigns(agency_id,name,template,total) VALUES($1,$2,$3,$4) RETURNING id`,[req.session.user.agency_id, name||'Campaña', template, numbers.length]);
+  const cid=c.rows[0].id;
+  // envío con delay anti-spam: 3 seg entre mensajes, pausa si error
+  let sent=0, failed=0;
+  (async ()=>{
+    for(const num of numbers){
+      try{
+        await axios.post(`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`,{
+          messaging_product:'whatsapp', to:num, type:'template', template:{name:template, language:{code:'es'}}
+        },{headers:{Authorization:`Bearer ${WHATSAPP_TOKEN}`}});
+        sent++;
+        await pool.query(`INSERT INTO messages(agency_id,wa_id,body,direction,type,is_campaign,campaign_id) VALUES($1,$2,$3,'out','template',true,$4)`,[req.session.user.agency_id,num,`Plantilla ${template}`,cid]);
+      }catch(e){
+        failed++;
+        if(e.response?.data?.error?.code===131026){ // spam / bloqueado
+          await pool.query(`UPDATE campaigns SET status='paused_spam' WHERE id=$1`,[cid]); break;
+        }
+      }
+      await new Promise(r=>setTimeout(r,3000)); // anti-spam delay
+      if(sent%50===0) await new Promise(r=>setTimeout(r,60000)); // pausa cada 50
+    }
+    await pool.query(`UPDATE campaigns SET sent=$1, failed=$2, status='done' WHERE id=$3`,[sent,failed,cid]);
+  })();
+  res.json({ok:true, campaign_id:cid, total:numbers.length});
+});
+app.get('/api/campaigns', needAuth, async (req,res)=>{
+  const r=await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC`,[req.session.user.agency_id]);
+  res.json(r.rows);
 });
 
-app.get('/api/campaigns', auth, async (req,res)=>{
-  const {rows}=await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC LIMIT 20`,[req.agency.id]).catch(()=>({rows:[]}));
-  res.json(rows);
-});
-
-app.get('/api/stats', auth, async (req,res)=>{
-  if(req.agency.id===0) return res.json({ok:true,total:0});
-  const {rows:[c]}=await pool.query('SELECT COUNT(*) as total FROM messages WHERE agency_id=$1',[req.agency.id]);
-  res.json({ok:true,total:c.total});
-});
-
-app.post('/data-deletion',(req,res)=>res.json({ok:true}));
-app.listen(PORT,()=>console.log('KLIDO ON',PORT));
+app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+app.listen(PORT,()=>console.log('KLIDO ON port',PORT));
