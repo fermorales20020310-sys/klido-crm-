@@ -1,18 +1,63 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - KLIDO</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - KLIDO CRM Pro</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial}body{display:flex;height:100vh;background:#E8F1FF}.side{width:260px;background:#0A1931;color:#fff;padding:20px;display:flex;flex-direction:column}.side img{width:90px;margin:0 auto 20px}.side button{background:transparent;color:#fff;border:1px solid #2a4a7a;padding:12px;border-radius:8px;margin:6px 0;cursor:pointer;text-align:left}.side button.active{background:#1E3A8A}.top{position:fixed;top:0;right:0;left:260px;height:60px;background:#fff;display:flex;justify-content:flex-end;align-items:center;padding:0 20px}.top button{background:#0A1931;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer}.main{flex:1;margin:80px 20px;background:#fff;border-radius:12px;padding:25px;overflow-y:auto}select,input{width:100%;padding:12px;margin:8px 0;border:2px solid #E8F1FF;border-radius:8px}.btn{background:#0A1931;color:#fff;border:none;padding:12px 25px;border-radius:8px;cursor:pointer;font-weight:700}.card{border:1px solid #E8F1FF;border-radius:8px;padding:15px;margin:10px 0}</style></head>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',Arial}
+body{background:#060a14;display:flex;justify-content:center;padding:18px;min-height:100vh}
+.app{width:100%;max-width:1480px;min-height:94vh;background:#0b1120;border-radius:20px;overflow:hidden;border:1px solid #1e3a5f}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #1e3a5f;background:#0a1931}
+.hleft{display:flex;align-items:center;gap:12px}.hleft img{width:42px;height:42px;border-radius:10px;background:#fff;padding:4px}
+.hleft h1{color:#fff;font-size:20px;font-weight:800}
+.btn{background:#2563eb;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600}
+.btn:hover{background:#1d4ed8}.btn.dark{background:#0a1931;border:1px solid #2563eb}
+.body{display:flex}
+.menu{width:210px;border-right:1px solid #1e3a5f;padding:20px 14px}
+.mi{padding:11px 14px;border-radius:10px;color:#93c5fd;cursor:pointer;margin-bottom:4px}
+.mi.active{background:#2563eb;color:#fff}
+.content{flex:1;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:#0f1e3a;border:1px solid #1e3a5f;border-radius:16px;padding:22px}
+.card h3{color:#fff;margin-bottom:6px;font-size:17px}
+.card p{color:#60a5fa;font-size:13px;margin-bottom:16px}
+label{color:#93c5fd;font-size:13px;display:block;margin:12px 0 6px}
+select,input[type=file]{width:100%;background:#0a1931;border:1px solid #2563eb;color:#fff;padding:12px;border-radius:10px;outline:none}
+select:focus{border-color:#60a5fa}
+.drop{border:2px dashed #2563eb;border-radius:12px;padding:28px;text-align:center;color:#60a5fa;cursor:pointer;margin-top:8px;transition:.2s}
+.drop:hover{background:#0a1931;border-color:#60a5fa}
+.nums{background:#0a1931;border-radius:10px;padding:12px;max-height:140px;overflow-y:auto;color:#93c5fd;font-size:13px;margin-top:10px}
+.send{width:100%;background:#2563eb;color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px}
+.send:disabled{background:#1e3a5f;cursor:not-allowed}
+.hist{grid-column:1/-1}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th{color:#60a5fa;font-size:12px;text-align:left;padding:10px;border-bottom:1px solid #1e3a5f}
+td{color:#dbeafe;font-size:13px;padding:10px;border-bottom:1px solid #102040}
+.status{background:#1e3a5f;color:#60a5fa;padding:4px 12px;border-radius:20px;font-size:11px}
+</style></head>
 <body>
-<div class="side"><img src="/logo.png"><button onclick="location.href='/index.html'">💬 Mensajes</button><button class="active">📢 Campañas</button></div>
-<div class="top"><button onclick="localStorage.clear();location.href='/login.html'">Salir</button></div>
-<div class="main"><h2 style="color:#0A1931">📢 Nueva Campaña</h2>
-<label>Plantilla aprobada por Meta:</label><select id="tpl"><option>Cargando...</option></select>
-<label>Subir Excel con números (columna A):</label><input type="file" id="xl" accept=".xlsx,.xls,.csv">
-<p id="cnt" style="color:#1E3A8A;font-weight:600"></p>
-<button class="btn" onclick="sendCamp()">Enviar Campaña</button>
-<h3 style="margin-top:30px;color:#0A1931">Historial</h3><div id="hist"></div></div>
-<script>if(!localStorage.getItem('k'))location.href='/login.html';let nums=[];
-async function init(){const r=await fetch('/api/templates');const t=await r.json();const s=document.getElementById('tpl');s.innerHTML=t.length?t.map(x=>`<option value="${x.name}">${x.name} (${x.status})</option>`).join(''):'<option>No hay plantillas</option>';loadHist()}
-document.getElementById('xl').addEventListener('change',e=>{const f=e.target.files[0];const rd=new FileReader();rd.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'binary'});const ws=wb.Sheets[wb.SheetNames[0]];const d=XLSX.utils.sheet_to_json(ws,{header:1});nums=d.flat().map(v=>String(v).replace(/\D/g,'')).filter(v=>v.length>=10);document.getElementById('cnt').textContent=nums.length+' números cargados'};rd.readAsBinaryString(f)});
-async function sendCamp(){const tpl=document.getElementById('tpl').value;if(!nums.length)return alert('Sube Excel primero');if(!confirm(`Enviar a ${nums.length} números?`))return;const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:nums,templateName:tpl})});const j=await r.json();alert(`Enviados: ${j.sent} Fallidos: ${j.failed}`);loadHist()}
-async function loadHist(){const r=await fetch('/api/campaigns');const h=await r.json();document.getElementById('hist').innerHTML=h.map(c=>`<div class="card"><b>${c.name}</b> - Total:${c.total} ✅${c.sent} ❌${c.failed}<br><small>${new Date(c.created_at).toLocaleString()}</small></div>`).join('')}
-init()</script></body></html>
+<div class="app">
+<div class="header">
+<div class="hleft"><img src="/logo.png"><h1>KLIDO CRM Pro</h1></div>
+<div style="display:flex;gap:10px"><button class="btn dark" onclick="location.href='/index.html'">← Inbox</button><button class="btn dark" onclick="localStorage.clear();location.href='/login.html'">Salir</button></div>
+</div>
+<div class="body">
+<div class="menu"><div class="mi" onclick="location.href='/index.html'">💬 Inbox</div><div class="mi active">📢 Campaigns</div></div>
+<div class="content">
+<div class="card"><h3>📢 Nueva Campaña</h3><p>Plantillas aprobadas por Meta se cargan automáticamente</p>
+<label>Plantilla aprobada</label><select id="tpl"><option>Cargando...</option></select>
+<label>Base de datos Excel</label><div class="drop" onclick="document.getElementById('file').click()">📁 Click o arrastra tu Excel aquí<input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none"></div>
+<div class="nums" id="nums">Sin números cargados</div>
+<button class="send" id="btnSend" disabled onclick="sendCamp()">Enviar Campaña</button>
+</div>
+<div class="card"><h3>👁️ Vista previa</h3><p>Así se verá tu plantilla</p><div id="prev" style="background:#0a1931;border-radius:12px;padding:18px;color:#dbeafe;min-height:200px">Selecciona una plantilla</div></div>
+<div class="card hist"><h3>📊 Historial de Campañas</h3><p>Últimos envíos realizados</p><table><thead><tr><th>Nombre</th><th>Total</th><th>Enviados</th><th>Fallidos</th><th>Estado</th><th>Fecha</th></tr></thead><tbody id="hist"></tbody></table></div>
+</div></div></div>
+<script>
+if(!localStorage.getItem('k'))location.href='/login.html';
+let numbers=[],templates=[];
+async function loadTpl(){const r=await fetch('/api/templates');templates=await r.json();const s=document.getElementById('tpl');s.innerHTML='';
+const ap=templates.filter(t=>t.status==='APPROVED');if(!ap.length)s.innerHTML='<option>Sin plantillas aprobadas</option>';else ap.forEach(t=>{const o=document.createElement('option');o.value=t.name;o.textContent=t.name;s.appendChild(o)});showPrev();loadHist();}
+function showPrev(){const n=document.getElementById('tpl').value;const t=templates.find(x=>x.name===n);document.getElementById('prev').innerHTML=t?`<b style="color:#fff">${t.name}</b><br><br><span style="color:#93c5fd">${t.components?.find(c=>c.type==='BODY')?.text||'Sin texto'}</span>`:'Selecciona una plantilla';}
+document.getElementById('tpl').onchange=showPrev;
+document.getElementById('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const wb=XLSX.read(ev.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{header:1});numbers=[...new Set(rows.flat().map(v=>String(v).replace(/\D/g,'')).filter(v=>v.length>=10))];document.getElementById('nums').innerHTML=numbers.length?numbers.length+' números: '+numbers.slice(0,10).join(', ')+(numbers.length>10?'...':''):'Sin números válidos';document.getElementById('btnSend').disabled=!numbers.length;};rd.readAsArrayBuffer(f);};
+async function sendCamp(){const tpl=document.getElementById('tpl').value;if(!tpl||!numbers.length)return;document.getElementById('btnSend').disabled=true;document.getElementById('btnSend').textContent='Enviando...';const r=await fetch('/api/campaigns/send-bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers,templateName:tpl})});const d=await r.json();alert(d.ok?`Enviados: ${d.sent} Fallidos: ${d.failed}`:'Error');document.getElementById('btnSend').textContent='Enviar Campaña';loadHist();}
+async function loadHist(){const r=await fetch('/api/campaigns');const h=await r.json();document.getElementById('hist').innerHTML=h.map(c=>`<tr><td>${c.name}</td><td>${c.total}</td><td>${c.sent}</td><td>${c.failed}</td><td><span class="status">${c.status}</span></td><td>${new Date(c.created_at).toLocaleString()}</td></tr>`).join('');}
+loadTpl();
+</script></body></html>
