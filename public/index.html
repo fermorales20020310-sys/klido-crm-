@@ -1,34 +1,192 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO AVANZA CRM</title>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO AVANZA CRM</title>
 <style>
-*{margin:0;box-sizing:border-box}body{background:#0f1420;color:#e6eaf2;font-family:Inter,system-ui}
-.app{height:100vh;display:flex;flex-direction:column}.topbar{display:flex;justify-content:space-between;padding:12px 20px;background:#151b2d;border-bottom:1px solid #222;align-items:center}
-.brand{display:flex;align-items:center;gap:10px}.brand-name{font-weight:800;font-size:18px}.logo-img{width:36px;height:36px;object-fit:contain}.pro{background:#2e7bff;font-size:11px;padding:3px 10px;border-radius:20px}
-.main{flex:1;display:flex}.menu{width:200px;background:#151b2d;padding:15px;display:flex;flex-direction:column;gap:8px}.menu button{background:transparent;border:0;color:#9aa3b8;padding:10px;text-align:left;border-radius:8px;cursor:pointer}.menu button.active{background:#2e7bff;color:#fff}
-.inbox{width:300px;background:#131929;padding:12px;overflow:auto}.chat{flex:1;display:flex;flex-direction:column}.messages{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:10px}.msg{max-width:65%;padding:10px 14px;border-radius:14px}.msg.in{background:#1c2338;align-self:flex-start}.msg.out{background:#2e7bff;align-self:flex-end;color:#fff}
-.input-bar{display:flex;gap:8px;padding:12px;background:#151b2d}.input-bar input{flex:1;background:#1c2338;border:0;padding:10px;border-radius:20px;color:#fff}.input-bar button{background:#2e7bff;border:0;color:#fff;width:38px;height:38px;border-radius:50%}
-.login-wrap{height:100vh;display:flex;align-items:center;justify-content:center}.login-card{background:#151b2d;padding:35px;border-radius:16px;width:340px;display:flex;flex-direction:column;gap:12px;text-align:center}.login-card input{background:#1c2338;border:0;padding:12px;border-radius:10px;color:#fff}.login-card button{background:#2e7bff;border:0;color:#fff;padding:12px;border-radius:10px;font-weight:bold}
-.chat-item{display:flex;gap:10px;padding:10px;border-radius:10px;cursor:pointer;align-items:center}.dot{width:10px;height:10px;border-radius:50%}.dot.red{background:#ff3b5c}.dot.yellow{background:#ffcc00}
-</style></head><body>
-<div id="login-screen" class="login-wrap"><div class="login-card"><img src="logo.png" style="width:70px;margin:auto"><h2>KLIDO AVANZA CRM</h2><input id="login-email" placeholder="Correo"><input id="login-pass" type="password" placeholder="Contraseña"><button onclick="doLogin()">Ingresar</button><small id="login-error" style="color:#ff5c5c"></small></div></div>
+*{margin:0;box-sizing:border-box}body{background:#0f1420;color:#e6eaf2;font-family:Inter,system-ui,sans-serif}
+.app{height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#151b2d;border-bottom:1px solid #222}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-name{font-weight:800;font-size:18px;letter-spacing:.5px}
+.logo-img{width:36px;height:36px;object-fit:contain;border-radius:8px}
+.pro{background:#2e7bff;font-size:11px;padding:3px 10px;border-radius:20px}
+.main{flex:1;display:flex;overflow:hidden}
+.menu{width:200px;background:#151b2d;padding:15px;display:flex;flex-direction:column;gap:8px}
+.menu button{background:transparent;border:0;color:#9aa3b8;padding:11px;text-align:left;border-radius:8px;cursor:pointer;font-size:14px}
+.menu button.active{background:#2e7bff;color:#fff}
+.inbox{width:320px;background:#131929;border-right:1px solid #222;padding:12px;overflow:auto}
+.inbox input,.inbox select{width:100%;padding:9px;margin:8px 0;background:#1c2338;border:0;border-radius:8px;color:#fff}
+.chat-item{display:flex;gap:10px;padding:10px;border-radius:10px;cursor:pointer;align-items:center}
+.chat-item:hover,.chat-item.active{background:#1c2338}
+.ci-avatar{width:38px;height:38px;border-radius:50%;background:#2e7bff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}.dot.red{background:#ff3b5c}.dot.yellow{background:#ffcc00}
+.chat{flex:1;display:flex;flex-direction:column;background:#0f1420}
+.chat-header{padding:12px;border-bottom:1px solid #222;display:flex;align-items:center;gap:10px;min-height:62px}
+.messages{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:65%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4}
+.msg.in{background:#1c2338;align-self:flex-start}.msg.out{background:#2e7bff;align-self:flex-end;color:#fff}
+.input-bar{display:flex;gap:8px;padding:12px;background:#151b2d}
+.input-bar input{flex:1;background:#1c2338;border:0;padding:11px 14px;border-radius:20px;color:#fff}
+.input-bar button{background:#2e7bff;border:0;color:#fff;width:42px;height:42px;border-radius:50%;cursor:pointer;font-size:16px}
+.btn-primary{background:#2e7bff;border:0;color:#fff;padding:10px;border-radius:8px;width:100%;cursor:pointer;margin:6px 0;font-weight:600}
+.btn-gray{background:#2a334e;border:0;color:#fff;padding:8px;border-radius:8px;cursor:pointer;margin:4px 4px 4px 0}
+.login-wrap{height:100vh;display:flex;align-items:center;justify-content:center;background:#0f1420}
+.login-card{background:#151b2d;padding:35px;border-radius:16px;width:340px;display:flex;flex-direction:column;gap:12px;text-align:center;border:1px solid #222}
+.login-logo{width:72px;height:72px;object-fit:contain;margin:auto}
+.login-card input{background:#1c2338;border:0;padding:12px;border-radius:10px;color:#fff}
+.login-card button{background:#2e7bff;border:0;color:#fff;padding:12px;border-radius:10px;font-weight:700;cursor:pointer}
+.stats{display:flex;gap:8px;margin:8px 0}.stat{background:#1c2338;padding:8px 12px;border-radius:8px;flex:1;text-align:center}.stat b{display:block;font-size:18px}
+</style>
+</head>
+<body>
+
+<div id="login-screen" class="login-wrap">
+  <div class="login-card">
+    <img src="logo.png" class="login-logo" onerror="this.style.display='none'">
+    <h2>KLIDO AVANZA CRM</h2>
+    <p style="color:#5f6b85;font-size:13px;margin:0">Panel interno</p>
+    <input id="login-email" placeholder="Correo" autocomplete="username">
+    <input id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password">
+    <button onclick="doLogin()">Ingresar</button>
+    <small id="login-error" style="color:#ff5c5c"></small>
+  </div>
+</div>
+
 <div id="app" class="app" style="display:none">
-<header class="topbar"><div class="brand"><img src="logo.png" class="logo-img"><span class="brand-name">KLIDO AVANZA CRM</span><span class="pro">PRO</span></div><button onclick="logout()" style="background:#ff3b5c;border:0;color:#fff;padding:6px 12px;border-radius:6px">Salir</button></header>
-<div class="main"><nav class="menu"><button id="btn-inbox" class="active" onclick="switchView('inbox')">💬 Mensajes</button><button id="btn-camp" onclick="switchView('camp')">📢 Campañas</button></nav>
-<aside class="inbox"><div id="view-inbox"><h3>Mensajes</h3><input id="search" placeholder="Buscar..." oninput="loadChats()" style="width:100%;padding:8px;margin:10px 0;background:#1c2338;border:0;border-radius:8px;color:#fff"><div id="chat-list"></div></div><div id="view-camp" style="display:none"><h3>Campañas</h3><select id="template-select" style="width:100%;padding:8px;background:#1c2338;color:#fff;border:0;border-radius:8px"></select><input id="camp-name" placeholder="Nombre campaña" style="width:100%;padding:8px;margin:6px 0;background:#1c2338;border:0;border-radius:8px;color:#fff"><input type="file" id="excel-file" accept=".xlsx"><button onclick="uploadCampaign()" style="width:100%;background:#2e7bff;color:#fff;border:0;padding:10px;border-radius:8px;margin:6px 0">Subir Excel</button><div id="camp-list"></div><div id="camp-history"></div></div></aside>
-<section class="chat"><div id="messages" class="messages"></div><div class="input-bar"><input id="msg-input" placeholder="Escribe un mensaje..."><button onclick="sendMessage()">➤</button></div></section></div></div>
+  <header class="topbar">
+    <div class="brand"><img src="logo.png" class="logo-img" onerror="this.style.display='none'"><span class="brand-name">KLIDO AVANZA CRM</span><span class="pro">PRO</span></div>
+    <div style="display:flex;gap:10px;align-items:center"><span id="stat-mini" style="color:#5f6b85;font-size:12px"></span><button onclick="logout()" style="background:#ff3b5c;border:0;color:#fff;padding:7px 14px;border-radius:7px;cursor:pointer">Salir</button></div>
+  </header>
+  <div class="main">
+    <nav class="menu">
+      <button id="btn-inbox" class="active" onclick="switchView('inbox')">💬 Mensajes</button>
+      <button id="btn-camp" onclick="switchView('camp')">📢 Campañas</button>
+      <div style="margin-top:10px;font-size:11px;color:#5a6378">ESTADÍSTICAS</div>
+      <div class="stats"><div class="stat"><b id="s-total">0</b><small>Chats</small></div><div class="stat"><b id="s-unread">0</b><small>No leídos</small></div></div>
+    </nav>
+    <aside class="inbox">
+      <div id="view-inbox">
+        <h3>Mensajes</h3>
+        <input id="search" placeholder="Buscar..." oninput="loadChats()">
+        <div id="chat-list"></div>
+      </div>
+      <div id="view-camp" style="display:none">
+        <h3>Nueva campaña</h3>
+        <input id="camp-name" placeholder="Nombre campaña">
+        <select id="template-select"></select>
+        <button class="btn-gray" onclick="syncTemplates()">🔄 Sincronizar plantillas</button>
+        <input type="file" id="excel-file" accept=".xlsx,.xls" style="margin-top:8px">
+        <button class="btn-primary" onclick="uploadCampaign()">Subir Excel y crear</button>
+        <h3 style="margin-top:12px">Historial</h3>
+        <div id="camp-list"></div>
+        <div id="camp-history" style="margin-top:8px"></div>
+      </div>
+    </aside>
+    <section class="chat">
+      <div id="chat-header" class="chat-header"><span style="color:#5f6b85">Selecciona un chat</span></div>
+      <div id="messages" class="messages"></div>
+      <div class="input-bar"><input id="msg-input" placeholder="Escribe un mensaje..."><button onclick="sendMessage()">➤</button></div>
+    </section>
+  </div>
+</div>
+
 <script>
-const AUTH_EMAIL='fermorales20020310@gmail.com';const AUTH_PASS='Mafe2002@';let currentWa=null,allChats=[];
-function doLogin(){if(document.getElementById('login-email').value===AUTH_EMAIL&&document.getElementById('login-pass').value===AUTH_PASS){localStorage.setItem('klido_auth','1');document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='flex';loadChats();}else document.getElementById('login-error').textContent='Credenciales incorrectas';}
-function logout(){localStorage.removeItem('klido_auth');location.reload();}
-function switchView(v){document.getElementById('view-inbox').style.display=v==='inbox'?'block':'none';document.getElementById('view-camp').style.display=v==='camp'?'block':'none';document.getElementById('btn-inbox').classList.toggle('active',v==='inbox');document.getElementById('btn-camp').classList.toggle('active',v==='camp');if(v==='camp'){loadTemplates();loadCampaigns();}}
-async function loadChats(){const r=await fetch('/api/chats');allChats=await r.json();document.getElementById('chat-list').innerHTML=allChats.map(c=>`<div class="chat-item" onclick="openChat('${c.wa_id}')"><div style="flex:1"><b>${c.name}</b><br><small>${(c.lastMessage||'').substring(0,30)}</small></div>${c.unread?`<span class="dot ${c.dot}"></span>`:''}</div>`).join('');}
-async function openChat(wa_id){currentWa=wa_id;await fetch('/api/chats/'+wa_id+'/read',{method:'POST'});loadMessages();loadChats();}
-async function loadMessages(){if(!currentWa)return;const r=await fetch('/api/messages/'+currentWa);const m=await r.json();document.getElementById('messages').innerHTML=m.map(x=>`<div class="msg ${x.direction==='in'?'in':'out'}">${x.text||''}</div>`).join('');}
-async function sendMessage(){const t=document.getElementById('msg-input').value;if(!t||!currentWa)return;document.getElementById('msg-input').value='';await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t})});loadMessages();}
-async function loadTemplates(){const r=await fetch('/api/templates');const d=await r.json();document.getElementById('template-select').innerHTML=d.map(x=>`<option value="${x.name}">${x.name}</option>`).join('');}
-async function loadCampaigns(){const r=await fetch('/api/campaigns');const d=await r.json();document.getElementById('camp-list').innerHTML=d.map(x=>`<div style="background:#1c2338;padding:8px;border-radius:8px;margin:6px 0"><b>${x.name}</b><br><small>${x.status}</small><br><button onclick="sendCampaign(${x.id})" style="background:#2e7bff;color:#fff;border:0;padding:6px;border-radius:6px">Enviar</button> <button onclick="showHistory(${x.id})" style="background:#444;color:#fff;border:0;padding:6px;border-radius:6px">Historial</button></div>`).join('');}
-async function uploadCampaign(){const fd=new FormData();fd.append('file',document.getElementById('excel-file').files[0]);fd.append('name',document.getElementById('camp-name').value);fd.append('template_name',document.getElementById('template-select').value);await fetch('/api/campaigns/upload',{method:'POST',body:fd});loadCampaigns();}
-async function showHistory(id){const r=await fetch('/api/campaigns/'+id);const d=await r.json();document.getElementById('camp-history').innerHTML=d.history.map(h=>`<small>${h.wa_id} - ${h.status}</small><br>`).join('');}
-async function sendCampaign(id){await fetch('/api/campaigns/'+id+'/send',{method:'POST'});alert('Enviando');}
-if(localStorage.getItem('klido_auth')){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='flex';loadChats();}
-setInterval(()=>{if(localStorage.getItem('klido_auth')){loadChats();loadMessages();}},5000);
-</script></body></html>
+const AUTH_EMAIL='fermorales20020310@gmail.com';
+const AUTH_PASS='Mafe2002@';
+let currentWa=null, allChats=[];
+
+function doLogin(){
+  const e=document.getElementById('login-email').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value;
+  if(e===AUTH_EMAIL.toLowerCase() && p===AUTH_PASS){
+    localStorage.setItem('klido_auth','1');
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    loadChats(); loadStats();
+  } else document.getElementById('login-error').textContent='Credenciales incorrectas';
+}
+function logout(){ localStorage.removeItem('klido_auth'); location.reload(); }
+function switchView(v){
+  document.getElementById('view-inbox').style.display=v==='inbox'?'block':'none';
+  document.getElementById('view-camp').style.display=v==='camp'?'block':'none';
+  document.getElementById('btn-inbox').classList.toggle('active',v==='inbox');
+  document.getElementById('btn-camp').classList.toggle('active',v==='camp');
+  if(v==='camp'){loadTemplates();loadCampaigns();}
+}
+async function loadStats(){
+  try{ const r=await fetch('/api/stats'); const s=await r.json();
+    document.getElementById('s-total').textContent=s.total;
+    document.getElementById('s-unread').textContent=s.unread;
+    document.getElementById('stat-mini').textContent=s.today+' mensajes hoy';
+  }catch(e){}
+}
+async function loadChats(){
+  const r=await fetch('/api/chats'); allChats=await r.json();
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const f=allChats.filter(c=>((c.name||'')+(c.wa_id||'')).toLowerCase().includes(q));
+  document.getElementById('chat-list').innerHTML=f.map(c=>`
+    <div class="chat-item ${c.wa_id===currentWa?'active':''}" onclick="openChat('${c.wa_id}')">
+      <div class="ci-avatar">${(c.name||'U').substring(0,2).toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><b>${c.name||c.wa_id}</b><br><small style="color:#9aa3b8">${(c.lastMessage||'').substring(0,35)}</small></div>
+      ${c.unread?`<span class="dot ${c.dot||'red'}"></span>`:''}
+    </div>`).join('') || '<small style="color:#5f6b85">Sin chats</small>';
+}
+async function openChat(wa_id){
+  currentWa=wa_id;
+  await fetch('/api/chats/'+wa_id+'/read',{method:'POST'});
+  const c=allChats.find(x=>x.wa_id===wa_id)||{name:wa_id};
+  document.getElementById('chat-header').innerHTML=`<div class="ci-avatar">${(c.name||'U').substring(0,2).toUpperCase()}</div><div><b>${c.name||wa_id}</b><br><small style="color:#5f6b85">WhatsApp • +${wa_id}</small></div>`;
+  loadMessages(); loadChats(); loadStats();
+}
+async function loadMessages(){
+  if(!currentWa) return;
+  const r=await fetch('/api/messages/'+currentWa); const msgs=await r.json();
+  document.getElementById('messages').innerHTML=msgs.map(m=>`<div class="msg ${m.direction==='in'?'in':'out'}">${(m.text||'').replace(/</g,'&lt;')}</div>`).join('');
+  const box=document.getElementById('messages'); box.scrollTop=box.scrollHeight;
+}
+async function sendMessage(){
+  const inp=document.getElementById('msg-input'); const text=inp.value.trim();
+  if(!text||!currentWa) return; inp.value='';
+  await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text})});
+  loadMessages(); loadChats();
+}
+document.getElementById('msg-input').addEventListener('keydown',e=>{if(e.key==='Enter')sendMessage();});
+async function loadTemplates(){
+  const r=await fetch('/api/templates'); const d=await r.json();
+  document.getElementById('template-select').innerHTML=d.map(x=>`<option value="${x.name}">${x.name}</option>`).join('')||'<option value="">Sin plantillas - sincroniza</option>';
+}
+async function syncTemplates(){ await fetch('/api/templates/sync'); loadTemplates(); alert('Plantillas sincronizadas'); }
+async function loadCampaigns(){
+  const r=await fetch('/api/campaigns'); const d=await r.json();
+  document.getElementById('camp-list').innerHTML=d.map(x=>`<div style="background:#1c2338;padding:10px;border-radius:8px;margin:6px 0"><b>${x.name}</b><br><small style="color:#9aa3b8">${x.status} • ${x.sent||0}/${x.total||0}</small><br><button class="btn-gray" onclick="showHistory(${x.id})">Historial</button><button class="btn-gray" onclick="sendCampaign(${x.id})" style="background:#2e7bff">Enviar</button></div>`).join('')||'<small style="color:#5f6b85">Sin campañas</small>';
+}
+async function uploadCampaign(){
+  const f=document.getElementById('excel-file').files[0];
+  if(!f){alert('Selecciona un Excel');return;}
+  const fd=new FormData(); fd.append('file',f);
+  fd.append('name',document.getElementById('camp-name').value||'Campaña');
+  fd.append('template_name',document.getElementById('template-select').value);
+  const r=await fetch('/api/campaigns/upload',{method:'POST',body:fd});
+  const d=await r.json(); alert('Creada: '+d.count+' contactos'); loadCampaigns();
+}
+async function showHistory(id){
+  const r=await fetch('/api/campaigns/'+id); const d=await r.json();
+  document.getElementById('camp-history').innerHTML='<h4>Detalle</h4>'+d.history.slice(0,100).map(h=>`<small>${h.wa_id} - ${h.status}</small><br>`).join('');
+}
+async function sendCampaign(id){
+  if(!confirm('¿Enviar campaña?')) return;
+  await fetch('/api/campaigns/'+id+'/send',{method:'POST'});
+  alert('Enviando por tandas'); loadCampaigns();
+}
+
+if(localStorage.getItem('klido_auth')){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  loadChats(); loadStats();
+}
+setInterval(()=>{ if(localStorage.getItem('klido_auth')){ loadChats(); loadMessages(); loadStats(); } },5000);
+</script>
+</body>
+</html>
