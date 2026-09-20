@@ -4,60 +4,80 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KLIDO AVANZA CRM PRO</title>
 <style>
-*{box-sizing:border-box;font-family:Inter,Arial}body{margin:0;background:#0f1420;color:#fff;display:flex;height:100vh}
-.sidebar{width:240px;background:#151b2d;padding:15px;display:flex;flex-direction:column}
-.logo-wrap{display:flex;align-items:center;gap:10px;margin-bottom:20px}
-.logo-wrap img{height:36px;object-fit:contain}
-.logo-wrap span{font-weight:800;font-size:16px;letter-spacing:.5px;line-height:1.1}
-.badge{background:#2f6bff;font-size:10px;padding:3px 8px;border-radius:20px;vertical-align:middle}
-.menu button{background:none;border:none;color:#9aa3b8;padding:12px;text-align:left;border-radius:10px;cursor:pointer;font-size:15px;width:100%}
-.menu button.active{background:#2f6bff;color:#fff}
-.main{flex:1;display:flex;flex-direction:column}
-.topbar{display:flex;justify-content:flex-end;padding:12px 20px;background:#151b2d}
-.topbar button{background:#ff4d4d;border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer}
-.content{flex:1;display:flex;overflow:hidden}
-.inbox-list{width:320px;background:#171e32;overflow-y:auto;border-right:1px solid #222}
-.chat-item{padding:12px;border-bottom:1px solid #222;cursor:pointer;display:flex;justify-content:space-between}
-.chat-item.active{background:#1f2946}.unread{background:#2f6bff;border-radius:50%;padding:2px 8px;font-size:12px}
-.online-dot{width:8px;height:8px;background:#00ff88;border-radius:50%;display:inline-block}
-.chat-window{flex:1;display:flex;flex-direction:column;background:#0f1420}
-.messages{flex:1;overflow-y:auto;padding:20px}.msg{max-width:60%;padding:10px 14px;border-radius:14px;margin:8px 0}
-.msg.in{background:#1e263f}.msg.out{background:#2f6bff;margin-left:auto}
-.msg.camp{border:2px solid #ffcc00}
-.campaign-tag{background:#ffcc00;color:#000;font-size:11px;padding:2px 6px;border-radius:6px}
-.inputbar{display:flex;padding:12px;background:#151b2d}.inputbar input{flex:1;padding:12px;border-radius:10px;border:none;background:#1e263f;color:#fff}
-.inputbar button{margin-left:8px;background:#2f6bff;border:none;color:#fff;padding:0 20px;border-radius:10px;cursor:pointer}
-.hidden{display:none}.camp-wrap{padding:20px;overflow-y:auto;width:100%}
-.card{background:#171e32;padding:18px;border-radius:14px;margin-bottom:18px}
-.card input,.card select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#1e263f;color:#fff}
-.btn-green{background:#25D366;color:#fff;border:none;padding:12px 20px;border-radius:10px;cursor:pointer;font-weight:bold}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid #2a3350;text-align:left}
+*{box-sizing:border-box;font-family:'Inter',-apple-system,Arial}body{margin:0;background:#0b1120;color:#e6ebf5;height:100vh;display:flex;flex-direction:column}
+.header{height:60px;background:#111a30;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid #1f2a4a}
+.brand{display:flex;align-items:center;gap:12px}.brand img{height:38px;width:38px;object-fit:contain;border-radius:8px;background:#fff}
+.brand.title{font-weight:800;font-size:15px;letter-spacing:.6px;line-height:1.1}.brand.title small{background:#2f6bff;color:#fff;font-size:10px;padding:3px 8px;border-radius:20px;letter-spacing:.5px}
+.btn-salir{background:#ff4d4d;border:none;color:#fff;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600}
+.layout{flex:1;display:flex;overflow:hidden}
+.nav{width:210px;background:#111a30;padding:14px;border-right:1px solid #1f2a4a}
+.nav button{width:100%;background:transparent;border:none;color:#8b94ad;padding:12px 14px;border-radius:10px;text-align:left;cursor:pointer;font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.nav button.active{background:#2f6bff;color:#fff;font-weight:600}
+.main{flex:1;display:flex;overflow:hidden}
+.chats{width:360px;background:#0f1730;border-right:1px solid #1f2a4a;display:flex;flex-direction:column}
+.search{padding:14px}.search input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid #1f2a4a;background:#0b1120;color:#fff}
+.list{flex:1;overflow-y:auto}
+.chat{padding:14px 16px;display:flex;gap:12px;cursor:pointer;border-bottom:1px solid #162040;align-items:center}
+.chat:hover{background:#141d3a}.chat.active{background:#182449}
+.avatar{width:44px;height:44px;border-radius:50%;background:#2f6bff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;position:relative}
+.avatar.dot{position:absolute;bottom:0;right:0;width:12px;height:12px;background:#00d084;border-radius:50%;border:2px solid #0f1730}
+.info{flex:1;min-width:0}.info.row{display:flex;justify-content:space-between;align-items:center}
+.name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.time{font-size:11px;color:#8b94ad}.preview{font-size:13px;color:#8b94ad;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}
+.unread{background:#ff3b30;color:#fff;font-size:11px;font-weight:700;min-width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.empty{flex:1;display:flex;align-items:center;justify-content:center;color:#5a6585;flex-direction:column;gap:10px}
+.window{flex:1;display:flex;flex-direction:column;background:#0b1120}
+.msgs{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:8px}
+.bubble{max-width:62%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.4}
+.bubble.in{background:#1a2442;align-self:flex-start;border-bottom-left-radius:4px}
+.bubble.out{background:#2f6bff;align-self:flex-end;border-bottom-right-radius:4px}
+.bubble.camp{border:1.5px solid #ffcc00}
+.tag{display:inline-block;background:#ffcc00;color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;margin-bottom:6px;letter-spacing:.5px}
+.meta{font-size:10px;color:#8b94ad;margin-top:6px;text-align:right}
+.bar{padding:14px 18px;background:#111a30;display:flex;gap:10px;border-top:1px solid #1f2a4a}
+.bar input{flex:1;padding:13px 16px;border-radius:12px;border:1px solid #1f2a4a;background:#0b1120;color:#fff}
+.bar button{background:#2f6bff;border:none;color:#fff;width:48px;border-radius:12px;cursor:pointer;font-size:18px}
+.hidden{display:none}
+.campwrap{flex:1;overflow-y:auto;padding:24px;background:#0b1120;width:100%}
+.card{background:#111a30;border:1px solid #1f2a4a;border-radius:16px;padding:22px;margin-bottom:20px}
+.card h3{margin:0 0 14px}.card input,.card select{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:1px solid #1f2a4a;background:#0b1120;color:#fff}
+.btn-green{background:#00c853;color:#fff;border:none;padding:13px 22px;border-radius:10px;font-weight:700;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:13px}th{color:#8b94ad;text-align:left;padding:10px;font-weight:600}td{padding:12px 10px;border-top:1px solid #1f2a4a}
+.status{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}.status.sending{background:#ffcc0022;color:#ffcc00}.status.completed{background:#00d08422;color:#00d084}
 </style>
 </head>
 <body>
-<div class="sidebar">
-<div class="logo-wrap"><img src="/logo.png" onerror="this.style.display='none'"><span>KLIDO AVANZA<br><span class="badge">CRM PRO</span></span></div>
-<div class="menu"><button id="btn-inbox" class="active" onclick="showTab('inbox')">💬 Inbox</button><button id="btn-camp" onclick="showTab('camp')">📢 Campañas</button></div>
+<div class="header">
+<div class="brand"><img src="/logo.png" onerror="this.style.display='none'"><div class="title">KLIDO AVANZA<br><small>CRM PRO</small></div></div>
+<button class="btn-salir" onclick="logout()">Salir</button>
 </div>
-<div class="main">
-<div class="topbar"><button onclick="logout()">Salir</button></div>
-<div class="content" id="tab-inbox"><div class="inbox-list" id="chats"></div><div class="chat-window"><div class="messages" id="msgs"></div><div class="inputbar"><input id="msg-input" placeholder="Escribe..."><button onclick="sendMsg()">➤</button></div></div></div>
-<div class="content hidden" id="tab-camp"><div class="camp-wrap">
-<div class="card"><h3>📢 Nueva Campaña</h3><input id="camp-name" placeholder="Nombre campaña"><select id="camp-template"><option>Cargando...</option></select><input type="file" id="camp-excel" accept=".xlsx,.xls,.csv"><button class="btn-green" onclick="crearCampana()">🚀 Enviar anti-spam</button><div id="camp-status"></div></div>
-<div class="card"><h3>📊 Historial</h3><table id="camp-history"></table></div>
+<div class="layout">
+<div class="nav"><button id="b-inbox" class="active" onclick="showTab('inbox')">💬 Inbox</button><button id="b-camp" onclick="showTab('camp')">📢 Campañas</button></div>
+<div class="main" id="tab-inbox">
+<div class="chats"><div class="search"><input placeholder="Buscar conversación..." oninput="filterChats(this.value)"></div><div class="list" id="chats"></div></div>
+<div class="window"><div class="msgs" id="msgs"><div class="empty"><div style="font-size:48px">💬</div><h3>Selecciona una conversación</h3><p>Tus mensajes de WhatsApp aparecerán aquí</p></div></div>
+<div class="bar"><input id="inp" placeholder="Escribe un mensaje..."><button onclick="sendMsg()">➤</button></div></div>
+</div>
+<div class="main hidden" id="tab-camp"><div class="campwrap">
+<div class="card"><h3>📢 Nueva Campaña</h3><input id="camp-name" placeholder="Nombre de campaña ej: Promo Septiembre"><select id="camp-template"><option>Cargando plantillas aprobadas...</option></select><input type="file" id="camp-excel" accept=".xlsx,.xls,.csv"><p style="color:#8b94ad;font-size:13px">Sube tu Excel. Detectamos la columna de teléfonos automáticamente. Envío con pausa anti-spam para evitar reportes.</p><button class="btn-green" onclick="crearCampana()">🚀 Lanzar campaña segura</button><div id="camp-status" style="margin-top:12px"></div></div>
+<div class="card"><h3>📊 Historial y seguimiento</h3><table id="hist"></table></div>
 </div></div>
 </div>
 <script>
-let currentWa=null;
-function showTab(t){document.getElementById('tab-inbox').classList.toggle('hidden',t!=='inbox');document.getElementById('tab-camp').classList.toggle('hidden',t!=='camp');document.getElementById('btn-inbox').classList.toggle('active',t==='inbox');document.getElementById('btn-camp').classList.toggle('active',t==='camp');}
-async function loadChats(){const r=await fetch('/api/chats');const cs=await r.json();document.getElementById('chats').innerHTML=cs.map(c=>`<div class="chat-item ${c.wa_id===currentWa?'active':''}" onclick="openChat('${c.wa_id}')"><div><span class="online-dot"></span> <b>${c.wa_id}</b><br><small>${(c.last_msg||'').substring(0,35)}</small></div>${c.unread>0?`<span class="unread">${c.unread}</span>`:''}</div>`).join('');}
-async function openChat(wa){currentWa=wa;loadChats();const r=await fetch('/api/messages/'+wa);const ms=await r.json();document.getElementById('msgs').innerHTML=ms.map(m=>`<div class="msg ${m.direction==='in'?'in':'out'} ${m.is_campaign?'camp':''}">${m.is_campaign?'<span class="campaign-tag">CAMPAÑA</span><br>':''}${m.body||''}</div>`).join('');}
-async function sendMsg(){const b=document.getElementById('msg-input').value;if(!b||!currentWa)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,body:b})});document.getElementById('msg-input').value='';openChat(currentWa);}
-async function loadTemplates(){try{const r=await fetch('/api/templates');const t=await r.json();document.getElementById('camp-template').innerHTML=t.map(x=>`<option value="${x.name}">${x.name}</option>`).join('');}catch{}}
-async function crearCampana(){const f=document.getElementById('camp-excel').files[0];const tpl=document.getElementById('camp-template').value;const name=document.getElementById('camp-name').value;if(!f)return alert('Sube Excel');const fd=new FormData();fd.append('file',f);fd.append('template',tpl);fd.append('name',name);document.getElementById('camp-status').innerText='⏳ Enviando...';await fetch('/api/campaigns/excel',{method:'POST',body:fd});loadHistory();}
-async function loadHistory(){const r=await fetch('/api/campaigns');const rows=await r.json();document.getElementById('camp-history').innerHTML='<tr><th>Nombre</th><th>Total</th><th>Enviados</th><th>Estado</th><th>Fecha</th></tr>'+rows.map(c=>`<tr><td>${c.name}</td><td>${c.total}</td><td>${c.sent}</td><td>${c.status}</td><td>${new Date(c.created_at).toLocaleString()}</td></tr>`).join('');}
-async function logout(){await fetch('/api/logout',{method:'POST'});location.href='/login.html';}
-loadChats();loadTemplates();loadHistory();setInterval(loadChats,5000);
+let cur=null, allChats=[];
+const fmt=n=>{if(!n)return '';let d=n.replace(/\D/g,'');return d.length>8?'+'+d.slice(0,2)+' '+d.slice(2):n};
+const ini=n=>{let d=n.replace(/\D/g,'');return d.slice(-2)};
+function showTab(t){document.getElementById('tab-inbox').classList.toggle('hidden',t!=='inbox');document.getElementById('tab-camp').classList.toggle('hidden',t!=='camp');document.getElementById('b-inbox').classList.toggle('active',t==='inbox');document.getElementById('b-camp').classList.toggle('active',t==='camp')}
+function filterChats(q){renderChats(allChats.filter(c=>c.wa_id.includes(q)))}
+function renderChats(cs){document.getElementById('chats').innerHTML=cs.length?cs.map(c=>`<div class="chat ${c.wa_id===cur?'active':''}" onclick="openChat('${c.wa_id}')"><div class="avatar">${ini(c.wa_id)}<span class="dot"></span></div><div class="info"><div class="row"><span class="name">${fmt(c.wa_id)}</span><span class="time">${c.created_at?new Date(c.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''}</span></div><div class="row"><span class="preview">${(c.last_msg||'Sin mensajes').substring(0,40)}</span>${c.unread>0?`<span class="unread">${c.unread}</span>`:''}</div></div></div>`).join(''):`<div class="empty" style="padding:40px"><p>No hay conversaciones aún</p></div>`}
+async function loadChats(){const r=await fetch('/api/chats');allChats=await r.json();renderChats(allChats)}
+async function openChat(wa){cur=wa;renderChats(allChats);const r=await fetch('/api/messages/'+wa);const ms=await r.json();document.getElementById('msgs').innerHTML=ms.map(m=>`<div class="bubble ${m.direction==='in'?'in':'out'} ${m.is_campaign?'camp':''}">${m.is_campaign?'<span class="tag">CAMPAÑA</span><br>':''}${m.body||''}<div class="meta">${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`).join('')||'<div class="empty">Sin mensajes</div>';document.getElementById('msgs').scrollTop=9999}
+async function sendMsg(){const v=document.getElementById('inp').value;if(!v||!cur)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:cur,body:v})});document.getElementById('inp').value='';openChat(cur)}
+async function loadTpl(){try{const r=await fetch('/api/templates');const t=await r.json();document.getElementById('camp-template').innerHTML=t.map(x=>`<option value="${x.name}">${x.name} - ${x.language}</option>`).join('')||'<option>Sin plantillas</option>'}catch{}}
+async function crearCampana(){const f=document.getElementById('camp-excel').files[0];if(!f)return alert('Sube un Excel');const fd=new FormData();fd.append('file',f);fd.append('template',document.getElementById('camp-template').value);fd.append('name',document.getElementById('camp-name').value||'Campaña');document.getElementById('camp-status').innerHTML='⏳ Lanzando con protección anti-spam...';await fetch('/api/campaigns/excel',{method:'POST',body:fd});document.getElementById('camp-status').innerHTML='✅ Campaña en curso';loadHist()}
+async function loadHist(){const r=await fetch('/api/campaigns');const h=await r.json();document.getElementById('hist').innerHTML='<tr><th>Campaña</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Fallidos</th><th>Estado</th><th>Fecha</th></tr>'+h.map(c=>`<tr><td><b>${c.name}</b></td><td>${c.template}</td><td>${c.total}</td><td>${c.sent}</td><td>${c.failed}</td><td><span class="status ${c.status}">${c.status}</span></td><td>${new Date(c.created_at).toLocaleString()}</td></tr>`).join('')}
+async function logout(){await fetch('/api/logout',{method:'POST'});location.href='/login.html'}
+loadChats();loadTpl();loadHist();setInterval(loadChats,5000);
 </script>
 </body>
 </html>
