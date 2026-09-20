@@ -1,33 +1,11 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KLIDO</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div id="app">
-  <aside id="sidebar">
-    <div class="logo"><!-- TU LOGO AQUÍ, no se toca --><img src="logo.png" alt="KLIDO"></div>
-    <div class="tabs"><button id="tab-chats" class="active">Chats</button><button id="tab-camp">Campañas</button></div>
-    <div id="chat-list"></div>
-    <div id="camp-panel" style="display:none">
-      <h3>Campañas</h3>
-      <button onclick="syncTemplates()">Sincronizar plantillas API</button>
-      <select id="template-select"></select>
-      <input type="text" id="camp-name" placeholder="Nombre campaña">
-      <input type="file" id="excel-file" accept=".xlsx,.xls">
-      <button onclick="uploadCampaign()">Subir Excel y crear</button>
-      <div id="camp-list"></div>
-      <div id="camp-history"></div>
-    </div>
-  </aside>
-  <main id="chat-window">
-    <div id="chat-header"></div>
-    <div id="messages"></div>
-    <div id="input-bar"><input id="msg-input" placeholder="Escribe..."><button onclick="markRead()">✓</button></div>
-  </main>
-</div>
-<script src="app.js"></script>
-</body>
-</html>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO CRM Pro</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="app">
+<header class="topbar"><div class="brand"><img src="logo.png" class="logo-img"><span>KLIDO CRM Pro</span><span class="pro">Pro Plan</span></div><div class="top-icons">🔍 🔕 ❓ <div class="avatar">AD</div></div></header>
+<div class="main">
+<nav class="menu"><p class="label">MENU</p><button class="active">📥 Inbox</button><button onclick="showTab('camp')">👥 Campaigns</button><button>📝 Templates</button><p class="label">SUPPORT</p><button>Help Center</button><button>Settings</button><div class="trial">Trial - 12 days left<br><button class="upgrade">Upgrade now</button></div></nav>
+<aside class="inbox"><div class="inbox-head"><h3>Inbox</h3><button onclick="syncTemplates()">⟳</button></div><input id="search" placeholder="Search conversations..." oninput="loadChats()"><div id="chat-list"></div>
+<div id="camp-panel" style="display:none"><h4>Campañas</h4><select id="template-select"></select><input id="camp-name" placeholder="Nombre campaña"><input type="file" id="excel-file" accept=".xlsx"><button onclick="uploadCampaign()">Subir Excel</button><div id="camp-list"></div><div id="camp-history"></div></div>
+</aside>
+<section class="chat"><div id="chat-header" class="chat-header"></div><div id="messages" class="messages"></div><div class="input-bar"><button>📎</button><input id="msg-input" placeholder="Type a message..."><button onclick="markRead()">➤</button></div></section>
+<aside class="profile" id="profile-panel"><h4>Customer Profile <span onclick="this.parentElement.style.display='none'" style="cursor:pointer">×</span></h4><div id="profile-info"></div></aside>
+</div></div><script src="app.js"></script></body></html>
