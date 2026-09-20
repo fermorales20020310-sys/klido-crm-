@@ -1,49 +1,73 @@
-<!-- CAMPAÑAS KLIDO -->
-<div id="campanas" class="tab">
-  <h2>📢 Campañas</h2>
-  
-  <div style="display:flex;gap:10px;margin-bottom:15px">
-    <input type="text" id="camp-name" placeholder="Nombre campaña" style="flex:1;padding:8px">
-    <select id="camp-template" style="flex:1;padding:8px"><option>Cargando plantillas...</option></select>
-  </div>
-
-  <div style="border:2px dashed #ccc;padding:20px;text-align:center;margin-bottom:15px">
-    <input type="file" id="camp-excel" accept=".xlsx,.xls,.csv">
-    <p>Sube tu Excel - detecto automáticamente la columna de números (numero / phone / telefono)</p>
-    <button onclick="crearCampana()" style="padding:10px 20px;background:#25D366;color:white;border:none;border-radius:8px;cursor:pointer">🚀 Enviar campaña</button>
-  </div>
-  <div id="camp-status"></div>
-
-  <h3>Historial de campañas</h3>
-  <table id="camp-history" border="1" style="width:100%;border-collapse:collapse">
-    <tr><th>Nombre</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Fallidos</th><th>Estado</th><th>Fecha</th></tr>
-  </table>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO CRM</title>
+<style>
+*{box-sizing:border-box;font-family:Inter,Arial}body{margin:0;background:#0f1420;color:#fff;display:flex;height:100vh}
+.sidebar{width:220px;background:#151b2d;padding:15px;display:flex;flex-direction:column}
+.sidebar img{height:36px;margin-bottom:20px;object-fit:contain}
+.menu button{background:none;border:none;color:#9aa3b8;padding:12px;text-align:left;border-radius:10px;cursor:pointer;font-size:15px;width:100%}
+.menu button.active{background:#2f6bff;color:#fff}
+.main{flex:1;display:flex;flex-direction:column}
+.topbar{display:flex;justify-content:flex-end;padding:12px 20px;background:#151b2d}
+.topbar button{background:#ff4d4d;border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer}
+.content{flex:1;display:flex;overflow:hidden}
+.inbox-list{width:320px;background:#171e32;overflow-y:auto;border-right:1px solid #222}
+.chat-item{padding:12px;border-bottom:1px solid #222;cursor:pointer;display:flex;justify-content:space-between}
+.chat-item.active{background:#1f2946}.unread{background:#2f6bff;border-radius:50%;padding:2px 8px;font-size:12px}
+.online-dot{width:8px;height:8px;background:#00ff88;border-radius:50%;display:inline-block}
+.campaign-tag{background:#ffcc00;color:#000;font-size:11px;padding:2px 6px;border-radius:6px;margin-left:6px}
+.chat-window{flex:1;display:flex;flex-direction:column;background:#0f1420}
+.messages{flex:1;overflow-y:auto;padding:20px}.msg{max-width:60%;padding:10px 14px;border-radius:14px;margin:8px 0}
+.msg.in{background:#1e263f;align-self:flex-start}.msg.out{background:#2f6bff;align-self:flex-end;margin-left:auto}
+.msg.camp{border:2px solid #ffcc00}
+.inputbar{display:flex;padding:12px;background:#151b2d}.inputbar input{flex:1;padding:12px;border-radius:10px;border:none;background:#1e263f;color:#fff}
+.inputbar button{margin-left:8px;background:#2f6bff;border:none;color:#fff;padding:0 20px;border-radius:10px;cursor:pointer}
+.hidden{display:none}
+.camp-wrap{padding:20px;overflow-y:auto;width:100%}
+.card{background:#171e32;padding:18px;border-radius:14px;margin-bottom:18px}
+.card input,.card select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#1e263f;color:#fff}
+.btn-green{background:#25D366;color:#fff;border:none;padding:12px 20px;border-radius:10px;cursor:pointer;font-weight:bold}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid #2a3350;text-align:left}
+</style>
+</head>
+<body>
+<div class="sidebar">
+<img src="/logo.png" alt="KLIDO" onerror="this.outerHTML='<h2>KLIDO CRM</h2>'">
+<div class="menu">
+<button id="btn-inbox" class="active" onclick="showTab('inbox')">💬 Inbox</button>
+<button id="btn-camp" onclick="showTab('camp')">📢 Campañas</button>
+</div></div>
+<div class="main">
+<div class="topbar"><button onclick="logout()">Salir</button></div>
+<div class="content" id="tab-inbox">
+<div class="inbox-list" id="chats"></div>
+<div class="chat-window"><div class="messages" id="msgs"></div>
+<div class="inputbar"><input id="msg-input" placeholder="Escribe un mensaje..."><button onclick="sendMsg()">➤</button></div></div>
 </div>
-
+<div class="content hidden" id="tab-camp"><div class="camp-wrap">
+<div class="card"><h3>📢 Nueva Campaña</h3>
+<input id="camp-name" placeholder="Nombre campaña">
+<select id="camp-template"><option>Cargando plantillas...</option></select>
+<input type="file" id="camp-excel" accept=".xlsx,.xls,.csv">
+<p style="color:#9aa3b8;font-size:13px">Sube Excel, detecto la columna de números automáticamente</p>
+<button class="btn-green" onclick="crearCampana()">🚀 Enviar con protección anti-spam</button>
+<div id="camp-status" style="margin-top:10px"></div></div>
+<div class="card"><h3>📊 Historial / Seguimiento</h3><table id="camp-history"></table></div>
+</div></div>
+</div>
 <script>
-// Cargar plantillas aprobadas automáticamente
-async function loadTemplates(){
-  const r = await fetch('/api/templates'); const tpls = await r.json();
-  document.getElementById('camp-template').innerHTML = tpls.map(t=>`<option value="${t.name}">${t.name} (${t.language})</option>`).join('') || '<option>No hay aprobadas</option>';
-}
-// Crear campaña desde Excel
-async function crearCampana(){
-  const file = document.getElementById('camp-excel').files[0];
-  const template = document.getElementById('camp-template').value;
-  const name = document.getElementById('camp-name').value || 'Campaña';
-  if(!file || !template) return alert('Sube Excel y elige plantilla');
-  const fd = new FormData(); fd.append('file', file); fd.append('template', template); fd.append('name', name);
-  document.getElementById('camp-status').innerHTML = '⏳ Enviando con anti-spam (3s entre mensajes)...';
-  const r = await fetch('/api/campaigns/excel',{method:'POST', body:fd});
-  const j = await r.json();
-  document.getElementById('camp-status').innerHTML = `✅ Campaña #${j.campaign_id} iniciada: ${j.total} números`;
-  loadHistory();
-}
-// Historial
-async function loadHistory(){
-  const r = await fetch('/api/campaigns'); const rows = await r.json();
-  document.getElementById('camp-history').innerHTML = '<tr><th>Nombre</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Fallidos</th><th>Estado</th><th>Fecha</th></tr>' +
-    rows.map(c=>`<tr><td>${c.name}</td><td>${c.template}</td><td>${c.total}</td><td>${c.sent}</td><td>${c.failed}</td><td>${c.status}</td><td>${new Date(c.created_at).toLocaleString()}</td></tr>`).join('');
-}
-loadTemplates(); loadHistory();
+let currentWa=null;
+function showTab(t){document.getElementById('tab-inbox').classList.toggle('hidden',t!=='inbox');document.getElementById('tab-camp').classList.toggle('hidden',t!=='camp');document.getElementById('btn-inbox').classList.toggle('active',t==='inbox');document.getElementById('btn-camp').classList.toggle('active',t==='camp');}
+async function loadChats(){const r=await fetch('/api/chats');const cs=await r.json();document.getElementById('chats').innerHTML=cs.map(c=>`<div class="chat-item ${c.wa_id===currentWa?'active':''}" onclick="openChat('${c.wa_id}')"><div><span class="online-dot"></span> <b>${c.wa_id}</b><br><small>${(c.last_msg||'').substring(0,35)}</small></div>${c.unread>0?`<span class="unread">${c.unread}</span>`:''}</div>`).join('');}
+async function openChat(wa){currentWa=wa;loadChats();const r=await fetch('/api/messages/'+wa);const ms=await r.json();document.getElementById('msgs').innerHTML=ms.map(m=>`<div class="msg ${m.direction==='in'?'in':'out'} ${m.is_campaign?'camp':''}">${m.is_campaign?'<span class="campaign-tag">CAMPAÑA</span><br>':''}${m.body||''}</div>`).join('');}
+async function sendMsg(){const b=document.getElementById('msg-input').value;if(!b||!currentWa)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,body:b})});document.getElementById('msg-input').value='';openChat(currentWa);}
+async function loadTemplates(){try{const r=await fetch('/api/templates');const t=await r.json();document.getElementById('camp-template').innerHTML=t.map(x=>`<option value="${x.name}">${x.name}</option>`).join('')||'<option>Sin plantillas aprobadas</option>';}catch{}}
+async function crearCampana(){const f=document.getElementById('camp-excel').files[0];const tpl=document.getElementById('camp-template').value;const name=document.getElementById('camp-name').value;if(!f)return alert('Sube Excel');const fd=new FormData();fd.append('file',f);fd.append('template',tpl);fd.append('name',name);document.getElementById('camp-status').innerText='⏳ Enviando con delay anti-spam...';const r=await fetch('/api/campaigns/excel',{method:'POST',body:fd});const j=await r.json();document.getElementById('camp-status').innerText=`✅ Campaña ${j.campaign_id} iniciada: ${j.total} contactos`;loadHistory();}
+async function loadHistory(){const r=await fetch('/api/campaigns');const rows=await r.json();document.getElementById('camp-history').innerHTML='<tr><th>Nombre</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Fallidos</th><th>Estado</th><th>Fecha</th></tr>'+rows.map(c=>`<tr><td>${c.name}</td><td>${c.template}</td><td>${c.total}</td><td>${c.sent}</td><td>${c.failed}</td><td>${c.status}</td><td>${new Date(c.created_at).toLocaleString()}</td></tr>`).join('');}
+async function logout(){await fetch('/api/logout',{method:'POST'});location.href='/login.html';}
+loadChats();loadTemplates();loadHistory();setInterval(loadChats,5000);
 </script>
+</body>
+</html>
