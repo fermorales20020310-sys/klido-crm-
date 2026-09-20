@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - KLIDO CRM Pro</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',Arial}
+body{background:#060a14;display:flex;justify-content:center;padding:18px;min-height:100vh}
+.app{width:100%;max-width:1480px;min-height:94vh;background:#0b1120;border-radius:20px;overflow:hidden;border:1px solid #1e3a5f}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #1e3a5f;background:#0a1931}
+.hleft{display:flex;align-items:center;gap:12px}.hleft img{width:42px;height:42px;border-radius:10px;background:#fff;padding:4px}
+.hleft h1{color:#fff;font-size:20px;font-weight:800}
+.btn{background:#2563eb;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:600}
+.btn.dark{background:#0a1931;border:1px solid #2563eb}
+.body{display:flex}.menu{width:210px;border-right:1px solid #1e3a5f;padding:20px 14px}
+.mi{padding:11px 14px;border-radius:10px;color:#93c5fd;cursor:pointer;margin-bottom:4px}
+.mi.active{background:#2563eb;color:#fff}
+.content{flex:1;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:#0f1e3a;border:1px solid #1e3a5f;border-radius:16px;padding:22px}
+.card h3{color:#fff;margin-bottom:6px;font-size:17px}.card p{color:#60a5fa;font-size:13px;margin-bottom:16px}
+label{color:#93c5fd;font-size:13px;display:block;margin:12px 0 6px}
+select,input{width:100%;background:#0a1931;border:1px solid #2563eb;color:#fff;padding:12px;border-radius:10px;outline:none}
+.drop{border:2px dashed #2563eb;border-radius:12px;padding:28px;text-align:center;color:#60a5fa;cursor:pointer;margin-top:8px}
+.nums{background:#0a1931;border-radius:10px;padding:12px;max-height:140px;overflow-y:auto;color:#93c5fd;font-size:13px;margin-top:10px}
+.send{width:100%;background:#2563eb;color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:16px}
+.hist{grid-column:1/-1}table{width:100%;border-collapse:collapse;margin-top:12px}
+th{color:#60a5fa;font-size:12px;text-align:left;padding:10px;border-bottom:1px solid #1e3a5f}
+td{color:#dbeafe;font-size:13px;padding:10px;border-bottom:1px solid #102040}
+.status{background:#1e3a5f;color:#60a5fa;padding:4px 12px;border-radius:20px;font-size:11px}
+</style></head>
+<body>
+<div class="app">
+<div class="header"><div class="hleft"><img src="/logo.png"><h1>KLIDO CRM Pro</h1></div>
+<div style="display:flex;gap:10px"><button class="btn dark" onclick="location.href='/index.html'">← Inbox</button><button class="btn dark" onclick="localStorage.removeItem('klido_auth');location.href='/index.html'">Salir</button></div></div>
+<div class="body"><div class="menu"><div class="mi" onclick="location.href='/index.html'">💬 Inbox</div><div class="mi active">📢 Campaigns</div></div>
+<div class="content">
+<div class="card"><h3>📢 Nueva Campaña</h3><p>Plantillas sincronizadas desde Meta</p>
+<label>Nombre campaña</label><input id="camp-name" placeholder="Ej: Promo Septiembre">
+<label>Plantilla aprobada</label><select id="tpl"><option>Cargando...</option></select>
+<button class="btn dark" style="margin-top:8px" onclick="syncTpl()">🔄 Sincronizar plantillas</button>
+<label>Base de datos Excel</label><div class="drop" onclick="document.getElementById('file').click()">📁 Click para subir Excel<input type="file" id="file" accept=".xlsx,.xls" style="display:none"></div>
+<div class="nums" id="nums">Sin archivo</div>
+<button class="send" id="btnSend" onclick="uploadAndSend()">Subir y Enviar Campaña</button>
+</div>
+<div class="card"><h3>👁️ Vista previa</h3><p>Así se verá tu plantilla</p><div id="prev" style="background:#0a1931;border-radius:12px;padding:18px;color:#dbeafe;min-height:200px">Selecciona una plantilla</div></div>
+<div class="card hist"><h3>📊 Historial</h3><table><thead><tr><th>Nombre</th><th>Total</th><th>Enviados</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="hist"></tbody></table><div id="detail" style="margin-top:12px;color:#93c5fd;font-size:13px"></div></div>
+</div></div></div>
+<script>
+if(!localStorage.getItem('klido_auth')) location.href='/index.html';
+let templates=[];
+async function loadTpl(){
+  const r=await fetch('/api/templates'); templates=await r.json();
+  const s=document.getElementById('tpl'); s.innerHTML=templates.map(t=>`<option value="${t.name}">${t.name}</option>`).join('')||'<option value="">Sin plantillas - sincroniza</option>';
+  showPrev();
+}
+function showPrev(){ const n=document.getElementById('tpl').value; const t=templates.find(x=>x.name===n);
+  document.getElementById('prev').innerHTML=t?`<b style="color:#fff">${t.name}</b><br><br>${t.body||'Sin texto'}`:'Selecciona plantilla'; }
+document.getElementById('tpl').onchange=showPrev;
+async function syncTpl(){ await fetch('/api/templates/sync'); loadTpl(); alert('Sincronizadas'); }
+document.getElementById('file').onchange=e=>{ document.getElementById('nums').textContent=e.target.files[0]?e.target.files[0].name+' listo':'Sin archivo'; };
+async function uploadAndSend(){
+  const f=document.getElementById('file').files[0]; if(!f){alert('Sube un Excel');return;}
+  const fd=new FormData(); fd.append('file',f);
+  fd.append('name',document.getElementById('camp-name').value||'Campaña');
+  fd.append('template_name',document.getElementById('tpl').value);
+  const r=await fetch('/api/campaigns/upload',{method:'POST',body:fd}); const d=await r.json();
+  if(d.id){ await fetch('/api/campaigns/'+d.id+'/send',{method:'POST'}); alert('Campaña '+d.count+' enviándose por tandas'); loadHist(); }
+}
+async function loadHist(){
+  const r=await fetch('/api/campaigns'); const h=await r.json();
+  document.getElementById('hist').innerHTML=h.map(c=>`<tr><td>${c.name}</td><td>${c.total}</td><td>${c.sent||0}</td><td><span class="status">${c.status}</span></td><td><button class="btn dark" onclick="showDetail(${c.id})">Ver</button></td></tr>`).join('');
+}
+async function showDetail(id){
+  const r=await fetch('/api/campaigns/'+id); const d=await r.json();
+  document.getElementById('detail').innerHTML=d.history.slice(0,50).map(x=>`${x.wa_id} - ${x.status}`).join('<br>');
+}
+loadTpl(); loadHist();
+</script></body></html>
