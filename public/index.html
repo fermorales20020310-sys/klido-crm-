@@ -3,10 +3,9 @@
 <title>KLIDO CRM Pro</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <style>
-body{background:#0a1128;color:#e2e8f0;font-family:Inter,system-ui}
-.sidebar{background:#0b142e}.menu-active{background:#2563eb;border-radius:10px}
-.chat-bg{background:#111c3a}.bubble-in{background:#1e2a4a;border-radius:12px}
-.bubble-out{background:#60a5fa;border-radius:12px;color:#0a1128;margin-left:auto}
+body{background:#0b1330;color:#e2e8f0;font-family:Inter,system-ui}
+.sidebar{background:#0a1128}.menu-active{background:#2563eb;border-radius:10px}
+.chat-bg{background:#101a3a}.bubble-in{background:#1e2a4f;border-radius:12px}
 .badge-unread{background:#ef4444;color:#fff;font-size:11px;min-width:20px;height:20px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
 .badge-camp{background:#fbbf24;color:#000;font-size:10px;padding:2px 8px;border-radius:9999px;font-weight:700}
 .msg-campaign{border-left:4px solid #fbbf24!important}
@@ -20,80 +19,63 @@ input,select{background:#1a2547!important;border:1px solid #2a3a63!important;col
 <input id="email" placeholder="Correo" class="w-full p-3 rounded mt-6 mb-3"><input id="pass" type="password" placeholder="Contraseña" class="w-full p-3 rounded mb-4">
 <button onclick="doLogin()" class="w-full btn-blue p-3 font-bold">Ingresar</button></div></div>
 
-<div id="app" class="hidden h-screen flex">
-<!-- MENU igual a tu diseño -->
-<div class="w-60 sidebar p-4 flex flex-col">
-<div class="flex items-center gap-2 mb-6"><img src="/logo.png" class="h-10 w-10 rounded-lg bg-white p-1" onerror="this.style.display='none'"><div><div class="font-bold">KLIDO CRM Pro</div></div><span class="text-xs bg-blue-600 px-2 rounded-full ml-auto">Pro Plan</span></div>
+<div id="app" class="hidden h-screen flex relative">
+<button onclick="logout()" class="absolute top-3 right-4 bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-lg text-sm font-bold z-50">Salir</button>
+
+<div class="w-56 sidebar p-4 flex flex-col">
+<div class="flex items-center gap-2 mb-6"><img src="/logo.png" class="h-10 w-10 rounded-lg" onerror="this.style.display='none'"><div class="font-bold text-sm leading-tight">KLIDO CRM<br>Pro</div><span class="text-xs bg-blue-600 px-2 rounded-full ml-auto">Pro<br>Plan</span></div>
 <div class="text-xs text-gray-500 mb-2">MENU</div>
-<button onclick="showSec('inbox')" class="menu-active p-3 text-left mb-1">💬 Inbox</button>
-<button class="p-3 text-left mb-1 hover:bg-white/5 rounded">👥 Contacts</button>
-<button onclick="showSec('campaigns')" class="p-3 text-left mb-1 hover:bg-white/5 rounded">📢 Campaigns</button>
-<button class="p-3 text-left mb-1 hover:bg-white/5 rounded">⚙️ Automation</button>
-<div class="text-xs text-gray-500 mt-6 mb-2">SUPPORT</div>
-<button class="p-3 text-left hover:bg-white/5 rounded">❓ Help Center</button>
-<div class="mt-auto card p-3 text-center"><div class="text-xs">Trial • 12 days left</div><button class="btn-blue w-full mt-2 p-2 text-sm">Upgrade now</button></div>
+<button onclick="showSec('inbox')" class="menu-active p-3 text-left mb-1 text-sm">💬 Inbox</button>
+<button class="p-3 text-left mb-1 hover:bg-white/5 rounded text-sm">👥 Contacts</button>
+<button onclick="showSec('campaigns')" class="p-3 text-left mb-1 hover:bg-white/5 rounded text-sm">📢 Campaigns</button>
 </div>
 
-<!-- CENTRO -->
-<div class="flex-1 flex flex-col">
-<!-- Barra superior con Salir -->
-<div class="flex justify-end items-center p-2 px-4 sidebar border-b border-white/10">
-<span class="text-sm text-gray-400 mr-4">🔍 ⚙️ ❓</span>
-<button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-lg text-sm font-bold">Salir</button>
-</div>
-
-<div class="flex flex-1 overflow-hidden">
 <div id="sec-inbox-list" class="w-80 chat-bg border-r border-white/10 flex flex-col">
-<div class="p-4 font-bold text-lg flex justify-between items-center">Inbox <button class="btn-blue w-8 h-8 rounded-full">+</button></div>
+<div class="p-4 font-bold flex justify-between items-center">Inbox <button class="btn-blue w-7 h-7 rounded-full text-sm">+</button></div>
 <input placeholder="🔍 Search conversations..." class="m-3 p-2.5 rounded-lg text-sm" oninput="filterChats(this.value)">
-<div id="chatList" class="flex-1 overflow-y-auto px-3 space-y-2 pb-4"></div>
+<div id="chatList" class="flex-1 overflow-y-auto px-3 space-y-2"></div>
 </div>
 
 <div id="sec-chat" class="flex-1 chat-bg flex flex-col">
-<div class="p-4 border-b border-white/10 flex items-center gap-3">
-<div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center font-bold" id="avatar">SN</div>
-<div><div id="chatName" class="font-bold">Selecciona chat</div><div class="text-xs text-green-400"><span class="online-dot"></span> Online • WhatsApp</div></div>
-</div>
+<div class="p-3 border-b border-white/10 flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center font-bold text-sm">SN</div><div><div id="chatName" class="font-bold text-sm">Selecciona chat</div><div class="text-xs text-green-400"><span class="online-dot"></span> Online • WhatsApp</div></div></div>
 <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3"></div>
-<div class="p-4 flex gap-3 items-center"><span class="text-gray-400">📎</span><span>😊</span><input id="msgInput" placeholder="Type a message..." class="flex-1 p-3 rounded-full" onkeypress="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()" class="btn-blue w-11 h-11 rounded-full text-lg">➤</button></div>
+<div class="p-4 flex gap-3 items-center"><span class="text-gray-400">📎</span><span>😊</span><input id="msgInput" placeholder="Type a message..." class="flex-1 p-3 rounded-full text-sm" onkeypress="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()" class="btn-blue w-10 h-10 rounded-lg">➤</button></div>
 </div>
 
 <div id="sec-campaigns" class="hidden flex-1 p-6 overflow-y-auto chat-bg">
 <h2 class="text-xl font-bold mb-4">Campaigns</h2>
 <div class="card p-5 mb-4"><label class="font-bold text-sm">Plantilla automática desde Cloud API</label><select id="tplSelect" class="w-full p-2.5 rounded-lg mt-2"></select>
-<label class="font-bold text-sm mt-4 block">Subir archivo Excel / CSV</label><input type="file" id="excelInput" accept=".xlsx,.xls,.csv" class="mt-2 p-2 w-full rounded-lg"><div id="numsPreview" class="text-sm text-green-400 mt-2"></div>
-<button onclick="sendCampaign()" class="mt-4 btn-blue px-6 py-2.5 font-bold">Enviar campaña</button>
-<p class="text-xs text-gray-400 mt-2">Solo plantillas APPROVED • Solo opt-in</p></div>
+<label class="font-bold text-sm mt-4 block">Subir Excel / CSV - auto detecta números</label><input type="file" id="excelInput" accept=".xlsx,.xls,.csv" class="mt-2 p-2 w-full rounded-lg"><div id="numsPreview" class="text-sm text-green-400 mt-2"></div>
+<button onclick="sendCampaign()" class="mt-4 btn-blue px-6 py-2.5 font-bold">Enviar campaña</button></div>
 <h3 class="font-bold mb-2">Historial de campañas</h3><div id="campHistory" class="space-y-2"></div>
 </div>
 
-<!-- PROFILE igual a tu diseño -->
 <div class="w-80 sidebar p-5 border-l border-white/10 hidden lg:block">
-<div class="flex justify-between font-bold mb-4">Customer Profile <button>✕</button></div>
-<div class="text-center"><div class="w-16 h-16 rounded-full bg-blue-500 mx-auto flex items-center justify-center font-bold text-xl">SN</div><div id="pName" class="font-bold mt-2">Sofia Nguyen</div><div class="text-xs text-gray-400">Customer • WhatsApp</div></div>
-<div class="flex gap-2 mt-4 justify-center"><span class="bg-blue-600 text-xs px-2 py-1 rounded">VIP</span><span class="bg-red-600 text-xs px-2 py-1 rounded">Hot Lead</span><span class="bg-gray-700 text-xs px-2 py-1 rounded">E-commerce</span></div>
-<div class="mt-5 text-sm space-y-3"><div>✉️ <span id="pMail">-</span></div><div>📞 <span id="pPhone">-</span></div></div>
-<div class="mt-4 card p-4"><div class="text-xs text-gray-400 mb-1">Notes</div><div class="text-sm">Historial completo disponible</div><div class="text-xs text-gray-500 mt-2">Created • 12 Oct 2024</div></div>
-<div class="flex gap-2 mt-4"><button class="flex-1 bg-gray-700 p-2.5 rounded-lg">Add note</button><button class="flex-1 btn-blue p-2.5">Edit profile</button></div>
+<div class="flex justify-between font-bold text-sm mb-4">Customer Profile <button>✕</button></div>
+<div class="text-center"><div class="w-14 h-14 rounded-full bg-blue-500 mx-auto flex items-center justify-center font-bold">SN</div><div id="pName" class="font-bold mt-2 text-sm">Sofia Nguyen</div><div class="text-xs text-gray-400">Customer • WhatsApp</div></div>
+<div class="flex gap-2 mt-3 justify-center"><span class="bg-blue-600 text-xs px-2 py-1 rounded">VIP</span><span class="bg-red-600 text-xs px-2 py-1 rounded">Hot Lead</span><span class="bg-gray-700 text-xs px-2 py-1 rounded">E-commerce</span></div>
+<div class="mt-4 text-sm space-y-2"><div>✉️ -</div><div>📞 <span id="pPhone">-</span></div></div>
+<div class="mt-4 card p-3"><div class="text-xs text-gray-400">Notes</div><div class="text-sm">Historial completo disponible</div></div>
+<div class="flex gap-2 mt-4"><button class="flex-1 bg-gray-700 p-2 rounded-lg text-sm">Add note</button><button class="flex-1 btn-blue p-2 text-sm">Edit profile</button></div>
 </div>
-</div></div></div>
+</div>
 
 <script>
 let token=localStorage.getItem('t'),currentWa=null,excelNumbers=[],allChats=[];
 const api=(u,o={})=>fetch(u,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}}).then(r=>r.json());
 function logout(){localStorage.removeItem('t');location.reload();}
-async function doLogin(){const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('pass').value})}).then(r=>r.json());if(r.ok){token=r.token;localStorage.setItem('t',token);document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');init();}else alert('Error login');}
+async function doLogin(){const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('pass').value})}).then(r=>r.json());if(r.ok){token=r.token;localStorage.setItem('t',token);document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');init();}}
 function showSec(s){document.getElementById('sec-inbox-list').style.display=s==='inbox'?'flex':'none';document.getElementById('sec-chat').style.display=s==='inbox'?'flex':'none';document.getElementById('sec-campaigns').style.display=s==='campaigns'?'block':'none';if(s==='campaigns'){loadTemplates();loadCampHistory();}}
-const chatHtml=c=>`<div onclick="openChat('${c.wa_id}')" class="card p-3 cursor-pointer flex gap-3 items-center ${c.has_campaign?'msg-campaign':''}"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-sm">${c.wa_id.slice(-2)}</div><div class="flex-1 min-w-0"><div class="font-bold text-sm truncate">${c.wa_id}</div><div class="text-xs text-gray-400 truncate">${c.last_msg||''} ${c.has_campaign?'<span class="badge-camp ml-1">CAMPANA</span>':''}</div></div><div class="flex flex-col items-end gap-1">${c.unread>0?`<span class="badge-unread">${c.unread}</span>`:`<span class="text-xs text-gray-500">${c.time||''}</span>`}</div></div>`;
+const chatHtml=c=>`<div onclick="openChat('${c.wa_id}')" class="card p-3 cursor-pointer flex gap-3 items-center ${c.has_campaign?'msg-campaign':''}"><div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">${c.wa_id.slice(-2)}</div><div class="flex-1 min-w-0"><div class="font-bold text-sm truncate">${c.wa_id}</div><div class="text-xs text-gray-400 truncate">${c.last_msg||''} ${c.has_campaign?'<span class="badge-camp ml-1">CAMPANA</span>':''}</div></div>${c.unread>0?`<span class="badge-unread">${c.unread}</span>`:''}</div>`;
 function filterChats(q){document.getElementById('chatList').innerHTML=allChats.filter(c=>c.wa_id.includes(q)).map(chatHtml).join('');}
 async function init(){loadChats();setInterval(async()=>{await loadChats();if(currentWa)loadMessages(true)},3000);}
 async function loadChats(){const d=await api('/api/chats');if(!d.ok)return;allChats=d.chats;document.getElementById('chatList').innerHTML=allChats.map(chatHtml).join('');}
 async function openChat(wa){currentWa=wa;document.getElementById('chatName').innerText=wa;document.getElementById('pName').innerText=wa;document.getElementById('pPhone').innerText=wa;await api('/api/chats/'+wa+'/read',{method:'POST'});loadMessages();}
-async function loadMessages(silent){if(!currentWa)return;const d=await api('/api/chats/'+currentWa+'/messages');if(!d.ok)return;const box=document.getElementById('messages');box.innerHTML='<div class="text-center text-xs text-gray-500 mb-4">Today • '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div>'+d.messages.map(m=>`<div class="p-3 max-w-md ${m.direction==='out'?'bubble-out':'bubble-in'} ${m.is_campaign?'msg-campaign':''}">${m.is_campaign?'<span class="badge-camp">CAMPANA</span><br>':''}${m.body}<div class="text-xs opacity-70 text-right mt-1">${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`).join('');if(!silent)box.scrollTop=box.scrollHeight;}
+async function loadMessages(s){if(!currentWa)return;const d=await api('/api/chats/'+currentWa+'/messages');if(!d.ok)return;const box=document.getElementById('messages');box.innerHTML=d.messages.map(m=>`<div class="p-3 max-w-md ${m.direction==='out'?'ml-auto bg-blue-500 text-white rounded-xl':'bubble-in'} ${m.is_campaign?'msg-campaign':''}">${m.is_campaign?'<span class="badge-camp">CAMPANA</span><br>':''}${m.body}<div class="text-xs opacity-70 text-right">${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`).join('');if(!s)box.scrollTop=box.scrollHeight;}
 async function sendMsg(){const v=document.getElementById('msgInput').value;if(!v||!currentWa)return;await api('/api/chats/send',{method:'POST',body:JSON.stringify({to:currentWa,body:v})});document.getElementById('msgInput').value='';loadMessages();}
-async function loadTemplates(){const d=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json());document.getElementById('tplSelect').innerHTML=(d||[]).map(t=>`<option value="${t.name}">${t.name} (${t.language})</option>`).join('');}
-document.getElementById('excelInput').addEventListener('change',async e=>{const fd=new FormData();fd.append('file',e.target.files[0]);const d=await fetch('/api/campaigns/upload-excel',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}).then(r=>r.json());if(d.ok){excelNumbers=d.numbers;document.getElementById('numsPreview').innerText='✓ '+d.count+' números detectados automáticamente';}});
+async function loadTemplates(){const d=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json());document.getElementById('tplSelect').innerHTML=(d||[]).map(t=>`<option value="${t.name}">${t.name}</option>`).join('');}
+document.getElementById('excelInput').addEventListener('change',async e=>{const fd=new FormData();fd.append('file',e.target.files[0]);const d=await fetch('/api/campaigns/upload-excel',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}).then(r=>r.json());if(d.ok){excelNumbers=d.numbers;document.getElementById('numsPreview').innerText='✓ '+d.count+' números detectados';}});
 async function sendCampaign(){const d=await api('/api/campaigns/send-bulk',{method:'POST',body:JSON.stringify({numbers:excelNumbers,templateName:document.getElementById('tplSelect').value})});alert('Enviados:'+d.sent);loadCampHistory();}
-async function loadCampHistory(){const d=await api('/api/campaigns');document.getElementById('campHistory').innerHTML=(d||[]).map(c=>`<div class="card p-3 text-sm"><b>${c.name}</b> <span class="badge-camp">${c.status}</span><br>Total:${c.total} Enviados:${c.sent}<br><span class="text-gray-500">${new Date(c.created_at).toLocaleString()}</span></div>`).join('');}
+async function loadCampHistory(){const d=await api('/api/campaigns');document.getElementById('campHistory').innerHTML=(d||[]).map(c=>`<div class="card p-3 text-sm"><b>${c.name}</b> <span class="badge-camp">${c.status}</span><br>Total:${c.total} Enviados:${c.sent}</div>`).join('');}
 if(token){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');init();}
 </script></body></html>
