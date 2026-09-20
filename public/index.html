@@ -1,17 +1,71 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO CRM</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial}body{display:flex;height:100vh;background:#E8F1FF}.side{width:260px;background:#0A1931;color:#fff;display:flex;flex-direction:column;padding:20px}.side img{width:90px;margin:0 auto 20px}.side button{background:transparent;color:#fff;border:1px solid #2a4a7a;padding:12px;border-radius:8px;margin:6px 0;cursor:pointer;text-align:left}.side button.active,.side button:hover{background:#1E3A8A}.top{position:fixed;top:0;right:0;left:260px;height:60px;background:#fff;display:flex;justify-content:flex-end;align-items:center;padding:0 20px;box-shadow:0 2px 10px rgba(0,0,0,.1)}.top button{background:#0A1931;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer}.main{flex:1;margin-top:60px;display:flex}.chats{width:340px;background:#fff;border-right:1px solid #ddd;overflow-y:auto}.tabs{display:flex;background:#dbeafe}.tabs div{flex:1;padding:12px;text-align:center;cursor:pointer;font-weight:600}.tabs .active{background:#fff;color:#0A1931;border-bottom:3px solid #0A1931}.chat{padding:14px;border-bottom:1px solid #eee;cursor:pointer;display:flex;justify-content:space-between}.chat:hover{background:#E8F1FF}.badge{background:#ef4444;color:#fff;border-radius:12px;padding:2px 8px;font-size:12px}.conv{flex:1;display:flex;flex-direction:column;background:#E8F1FF}.msgs{flex:1;overflow-y:auto;padding:20px}.m{max-width:70%;padding:10px 14px;border-radius:12px;margin:6px 0}.in{background:#fff;align-self:flex-start}.out{background:#0A1931;color:#fff;align-self:flex-end}.m img{max-width:220px;border-radius:8px}.box{display:flex;padding:15px;background:#fff}.box input{flex:1;padding:12px;border:2px solid #E8F1FF;border-radius:8px}.box button{background:#0A1931;color:#fff;border:none;padding:12px 20px;border-radius:8px;margin-left:10px;cursor:pointer}</style></head>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO AVANZA CRM</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial}
+body{display:flex;height:100vh;background:#EAF1FF}
+.side{width:250px;background:#0A1931;color:#fff;display:flex;flex-direction:column;padding:18px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:25px}
+.brand img{width:48px;height:48px;object-fit:contain;border-radius:8px;background:#fff;padding:4px}
+.brand span{font-weight:800;font-size:15px;line-height:1.2;letter-spacing:.5px}
+.side button{background:transparent;color:#cbd5e1;border:1px solid #1e3a5f;padding:11px 14px;border-radius:10px;margin:5px 0;cursor:pointer;text-align:left;font-size:14px;transition:.2s}
+.side button.active,.side button:hover{background:#1E3A8A;color:#fff;border-color:#1E3A8A}
+.top{position:fixed;top:0;right:0;left:250px;height:58px;background:#fff;display:flex;justify-content:flex-end;align-items:center;padding:0 20px;box-shadow:0 1px 8px rgba(0,0,0,.06);z-index:10}
+.top button{background:#0A1931;color:#fff;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px}
+.main{flex:1;margin-top:58px;display:flex}
+.chats{width:320px;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column}
+.tabs{display:flex;border-bottom:1px solid #e5e7eb}
+.tabs div{flex:1;padding:13px;text-align:center;cursor:pointer;font-size:14px;font-weight:600;color:#64748b;display:flex;align-items:center;justify-content:center;gap:8px}
+.tabs .active{background:#fff;color:#0A1931;border-bottom:2px solid #0A1931}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot.g{background:#22c55e}.dot.r{background:#ef4444}
+#list{flex:1;overflow-y:auto}
+.chat{padding:13px 15px;border-bottom:1px solid #f1f5f9;cursor:pointer}
+.chat:hover{background:#F8FAFF}
+.chat b{font-size:14px;color:#0A1931}
+.chat small{color:#64748b;font-size:12px}
+.conv{flex:1;display:flex;flex-direction:column}
+.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:70%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4}
+.in{background:#fff;align-self:flex-start;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.out{background:#0A1931;color:#fff;align-self:flex-end}
+.m img{max-width:220px;border-radius:10px}
+.box{display:flex;padding:14px;background:#fff;border-top:1px solid #e5e7eb;gap:10px}
+.box input{flex:1;padding:12px 16px;border:1.5px solid #EAF1FF;border-radius:12px;outline:none}
+.box input:focus{border-color:#0A1931}
+.box button{background:#0A1931;color:#fff;border:none;padding:12px 22px;border-radius:12px;cursor:pointer;font-weight:600}
+</style></head>
 <body>
-<div class="side"><img src="/logo.png"><button class="active" onclick="location.href='/index.html'">💬 Mensajes</button><button onclick="location.href='/campaigns.html'">📢 Campañas</button></div>
+<div class="side">
+<div class="brand"><img src="/logo.png" alt="K"><span>KLIDO<br>AVANZA CRM</span></div>
+<button class="active" onclick="location.href='/index.html'">💬 Mensajes</button>
+<button onclick="location.href='/campaigns.html'">📢 Campañas</button>
+</div>
 <div class="top"><button onclick="localStorage.clear();location.href='/login.html'">Salir</button></div>
-<div class="main"><div style="flex:1;display:flex;margin-top:0"><div class="chats"><div class="tabs"><div id="t1" class="active" onclick="f='all';load()">Bandeja</div><div id="t2" onclick="f='unread';load()">No leídos</div></div><div id="list"></div></div>
-<div class="conv"><div class="msgs" id="msgs"><p style="text-align:center;color:#888;margin-top:50px">Selecciona un chat</p></div><div class="box"><input id="txt" placeholder="Escribe..."><button onclick="send()">Enviar</button></div></div></div></div>
-<script>if(!localStorage.getItem('k'))location.href='/login.html';let cur=null,f='all',all=[];
-async function load(){const r=await fetch('/api/chats');all=await r.json();render()}
-function render(){const l=document.getElementById('list');l.innerHTML='';const d=f==='unread'?all.filter(c=>c.unread_count>0):all;d.forEach(c=>{const e=document.createElement('div');e.className='chat';e.innerHTML=`<div><b>${c.wa_id}</b><br><small>${(c.text||'').substring(0,35)}</small></div>${c.unread_count>0?`<span class="badge">${c.unread_count}</span>`:''}`;e.onclick=()=>open(c.wa_id);l.appendChild(e)})}
-async function open(id){cur=id;await fetch('/api/chats/'+id+'/read',{method:'PUT'});loadMsgs();load()}
-async function loadMsgs(){if(!cur)return;const r=await fetch('/api/messages/'+cur);const m=await r.json();const b=document.getElementById('msgs');b.innerHTML='';m.forEach(x=>{const d=document.createElement('div');d.className='m '+(x.direction==='in'?'in':'out');let h=x.text||'';if(x.media_url){if(x.media_type?.startsWith('image'))h=`<img src="${x.media_url}"><br>${h}`;else h=`<a href="${x.media_url}" target="_blank">📎 Ver archivo</a><br>${h}`}d.innerHTML=h+(x.source==='campaign'?' <small style="color:#fbbf24">●</small>':'');b.appendChild(d)});b.scrollTop=b.scrollHeight}
-async function send(){const v=document.getElementById('txt').value;if(!v||!cur)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:cur,message:v})});document.getElementById('txt').value='';loadMsgs()}
+<div class="main">
+<div class="chats">
+<div class="tabs">
+<div id="t1" class="active" onclick="setF('all')"><span class="dot g"></span> Bandeja</div>
+<div id="t2" onclick="setF('unread')"><span class="dot r"></span> No leídos <span id="ucount" style="background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;display:none"></span></div>
+</div>
+<div id="list"></div>
+</div>
+<div class="conv"><div class="msgs" id="msgs"><p style="text-align:center;color:#94a3b8;margin-top:60px">Selecciona un chat para ver mensajes</p></div>
+<div class="box"><input id="txt" placeholder="Escribe..." onkeypress="if(event.key==='Enter')send()"><button onclick="send()">Enviar</button></div>
+</div>
+</div>
+<script>
+if(!localStorage.getItem('k'))location.href='/login.html';
+let cur=null,f='all',all=[];
+async function load(){const r=await fetch('/api/chats');all=await r.json();render();
+const u=all.reduce((a,c)=>a+(c.unread_count||0),0);
+const b=document.getElementById('ucount');b.style.display=u>0?'inline':'none';b.textContent=u;}
+function render(){const l=document.getElementById('list');l.innerHTML='';const d=f==='unread'?all.filter(c=>c.unread_count>0):all;
+d.forEach(c=>{const e=document.createElement('div');e.className='chat';e.innerHTML=`<b>${c.wa_id}</b><br><small>${(c.text||'').substring(0,40)}</small>`;e.onclick=()=>open(c.wa_id);l.appendChild(e)});}
+function setF(v){f=v;document.getElementById('t1').classList.toggle('active',v==='all');document.getElementById('t2').classList.toggle('active',v==='unread');render();}
+async function open(id){cur=id;await fetch('/api/chats/'+id+'/read',{method:'PUT'});loadMsgs();load();}
+async function loadMsgs(){if(!cur)return;const r=await fetch('/api/messages/'+cur);const m=await r.json();const b=document.getElementById('msgs');b.innerHTML='';
+m.forEach(x=>{const d=document.createElement('div');d.className='m '+(x.direction==='in'?'in':'out');let h=x.text||'';
+if(x.media_url){if((x.media_type||'').startsWith('image'))h=`<img src="${x.media_url}"><br>${h}`;else h=`<a href="${x.media_url}" target="_blank" style="color:inherit">📎 Ver archivo</a><br>${h}`}
+d.innerHTML=h;b.appendChild(d)});b.scrollTop=b.scrollHeight;}
+async function send(){const v=document.getElementById('txt').value;if(!v||!cur)return;await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:cur,message:v})});document.getElementById('txt').value='';loadMsgs();}
 setInterval(async()=>{await load();if(cur)loadMsgs()},3000);load();
-document.getElementById('t1').onclick=()=>{f='all';document.getElementById('t1').classList.add('active');document.getElementById('t2').classList.remove('active');render()};
-document.getElementById('t2').onclick=()=>{f='unread';document.getElementById('t2').classList.add('active');document.getElementById('t1').classList.remove('active');render()};
 </script></body></html>
