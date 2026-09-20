@@ -7,26 +7,32 @@
 <style>
 :root{--azul-osc:#0e2a47;--azul-claro:#e6f0ff;--azul-btn:#1a56db}
 body{background:var(--azul-claro)}
-.msg-campaign{border-left:4px solid #fbbf24;background:#fefce8!important}
+.msg-campaign{border-left:4px solid #fbbf24;background:#fefce8!important;color:#000!important}
 .badge-camp{background:#fbbf24;color:#000;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700}
 .btn-primary{background:var(--azul-btn);color:#fff}
 .header-dark{background:var(--azul-osc);color:#fff}
-.online-dot{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block}
+.online-dot{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 </style>
 </head>
 <body>
 <div id="login" class="min-h-screen flex items-center justify-center">
 <div class="bg-white p-8 rounded-xl shadow-lg w-96 border-t-8" style="border-color:var(--azul-osc)">
-<h1 class="text-2xl font-bold" style="color:var(--azul-osc)">KLIDO CRM</h1>
-<p class="text-sm text-gray-500 mb-6">WhatsApp Business Platform</p>
+<img src="/logo.png" class="h-16 mx-auto mb-3" alt="KLIDO" onerror="this.style.display='none'">
+<h1 class="text-2xl font-bold text-center" style="color:var(--azul-osc)">KLIDO CRM</h1>
+<p class="text-sm text-gray-500 mb-6 text-center">WhatsApp Business Platform</p>
 <input id="email" placeholder="Email" class="w-full border p-3 rounded mb-3">
 <input id="pass" type="password" placeholder="Password" class="w-full border p-3 rounded mb-4">
 <button onclick="doLogin()" class="w-full btn-primary p-3 rounded font-bold">Ingresar</button>
+<p class="text-xs text-gray-400 mt-4 text-center">Uso exclusivo con WhatsApp Business API<br>Plantillas aprobadas por Meta</p>
 </div></div>
 
 <div id="app" class="hidden h-screen flex">
 <div class="w-80 bg-white border-r flex flex-col">
-<div class="p-4 header-dark"><h2 class="font-bold">Chats <span class="online-dot"></span> online</h2></div>
+<div class="p-4 header-dark flex items-center gap-3">
+<img src="/logo.png" class="h-8 w-8 rounded bg-white p-1" onerror="this.style.display='none'">
+<h2 class="font-bold">Chats <span class="online-dot"></span> <span class="text-xs text-green-300">online</span></h2>
+</div>
 <div id="chatList" class="flex-1 overflow-y-auto"></div>
 <div class="p-2 border-t flex gap-2 bg-blue-50">
 <button onclick="showTab('chats')" class="flex-1 btn-primary p-2 rounded text-sm">Chats</button>
@@ -34,38 +40,47 @@ body{background:var(--azul-claro)}
 </div></div>
 
 <div id="tab-chats" class="flex-1 flex flex-col">
-<div id="chatHeader" class="p-4 header-dark font-bold">Selecciona un chat</div>
+<div id="chatHeader" class="p-4 header-dark font-bold flex items-center gap-3">
+<img src="/logo.png" class="h-6 w-6 rounded bg-white p-0.5" onerror="this.style.display='none'"><span id="chatTitle">Selecciona un chat</span>
+</div>
 <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
 <div class="p-4 bg-white border-t flex gap-2">
 <input id="msgInput" placeholder="Escribe..." class="flex-1 border p-2 rounded" onkeypress="if(event.key==='Enter')sendMsg()">
+<input type="file" id="fileInput" class="hidden">
+<button onclick="alert('Sube a tu CDN y usa Enviar con media URL')" class="bg-gray-200 px-3 rounded">📎</button>
 <button onclick="sendMsg()" class="btn-primary px-4 rounded">Enviar</button>
 </div></div>
 
 <div id="tab-campaigns" class="flex-1 hidden flex-col p-6 overflow-y-auto">
-<h2 class="text-xl font-bold mb-4" style="color:var(--azul-osc)">Campañas Meta Compliance</h2>
+<h2 class="text-xl font-bold mb-4" style="color:var(--azul-osc)">Campañas 100% Meta Compliance</h2>
 <div class="bg-white p-4 rounded shadow mb-4 border-l-4" style="border-color:var(--azul-btn)">
+<label class="font-bold text-sm">1. Plantilla aprobada</label>
 <select id="tplSelect" class="w-full border p-2 rounded mt-2"></select>
-<input type="file" id="excelInput" accept=".xlsx,.xls,.csv" class="mt-4">
+<label class="font-bold text-sm mt-4 block">2. Subir Excel con números</label>
+<input type="file" id="excelInput" accept=".xlsx,.xls,.csv" class="mt-2">
 <div id="numsPreview" class="text-sm text-gray-600 mt-2"></div>
 <button onclick="sendCampaign()" class="mt-4 btn-primary font-bold px-6 py-2 rounded">Enviar campaña legal</button>
+<p class="text-xs text-gray-500 mt-2">✓ Solo APPROVED ✓ Solo opt-in ✓ Con opt-out</p>
 </div>
+<h3 class="font-bold mb-2" style="color:var(--azul-osc)">Historial</h3>
 <div id="campHistory" class="space-y-2"></div>
 </div>
 </div>
+
 <script>
 let token=localStorage.getItem('t'),currentWa=null,excelNumbers=[];
 const api=(u,o={})=>fetch(u,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}}).then(r=>r.json());
 async function doLogin(){const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('pass').value})}).then(r=>r.json());if(r.ok){token=r.token;localStorage.setItem('t',token);document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');loadAll();}else alert('Login fallido');}
-function showTab(t){document.getElementById('tab-chats').style.display=t==='chats'?'flex':'none';document.getElementById('tab-campaigns').style.display=t==='campaigns'?'flex':'none';if(t==='campaigns')loadTemplates()+loadCampHistory();}
+function showTab(t){document.getElementById('tab-chats').style.display=t==='chats'?'flex':'none';document.getElementById('tab-campaigns').style.display=t==='campaigns'?'flex':'none';if(t==='campaigns'){loadTemplates();loadCampHistory();}}
 async function loadAll(){loadChats();setInterval(()=>{loadChats();if(currentWa)loadMessages(true)},3000);}
-async function loadChats(){const d=await api('/api/chats');if(!d.ok)return;document.getElementById('chatList').innerHTML=d.chats.map(c=>`<div onclick="openChat('${c.wa_id}')" class="p-3 border-b hover:bg-blue-50 cursor-pointer"><div class="flex justify-between"><b style="color:var(--azul-osc)">${c.wa_id}</b>${c.has_campaign?'<span class="badge-camp">CAMPANA</span>':''}</div><div class="text-sm text-gray-500 truncate">${c.last_msg||''}</div></div>`).join('');}
-async function openChat(wa){currentWa=wa;document.getElementById('chatHeader').innerHTML=wa+' <span class="online-dot"></span>';loadMessages();}
-async function loadMessages(s){if(!currentWa)return;const d=await api('/api/chats/'+currentWa+'/messages');if(!d.ok)return;const box=document.getElementById('messages');box.innerHTML=d.messages.map(m=>`<div class="p-2 rounded max-w-xs ${m.direction==='out'?'ml-auto text-white':'bg-white shadow'} ${m.is_campaign?'msg-campaign':''}" ${m.direction==='out'&&!m.is_campaign?'style="background:var(--azul-osc)"':''}>${m.is_campaign?'<span class="badge-camp">CAMPANA</span><br>':''}${m.body}<div class="text-xs opacity-70">${new Date(m.created_at).toLocaleString()}</div></div>`).join('');if(!s)box.scrollTop=box.scrollHeight;}
+async function loadChats(){const d=await api('/api/chats');if(!d.ok)return;document.getElementById('chatList').innerHTML=d.chats.map(c=>`<div onclick="openChat('${c.wa_id}')" class="p-3 border-b hover:bg-blue-50 cursor-pointer ${c.has_campaign?'bg-yellow-50':''}"><div class="flex justify-between"><b style="color:var(--azul-osc)">${c.wa_id}</b>${c.has_campaign?'<span class="badge-camp">CAMPANA</span>':''}</div><div class="text-sm text-gray-500 truncate">${c.last_msg||''}</div></div>`).join('');}
+async function openChat(wa){currentWa=wa;document.getElementById('chatTitle').innerText=wa+' • online';loadMessages();}
+async function loadMessages(silent){if(!currentWa)return;const d=await api('/api/chats/'+currentWa+'/messages');if(!d.ok)return;const box=document.getElementById('messages');box.innerHTML=d.messages.map(m=>`<div class="p-2 rounded max-w-xs ${m.direction==='out'?'ml-auto text-white':'bg-white shadow'} ${m.is_campaign?'msg-campaign':''}" ${m.direction==='out'&&!m.is_campaign?'style="background:var(--azul-osc)"':''}>${m.is_campaign?'<span class="badge-camp">CAMPANA</span><br>':''}${m.type==='image'?'📷 ':m.type==='document'?'📄 ':m.type==='video'?'🎥 ':m.type==='audio'?'🎙️ ':''}${m.body}<div class="text-xs opacity-70">${new Date(m.created_at).toLocaleString()}</div></div>`).join('');if(!silent)box.scrollTop=box.scrollHeight;}
 async function sendMsg(){const b=document.getElementById('msgInput').value;if(!b||!currentWa)return;await api('/api/chats/send',{method:'POST',body:JSON.stringify({to:currentWa,body:b})});document.getElementById('msgInput').value='';loadMessages();}
-async function loadTemplates(){const d=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json());document.getElementById('tplSelect').innerHTML=(d||[]).map(t=>`<option value="${t.name}">${t.name}</option>`).join('');}
-document.getElementById('excelInput')?.addEventListener('change',async e=>{const fd=new FormData();fd.append('file',e.target.files[0]);const d=await fetch('/api/campaigns/upload-excel',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}).then(r=>r.json());if(d.ok){excelNumbers=d.numbers;document.getElementById('numsPreview').innerText=d.count+' números detectados';}});
-async function sendCampaign(){const tpl=document.getElementById('tplSelect').value;const d=await api('/api/campaigns/send-bulk',{method:'POST',body:JSON.stringify({numbers:excelNumbers,templateName:tpl})});alert(`Enviados: ${d.sent}`);loadCampHistory();}
-async function loadCampHistory(){const d=await api('/api/campaigns');document.getElementById('campHistory').innerHTML=(d||[]).map(c=>`<div class="bg-white p-3 rounded shadow text-sm"><b>${c.name}</b> - ${c.status}<br>Total:${c.total} Enviados:${c.sent}</div>`).join('');}
+async function loadTemplates(){const d=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json());document.getElementById('tplSelect').innerHTML=(d||[]).map(t=>`<option value="${t.name}">${t.name} (${t.language})</option>`).join('')||'<option>Sin aprobadas</option>';}
+document.getElementById('excelInput').addEventListener('change',async e=>{const fd=new FormData();fd.append('file',e.target.files[0]);const d=await fetch('/api/campaigns/upload-excel',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}).then(r=>r.json());if(d.ok){excelNumbers=d.numbers;document.getElementById('numsPreview').innerText=d.count+' números detectados';}});
+async function sendCampaign(){const tpl=document.getElementById('tplSelect').value;if(!excelNumbers.length)return alert('Sube Excel primero');const d=await api('/api/campaigns/send-bulk',{method:'POST',body:JSON.stringify({numbers:excelNumbers,templateName:tpl})});alert(`Enviados:${d.sent} Fallidos:${d.failed} Omitidos:${d.skipped}`);loadCampHistory();}
+async function loadCampHistory(){const d=await api('/api/campaigns');document.getElementById('campHistory').innerHTML=(d||[]).map(c=>`<div class="bg-white p-3 rounded shadow text-sm"><b>${c.name}</b> - ${c.status}<br>Total:${c.total} Enviados:${c.sent} Fallidos:${c.failed}<br><span class="text-gray-400">${new Date(c.created_at).toLocaleString()}</span></div>`).join('');}
 if(token){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');loadAll();}
 </script>
 </body></html>
