@@ -1,60 +1,49 @@
-<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO CRM Pro</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-<style>
-body{background:#0b1330;color:#e2e8f0;font-family:Inter,system-ui;margin:0}
-.sidebar{background:#0a1128}.menu-active{background:#2563eb;border-radius:10px}
-.chat-bg{background:#101a3a}.bubble-in{background:#1e2a4f;border-radius:12px}
-.bubble-out{background:#3b82f6;color:#fff;border-radius:12px;margin-left:auto}
-.badge-unread{background:#ef4444;color:#fff;font-size:11px;min-width:20px;height:20px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
-.badge-camp{background:#fbbf24;color:#000;font-size:10px;padding:2px 8px;border-radius:9999px;font-weight:700}
-.msg-campaign{border-left:4px solid #fbbf24!important}
-.online-dot{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block}
-input,select{background:#1a2547!important;border:1px solid #2a3a63!important;color:#e2e8f0!important}
-.btn-blue{background:#2563eb;color:#fff;border-radius:10px}.card{background:#162044;border-radius:12px}
-</style></head><body>
-<div id="login" class="min-h-screen flex items-center justify-center"><div class="card p-8 w-96 text-center">
-<img src="/logo.png" class="h-16 mx-auto mb-2"><h1 class="text-2xl font-bold">KLIDO CRM Pro</h1><span class="text-xs bg-blue-600 px-2 py-1 rounded-full">Pro Plan</span>
-<input id="email" placeholder="Correo" class="w-full p-3 rounded mt-6 mb-3"><input id="pass" type="password" placeholder="Contraseña" class="w-full p-3 rounded mb-4">
-<button onclick="doLogin()" class="w-full btn-blue p-3 font-bold">Ingresar</button></div></div>
+<!-- CAMPAÑAS KLIDO -->
+<div id="campanas" class="tab">
+  <h2>📢 Campañas</h2>
+  
+  <div style="display:flex;gap:10px;margin-bottom:15px">
+    <input type="text" id="camp-name" placeholder="Nombre campaña" style="flex:1;padding:8px">
+    <select id="camp-template" style="flex:1;padding:8px"><option>Cargando plantillas...</option></select>
+  </div>
 
-<div id="app" class="hidden h-screen flex relative">
-<button onclick="logout()" style="position:absolute;top:12px;right:16px;z-index:50" class="bg-red-600 px-4 py-1.5 rounded-lg text-sm font-bold">Salir</button>
-<div class="w-56 sidebar p-4 flex flex-col">
-<div class="flex items-center gap-2 mb-6"><img src="/logo.png" class="h-10 w-10 rounded-lg bg-white p-1"><div class="font-bold text-sm">KLIDO CRM Pro</div><span class="text-xs bg-blue-600 px-2 rounded-full ml-auto">Pro Plan</span></div>
-<div class="text-xs text-gray-500 mb-2">MENU</div>
-<button onclick="showSec('inbox')" class="menu-active p-3 text-left mb-1 text-sm">💬 Inbox</button>
-<button class="p-3 text-left mb-1 hover:bg-white/5 rounded text-sm">👥 Contacts</button>
-<button onclick="showSec('campaigns')" class="p-3 text-left mb-1 hover:bg-white/5 rounded text-sm">📢 Campaigns</button>
+  <div style="border:2px dashed #ccc;padding:20px;text-align:center;margin-bottom:15px">
+    <input type="file" id="camp-excel" accept=".xlsx,.xls,.csv">
+    <p>Sube tu Excel - detecto automáticamente la columna de números (numero / phone / telefono)</p>
+    <button onclick="crearCampana()" style="padding:10px 20px;background:#25D366;color:white;border:none;border-radius:8px;cursor:pointer">🚀 Enviar campaña</button>
+  </div>
+  <div id="camp-status"></div>
+
+  <h3>Historial de campañas</h3>
+  <table id="camp-history" border="1" style="width:100%;border-collapse:collapse">
+    <tr><th>Nombre</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Fallidos</th><th>Estado</th><th>Fecha</th></tr>
+  </table>
 </div>
-<div id="sec-inbox-list" class="w-80 chat-bg border-r border-white/10 flex flex-col">
-<div class="p-4 font-bold flex justify-between items-center">Inbox <button class="btn-blue w-7 h-7 rounded-full">+</button></div>
-<input placeholder="🔍 Search conversations..." class="m-3 p-2.5 rounded-lg text-sm" oninput="filterChats(this.value)">
-<div id="chatList" class="flex-1 overflow-y-auto px-3 space-y-2"></div></div>
-<div id="sec-chat" class="flex-1 chat-bg flex flex-col">
-<div class="p-3 border-b border-white/10 flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center font-bold text-sm">SN</div><div><div id="chatName" class="font-bold text-sm">Selecciona chat</div><div class="text-xs text-green-400"><span class="online-dot"></span> Online • WhatsApp</div></div></div>
-<div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3"></div>
-<div class="p-4 flex gap-3 items-center"><span>📎</span><span>😊</span><input id="msgInput" placeholder="Type a message..." class="flex-1 p-3 rounded-full text-sm" onkeypress="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()" class="btn-blue w-10 h-10 rounded-lg">➤</button></div></div>
-<div id="sec-campaigns" class="hidden flex-1 p-6 overflow-y-auto chat-bg"><h2 class="text-xl font-bold mb-4">Campaigns</h2><div class="card p-5 mb-4"><label class="font-bold text-sm">Plantilla automática Cloud API</label><select id="tplSelect" class="w-full p-2.5 rounded-lg mt-2"></select><label class="font-bold text-sm mt-4 block">Subir Excel / CSV</label><input type="file" id="excelInput" accept=".xlsx,.xls,.csv" class="mt-2 p-2 w-full rounded-lg"><div id="numsPreview" class="text-sm text-green-400 mt-2"></div><button onclick="sendCampaign()" class="mt-4 btn-blue px-6 py-2.5 font-bold">Enviar campaña</button></div><h3 class="font-bold mb-2">Historial</h3><div id="campHistory" class="space-y-2"></div></div>
-<div class="w-80 sidebar p-5 border-l border-white/10 hidden lg:block"><div class="flex justify-between font-bold text-sm mb-4">Customer Profile <button>✕</button></div><div class="text-center"><div class="w-14 h-14 rounded-full bg-blue-500 mx-auto flex items-center justify-center font-bold">SN</div><div id="pName" class="font-bold mt-2 text-sm">Sofia Nguyen</div><div class="text-xs text-gray-400">Customer • WhatsApp</div></div><div class="flex gap-2 mt-3 justify-center"><span class="bg-blue-600 text-xs px-2 py-1 rounded">VIP</span><span class="bg-red-600 text-xs px-2 py-1 rounded">Hot Lead</span><span class="bg-gray-700 text-xs px-2 py-1 rounded">E-commerce</span></div><div class="mt-4 card p-3"><div class="text-xs text-gray-400">Notes</div><div class="text-sm">Historial completo disponible</div></div><div class="flex gap-2 mt-4"><button class="flex-1 bg-gray-700 p-2 rounded-lg text-sm">Add note</button><button class="flex-1 btn-blue p-2 text-sm">Edit profile</button></div></div>
-</div>
+
 <script>
-let token=localStorage.getItem('t'),currentWa=null,excelNumbers=[],allChats=[];
-const api=(u,o={})=>fetch(u,{...o,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(o.headers||{})}}).then(r=>r.json());
-function logout(){localStorage.removeItem('t');location.reload();}
-async function doLogin(){const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('pass').value})}).then(r=>r.json());if(r.ok){token=r.token;localStorage.setItem('t',token);document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');init();}}
-function showSec(s){document.getElementById('sec-inbox-list').style.display=s==='inbox'?'flex':'none';document.getElementById('sec-chat').style.display=s==='inbox'?'flex':'none';document.getElementById('sec-campaigns').style.display=s==='campaigns'?'block':'none';if(s==='campaigns'){loadTemplates();loadCampHistory();}}
-const chatHtml=c=>`<div onclick="openChat('${c.wa_id}')" class="card p-3 cursor-pointer flex gap-3 items-center ${c.has_campaign?'msg-campaign':''}"><div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm">${c.wa_id.slice(-2)}</div><div class="flex-1 min-w-0"><div class="font-bold text-sm truncate">${c.wa_id}</div><div class="text-xs text-gray-400 truncate">${c.last_msg||''} ${c.has_campaign?'<span class="badge-camp ml-1">CAMPANA</span>':''}</div></div>${c.unread>0?`<span class="badge-unread">${c.unread}</span>`:''}</div>`;
-function filterChats(q){document.getElementById('chatList').innerHTML=allChats.filter(c=>c.wa_id.includes(q)).map(chatHtml).join('');}
-async function init(){loadChats();setInterval(async()=>{await loadChats();if(currentWa)loadMessages(true)},3000);}
-async function loadChats(){const d=await api('/api/chats');if(!d.ok)return;allChats=d.chats;document.getElementById('chatList').innerHTML=allChats.map(chatHtml).join('');}
-async function openChat(wa){currentWa=wa;document.getElementById('chatName').innerText=wa;document.getElementById('pName').innerText=wa;await api('/api/chats/'+wa+'/read',{method:'POST'});loadMessages();}
-async function loadMessages(s){if(!currentWa)return;const d=await api('/api/chats/'+currentWa+'/messages');if(!d.ok)return;const box=document.getElementById('messages');box.innerHTML=d.messages.map(m=>`<div class="p-3 max-w-md ${m.direction==='out'?'bubble-out':'bubble-in'} ${m.is_campaign?'msg-campaign':''}">${m.is_campaign?'<span class="badge-camp">CAMPANA</span><br>':''}${m.body}<div class="text-xs opacity-70 text-right">${new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`).join('');if(!s)box.scrollTop=box.scrollHeight;}
-async function sendMsg(){const v=document.getElementById('msgInput').value;if(!v||!currentWa)return;await api('/api/chats/send',{method:'POST',body:JSON.stringify({to:currentWa,body:v})});document.getElementById('msgInput').value='';loadMessages();}
-async function loadTemplates(){const d=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json());document.getElementById('tplSelect').innerHTML=(d||[]).map(t=>`<option value="${t.name}">${t.name}</option>`).join('');}
-document.getElementById('excelInput').addEventListener('change',async e=>{const fd=new FormData();fd.append('file',e.target.files[0]);const d=await fetch('/api/campaigns/upload-excel',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}).then(r=>r.json());if(d.ok){excelNumbers=d.numbers;document.getElementById('numsPreview').innerText='✓ '+d.count+' números detectados';}});
-async function sendCampaign(){const d=await api('/api/campaigns/send-bulk',{method:'POST',body:JSON.stringify({numbers:excelNumbers,templateName:document.getElementById('tplSelect').value})});alert('Enviados:'+d.sent);loadCampHistory();}
-async function loadCampHistory(){const d=await api('/api/campaigns');document.getElementById('campHistory').innerHTML=(d||[]).map(c=>`<div class="card p-3 text-sm"><b>${c.name}</b> <span class="badge-camp">${c.status}</span><br>Total:${c.total} Enviados:${c.sent}</div>`).join('');}
-if(token){document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');init();}
-</script></body></html>
+// Cargar plantillas aprobadas automáticamente
+async function loadTemplates(){
+  const r = await fetch('/api/templates'); const tpls = await r.json();
+  document.getElementById('camp-template').innerHTML = tpls.map(t=>`<option value="${t.name}">${t.name} (${t.language})</option>`).join('') || '<option>No hay aprobadas</option>';
+}
+// Crear campaña desde Excel
+async function crearCampana(){
+  const file = document.getElementById('camp-excel').files[0];
+  const template = document.getElementById('camp-template').value;
+  const name = document.getElementById('camp-name').value || 'Campaña';
+  if(!file || !template) return alert('Sube Excel y elige plantilla');
+  const fd = new FormData(); fd.append('file', file); fd.append('template', template); fd.append('name', name);
+  document.getElementById('camp-status').innerHTML = '⏳ Enviando con anti-spam (3s entre mensajes)...';
+  const r = await fetch('/api/campaigns/excel',{method:'POST', body:fd});
+  const j = await r.json();
+  document.getElementById('camp-status').innerHTML = `✅ Campaña #${j.campaign_id} iniciada: ${j.total} números`;
+  loadHistory();
+}
+// Historial
+async function loadHistory(){
+  const r = await fetch('/api/campaigns'); const rows = await r.json();
+  document.getElementById('camp-history').innerHTML = '<tr><th>Nombre</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Fallidos</th><th>Estado</th><th>Fecha</th></tr>' +
+    rows.map(c=>`<tr><td>${c.name}</td><td>${c.template}</td><td>${c.total}</td><td>${c.sent}</td><td>${c.failed}</td><td>${c.status}</td><td>${new Date(c.created_at).toLocaleString()}</td></tr>`).join('');
+}
+loadTemplates(); loadHistory();
+</script>
