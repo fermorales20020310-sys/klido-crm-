@@ -1,85 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KLIDO PRO</title>
 <style>
-:root{ --bg:#ffffff; --sidebar:#f8f9fa; --chatbg:#efeae2; --text:#111; --bubble-in:#fff; --bubble-out:#d9fdd3; }
-body.dark{ --bg:#0b141a; --sidebar:#111b21; --chatbg:#0b141a; --text:#e9edef; --bubble-in:#1f2c34; --bubble-out:#005c4b; }
-*{box-sizing:border-box} body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text);display:flex;height:100vh}
-#sidebar{width:320px;background:var(--sidebar);border-right:1px solid #ddd;display:flex;flex-direction:column}
-#topbar{padding:12px;display:flex;justify-content:space-between;align-items:center}
-#chats{flex:1;overflow:auto}
-.chat{padding:12px;border-bottom:1px solid #eee;cursor:pointer;display:flex;justify-content:space-between}
-.chat.unread{font-weight:bold} .dot{width:10px;height:10px;background:red;border-radius:50%;display:inline-block}
-#main{flex:1;display:flex;flex-direction:column}
-#msgs{flex:1;overflow:auto;padding:20px;background:var(--chatbg)}
-.msg{max-width:70%;padding:8px 12px;margin:6px;border-radius:8px}
-.in{background:var(--bubble-in);align-self:flex-start} .out{background:var(--bubble-out);align-self:flex-end;margin-left:auto}
-#input{padding:12px;display:flex;gap:8px}
-button{cursor:pointer}
+:root{--bg:#fff;--side:#f8f9fa;--chatbg:#efeae2;--tx:#111;--in:#fff;--out:#d9fdd3}
+body.dark{--bg:#0b141a;--side:#111b21;--chatbg:#0b141a;--tx:#e9edef;--in:#1f2c34;--out:#005c4b}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui;background:var(--bg);color:var(--tx);display:flex;height:100vh}
+#sidebar{width:320px;background:var(--side);display:flex;flex-direction:column;border-right:1px solid #ddd}
+#top{padding:10px;display:flex;align-items:center;justify-content:space-between}
+#top img{height:42px;object-fit:contain}
+#chats{flex:1;overflow:auto}.chat{padding:12px;border-bottom:1px solid #eee;cursor:pointer}
+.chat.unread{font-weight:700}.dot{width:9px;height:9px;background:#ff3b30;border-radius:50%;display:inline-block;margin-right:6px}
+#main{flex:1;display:flex;flex-direction:column}#msgs{flex:1;overflow:auto;padding:20px;background:var(--chatbg);display:flex;flex-direction:column}
+.msg{max-width:70%;padding:8px 12px;margin:5px;border-radius:8px}.in{background:var(--in);align-self:flex-start}.out{background:var(--out);align-self:flex-end}
+#bar{padding:12px;display:flex;gap:8px}
 </style>
 </head>
 <body>
 <div id="sidebar">
-  <div id="topbar">
-    <b>KLIDO PRO</b>
-    <div>
-      <select id="agencySel"><option value="tu_empresa">Mi empresa</option><option value="agencia_piloto">Piloto</option></select>
-      <button id="themeBtn">🌙</button>
-    </div>
-  </div>
-  <div id="chats"></div>
+<div id="top">
+<img src="/logo.png" alt="KLIDO">
+<div>
+<select id="agencySel"><option value="tu_empresa">Mi empresa</option><option value="agencia_piloto">Piloto</option></select>
+<button id="themeBtn">🌙</button>
 </div>
-<div id="main">
-  <div id="msgs"></div>
-  <div id="input">
-    <input id="txt" placeholder="Escribe..." style="flex:1;padding:10px">
-    <button onclick="send()">Enviar</button>
-  </div>
+</div>
+<div id="chats"></div>
+</div>
+<div id="main"><div id="msgs"></div>
+<div id="bar"><input id="txt" placeholder="Escribe..." style="flex:1;padding:10px"><button onclick="send()">Enviar</button></div>
 </div>
 <script>
-let curWa=null;
-const agency=()=>document.getElementById('agencySel').value;
-const pop=new Audio('https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3');
-let lastUnread=0;
-
-// tema
-const tbtn=document.getElementById('themeBtn');
-if(localStorage.getItem('klido-theme')==='dark'){document.body.classList.add('dark');tbtn.textContent='☀️'}
-tbtn.onclick=()=>{document.body.classList.toggle('dark');const d=document.body.classList.contains('dark');localStorage.setItem('klido-theme',d?'dark':'light');tbtn.textContent=d?'☀️':'🌙'};
-
+let cur=null; const ag=()=>document.getElementById('agencySel').value;
+const pop=new Audio('https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3'); let lastU=0;
+const tb=document.getElementById('themeBtn');
+if(localStorage.getItem('klido-theme')==='dark'){document.body.classList.add('dark');tb.textContent='☀️'}
+tb.onclick=()=>{document.body.classList.toggle('dark');const d=document.body.classList.contains('dark');localStorage.setItem('klido-theme',d?'dark':'light');tb.textContent=d?'☀️':'🌙'};
 async function loadChats(){
-  const r=await fetch('/api/chats?agency_id='+agency()); const chats=await r.json();
-  const unreadCount=chats.filter(c=>c.unread).length;
-  if(unreadCount>lastUnread) pop.play().catch(()=>{});
-  lastUnread=unreadCount;
-  document.getElementById('chats').innerHTML=chats.map(c=>`
-    <div class="chat ${c.unread?'unread':''}" onclick="openChat('${c.wa_id}','${c.name}')">
-      <span>${c.unread?'<span class="dot"></span> ':''}${c.name}<br><small>${c.lastMessage||''}</small></span>
-    </div>`).join('');
+ const r=await fetch('/api/chats?agency_id='+ag()); const cs=await r.json();
+ const u=cs.filter(c=>c.unread).length; if(u>lastU) pop.play().catch(()=>{}); lastU=u;
+ document.getElementById('chats').innerHTML=cs.map(c=>`<div class="chat ${c.unread?'unread':''}" onclick="openChat('${c.wa_id}')">${c.unread?'<span class="dot"></span>':''}<b>${c.name}</b><br><small>${c.lastMessage||''}</small></div>`).join('');
 }
-async function openChat(wa,name){
-  curWa=wa;
-  await fetch('/api/chats/'+wa+'/read?agency_id='+agency(),{method:'POST'});
-  const r=await fetch('/api/messages/'+wa+'?agency_id='+agency()); const msgs=await r.json();
-  document.getElementById('msgs').innerHTML=msgs.map(m=>{
-    let inner=m.text;
-    if(m.media_type==='image'&&m.media_url) inner=`<img src="${m.media_url}" style="max-width:200px;border-radius:8px"><br>${m.text}`;
-    if(m.media_type==='audio'&&m.media_url) inner=`<audio controls src="${m.media_url}" style="max-width:200px"></audio>`;
-    if(m.media_type==='video'&&m.media_url) inner=`<video controls src="${m.media_url}" style="max-width:200px"></video>`;
-    return `<div class="msg ${m.direction==='in'?'in':'out'}">${inner}<br><small>${m.status||''}</small></div>`;
-  }).join('');
-  loadChats();
+async function openChat(wa){cur=wa;await fetch(`/api/chats/${wa}/read?agency_id=${ag()}`,{method:'POST'});
+ const r=await fetch(`/api/messages/${wa}?agency_id=${ag()}`);const ms=await r.json();
+ document.getElementById('msgs').innerHTML=ms.map(m=>{
+  let h=m.text||'';
+  if(m.media_type==='image'&&m.media_url) h=`<img src="${m.media_url}" style="max-width:220px;border-radius:8px"><br>${h}`;
+  if(m.media_type==='audio'&&m.media_url) h=`<audio controls src="${m.media_url}" style="max-width:220px"></audio>`;
+  if(m.media_type==='video'&&m.media_url) h=`<video controls src="${m.media_url}" style="max-width:220px"></video>`;
+  return `<div class="msg ${m.direction==='in'?'in':'out'}">${h}</div>`;}).join('');loadChats();
 }
-async function send(){
-  const t=document.getElementById('txt').value; if(!t||!curWa) return;
-  await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:curWa,text:t,agency_id:agency()})});
-  document.getElementById('txt').value=''; openChat(curWa);
-}
-document.getElementById('agencySel').onchange=()=>{curWa=null;document.getElementById('msgs').innerHTML='';loadChats();};
-setInterval(loadChats,3000); loadChats();
+async function send(){const t=document.getElementById('txt').value;if(!t||!cur)return;
+ await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:cur,text:t,agency_id:ag()})});
+ document.getElementById('txt').value='';openChat(cur);}
+document.getElementById('agencySel').onchange=()=>{cur=null;document.getElementById('msgs').innerHTML='';loadChats();};
+setInterval(loadChats,3000);loadChats();
 </script>
 </body>
 </html>
