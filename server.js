@@ -29,7 +29,12 @@ async function initDB(){
     is_campaign BOOLEAN DEFAULT false, timestamp BIGINT, status TEXT DEFAULT 'sent'
   )`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_wa_agency ON messages(wa_id, agency_id, timestamp)`);
-  console.log('KLIDO PRO MULTI-AGENCIA DB ready');
+  // campañas
+  await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(
+    id SERIAL PRIMARY KEY, agency_id TEXT, template TEXT, total INT DEFAULT 0,
+    sent INT DEFAULT 0, status TEXT DEFAULT 'programada', created_at BIGINT
+  )`);
+  console.log('KLIDO GOLD DB ready');
 }
 initDB();
 
@@ -50,24 +55,24 @@ app.post('/webhook', async (req,res)=>{
     if(msg){
       const wa_id = msg.from;
       const name = value.contacts?.[0]?.profile?.name || wa_id;
-      let text='', media_type='text', media_id=null;
+      let text='', media_type='text', media_id=null, is_campaign=false;
       if(msg.type==='text') text=msg.text.body;
       else if(msg.image){ text='📷 Imagen'; media_type='image'; media_id=msg.image.id; }
       else if(msg.video){ text='🎥 Video'; media_type='video'; media_id=msg.video.id; }
       else if(msg.audio){ text='🎤 Audio'; media_type='audio'; media_id=msg.audio.id; }
       else if(msg.document){ text='📄 Documento'; media_type='document'; media_id=msg.document.id; }
       else text='['+msg.type+']';
-
-      // Guardamos el media_id, no la URL temporal
+      // detectar si viene de campaña por contexto
+      if(msg.context) is_campaign = true;
       let media_url = media_id? media_id : null;
       const now=Date.now();
-
+      const dot = is_campaign? 'yellow' : 'red';
       await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at)
-        VALUES($1,$2,$3,$4,$5,true,'red',$6,$5)
-        ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,unread=true,unread_dot='red',last_type=EXCLUDED.last_type,updated_at=EXCLUDED.updated_at,name=EXCLUDED.name`,
-        [wa_id,agency_id,name,text,now,media_type]);
-      await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6)`,
-        [wa_id,agency_id,text,media_type,media_url,now]);
+        VALUES($1,$2,$3,$4,$5,true,$7,$6,$5)
+        ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,unread=true,unread_dot=$7,last_type=EXCLUDED.last_type,updated_at=EXCLUDED.updated_at,name=EXCLUDED.name`,
+        [wa_id,agency_id,name,text,now,media_type,dot]);
+      await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,is_campaign,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6,$7)`,
+        [wa_id,agency_id,text,media_type,media_url,is_campaign,now]);
     }
     const status = value?.statuses?.[0];
     if(status){
@@ -77,7 +82,7 @@ app.post('/webhook', async (req,res)=>{
   res.sendStatus(200);
 });
 
-// Proxy: pide URL fresca a Meta con el media_id y la transmite
+// Proxy medios: /api/media?mid=MEDIA_ID
 app.get('/api/media', async (req,res)=>{
   try{
     const mid = req.query.mid || req.query.url;
@@ -106,7 +111,7 @@ app.get('/api/chats', async (req,res)=>{
 
 app.get('/api/messages/:wa', async (req,res)=>{
   const agency_id = req.query.agency_id || 'tu_empresa';
-  const r = await pool.query(`SELECT text, direction, timestamp, media_type, media_url, status FROM messages WHERE wa_id=$1 AND agency_id=$2 ORDER BY timestamp ASC LIMIT 500`,[req.params.wa, agency_id]);
+  const r = await pool.query(`SELECT text, direction, timestamp, media_type, media_url, status, is_campaign FROM messages WHERE wa_id=$1 AND agency_id=$2 ORDER BY timestamp ASC LIMIT 500`,[req.params.wa, agency_id]);
   res.json(r.rows);
 });
 
@@ -128,6 +133,26 @@ app.post('/api/messages/send', async (req,res)=>{
   }catch(e){ console.error(e.response?.data||e.message); res.status(500).json({error:'send failed'}); }
 });
 
+// Crear campaña: 50 cada 6h con plantilla
+app.post('/api/campaigns', async (req,res)=>{
+  const {agency_id, template, phones} = req.body;
+  const ag = agency_id || 'tu_empresa';
+  const now = Date.now();
+  const r = await pool.query(`INSERT INTO campaigns(agency_id,template,total,sent,status,created_at) VALUES($1,$2,$3,0,'programada',$4) RETURNING id`,[ag,template,phones.length,now]);
+  const campId = r.rows[0].id;
+  // guardar teléfonos como mensajes programados simples (worker los envía)
+  for(let p of phones.slice(0,1000)){
+    await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,is_campaign,timestamp,status) VALUES($1,$2,'out',$3,'text',true,$4,'queued')`,[p,ag,`CAMPAIGN:${campId}:${template}`,now]);
+  }
+  res.json({ok:true, id:campId});
+});
+
+app.get('/api/campaigns', async (req,res)=>{
+  const agency_id = req.query.agency_id || 'tu_empresa';
+  const r = await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC`,[agency_id]);
+  res.json(r.rows);
+});
+
 app.post('/api/chats/:wa/read', async (req,res)=>{
   const agency_id = req.query.agency_id || req.body.agency_id || 'tu_empresa';
   await pool.query(`UPDATE conversations SET unread=false WHERE wa_id=$1 AND agency_id=$2`,[req.params.wa, agency_id]);
@@ -135,4 +160,4 @@ app.post('/api/chats/:wa/read', async (req,res)=>{
 });
 
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log('KLIDO PRO MULTI ON '+PORT));
+app.listen(PORT,()=>console.log('KLIDO GOLD ON '+PORT));
