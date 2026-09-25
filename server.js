@@ -29,7 +29,6 @@ async function initDB(){
     is_campaign BOOLEAN DEFAULT false, timestamp BIGINT, status TEXT DEFAULT 'sent'
   )`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_wa_agency ON messages(wa_id, agency_id, timestamp)`);
-  // campañas
   await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(
     id SERIAL PRIMARY KEY, agency_id TEXT, template TEXT, total INT DEFAULT 0,
     sent INT DEFAULT 0, status TEXT DEFAULT 'programada', created_at BIGINT
@@ -62,7 +61,6 @@ app.post('/webhook', async (req,res)=>{
       else if(msg.audio){ text='🎤 Audio'; media_type='audio'; media_id=msg.audio.id; }
       else if(msg.document){ text='📄 Documento'; media_type='document'; media_id=msg.document.id; }
       else text='['+msg.type+']';
-      // detectar si viene de campaña por contexto
       if(msg.context) is_campaign = true;
       let media_url = media_id? media_id : null;
       const now=Date.now();
@@ -82,7 +80,6 @@ app.post('/webhook', async (req,res)=>{
   res.sendStatus(200);
 });
 
-// Proxy medios: /api/media?mid=MEDIA_ID
 app.get('/api/media', async (req,res)=>{
   try{
     const mid = req.query.mid || req.query.url;
@@ -133,29 +130,28 @@ app.post('/api/messages/send', async (req,res)=>{
   }catch(e){ console.error(e.response?.data||e.message); res.status(500).json({error:'send failed'}); }
 });
 
-// Crear campaña: 50 cada 6h con plantilla
 app.post('/api/campaigns', async (req,res)=>{
   const {agency_id, template, phones} = req.body;
   const ag = agency_id || 'tu_empresa';
+  const list = Array.isArray(phones)? phones : [];
   const now = Date.now();
-  const r = await pool.query(`INSERT INTO campaigns(agency_id,template,total,sent,status,created_at) VALUES($1,$2,$3,0,'programada',$4) RETURNING id`,[ag,template,phones.length,now]);
+  const r = await pool.query(`INSERT INTO campaigns(agency_id,template,total,sent,status,created_at) VALUES($1,$2,$3,0,'programada',$4) RETURNING id`,[ag,template||'hello_world',list.length,now]);
   const campId = r.rows[0].id;
-  // guardar teléfonos como mensajes programados simples (worker los envía)
-  for(let p of phones.slice(0,1000)){
-    await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,is_campaign,timestamp,status) VALUES($1,$2,'out',$3,'text',true,$4,'queued')`,[p,ag,`CAMPAIGN:${campId}:${template}`,now]);
+  for(let p of list.slice(0,2000)){
+    await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,is_campaign,timestamp,status) VALUES($1,$2,'out',$3,'text',true,$4,'queued')`,[String(p),ag,`CAMPAIGN:${campId}:${template}`,now]);
   }
-  res.json({ok:true, id:campId});
+  res.json({ok:true, id:campId, total:list.length});
 });
 
 app.get('/api/campaigns', async (req,res)=>{
   const agency_id = req.query.agency_id || 'tu_empresa';
-  const r = await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC`,[agency_id]);
+  const r = await pool.query(`SELECT id, agency_id, template, total, sent, status, created_at FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC LIMIT 100`,[agency_id]);
   res.json(r.rows);
 });
 
 app.post('/api/chats/:wa/read', async (req,res)=>{
   const agency_id = req.query.agency_id || req.body.agency_id || 'tu_empresa';
-  await pool.query(`UPDATE conversations SET unread=false WHERE wa_id=$1 AND agency_id=$2`,[req.params.wa, agency_id]);
+  await pool.query(`UPDATE conversations SET unread=false, unread_dot='transparent' WHERE wa_id=$1 AND agency_id=$2`,[req.params.wa, agency_id]);
   res.json({ok:true});
 });
 
