@@ -1,7 +1,6 @@
 const express = require('express');
 const { Pool } = require('pg');
 const axios = require('axios');
-const multer = require('multer');
 const path = require('path');
 const app = express();
 app.use(express.json());
@@ -30,9 +29,11 @@ async function initDB(){
     wa_id TEXT, agency_id TEXT DEFAULT 'tu_empresa',
     name TEXT, last_message TEXT, last_time BIGINT,
     unread BOOLEAN DEFAULT true, unread_dot TEXT DEFAULT 'red',
-    last_type TEXT DEFAULT 'text', updated_at BIGINT,
-    PRIMARY KEY (wa_id, agency_id)
+    last_type TEXT DEFAULT 'text', updated_at BIGINT
   )`);
+  // FIX: crea el constraint que faltaba en tu tabla vieja
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS uniq_conv_wa_agency ON conversations(wa_id, agency_id)`);
+
   await pool.query(`CREATE TABLE IF NOT EXISTS messages(
     id SERIAL PRIMARY KEY, wa_id TEXT, agency_id TEXT DEFAULT 'tu_empresa',
     direction TEXT, text TEXT, media_type TEXT, media_url TEXT,
@@ -43,7 +44,6 @@ async function initDB(){
 }
 initDB();
 
-// LOGO - esto debe ir antes de las rutas API
 app.use(express.static(path.join(__dirname,'public')));
 
 app.get('/webhook',(req,res)=>{
@@ -52,14 +52,12 @@ app.get('/webhook',(req,res)=>{
 });
 
 app.post('/webhook', async (req,res)=>{
-  console.log('WEBHOOK HIT');
   try{
     const change = req.body.entry?.[0]?.changes?.[0];
     const value = change?.value;
     const msg = value?.messages?.[0];
     const phoneNumberId = value?.metadata?.phone_number_id;
     const agency_id = getAgency(phoneNumberId);
-    console.log('agency:',agency_id,'phoneId:',phoneNumberId);
 
     if(msg){
       const wa_id = msg.from;
@@ -81,7 +79,6 @@ app.post('/webhook', async (req,res)=>{
         [wa_id,agency_id,name,text,now,media_type]);
       await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6)`,
         [wa_id,agency_id,text,media_type,media_url,now]);
-      console.log('saved msg',wa_id,agency_id);
     }
     const status = value?.statuses?.[0];
     if(status){
