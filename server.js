@@ -2,21 +2,18 @@ const express = require('express');
 const { Pool } = require('pg');
 const axios = require('axios');
 const multer = require('multer');
-const XLSX = require('xlsx');
 const path = require('path');
 const app = express();
 app.use(express.json());
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
-const upload = multer({ dest:'/tmp/' });
 
-// MAPEO MULTI-AGENCIA: phone_number_id -> agency_id
-// Agrega en Railway: AGENCY_MAP={"123456":"tu_empresa","789012":"agencia_piloto"}
 function getAgency(phoneNumberId){
   try{
     const map = JSON.parse(process.env.AGENCY_MAP || '{}');
-    return map[phoneNumberId] || process.env.DEFAULT_AGENCY || 'tu_empresa';
-  }catch{ return 'tu_empresa'; }
+    if(phoneNumberId && map[phoneNumberId]) return map[phoneNumberId];
+    return process.env.DEFAULT_AGENCY || 'tu_empresa';
+  }catch{ return process.env.DEFAULT_AGENCY || 'tu_empresa'; }
 }
 
 async function downloadMedia(mediaId){
@@ -24,25 +21,11 @@ async function downloadMedia(mediaId){
     const meta = await axios.get(`https://graph.facebook.com/v21.0/${mediaId}`,{
       headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}
     });
-    return meta.data.url; // URL temporal de Meta
+    return meta.data.url;
   }catch(e){ console.error('media err',e.message); return null; }
 }
 
 async function initDB(){
-  const alters = [
-    `ALTER TABLE conversations ADD COLUMN IF NOT EXISTS unread BOOLEAN DEFAULT true`,
-    `ALTER TABLE conversations ADD COLUMN IF NOT EXISTS unread_dot TEXT DEFAULT 'red'`,
-    `ALTER TABLE conversations ADD COLUMN IF NOT EXISTS last_type TEXT DEFAULT 'text'`,
-    `ALTER TABLE conversations ADD COLUMN IF NOT EXISTS agency_id TEXT DEFAULT 'tu_empresa'`,
-    `ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_campaign BOOLEAN DEFAULT false`,
-    `ALTER TABLE messages ADD COLUMN IF NOT EXISTS media_type TEXT`,
-    `ALTER TABLE messages ADD COLUMN IF NOT EXISTS media_url TEXT`,
-    `ALTER TABLE messages ADD COLUMN IF NOT EXISTS agency_id TEXT DEFAULT 'tu_empresa'`,
-    `ALTER TABLE campaign_logs ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending'`,
-    `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS agency_id TEXT DEFAULT 'tu_empresa'`
-  ];
-  for(let q of alters){ try{ await pool.query(q); }catch(e){} }
-
   await pool.query(`CREATE TABLE IF NOT EXISTS conversations(
     wa_id TEXT, agency_id TEXT DEFAULT 'tu_empresa',
     name TEXT, last_message TEXT, last_time BIGINT,
@@ -60,6 +43,7 @@ async function initDB(){
 }
 initDB();
 
+// LOGO - esto debe ir antes de las rutas API
 app.use(express.static(path.join(__dirname,'public')));
 
 app.get('/webhook',(req,res)=>{
@@ -68,12 +52,14 @@ app.get('/webhook',(req,res)=>{
 });
 
 app.post('/webhook', async (req,res)=>{
+  console.log('WEBHOOK HIT');
   try{
     const change = req.body.entry?.[0]?.changes?.[0];
     const value = change?.value;
     const msg = value?.messages?.[0];
     const phoneNumberId = value?.metadata?.phone_number_id;
     const agency_id = getAgency(phoneNumberId);
+    console.log('agency:',agency_id,'phoneId:',phoneNumberId);
 
     if(msg){
       const wa_id = msg.from;
@@ -91,20 +77,20 @@ app.post('/webhook', async (req,res)=>{
 
       await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at)
         VALUES($1,$2,$3,$4,$5,true,'red',$6,$5)
-        ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=$4,last_time=$5,unread=true,unread_dot='red',last_type=$6,updated_at=$5,name=$3`,
+        ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,unread=true,unread_dot='red',last_type=EXCLUDED.last_type,updated_at=EXCLUDED.updated_at,name=EXCLUDED.name`,
         [wa_id,agency_id,name,text,now,media_type]);
       await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6)`,
         [wa_id,agency_id,text,media_type,media_url,now]);
+      console.log('saved msg',wa_id,agency_id);
     }
     const status = value?.statuses?.[0];
     if(status){
-      await pool.query(`UPDATE messages SET status=$1 WHERE wa_id=$2 ORDER BY id DESC LIMIT 1`,[status.status, status.recipient_id]);
+      await pool.query(`UPDATE messages SET status=$1 WHERE id = (SELECT id FROM messages WHERE wa_id=$2 ORDER BY id DESC LIMIT 1)`,[status.status, status.recipient_id]);
     }
   }catch(e){ console.error('webhook err',e.message); }
   res.sendStatus(200);
 });
 
-// CHATS - filtrado por agencia
 app.get('/api/chats', async (req,res)=>{
   const agency_id = req.query.agency_id || 'tu_empresa';
   const r = await pool.query(`SELECT wa_id as "wa_id", name, last_message as "lastMessage", unread, unread_dot as dot, last_type FROM conversations WHERE agency_id=$1 ORDER BY last_time DESC LIMIT 200`,[agency_id]);
@@ -120,7 +106,6 @@ app.get('/api/messages/:wa', async (req,res)=>{
 app.post('/api/messages/send', async (req,res)=>{
   const {wa_id, text, agency_id} = req.body;
   const ag = agency_id || 'tu_empresa';
-  // busca phone_number_id inverso
   let phoneId = process.env.PHONE_NUMBER_ID;
   try{
     const map = JSON.parse(process.env.AGENCY_MAP || '{}');
@@ -132,11 +117,17 @@ app.post('/api/messages/send', async (req,res)=>{
     },{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
     const now=Date.now();
     await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,timestamp,status) VALUES($1,$2,'out',$3,$4,'sent')`,[wa_id,ag,text,now]);
-    await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,updated_at)
-      VALUES($1,$2,$1,$3,$4,false,'red',$4) ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=$3,last_time=$4,updated_at=$4`,
+    await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,updated_at)
+      VALUES($1,$2,$1,$3,$4,false,$4) ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,updated_at=EXCLUDED.updated_at`,
       [wa_id,ag,text,now]);
     res.json({ok:true});
   }catch(e){ console.error(e.response?.data||e.message); res.status(500).json({error:'send failed'}); }
+});
+
+app.post('/api/chats/:wa/read', async (req,res)=>{
+  const agency_id = req.query.agency_id || req.body.agency_id || 'tu_empresa';
+  await pool.query(`UPDATE conversations SET unread=false WHERE wa_id=$1 AND agency_id=$2`,[req.params.wa, agency_id]);
+  res.json({ok:true});
 });
 
 const PORT=process.env.PORT||3000;
