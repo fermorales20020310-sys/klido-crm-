@@ -83,7 +83,7 @@ app.post('/webhook', async (req,res)=>{
   res.sendStatus(200);
 });
 
-// PROXY para audios/imagenes/videos - evita error 401 de Meta
+// Proxy para reproducir audios/imágenes/videos sin error 401
 app.get('/api/media', async (req,res)=>{
   try{
     const url = req.query.url;
@@ -113,10 +113,7 @@ app.post('/api/messages/send', async (req,res)=>{
   const {wa_id, text, agency_id} = req.body;
   const ag = agency_id || 'tu_empresa';
   let phoneId = process.env.PHONE_NUMBER_ID;
-  try{
-    const map = JSON.parse(process.env.AGENCY_MAP || '{}');
-    for(let k in map){ if(map[k]===ag) phoneId=k; }
-  }catch{}
+  try{ const map = JSON.parse(process.env.AGENCY_MAP || '{}'); for(let k in map){ if(map[k]===ag) phoneId=k; } }catch{}
   try{
     await axios.post(`https://graph.facebook.com/v21.0/${phoneId}/messages`,{
       messaging_product:'whatsapp', to:wa_id, type:'text', text:{body:text}
