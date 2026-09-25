@@ -31,9 +31,7 @@ async function initDB(){
     unread BOOLEAN DEFAULT true, unread_dot TEXT DEFAULT 'red',
     last_type TEXT DEFAULT 'text', updated_at BIGINT
   )`);
-  // FIX: crea el constraint que faltaba en tu tabla vieja
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS uniq_conv_wa_agency ON conversations(wa_id, agency_id)`);
-
   await pool.query(`CREATE TABLE IF NOT EXISTS messages(
     id SERIAL PRIMARY KEY, wa_id TEXT, agency_id TEXT DEFAULT 'tu_empresa',
     direction TEXT, text TEXT, media_type TEXT, media_url TEXT,
@@ -58,7 +56,6 @@ app.post('/webhook', async (req,res)=>{
     const msg = value?.messages?.[0];
     const phoneNumberId = value?.metadata?.phone_number_id;
     const agency_id = getAgency(phoneNumberId);
-
     if(msg){
       const wa_id = msg.from;
       const name = value.contacts?.[0]?.profile?.name || wa_id;
@@ -69,10 +66,8 @@ app.post('/webhook', async (req,res)=>{
       else if(msg.audio){ text='🎤 Audio'; media_type='audio'; media_id=msg.audio.id; }
       else if(msg.document){ text='📄 Documento'; media_type='document'; media_id=msg.document.id; }
       else text='['+msg.type+']';
-
       let media_url = media_id? await downloadMedia(media_id) : null;
       const now=Date.now();
-
       await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at)
         VALUES($1,$2,$3,$4,$5,true,'red',$6,$5)
         ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,unread=true,unread_dot='red',last_type=EXCLUDED.last_type,updated_at=EXCLUDED.updated_at,name=EXCLUDED.name`,
@@ -86,6 +81,20 @@ app.post('/webhook', async (req,res)=>{
     }
   }catch(e){ console.error('webhook err',e.message); }
   res.sendStatus(200);
+});
+
+// PROXY para audios/imagenes/videos - evita error 401 de Meta
+app.get('/api/media', async (req,res)=>{
+  try{
+    const url = req.query.url;
+    if(!url) return res.sendStatus(400);
+    const r = await axios.get(url, {
+      headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`},
+      responseType:'stream'
+    });
+    res.setHeader('Content-Type', r.headers['content-type'] || 'application/octet-stream');
+    r.data.pipe(res);
+  }catch(e){ console.error('media proxy err', e.message); res.sendStatus(500); }
 });
 
 app.get('/api/chats', async (req,res)=>{
