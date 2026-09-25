@@ -15,15 +15,6 @@ function getAgency(phoneNumberId){
   }catch{ return process.env.DEFAULT_AGENCY || 'tu_empresa'; }
 }
 
-async function downloadMedia(mediaId){
-  try{
-    const meta = await axios.get(`https://graph.facebook.com/v21.0/${mediaId}`,{
-      headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}
-    });
-    return meta.data.url;
-  }catch(e){ console.error('media err',e.message); return null; }
-}
-
 async function initDB(){
   await pool.query(`CREATE TABLE IF NOT EXISTS conversations(
     wa_id TEXT, agency_id TEXT DEFAULT 'tu_empresa',
@@ -66,8 +57,11 @@ app.post('/webhook', async (req,res)=>{
       else if(msg.audio){ text='🎤 Audio'; media_type='audio'; media_id=msg.audio.id; }
       else if(msg.document){ text='📄 Documento'; media_type='document'; media_id=msg.document.id; }
       else text='['+msg.type+']';
-      let media_url = media_id? await downloadMedia(media_id) : null;
+
+      // Guardamos el media_id, no la URL temporal
+      let media_url = media_id? media_id : null;
       const now=Date.now();
+
       await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at)
         VALUES($1,$2,$3,$4,$5,true,'red',$6,$5)
         ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,unread=true,unread_dot='red',last_type=EXCLUDED.last_type,updated_at=EXCLUDED.updated_at,name=EXCLUDED.name`,
@@ -83,16 +77,23 @@ app.post('/webhook', async (req,res)=>{
   res.sendStatus(200);
 });
 
-// Proxy para reproducir audios/imágenes/videos sin error 401
+// Proxy: pide URL fresca a Meta con el media_id y la transmite
 app.get('/api/media', async (req,res)=>{
   try{
-    const url = req.query.url;
-    if(!url) return res.sendStatus(400);
-    const r = await axios.get(url, {
+    const mid = req.query.mid || req.query.url;
+    if(!mid) return res.sendStatus(400);
+    let fileUrl = mid;
+    if(!mid.startsWith('http')){
+      const meta = await axios.get(`https://graph.facebook.com/v21.0/${mid}`,{
+        headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}
+      });
+      fileUrl = meta.data.url;
+    }
+    const r = await axios.get(fileUrl, {
       headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`},
       responseType:'stream'
     });
-    res.setHeader('Content-Type', r.headers['content-type'] || 'application/octet-stream');
+    res.setHeader('Content-Type', r.headers['content-type'] || 'audio/ogg');
     r.data.pipe(res);
   }catch(e){ console.error('media proxy err', e.message); res.sendStatus(500); }
 });
