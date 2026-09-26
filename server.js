@@ -62,7 +62,6 @@ app.post('/webhook', async (req,res)=>{
       else if(msg.document){ text='📄 Documento'; media_type='document'; media_id=msg.document.id; }
       else text='['+msg.type+']';
       if(msg.context) is_campaign = true;
-      let media_url = media_id? media_id : null;
       const now=Date.now();
       const dot = is_campaign? 'yellow' : 'red';
       await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at)
@@ -70,7 +69,7 @@ app.post('/webhook', async (req,res)=>{
         ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,unread=true,unread_dot=$7,last_type=EXCLUDED.last_type,updated_at=EXCLUDED.updated_at,name=EXCLUDED.name`,
         [wa_id,agency_id,name,text,now,media_type,dot]);
       await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,is_campaign,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6,$7)`,
-        [wa_id,agency_id,text,media_type,media_url,is_campaign,now]);
+        [wa_id,agency_id,text,media_type,media_id,is_campaign,now]);
     }
     const status = value?.statuses?.[0];
     if(status){
@@ -82,22 +81,19 @@ app.post('/webhook', async (req,res)=>{
 
 app.get('/api/media', async (req,res)=>{
   try{
-    const mid = req.query.mid || req.query.url;
-    if(!mid) return res.sendStatus(400);
-    let fileUrl = mid;
-    if(!mid.startsWith('http')){
-      const meta = await axios.get(`https://graph.facebook.com/v21.0/${mid}`,{
-        headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}
-      });
-      fileUrl = meta.data.url;
-    }
+    const mid = (req.query.mid||'').trim();
+    if(!mid) return res.status(400).send('sin mid');
+    const meta = await axios.get(`https://graph.facebook.com/v22.0/${mid}`,{
+      headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}
+    });
+    const fileUrl = meta.data.url;
     const r = await axios.get(fileUrl, {
       headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`},
-      responseType:'stream'
+      responseType:'stream', timeout:15000
     });
-    res.setHeader('Content-Type', r.headers['content-type'] || 'audio/ogg');
+    res.setHeader('Content-Type', r.headers['content-type'] || 'application/octet-stream');
     r.data.pipe(res);
-  }catch(e){ console.error('media proxy err', e.message); res.sendStatus(500); }
+  }catch(e){ console.error('media proxy err', e.response?.data || e.message); res.status(500).send('media error'); }
 });
 
 app.get('/api/chats', async (req,res)=>{
@@ -118,7 +114,7 @@ app.post('/api/messages/send', async (req,res)=>{
   let phoneId = process.env.PHONE_NUMBER_ID;
   try{ const map = JSON.parse(process.env.AGENCY_MAP || '{}'); for(let k in map){ if(map[k]===ag) phoneId=k; } }catch{}
   try{
-    await axios.post(`https://graph.facebook.com/v21.0/${phoneId}/messages`,{
+    await axios.post(`https://graph.facebook.com/v22.0/${phoneId}/messages`,{
       messaging_product:'whatsapp', to:wa_id, type:'text', text:{body:text}
     },{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
     const now=Date.now();
