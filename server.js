@@ -17,18 +17,18 @@ function getPidForAgency(a){const m=getAgencyMap();for(let k in m)if(m[k]===a)re
 
 async function init(){
 await pool.query(`CREATE TABLE IF NOT EXISTS agencies(id TEXT PRIMARY KEY, name TEXT, phone_number_id TEXT UNIQUE, created_at BIGINT)`);
+// FIX definitivo tipos viejos
 await pool.query(`DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agencies' AND column_name='id' AND data_type='integer') THEN
     ALTER TABLE agencies ALTER COLUMN id TYPE TEXT USING id::text;
   END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agencies' AND column_name='phone_number_id' AND data_type='integer') THEN
-    ALTER TABLE agencies ALTER COLUMN phone_number_id TYPE TEXT USING phone_number_id::text;
-  END IF;
 END $$`);
+try{await pool.query(`ALTER TABLE agencies ALTER COLUMN phone_number_id TYPE TEXT USING phone_number_id::text`);}catch(e){}
+try{await pool.query(`ALTER TABLE agencies DROP COLUMN IF EXISTS created_at`);}catch(e){}
+await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS created_at BIGINT`);
 await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS waba_id TEXT`);
 await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS phone_number_id TEXT`);
 await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS name TEXT`);
-await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS created_at BIGINT`);
 await pool.query(`CREATE TABLE IF NOT EXISTS conversations(wa_id TEXT,agency_id TEXT,name TEXT,last_message TEXT,last_time BIGINT,unread BOOLEAN DEFAULT true,unread_dot TEXT DEFAULT 'transparent',last_type TEXT DEFAULT 'text',tag TEXT DEFAULT 'nuevo',updated_at BIGINT,UNIQUE(wa_id,agency_id))`);
 await pool.query(`CREATE TABLE IF NOT EXISTS messages(id SERIAL PRIMARY KEY,wa_id TEXT,agency_id TEXT,direction TEXT,text TEXT,media_type TEXT,media_url TEXT,is_campaign BOOLEAN DEFAULT false,timestamp BIGINT,status TEXT DEFAULT 'sent')`);
 await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY,agency_id TEXT,template TEXT,total INT DEFAULT 0,sent INT DEFAULT 0,status TEXT DEFAULT 'programada',created_at BIGINT)`);
@@ -40,9 +40,9 @@ for(let aid of ids){
   const pidRaw=Object.keys(m).find(k=>m[k]===aid)||null;
   const pid=pidRaw? String(pidRaw) : null;
   const aidStr=String(aid);
-  await pool.query(`INSERT INTO agencies(id,name,phone_number_id,created_at) VALUES($1::text,$1::text,$2::text,$3::bigint) ON CONFLICT(id) DO NOTHING`,[aidStr,pid,now]);
+  await pool.query(`INSERT INTO agencies(id,name,phone_number_id,created_at) VALUES($1,$2,$3,$4) ON CONFLICT(id) DO NOTHING`,[aidStr][aidStr][pid][now]);
 }
-try{const au=process.env.ADMIN_USER;const aa=process.env.ADMIN_AGENCY||process.env.DEFAULT_AGENCY||'acol';let h=process.env.ADMIN_PASSWORD_HASH;const pl=process.env.ADMIN_PASSWORD||process.env.ADMIN_PASS;if(au&&!h&&pl)h=bcrypt.hashSync(pl,8);if(au&&h)await pool.query(`INSERT INTO users(agency_id,username,password_hash,role) VALUES($1,$2,$3,'jefe') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3`,[aa,au,h]);}catch(e){console.error(e.message);}
+try{const au=process.env.ADMIN_USER;const aa=process.env.ADMIN_AGENCY||process.env.DEFAULT_AGENCY||'acol';let h=process.env.ADMIN_PASSWORD_HASH;const pl=process.env.ADMIN_PASSWORD||process.env.ADMIN_PASS;if(au&&!h&&pl)h=bcrypt.hashSync(pl,8);if(au&&h)await pool.query(`INSERT INTO users(agency_id,username,password_hash,role) VALUES($1,$2,$3,'jefe') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3`,[aa][au][h]);}catch(e){console.error(e.message);}
 console.log('GOLD TODO-EN-UNO');
 }
 init();
@@ -57,7 +57,7 @@ if(!isSuper(req))return res.status(403).json({error:'forbidden'});
 const{id,phone_number_id,waba_id}=req.body;if(!id||!phone_number_id)return res.status(400).json({error:'faltan datos'});
 const c=await pool.query(`SELECT COUNT(*) FROM agencies`);if(parseInt(c.rows[0].count)>=MAX_AGENCIES)return res.status(400).json({error:'limite 10'});
 const nid=String(id).toLowerCase().trim();
-await pool.query(`INSERT INTO agencies(id,name,phone_number_id,waba_id,created_at) VALUES($1::text,$1::text,$2::text,$3::text,$4::bigint) ON CONFLICT(id) DO UPDATE SET phone_number_id=$2::text, waba_id=$3::text`,[nid,String(phone_number_id),waba_id||null,Date.now()]);
+await pool.query(`INSERT INTO agencies(id,name,phone_number_id,waba_id,created_at) VALUES($1,$1,$2,$3,$4) ON CONFLICT(id) DO UPDATE SET phone_number_id=$2, waba_id=$3`,[nid,String(phone_number_id),waba_id||null,Date.now()]);
 res.json({ok:true,msg:'Agrega a AGENCY_MAP: "'+String(phone_number_id)+'":"'+nid+'" y redeploy'});
 });
 app.post('/api/super/users',async(req,res)=>{
@@ -72,8 +72,8 @@ app.post('/webhook',async(req,res)=>{try{const v=req.body.entry?.[0]?.changes?.[
 if(m){const wa=m.from;const nm=v.contacts?.[0]?.profile?.name||wa;let tx='',mt='text',mid=null;const isc=!!m.context;
 if(m.type==='text')tx=m.text.body;else if(m.image){tx='📷 Imagen';mt='image';mid=m.image.id;}else if(m.audio){tx='🎤 Audio';mt='audio';mid=m.audio.id;}else if(m.video){tx='🎥 Video';mt='video';mid=m.video.id;}else if(m.document){tx='📄 Documento';mt='document';mid=m.document.id;}else tx='['+m.type+']';
 const now=Date.now();const dot=isc?'yellow':'red';
-await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at) VALUES($1,$2,$3,$4,$5,true,$6,$7,$5) ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=$4,last_time=$5,unread=true,unread_dot=$6,last_type=$7,updated_at=$5,name=$3`,[wa,ag,nm,tx,now,dot,mt]);
-await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,is_campaign,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6,$7)`,[wa,ag,tx,mt,mid,isc,now]);}}catch(e){console.error(e.message);}res.sendStatus(200);});
+await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at) VALUES($1,$2,$3,$4,$5,true,$6,$7,$5) ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=$4,last_time=$5,unread=true,unread_dot=$6,last_type=$7,updated_at=$5,name=$3`,[wa][ag][nm][tx][now][dot][mt]);
+await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,is_campaign,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6,$7)`,[wa][ag][tx][mt][mid][isc][now]);}}catch(e){console.error(e.message);}res.sendStatus(200);});
 
 app.post('/api/login',async(req,res)=>{const{agency_id,username,password}=req.body;const r=await pool.query(`SELECT * FROM users WHERE agency_id=$1 AND username=$2`,[agency_id,username]);if(!r.rows.length)return res.status(401).json({error:'no_user'});if(!bcrypt.compareSync(password,r.rows[0].password_hash))return res.status(401).json({error:'bad'});res.json({ok:true,role:r.rows[0].role});});
 app.get('/api/media',async(req,res)=>{try{const mid=(req.query.mid||'').trim();const meta=await axios.get(`https://graph.facebook.com/${G}/${mid}`,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});const rr=await axios.get(meta.data.url,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`},responseType:'stream'});res.setHeader('Content-Type',rr.headers['content-type']);rr.data.pipe(res);}catch(e){res.sendStatus(500);}});
