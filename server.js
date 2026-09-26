@@ -1,155 +1,92 @@
-const express = require('express');
-const { Pool } = require('pg');
-const axios = require('axios');
-const path = require('path');
-const app = express();
-app.use(express.json());
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
-
-function getAgency(phoneNumberId){
-  try{
-    const map = JSON.parse(process.env.AGENCY_MAP || '{}');
-    if(phoneNumberId && map[phoneNumberId]) return map[phoneNumberId];
-    return process.env.DEFAULT_AGENCY || 'tu_empresa';
-  }catch{ return process.env.DEFAULT_AGENCY || 'tu_empresa'; }
-}
-
-async function initDB(){
-  await pool.query(`CREATE TABLE IF NOT EXISTS conversations(
-    wa_id TEXT, agency_id TEXT DEFAULT 'tu_empresa',
-    name TEXT, last_message TEXT, last_time BIGINT,
-    unread BOOLEAN DEFAULT true, unread_dot TEXT DEFAULT 'red',
-    last_type TEXT DEFAULT 'text', updated_at BIGINT
-  )`);
-  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS uniq_conv_wa_agency ON conversations(wa_id, agency_id)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS messages(
-    id SERIAL PRIMARY KEY, wa_id TEXT, agency_id TEXT DEFAULT 'tu_empresa',
-    direction TEXT, text TEXT, media_type TEXT, media_url TEXT,
-    is_campaign BOOLEAN DEFAULT false, timestamp BIGINT, status TEXT DEFAULT 'sent'
-  )`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_msg_wa_agency ON messages(wa_id, agency_id, timestamp)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(
-    id SERIAL PRIMARY KEY, agency_id TEXT, template TEXT, total INT DEFAULT 0,
-    sent INT DEFAULT 0, status TEXT DEFAULT 'programada', created_at BIGINT
-  )`);
-  console.log('KLIDO GOLD DB ready');
-}
-initDB();
-
+const express=require('express'),{Pool}=require('pg'),axios=require('axios'),path=require('path'),xlsx=require('xlsx'),bcrypt=require('bcryptjs'),cron=require('node-cron');
+const app=express();app.use(express.json({limit:'10mb'}));
+const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
+const G='v22.0';
+function getAgency(pid){try{const m=JSON.parse(process.env.AGENCY_MAP||'{}');if(pid&&m[pid])return m[pid];return process.env.DEFAULT_AGENCY||'tu_empresa'}catch{return process.env.DEFAULT_AGENCY||'tu_empresa'}}
+async function init(){
+await pool.query(`CREATE TABLE IF NOT EXISTS conversations(wa_id TEXT,agency_id TEXT,name TEXT,last_message TEXT,last_time BIGINT,unread BOOLEAN DEFAULT true,unread_dot TEXT DEFAULT 'transparent',last_type TEXT DEFAULT 'text',tag TEXT DEFAULT 'nuevo',updated_at BIGINT,UNIQUE(wa_id,agency_id))`);
+await pool.query(`CREATE TABLE IF NOT EXISTS messages(id SERIAL PRIMARY KEY,wa_id TEXT,agency_id TEXT,direction TEXT,text TEXT,media_type TEXT,media_url TEXT,is_campaign BOOLEAN DEFAULT false,timestamp BIGINT,status TEXT DEFAULT 'sent')`);
+await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY,agency_id TEXT,template TEXT,total INT DEFAULT 0,sent INT DEFAULT 0,status TEXT DEFAULT 'programada',created_at BIGINT)`);
+await pool.query(`CREATE TABLE IF NOT EXISTS campaign_queue(id SERIAL PRIMARY KEY,campaign_id INT,agency_id TEXT,wa_id TEXT,template TEXT,params TEXT,status TEXT DEFAULT 'queued',created_at BIGINT)`);
+await pool.query(`CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,agency_id TEXT,username TEXT,password_hash TEXT,role TEXT DEFAULT 'trabajador',UNIQUE(agency_id,username))`);
+await pool.query(`CREATE TABLE IF NOT EXISTS templates_cache(agency_id TEXT PRIMARY KEY,data JSONB,updated_at BIGINT)`);
+const h=bcrypt.hashSync('klido123',8);
+await pool.query(`INSERT INTO users(agency_id,username,password_hash,role) VALUES('tu_empresa','admin',$1,'jefe') ON CONFLICT DO NOTHING`,[h]);
+console.log('DB GOLD ready');
+}init();
 app.use(express.static(path.join(__dirname,'public')));
+app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===process.env.VERIFY_TOKEN)return res.send(req.query['hub.challenge']);res.sendStatus(403)});
+app.post('/webhook',async(req,res)=>{try{
+const v=req.body.entry?.[0]?.changes?.[0]?.value;const m=v?.messages?.[0];const ag=getAgency(v?.metadata?.phone_number_id);
+if(m){const wa=m.from;const nm=v.contacts?.[0]?.profile?.name||wa;let tx='',mt='text',mid=null,isc=!!m.context;
+if(m.type==='text')tx=m.text.body;else if(m.image){tx='📷 Imagen';mt='image';mid=m.image.id}else if(m.audio){tx='🎤 Audio';mt='audio';mid=m.audio.id}else if(m.video){tx='🎥 Video';mt='video';mid=m.video.id}else if(m.document){tx='📄 Documento';mt='document';mid=m.document.id}else tx='['+m.type+']';
+const now=Date.now();const dot=isc?'yellow':'red';
+await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at) VALUES($1,$2,$3,$4,$5,true,$6,$7,$5) ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=$4,last_time=$5,unread=true,unread_dot=$6,last_type=$7,updated_at=$5,name=$3`,[wa,ag,nm,tx,now,dot,mt]);
+await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,is_campaign,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6,$7)`,[wa,ag,tx,mt,mid,isc,now]);}
+const st=v?.statuses?.[0];if(st){await pool.query(`UPDATE messages SET status=$1 WHERE wa_id=$2 AND agency_id=$3 AND id=(SELECT max(id) FROM messages WHERE wa_id=$2)`,[st.status,st.recipient_id,ag]);}
+}catch(e){console.error(e.message)}res.sendStatus(200)});
 
-app.get('/webhook',(req,res)=>{
-  if(req.query['hub.verify_token']===process.env.VERIFY_TOKEN) return res.send(req.query['hub.challenge']);
-  res.sendStatus(403);
+app.get('/api/media',async(req,res)=>{try{const mid=(req.query.mid||'').trim();if(!mid)return res.sendStatus(400);
+const meta=await axios.get(`https://graph.facebook.com/${G}/${mid}`,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+const r=await axios.get(meta.data.url,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`},responseType:'stream',timeout:15000});
+res.setHeader('Content-Type',r.headers['content-type']||'application/octet-stream');r.data.pipe(res);
+}catch(e){console.error('media',e.response?.data||e.message);res.sendStatus(500)}});
+
+app.post('/api/login',async(req,res)=>{const{agency_id,username,password}=req.body;
+const r=await pool.query(`SELECT * FROM users WHERE agency_id=$1 AND username=$2`,[agency_id,username]);
+if(!r.rows.length)return res.status(401).json({error:'no user'});
+if(!bcrypt.compareSync(password,r.rows[0].password_hash))return res.status(401).json({error:'bad pass'});
+res.json({ok:true,role:r.rows[0].role,agency_id});});
+app.get('/api/chats',async(req,res)=>{const ag=req.query.agency_id;const tag=req.query.tag;
+let q=`SELECT wa_id,name,last_message as "lastMessage",unread,unread_dot as dot,last_type,tag FROM conversations WHERE agency_id=$1`;let p=[ag];
+if(tag){q+=` AND tag=$2`;p.push(tag)}q+=` ORDER BY last_time DESC LIMIT 300`;
+const r=await pool.query(q,p);res.json(r.rows)});
+app.get('/api/messages/:wa',async(req,res)=>{const r=await pool.query(`SELECT text,direction,timestamp,media_type,media_url,status,is_campaign FROM messages WHERE wa_id=$1 AND agency_id=$2 ORDER BY timestamp ASC LIMIT 1000`,[req.params.wa,req.query.agency_id]);res.json(r.rows)});
+app.post('/api/messages/send',async(req,res)=>{const{wa_id,text,agency_id}=req.body;let pid=process.env.PHONE_NUMBER_ID;
+try{const mp=JSON.parse(process.env.AGENCY_MAP||'{}');for(let k in mp)if(mp[k]===agency_id)pid=k}catch{}
+await axios.post(`https://graph.facebook.com/${G}/${pid}/messages`,{messaging_product:'whatsapp',to:wa_id,type:'text',text:{body:text}},{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+const now=Date.now();
+await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,timestamp,status) VALUES($1,$2,'out',$3,$4,'sent')`,[wa_id,agency_id,text,now]);
+await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,updated_at) VALUES($1,$2,$1,$3,$4,false,'transparent',$4) ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=$3,last_time=$4,updated_at=$4`,[wa_id,agency_id,text,now]);
+res.json({ok:true})});
+app.post('/api/chats/:wa/read',async(req,res)=>{await pool.query(`UPDATE conversations SET unread=false,unread_dot='transparent' WHERE wa_id=$1 AND agency_id=$2`,[req.params.wa,req.query.agency_id||req.body.agency_id]);res.json({ok:true})});
+app.post('/api/chats/:wa/tag',async(req,res)=>{await pool.query(`UPDATE conversations SET tag=$1 WHERE wa_id=$2 AND agency_id=$3`,[req.body.tag,req.params.wa,req.body.agency_id]);res.json({ok:true})});
+
+// templates aprobadas auto
+app.get('/api/templates',async(req,res)=>{const ag=req.query.agency_id;
+const cached=await pool.query(`SELECT data FROM templates_cache WHERE agency_id=$1`,[ag]);
+if(cached.rows.length&&Date.now()-cached.rows[0].data.ts<3600000)return res.json(cached.rows[0].data.list);
+try{const waba=process.env.WABA_ID;const r=await axios.get(`https://graph.facebook.com/${G}/${waba}/message_templates?fields=name,status,language`,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+const list=r.data.data.filter(t=>t.status==='APPROVED');
+await pool.query(`INSERT INTO templates_cache(agency_id,data,updated_at) VALUES($1,$2,$3) ON CONFLICT(agency_id) DO UPDATE SET data=$2`,[ag,{list,ts:Date.now()},Date.now()]);
+res.json(list);}catch(e){res.json(cached.rows[0]?.data.list||[])}});
+
+// crear campaña desde excel -> extrae números y encola
+app.post('/api/campaigns/upload',async(req,res)=>{try{
+const{agency_id,template,params,fileBase64}=req.body;const ag=agency_id||'tu_empresa';
+const buf=Buffer.from(fileBase64.split(',').pop(),'base64');const wb=xlsx.read(buf,{type:'buffer'});
+const ws=wb.Sheets[wb.SheetNames[0]];const rows=xlsx.utils.sheet_to_json(ws,{header:1});
+let phones=[];rows.flat().forEach(c=>{let s=String(c||'').replace(/\D/g,'');if(s.length>=10)phones.push(s)});
+phones=[...new Set(phones)];const now=Date.now();
+const cr=await pool.query(`INSERT INTO campaigns(agency_id,template,total,sent,status,created_at) VALUES($1,$2,$3,0,'enviando',$4) RETURNING id`,[ag,template,phones.length,now]);
+for(let p of phones){await pool.query(`INSERT INTO campaign_queue(campaign_id,agency_id,wa_id,template,params,status,created_at) VALUES($1,$2,$3,$4,$5,'queued',$6)`,[cr.rows[0].id,ag,p,template,params||'[]',now])}
+res.json({ok:true,id:cr.rows[0].id,total:phones.length});
+}catch(e){console.error(e);res.status(500).json({error:'excel'}}});
+app.get('/api/campaigns',async(req,res)=>{const r=await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC LIMIT 50`,[req.query.agency_id]);res.json(r.rows)});
+
+// worker: 50 cada 6 horas
+cron.schedule('0 */6 * * *',async()=>{
+console.log('worker campañas 50/6h');
+const q=await pool.query(`SELECT * FROM campaign_queue WHERE status='queued' ORDER BY id ASC LIMIT 50`);
+for(let row of q.rows){
+try{let pid=process.env.PHONE_NUMBER_ID;try{const mp=JSON.parse(process.env.AGENCY_MAP||'{}');for(let k in mp)if(mp[k]===row.agency_id)pid=k}catch{}
+await axios.post(`https://graph.facebook.com/${G}/${pid}/messages`,{messaging_product:'whatsapp',to:row.wa_id,type:'template',template:{name:row.template,language:{code:'es'}}},{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+await pool.query(`UPDATE campaign_queue SET status='sent' WHERE id=$1`,[row.id]);
+await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,is_campaign,timestamp,status) VALUES($1,$2,'out',$3,'text',true,$4,'sent')`,[row.wa_id,row.agency_id,`📢 ${row.template}`,Date.now()]);
+await pool.query(`UPDATE campaigns SET sent=sent+1 WHERE id=$1`,[row.campaign_id]);
+}catch(e){await pool.query(`UPDATE campaign_queue SET status='error' WHERE id=$1`,[row.id])}
+}
+const rem=await pool.query(`SELECT count(*) FROM campaign_queue WHERE status='queued'`);
+if(rem.rows[0].count==='0')await pool.query(`UPDATE campaigns SET status='completada' WHERE status='enviando'`);
 });
-
-app.post('/webhook', async (req,res)=>{
-  try{
-    const change = req.body.entry?.[0]?.changes?.[0];
-    const value = change?.value;
-    const msg = value?.messages?.[0];
-    const phoneNumberId = value?.metadata?.phone_number_id;
-    const agency_id = getAgency(phoneNumberId);
-    if(msg){
-      const wa_id = msg.from;
-      const name = value.contacts?.[0]?.profile?.name || wa_id;
-      let text='', media_type='text', media_id=null, is_campaign=false;
-      if(msg.type==='text') text=msg.text.body;
-      else if(msg.image){ text='📷 Imagen'; media_type='image'; media_id=msg.image.id; }
-      else if(msg.video){ text='🎥 Video'; media_type='video'; media_id=msg.video.id; }
-      else if(msg.audio){ text='🎤 Audio'; media_type='audio'; media_id=msg.audio.id; }
-      else if(msg.document){ text='📄 Documento'; media_type='document'; media_id=msg.document.id; }
-      else text='['+msg.type+']';
-      if(msg.context) is_campaign = true;
-      const now=Date.now();
-      const dot = is_campaign? 'yellow' : 'red';
-      await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at)
-        VALUES($1,$2,$3,$4,$5,true,$7,$6,$5)
-        ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,unread=true,unread_dot=$7,last_type=EXCLUDED.last_type,updated_at=EXCLUDED.updated_at,name=EXCLUDED.name`,
-        [wa_id,agency_id,name,text,now,media_type,dot]);
-      await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,is_campaign,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6,$7)`,
-        [wa_id,agency_id,text,media_type,media_id,is_campaign,now]);
-    }
-    const status = value?.statuses?.[0];
-    if(status){
-      await pool.query(`UPDATE messages SET status=$1 WHERE id = (SELECT id FROM messages WHERE wa_id=$2 ORDER BY id DESC LIMIT 1)`,[status.status, status.recipient_id]);
-    }
-  }catch(e){ console.error('webhook err',e.message); }
-  res.sendStatus(200);
-});
-
-app.get('/api/media', async (req,res)=>{
-  try{
-    const mid = (req.query.mid||'').trim();
-    if(!mid) return res.status(400).send('sin mid');
-    const meta = await axios.get(`https://graph.facebook.com/v22.0/${mid}`,{
-      headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}
-    });
-    const fileUrl = meta.data.url;
-    const r = await axios.get(fileUrl, {
-      headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`},
-      responseType:'stream', timeout:15000
-    });
-    res.setHeader('Content-Type', r.headers['content-type'] || 'application/octet-stream');
-    r.data.pipe(res);
-  }catch(e){ console.error('media proxy err', e.response?.data || e.message); res.status(500).send('media error'); }
-});
-
-app.get('/api/chats', async (req,res)=>{
-  const agency_id = req.query.agency_id || 'tu_empresa';
-  const r = await pool.query(`SELECT wa_id as "wa_id", name, last_message as "lastMessage", unread, unread_dot as dot, last_type FROM conversations WHERE agency_id=$1 ORDER BY last_time DESC LIMIT 200`,[agency_id]);
-  res.json(r.rows);
-});
-
-app.get('/api/messages/:wa', async (req,res)=>{
-  const agency_id = req.query.agency_id || 'tu_empresa';
-  const r = await pool.query(`SELECT text, direction, timestamp, media_type, media_url, status, is_campaign FROM messages WHERE wa_id=$1 AND agency_id=$2 ORDER BY timestamp ASC LIMIT 500`,[req.params.wa, agency_id]);
-  res.json(r.rows);
-});
-
-app.post('/api/messages/send', async (req,res)=>{
-  const {wa_id, text, agency_id} = req.body;
-  const ag = agency_id || 'tu_empresa';
-  let phoneId = process.env.PHONE_NUMBER_ID;
-  try{ const map = JSON.parse(process.env.AGENCY_MAP || '{}'); for(let k in map){ if(map[k]===ag) phoneId=k; } }catch{}
-  try{
-    await axios.post(`https://graph.facebook.com/v22.0/${phoneId}/messages`,{
-      messaging_product:'whatsapp', to:wa_id, type:'text', text:{body:text}
-    },{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
-    const now=Date.now();
-    await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,timestamp,status) VALUES($1,$2,'out',$3,$4,'sent')`,[wa_id,ag,text,now]);
-    await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,updated_at)
-      VALUES($1,$2,$1,$3,$4,false,$4) ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=EXCLUDED.last_message,last_time=EXCLUDED.last_time,updated_at=EXCLUDED.updated_at`,
-      [wa_id,ag,text,now]);
-    res.json({ok:true});
-  }catch(e){ console.error(e.response?.data||e.message); res.status(500).json({error:'send failed'}); }
-});
-
-app.post('/api/campaigns', async (req,res)=>{
-  const {agency_id, template, phones} = req.body;
-  const ag = agency_id || 'tu_empresa';
-  const list = Array.isArray(phones)? phones : [];
-  const now = Date.now();
-  const r = await pool.query(`INSERT INTO campaigns(agency_id,template,total,sent,status,created_at) VALUES($1,$2,$3,0,'programada',$4) RETURNING id`,[ag,template||'hello_world',list.length,now]);
-  const campId = r.rows[0].id;
-  for(let p of list.slice(0,2000)){
-    await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,is_campaign,timestamp,status) VALUES($1,$2,'out',$3,'text',true,$4,'queued')`,[String(p),ag,`CAMPAIGN:${campId}:${template}`,now]);
-  }
-  res.json({ok:true, id:campId, total:list.length});
-});
-
-app.get('/api/campaigns', async (req,res)=>{
-  const agency_id = req.query.agency_id || 'tu_empresa';
-  const r = await pool.query(`SELECT id, agency_id, template, total, sent, status, created_at FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC LIMIT 100`,[agency_id]);
-  res.json(r.rows);
-});
-
-app.post('/api/chats/:wa/read', async (req,res)=>{
-  const agency_id = req.query.agency_id || req.body.agency_id || 'tu_empresa';
-  await pool.query(`UPDATE conversations SET unread=false, unread_dot='transparent' WHERE wa_id=$1 AND agency_id=$2`,[req.params.wa, agency_id]);
-  res.json({ok:true});
-});
-
-const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log('KLIDO GOLD ON '+PORT));
+app.listen(process.env.PORT||3000,()=>console.log('GOLD ON'));
