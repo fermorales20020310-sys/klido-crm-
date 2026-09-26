@@ -1,57 +1,113 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO GOLD CRM Pro</title>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO GOLD</title>
 <style>
-:root{--bg:#0f1420;--panel:#161c2e;--panel2:#1c2438;--txt:#e8ecf5;--mut:#8a93ad;--acc:#2f7bff;--gold:#d4af37}
-body.light{--bg:#f2f4f9;--panel:#fff;--panel2:#eef1f7;--txt:#1a2030;--mut:#6b7280}
-*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--txt);font-family:Inter,system-ui;display:flex;height:100vh;overflow:hidden}
-.login{position:fixed;inset:0;background:#0a0e1a;display:flex;align-items:center;justify-content:center;z-index:99}
-.login.card{background:#161c2e;padding:36px;border-radius:16px;width:360px;text-align:center;border:1px solid #d4af37}
-.login input,.login select{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #333;background:#0f1420;color:#fff}
-.login button{background:linear-gradient(135deg,#d4af37,#f5d76e);border:0;padding:12px;width:100%;border-radius:8px;font-weight:700;cursor:pointer}
-.sidebar{width:200px;background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:4px}
-.sidebar h2{color:var(--gold);font-size:17px;margin:6px 8px}
-.sbtn{padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--mut)}.sbtn.active,.sbtn:hover{background:var(--acc);color:#fff}
-.inbox{width:300px;background:var(--panel);border-left:1px solid #222842;border-right:1px solid #222842;display:flex;flex-direction:column}
-.inbox input{margin:10px;padding:9px;border-radius:8px;border:0;background:var(--panel2);color:var(--txt)}
-.chatitem{padding:10px 12px;display:flex;gap:10px;cursor:pointer;border-radius:10px;margin:2px 6px;position:relative}
-.chatitem.active{background:var(--panel2)}.avatar{width:40px;height:40px;border-radius:50%;background:#2f7bff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
-.dot{width:10px;height:10px;border-radius:50%;position:absolute;left:6px;top:8px;border:2px solid var(--panel)}
-.main{flex:1;display:flex;flex-direction:column}.chead{padding:12px 16px;background:var(--panel);display:flex;align-items:center;justify-content:space-between}
-.msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px}
-.b{max-width:65%;padding:10px 14px;border-radius:14px;font-size:14px}.bin{background:var(--panel2);align-self:flex-start}.bout{background:#2f7bff;color:#fff;align-self:flex-end}.camp{outline:2px solid #ffd400}
-.inputbar{padding:12px;background:var(--panel);display:flex;gap:8px}.inputbar input[type=text]{flex:1;padding:12px;border-radius:20px;border:0;background:var(--panel2);color:var(--txt)}
-.ibtn{background:var(--acc);border:0;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer}
-.profile{width:240px;background:var(--panel);padding:16px}.tag{background:#2f7bff33;color:#7aaaff;padding:3px 8px;border-radius:20px;font-size:11px;margin:2px;display:inline-block}
-.view{display:none;flex:1;flex-direction:column;padding:20px;overflow:auto}.view.active{display:flex}
-table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #2a3350;font-size:13px;text-align:left}
-.btn{background:var(--acc);color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;margin:4px}
-.topbar{position:absolute;top:10px;right:14px;display:flex;gap:8px}
-.tbtn{background:var(--panel2);border:0;color:var(--txt);padding:8px;border-radius:8px;cursor:pointer}
-</style></head><body>
-<div class="login" id="login"><div class="card"><img src="logo.png" style="width:70px" onerror="this.style.display='none'"><h2 style="color:#d4af37;margin:10px 0">KLIDO GOLD</h2><input id="email" placeholder="correo"><input id="pass" type="password" placeholder="contraseña"><select id="role"><option value="admin">Jefe / Administrador</option><option value="agent">Trabajador</option></select><button onclick="doLogin()">INGRESAR</button></div></div>
-<div class="sidebar"><h2>⚡ KLIDO GOLD</h2><div class="sbtn active" onclick="showV('inboxV',this)">📥 Inbox</div><div class="sbtn" onclick="showV('campV',this)">📢 Campaigns</div><div class="sbtn" onclick="showV('histV',this)">📊 Historial</div><div class="sbtn" onclick="showV('setV',this)">⚙️ Settings</div><div style="margin-top:auto;font-size:12px;color:var(--mut)" id="userLbl"></div></div>
-<div class="inbox" id="inboxV"><input placeholder="Buscar..." oninput="filterChats(this.value)"><div id="chats" style="overflow:auto;flex:1"></div></div>
-<div class="main" id="mainChat"><div class="topbar"><button class="tbtn" onclick="document.body.classList.toggle('light')">🌙/☀️</button><button class="tbtn" onclick="soundOn=!soundOn">🔔</button></div><div class="chead"><div style="display:flex;gap:10px;align-items:center"><div class="avatar" id="cAv">--</div><b id="cName">Selecciona chat</b></div></div><div class="msgs" id="msgs"></div><div class="inputbar"><button class="ibtn" id="recBtn" onclick="toggleRec()">🎤</button><input type=text id="txt" placeholder="Escribe..." onkeydown="if(event.key==='Enter')sendText()"><button class="ibtn" onclick="sendText()">➤</button></div></div>
-<div class="view" id="campV"><h3>📢 Nueva Campaña</h3><p>Sube Excel, envío 50 cada 6h con plantilla aprobada.</p><input type=file id=xl accept=".xlsx,.xls,.csv"><input id="tplName" placeholder="plantilla aprobada" style="padding:10px;margin:6px"><br><button class="btn" onclick="loadExcel()">Cargar Excel</button><div id="xlPrev"></div><button class="btn" onclick="startCampaign()">🚀 Iniciar</button></div>
-<div class="view" id="histV"><h3>Historial Campañas</h3><table><tr><th>Fecha</th><th>Plantilla</th><th>Total</th><th>Estado</th></tr><tbody id="campHist"></tbody></table></div>
-<div class="view" id="setV"><h3>Settings</h3><label><input type=checkbox checked onchange="document.body.classList.toggle('light')"> Claro / Oscuro</label><br><label><input type=checkbox id=sndChk checked> Sonido mensaje</label><div id="adminPanel"></div></div>
-<div class="profile" id="prof"><h4>Customer Profile</h4><div class="avatar" id="pAv" style="margin:10px 0">--</div><b id="pName"></b><div><span class="tag">VIP</span><span class="tag">Hot Lead</span></div><div id="pDet" style="font-size:12px;color:var(--mut);margin-top:8px"></div></div>
-<audio id="notif" src="https://notificationsounds.com/storage/sounds/file-sounds-1152-pristine.mp3"></audio>
+:root{--bg:#111;--panel:#1c1c1e;--gold:#d4af37;--tx:#fff;--mu:#8e8e93}
+body.light{--bg:#f2f2f7;--panel:#fff;--tx:#111;--mu:#666}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,system-ui}
+body{background:var(--bg);color:var(--tx);height:100vh}
+#login{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:99}
+.lbox{background:var(--panel);border:1px solid var(--gold);border-radius:16px;padding:32px;width:330px;text-align:center}
+.lbox img{width:110px;height:110px;object-fit:contain;margin-bottom:12px;border-radius:12px}
+.lbox input,.lbox select{width:100%;padding:11px;margin:7px 0;border-radius:10px;border:1px solid #333;background:var(--bg);color:var(--tx)}
+.btn{background:var(--gold);color:#000;border:0;padding:11px;border-radius:10px;font-weight:700;cursor:pointer;width:100%}
+#app{display:none;height:100vh}
+.side{width:330px;background:var(--panel);border-right:1px solid var(--gold);display:flex;flex-direction:column}
+.sh{padding:14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #333}
+.sh img{width:42px;height:42px;object-fit:contain;border-radius:10px;background:#000}
+.clist{flex:1;overflow-y:auto}
+.chat{padding:12px 14px;border-bottom:1px solid #262626;display:flex;gap:10px;align-items:center;cursor:pointer}
+.chat.act{background:#2c2c2e}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ci{flex:1;overflow:hidden}.ci b{font-size:14px;display:block}.ci span{font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.main{flex:1;display:flex;flex-direction:column}
+.mh{padding:14px 18px;background:var(--panel);border-bottom:1px solid var(--gold)}
+#msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:72%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.4}
+.m.in{background:#2c2c2e;align-self:flex-start}
+.m.out{background:var(--gold);color:#000;align-self:flex-end}
+.m img{max-width:240px;border-radius:10px;display:block}
+.bar{padding:12px;background:var(--panel);display:flex;gap:10px}
+.bar input{flex:1;padding:12px;border-radius:22px;border:1px solid #333;background:var(--bg);color:var(--tx)}
+.tb{display:flex;gap:8px;padding:10px;border-bottom:1px solid #333}
+.tb button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;font-size:12px}
+.hid{display:none!important}
+.pad{padding:14px}
+</style>
+</head>
+<body>
+<div id="login"><div class="lbox">
+<img src="logo.png" alt="KLIDO">
+<h2 style="color:var(--gold);margin-bottom:10px">KLIDO GOLD</h2>
+<input id="a" placeholder="agencia: tu_empresa">
+<select id="r"><option value="jefe">Jefe</option><option value="trabajador">Trabajador</option></select>
+<input id="p" type="password" placeholder="contraseña">
+<button class="btn" onclick="login()">Entrar</button>
+</div></div>
+
+<div id="app" style="display:none">
+<div class="side">
+<div class="sh"><img src="logo.png"><b style="color:var(--gold)">KLIDO GOLD</b><button onclick="document.body.classList.toggle('light')" style="margin-left:auto;background:none;border:0;font-size:18px;cursor:pointer">🌓</button></div>
+<div class="tb"><button onclick="sec('c')">Chats</button><button onclick="sec('p')">Campañas</button><button onclick="sec('h')">Historial</button></div>
+<div id="s-c" class="clist"></div>
+<div id="s-p" class="clist hid"><div class="pad">
+<input id="ct" placeholder="hello_world" style="width:100%;padding:9px;margin-bottom:8px;border-radius:8px;border:1px solid #333;background:var(--bg);color:var(--tx)">
+<input type="file" id="cf" accept=".csv,.txt"><button class="btn" style="margin-top:8px" onclick="mkCamp()">Crear</button><div id="cl"></div>
+</div></div>
+<div id="s-h" class="clist hid"><div class="pad" id="hl"></div></div>
+</div>
+<div class="main">
+<div class="mh"><b id="cn">Selecciona un chat</b></div>
+<div id="msgs"></div>
+<div class="bar"><input id="mi" placeholder="Escribe..." onkeydown="if(event.key==='Enter')send()"><button class="btn" style="width:90px" onclick="send()">Enviar</button></div>
+</div>
+</div>
+<audio id="nt" src="https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3"></audio>
 <script>
-let agency_id='tu_empresa',curWa=null,allChats=[],soundOn=true,phones=[],mediaRec,chunks=[],lastCount=0;
-function doLogin(){if(!document.getElementById('email').value){alert('correo');return}document.getElementById('login').style.display='none';let r=document.getElementById('role').value;document.getElementById('userLbl').innerText=document.getElementById('email').value+' • '+r;if(r==='admin')document.getElementById('adminPanel').innerHTML='<b>Jefe:</b><select onchange="agency_id=this.value;loadChats()"><option value="tu_empresa">Mi agencia</option><option value="agencia1">Agencia1</option></select>';loadChats();setInterval(checkNew,5000)}
-function showV(id,el){document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');['campV','histV','setV'].forEach(v=>document.getElementById(v).classList.remove('active'));document.getElementById('inboxV').style.display=id==='inboxV'?'flex':'none';document.getElementById('mainChat').style.display=id==='inboxV'?'flex':'none';document.getElementById('prof').style.display=id==='inboxV'?'block':'none';if(id!=='inboxV')document.getElementById(id).classList.add('active');if(id==='histV')renderHist()}
-async function loadChats(){let r=await fetch('/api/chats?agency_id='+agency_id);allChats=await r.json();renderChats(allChats)}
-function renderChats(l){let d=document.getElementById('chats');d.innerHTML='';l.forEach(c=>{let el=document.createElement('div');el.className='chatitem'+(c.wa_id===curWa?' active':'');el.innerHTML='<div class="dot" style="background:'+(c.dot==='yellow'?'#ffd400':c.unread?'red':'transparent')+'"></div><div class="avatar">'+(c.name||'??').slice(0,2).toUpperCase()+'</div><div><b style="font-size:13px">'+c.name+'</b><div style="font-size:12px;color:var(--mut)">'+(c.lastMessage||'')+'</div></div>';el.onclick=()=>openChat(c);d.appendChild(el)})}
-function filterChats(q){renderChats(allChats.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())))}
-async function openChat(c){curWa=c.wa_id;document.getElementById('cName').innerText=c.name;document.getElementById('cAv').innerText=c.name.slice(0,2).toUpperCase();document.getElementById('pName').innerText=c.name;document.getElementById('pAv').innerText=c.name.slice(0,2).toUpperCase();document.getElementById('pDet').innerText=c.wa_id;renderChats(allChats);await fetch('/api/chats/'+curWa+'/read?agency_id='+agency_id,{method:'POST'});loadMsgs()}
-async function loadMsgs(){if(!curWa)return;let r=await fetch('/api/messages/'+curWa+'?agency_id='+agency_id);let ms=await r.json();let d=document.getElementById('msgs');d.innerHTML='';ms.forEach(m=>{let b=document.createElement('div');b.className='b '+(m.direction==='in'?'bin':'bout')+(m.is_campaign?' camp':'');let h='';if(m.media_type==='image')h='<img src="/api/media?mid='+m.media_url+'" style="max-width:220px;border-radius:8px">';else if(m.media_type==='video')h='<video controls src="/api/media?mid='+m.media_url+'" style="max-width:220px"></video>';else if(m.media_type==='audio')h='<audio controls src="/api/media?mid='+m.media_url+'"></audio>';else h=(m.text||'').replace(/</g,'&lt;');b.innerHTML=h+(m.is_campaign?'<div style="font-size:10px">📢 campaña</div>':'');d.appendChild(b)});d.scrollTop=d.scrollHeight;lastCount=ms.length}
-async function checkNew(){if(!curWa)return;let r=await fetch('/api/messages/'+curWa+'?agency_id='+agency_id);let ms=await r.json();if(ms.length>lastCount){if(soundOn&&document.getElementById('sndChk').checked)document.getElementById('notif').play();loadMsgs();loadChats()}}
-async function sendText(){let t=document.getElementById('txt').value;if(!t||!curWa)return;await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:curWa,text:t,agency_id})});document.getElementById('txt').value='';loadMsgs()}
-async function toggleRec(){if(mediaRec&&mediaRec.state==='recording'){mediaRec.stop();return}try{let s=await navigator.mediaDevices.getUserMedia({audio:true});mediaRec=new MediaRecorder(s);chunks=[];mediaRec.ondataavailable=e=>chunks.push(e.data);mediaRec.onstop=()=>{let blob=new Blob(chunks,{type:'audio/webm'});let url=URL.createObjectURL(blob);let d=document.getElementById('msgs');let b=document.createElement('div');b.className='b bout';b.innerHTML='<audio controls src="'+url+'"></audio>';d.appendChild(b)};mediaRec.start();document.getElementById('recBtn').innerText='⏹️'}catch(e){alert('Sin micrófono')}}
-function loadExcel(){let f=document.getElementById('xl').files[0];if(!f){alert('sube excel');return}let rd=new FileReader();rd.onload=e=>{let wb=XLSX.read(e.target.result,{type:'array'});let ws=wb.Sheets[wb.SheetNames[0]];let rows=XLSX.utils.sheet_to_json(ws,{header:1});phones=[];rows.flat().forEach(v=>{let s=String(v||'').replace(/\D/g,'');if(s.length>=8)phones.push(s)});phones=[...new Set(phones)];document.getElementById('xlPrev').innerHTML='<b>'+phones.length+' números</b>'};rd.readAsArrayBuffer(f)}
-async function startCampaign(){let tpl=document.getElementById('tplName').value||'hello_world';if(!phones.length){alert('carga excel');return}await fetch('/api/campaigns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,phones})});alert('Campaña creada: '+phones.length+' nums, 50 cada 6h plantilla '+tpl);renderHist()}
-async function renderHist(){let r=await fetch('/api/campaigns?agency_id='+agency_id);let h=await r.json();document.getElementById('campHist').innerHTML=h.map(x=>'<tr><td>'+new Date(x.created_at).toLocaleString()+'</td><td>'+x.template+'</td><td>'+x.total+'</td><td>'+x.status+'</td></tr>').join('')}
-</script></body></html>
+let AG='',RO='',WA=null,lastN=0;
+function login(){
+AG=document.getElementById('a').value.trim()||'tu_empresa';RO=document.getElementById('r').value;
+let ps=document.getElementById('p').value;
+if(RO==='jefe'&&ps!=='klido123')return alert('clave jefe mal');
+if(RO==='trabajador'&&ps!=='worker123')return alert('clave worker mal');
+document.getElementById('login').style.display='none';document.getElementById('app').style.display='flex';
+loadC();setInterval(loadC,5000);loadCamp();
+}
+function sec(x){['c','p','h'].forEach(k=>document.getElementById('s-'+k).classList.add('hid'));document.getElementById('s-'+x).classList.remove('hid');if(x==='h')loadH();if(x==='p')loadCamp();}
+async function loadC(){
+let r=await fetch('/api/chats?agency_id='+AG);let cs=await r.json();
+let el=document.getElementById('s-c');el.innerHTML='';
+cs.forEach(c=>{let d=document.createElement('div');d.className='chat'+(c.wa_id===WA?' act':'');
+let dot=c.dot||(c.unread?'red':'transparent');
+let prev=c.last_type==='image'?'📷 Imagen':c.last_type==='audio'?'🎤 Audio':c.last_type==='video'?'🎥 Video':(c.lastMessage||'');
+d.innerHTML=`<div class="dot" style="background:${dot}"></div><div class="ci"><b>${c.name||c.wa_id}</b><span>${prev}</span></div>`;
+d.onclick=()=>openC(c.wa_id,c.name);el.appendChild(d);});
+}
+async function openC(wa,nm){WA=wa;document.getElementById('cn').textContent=nm||wa;await fetch('/api/chats/'+wa+'/read?agency_id='+AG,{method:'POST'});loadM();loadC();}
+async function loadM(){
+if(!WA)return;let r=await fetch('/api/messages/'+WA+'?agency_id='+AG);let ms=await r.json();
+let el=document.getElementById('msgs');el.innerHTML='';
+ms.forEach(m=>{let d=document.createElement('div');d.className='m '+(m.direction==='in'?'in':'out');let h='';
+if(m.media_type==='image'&&m.media_url)h=`<img src="/api/media?mid=${m.media_url}">`;
+else if(m.media_type==='audio'&&m.media_url)h=`<audio controls src="/api/media?mid=${m.media_url}" style="width:220px"></audio>`;
+else if(m.media_type==='video'&&m.media_url)h=`<video controls src="/api/media?mid=${m.media_url}" style="max-width:240px;border-radius:10px"></video>`;
+else h=(m.text||'').replace(/</g,'&lt;');
+if(m.is_campaign)h='📢 '+h;d.innerHTML=h;el.appendChild(d);});
+el.scrollTop=el.scrollHeight;
+if(ms.length>lastN&&lastN>0)document.getElementById('nt').play().catch(()=>{});lastN=ms.length;
+}
+async function send(){let i=document.getElementById('mi');let t=i.value.trim();if(!t||!WA)return;
+await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:WA,text:t,agency_id:AG})});i.value='';loadM();loadC();}
+async function mkCamp(){let tpl=document.getElementById('ct').value||'hello_world';let f=document.getElementById('cf').files[0];if(!f)return alert('sube csv');
+let txt=await f.text();let phones=txt.split(/[\n,;]+/).map(s=>s.trim()).filter(s=>s.length>7);
+let r=await fetch('/api/campaigns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AG,template:tpl,phones})});
+let j=await r.json();alert('Creada '+j.total);loadCamp();}
+async function loadCamp(){let r=await fetch('/api/campaigns?agency_id='+AG);let l=await r.json();
+document.getElementById('cl').innerHTML=l.map(c=>`<div style="border:1px solid #333;padding:8px;border-radius:8px;margin-top:8px;font-size:13px"><b>#${c.id}</b> ${c.template} | ${c.total} | ${c.status}</div>`).join('');}
+async function loadH(){let r=await fetch('/api/campaigns?agency_id='+AG);let l=await r.json();
+document.getElementById('hl').innerHTML=l.map(c=>`<div style="padding:8px;border-bottom:1px solid #333;font-size:13px">#${c.id} ${c.template} - ${new Date(c.created_at).toLocaleString()}</div>`).join('');}
+setInterval(()=>{if(WA)loadM()},4000);
+</script>
+</body></html>
