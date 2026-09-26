@@ -17,6 +17,9 @@ function getPidForAgency(a){ const m=getAgencyMap(); for(let k in m) if(m[k]===a
 
 async function init(){
   await pool.query(`CREATE TABLE IF NOT EXISTS agencies(id TEXT PRIMARY KEY, name TEXT, phone_number_id TEXT UNIQUE, created_at BIGINT)`);
+  // FIX columnas viejas
+  try{ await pool.query(`ALTER TABLE agencies ALTER COLUMN email DROP NOT NULL`); }catch(e){}
+  try{ await pool.query(`ALTER TABLE agencies DROP COLUMN IF EXISTS email`); }catch(e){}
   await pool.query(`DO $$ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agencies' AND column_name='id' AND data_type='integer') THEN
       ALTER TABLE agencies ALTER COLUMN id TYPE TEXT USING id::text;
