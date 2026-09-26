@@ -24,6 +24,9 @@ await pool.query(`DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agencies' AND column_name='phone_number_id' AND data_type='integer') THEN
     ALTER TABLE agencies ALTER COLUMN phone_number_id TYPE TEXT USING phone_number_id::text;
   END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='agencies' AND column_name='created_at' AND data_type LIKE 'timestamp%') THEN
+    ALTER TABLE agencies ALTER COLUMN created_at TYPE BIGINT USING (EXTRACT(EPOCH FROM created_at)*1000)::bigint;
+  END IF;
 END $$`);
 await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS waba_id TEXT`);
 await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS phone_number_id TEXT`);
