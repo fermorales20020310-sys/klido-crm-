@@ -1,113 +1,56 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO GOLD</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO GOLD CRM</title>
 <style>
-:root{--bg:#111;--panel:#1c1c1e;--gold:#d4af37;--tx:#fff;--mu:#8e8e93}
-body.light{--bg:#f2f2f7;--panel:#fff;--tx:#111;--mu:#666}
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,system-ui}
-body{background:var(--bg);color:var(--tx);height:100vh}
-#login{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:99}
-.lbox{background:var(--panel);border:1px solid var(--gold);border-radius:16px;padding:32px;width:330px;text-align:center}
-.lbox img{width:110px;height:110px;object-fit:contain;margin-bottom:12px;border-radius:12px}
-.lbox input,.lbox select{width:100%;padding:11px;margin:7px 0;border-radius:10px;border:1px solid #333;background:var(--bg);color:var(--tx)}
-.btn{background:var(--gold);color:#000;border:0;padding:11px;border-radius:10px;font-weight:700;cursor:pointer;width:100%}
-#app{display:none;height:100vh}
-.side{width:330px;background:var(--panel);border-right:1px solid var(--gold);display:flex;flex-direction:column}
-.sh{padding:14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #333}
-.sh img{width:42px;height:42px;object-fit:contain;border-radius:10px;background:#000}
-.clist{flex:1;overflow-y:auto}
-.chat{padding:12px 14px;border-bottom:1px solid #262626;display:flex;gap:10px;align-items:center;cursor:pointer}
-.chat.act{background:#2c2c2e}
-.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.ci{flex:1;overflow:hidden}.ci b{font-size:14px;display:block}.ci span{font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-.main{flex:1;display:flex;flex-direction:column}
-.mh{padding:14px 18px;background:var(--panel);border-bottom:1px solid var(--gold)}
+:root{--bg:#0a1931;--bg2:#10254d;--panel:#0f2347;--acc:#4da6ff;--acc2:#1e90ff;--tx:#fff;--mu:#8aa0c2}
+body.light{--bg:#e8f1ff;--bg2:#d0e4ff;--panel:#ffffff;--tx:#0a1931;--mu:#5a6d8a}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}body{background:var(--bg);color:var(--tx);height:100vh}
+#login{position:fixed;inset:0;background:#071224;display:flex;align-items:center;justify-content:center;z-index:99}
+.lbox{background:var(--panel);border:2px solid var(--acc);border-radius:18px;padding:32px;width:340px;text-align:center}
+.lbox img{width:120px;height:120px;object-fit:contain;margin-bottom:10px}
+.lbox input{width:100%;padding:11px;margin:7px 0;border-radius:10px;border:1px solid var(--acc);background:var(--bg);color:var(--tx)}
+.btn{background:var(--acc2);color:#fff;border:0;padding:11px;border-radius:10px;font-weight:700;cursor:pointer;width:100%}
+#app{display:none;height:100vh}.side{width:340px;background:var(--panel);border-right:2px solid var(--acc);display:flex;flex-direction:column}
+.sh{padding:14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--acc)}
+.sh img{width:44px;height:44px;object-fit:contain;border-radius:10px;background:#fff}
+.clist{flex:1;overflow-y:auto}.chat{padding:12px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #1e3a6e;cursor:pointer}
+.chat.act{background:var(--bg2)}.dot{width:11px;height:11px;border-radius:50%}
+.tag{font-size:10px;background:var(--acc);color:#fff;padding:2px 8px;border-radius:10px;margin-left:6px}
+.main{flex:1;display:flex;flex-direction:column}.mh{padding:14px;background:var(--panel);border-bottom:2px solid var(--acc);display:flex;justify-content:space-between;align-items:center}
 #msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:8px}
-.m{max-width:72%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.4}
-.m.in{background:#2c2c2e;align-self:flex-start}
-.m.out{background:var(--gold);color:#000;align-self:flex-end}
-.m img{max-width:240px;border-radius:10px;display:block}
-.bar{padding:12px;background:var(--panel);display:flex;gap:10px}
-.bar input{flex:1;padding:12px;border-radius:22px;border:1px solid #333;background:var(--bg);color:var(--tx)}
-.tb{display:flex;gap:8px;padding:10px;border-bottom:1px solid #333}
-.tb button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;font-size:12px}
-.hid{display:none!important}
-.pad{padding:14px}
-</style>
-</head>
-<body>
-<div id="login"><div class="lbox">
-<img src="logo.png" alt="KLIDO">
-<h2 style="color:var(--gold);margin-bottom:10px">KLIDO GOLD</h2>
-<input id="a" placeholder="agencia: tu_empresa">
-<select id="r"><option value="jefe">Jefe</option><option value="trabajador">Trabajador</option></select>
-<input id="p" type="password" placeholder="contraseña">
-<button class="btn" onclick="login()">Entrar</button>
-</div></div>
-
-<div id="app" style="display:none">
-<div class="side">
-<div class="sh"><img src="logo.png"><b style="color:var(--gold)">KLIDO GOLD</b><button onclick="document.body.classList.toggle('light')" style="margin-left:auto;background:none;border:0;font-size:18px;cursor:pointer">🌓</button></div>
-<div class="tb"><button onclick="sec('c')">Chats</button><button onclick="sec('p')">Campañas</button><button onclick="sec('h')">Historial</button></div>
+.m{max-width:72%;padding:10px 13px;border-radius:14px;font-size:14px}.m.in{background:#1e3a6e;color:#fff;align-self:flex-start;border-left:4px solid transparent}
+.m.in.camp{border-left-color:#ffdd00;background:#2a2a00}.m.out{background:var(--acc2);color:#fff;align-self:flex-end}
+.m img{max-width:240px;border-radius:10px}.bar{padding:12px;background:var(--panel);display:flex;gap:10px}
+.bar input{flex:1;padding:12px;border-radius:22px;border:1px solid var(--acc);background:var(--bg);color:var(--tx)}
+.tb{display:flex;gap:6px;padding:10px;flex-wrap:wrap}.tb button{padding:7px 10px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--acc);cursor:pointer;font-size:12px}
+.hid{display:none!important}.pad{padding:14px}select,input[type=file]{width:100%;margin:6px 0}
+</style></head><body>
+<div id="login"><div class="lbox"><img src="logo.png"><h2 style="color:var(--acc)">KLIDO GOLD</h2>
+<input id="ag" placeholder="agencia"><input id="us" placeholder="usuario"><input id="pw" type="password" placeholder="contraseña"><button class="btn" onclick="login()">Entrar CRM</button></div></div>
+<div id="app"><div class="side"><div class="sh"><img src="logo.png"><b>KLIDO GOLD</b><button onclick="document.body.classList.toggle('light')" style="margin-left:auto;background:none;border:0;font-size:18px;cursor:pointer">🌓</button></div>
+<div class="tb"><button onclick="fTag('')">Todos</button><button onclick="fTag('nuevo')">Nuevos</button><button onclick="fTag('interesado')">Interesados</button><button onclick="fTag('cliente')">Clientes</button><button onclick="sec('c')">Chats</button><button onclick="sec('p')">Campañas</button></div>
 <div id="s-c" class="clist"></div>
-<div id="s-p" class="clist hid"><div class="pad">
-<input id="ct" placeholder="hello_world" style="width:100%;padding:9px;margin-bottom:8px;border-radius:8px;border:1px solid #333;background:var(--bg);color:var(--tx)">
-<input type="file" id="cf" accept=".csv,.txt"><button class="btn" style="margin-top:8px" onclick="mkCamp()">Crear</button><div id="cl"></div>
-</div></div>
-<div id="s-h" class="clist hid"><div class="pad" id="hl"></div></div>
-</div>
-<div class="main">
-<div class="mh"><b id="cn">Selecciona un chat</b></div>
-<div id="msgs"></div>
-<div class="bar"><input id="mi" placeholder="Escribe..." onkeydown="if(event.key==='Enter')send()"><button class="btn" style="width:90px" onclick="send()">Enviar</button></div>
-</div>
-</div>
+<div id="s-p" class="clist hid"><div class="pad"><h4>Campaña masiva (50 cada 6h)</h4><select id="tpl"></select><input type="file" id="ex" accept=".xlsx,.csv"><button class="btn" onclick="upCamp()">Subir y encolar envío</button><div id="cl"></div></div></div>
+</div><div class="main"><div class="mh"><b id="cn">Chat</b><select id="tagSel" onchange="setTag()"><option value="nuevo">nuevo</option><option value="interesado">interesado</option><option value="cliente">cliente</option><option value="descartado">descartado</option></select></div><div id="msgs"></div><div class="bar"><input id="mi" placeholder="Escribe..." onkeydown="if(event.key==='Enter')send()"><button class="btn" style="width:90px" onclick="send()">Enviar</button></div></div></div>
 <audio id="nt" src="https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3"></audio>
 <script>
-let AG='',RO='',WA=null,lastN=0;
-function login(){
-AG=document.getElementById('a').value.trim()||'tu_empresa';RO=document.getElementById('r').value;
-let ps=document.getElementById('p').value;
-if(RO==='jefe'&&ps!=='klido123')return alert('clave jefe mal');
-if(RO==='trabajador'&&ps!=='worker123')return alert('clave worker mal');
-document.getElementById('login').style.display='none';document.getElementById('app').style.display='flex';
-loadC();setInterval(loadC,5000);loadCamp();
-}
-function sec(x){['c','p','h'].forEach(k=>document.getElementById('s-'+k).classList.add('hid'));document.getElementById('s-'+x).classList.remove('hid');if(x==='h')loadH();if(x==='p')loadCamp();}
-async function loadC(){
-let r=await fetch('/api/chats?agency_id='+AG);let cs=await r.json();
-let el=document.getElementById('s-c');el.innerHTML='';
-cs.forEach(c=>{let d=document.createElement('div');d.className='chat'+(c.wa_id===WA?' act':'');
-let dot=c.dot||(c.unread?'red':'transparent');
-let prev=c.last_type==='image'?'📷 Imagen':c.last_type==='audio'?'🎤 Audio':c.last_type==='video'?'🎥 Video':(c.lastMessage||'');
-d.innerHTML=`<div class="dot" style="background:${dot}"></div><div class="ci"><b>${c.name||c.wa_id}</b><span>${prev}</span></div>`;
-d.onclick=()=>openC(c.wa_id,c.name);el.appendChild(d);});
-}
-async function openC(wa,nm){WA=wa;document.getElementById('cn').textContent=nm||wa;await fetch('/api/chats/'+wa+'/read?agency_id='+AG,{method:'POST'});loadM();loadC();}
-async function loadM(){
-if(!WA)return;let r=await fetch('/api/messages/'+WA+'?agency_id='+AG);let ms=await r.json();
-let el=document.getElementById('msgs');el.innerHTML='';
-ms.forEach(m=>{let d=document.createElement('div');d.className='m '+(m.direction==='in'?'in':'out');let h='';
-if(m.media_type==='image'&&m.media_url)h=`<img src="/api/media?mid=${m.media_url}">`;
-else if(m.media_type==='audio'&&m.media_url)h=`<audio controls src="/api/media?mid=${m.media_url}" style="width:220px"></audio>`;
-else if(m.media_type==='video'&&m.media_url)h=`<video controls src="/api/media?mid=${m.media_url}" style="max-width:240px;border-radius:10px"></video>`;
-else h=(m.text||'').replace(/</g,'&lt;');
-if(m.is_campaign)h='📢 '+h;d.innerHTML=h;el.appendChild(d);});
-el.scrollTop=el.scrollHeight;
-if(ms.length>lastN&&lastN>0)document.getElementById('nt').play().catch(()=>{});lastN=ms.length;
-}
-async function send(){let i=document.getElementById('mi');let t=i.value.trim();if(!t||!WA)return;
-await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:WA,text:t,agency_id:AG})});i.value='';loadM();loadC();}
-async function mkCamp(){let tpl=document.getElementById('ct').value||'hello_world';let f=document.getElementById('cf').files[0];if(!f)return alert('sube csv');
-let txt=await f.text();let phones=txt.split(/[\n,;]+/).map(s=>s.trim()).filter(s=>s.length>7);
-let r=await fetch('/api/campaigns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AG,template:tpl,phones})});
-let j=await r.json();alert('Creada '+j.total);loadCamp();}
-async function loadCamp(){let r=await fetch('/api/campaigns?agency_id='+AG);let l=await r.json();
-document.getElementById('cl').innerHTML=l.map(c=>`<div style="border:1px solid #333;padding:8px;border-radius:8px;margin-top:8px;font-size:13px"><b>#${c.id}</b> ${c.template} | ${c.total} | ${c.status}</div>`).join('');}
-async function loadH(){let r=await fetch('/api/campaigns?agency_id='+AG);let l=await r.json();
-document.getElementById('hl').innerHTML=l.map(c=>`<div style="padding:8px;border-bottom:1px solid #333;font-size:13px">#${c.id} ${c.template} - ${new Date(c.created_at).toLocaleString()}</div>`).join('');}
+let AG='',WA=null,curTag='',lastN=0;
+async function login(){AG=ag.value.trim();let u=us.value.trim(),p=pw.value;
+let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AG,username:u,password:p})});
+if(!r.ok)return alert('login mal');loginOk();}
+function loginOk(){login.style.display='none';app.style.display='flex';loadC();loadTpl();setInterval(loadC,5000)}
+function sec(x){document.getElementById('s-c').classList.toggle('hid',x!=='c');document.getElementById('s-p').classList.toggle('hid',x!=='p');if(x==='p')loadCamp()}
+function fTag(t){curTag=t;loadC()}
+async function loadC(){let r=await fetch(`/api/chats?agency_id=${AG}&tag=${curTag}`);let cs=await r.json();let el=document.getElementById('s-c');el.innerHTML='';
+cs.forEach(c=>{let d=document.createElement('div');d.className='chat'+(c.wa_id===WA?' act':'');d.innerHTML=`<div class="dot" style="background:${c.dot||'transparent'}"></div><div style="flex:1"><b style="font-size:13px">${c.name||c.wa_id}</b><span class="tag">${c.tag}</span><div style="font-size:12px;color:var(--mu)">${c.last_type==='image'?'📷 Imagen':c.last_type==='audio'?'🎤 Audio':(c.lastMessage||'')}</div></div>`;d.onclick=()=>openC(c.wa_id,c.name);el.appendChild(d)})}
+async function openC(wa,n){WA=wa;cn.textContent=n||wa;await fetch(`/api/chats/${wa}/read?agency_id=${AG}`,{method:'POST'});loadM();loadC()}
+async function loadM(){if(!WA)return;let r=await fetch(`/api/messages/${WA}?agency_id=${AG}`);let ms=await r.json();let el=msgs;el.innerHTML='';
+ms.forEach(m=>{let d=document.createElement('div');d.className='m '+(m.direction==='in'?'in':'out')+(m.is_campaign&&m.direction==='in'?' camp':'');let h='';
+if(m.media_type==='image'&&m.media_url)h=`<img src="/api/media?mid=${m.media_url}">`;else if(m.media_type==='audio'&&m.media_url)h=`<audio controls src="/api/media?mid=${m.media_url}" style="width:210px"></audio>`;else h=(m.text||'').replace(/</g,'&lt;');
+if(m.is_campaign)h='🟡 '+h;d.innerHTML=h;el.appendChild(d)});el.scrollTop=el.scrollHeight;
+if(ms.length>lastN&&lastN>0)nt.play().catch(()=>{});lastN=ms.length}
+async function send(){let t=mi.value.trim();if(!t||!WA)return;await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:WA,text:t,agency_id:AG})});mi.value='';loadM()}
+async function setTag(){await fetch(`/api/chats/${WA}/tag`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AG})});loadC()}
+async function loadTpl(){let r=await fetch(`/api/templates?agency_id=${AG}`);let l=await r.json();tpl.innerHTML=l.map(t=>`<option>${t.name}</option>`).join('')}
+async function upCamp(){let f=ex.files[0];if(!f)return alert('sube excel');let rd=new FileReader();rd.onload=async()=>{let r=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AG,template:tpl.value,fileBase64:rd.result})});let j=await r.json();alert('Encolados '+j.total+' - se envían 50 cada 6h');loadCamp()};rd.readAsDataURL(f)}
+async function loadCamp(){let r=await fetch(`/api/campaigns?agency_id=${AG}`);let l=await r.json();cl.innerHTML=l.map(c=>`<div style="border:1px solid var(--acc);padding:8px;border-radius:8px;margin-top:8px;font-size:13px">#${c.id} ${c.template} ${c.sent}/${c.total} ${c.status}</div>`).join('')}
 setInterval(()=>{if(WA)loadM()},4000);
-</script>
-</body></html>
+</script></body></html>
