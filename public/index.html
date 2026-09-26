@@ -56,7 +56,6 @@ body.light.search input{color:#111}
 <img src="logo.png" style="width:48px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'"><h3>KLIDO CRM Pro</h3>
 <input id="ag" placeholder="agencia id (ej: acol)"><input id="us" placeholder="usuario"><input id="pw" type="password" placeholder="clave">
 <button onclick="doLogin()">Entrar</button></div></div>
-
 <div class="sidebar">
 <div class="brand"><img src="logo.png" onerror="this.style.display='none'"><div><b>KLIDO CRM Pro</b><span class="pro">Pro Plan</span></div></div>
 <button onclick="document.body.classList.toggle('light')" style="margin:6px 0;padding:8px;border-radius:8px;border:1px solid #2f7bff;background:transparent;color:inherit;cursor:pointer">🌙 / ☀️ Tema</button>
@@ -70,13 +69,11 @@ body.light.search input{color:#111}
 <div class="item" onclick="show('settings')">⚙️ Settings</div>
 <div class="trial">Trial - 12 days left<br><button>Upgrade now</button></div>
 </div>
-
 <div class="inbox" id="panel-inbox">
 <div class="inbox-h">Inbox <span>⋮ ＋</span></div>
 <div class="search">🔍<input id="q" placeholder="Search conversations..." oninput="filter()"></div>
 <div id="chatList"></div>
 </div>
-
 <div class="inbox" id="panel-campaigns" style="display:none">
 <div class="inbox-h">Campaigns</div><div style="padding:14px">
 <label style="font-size:12px">Plantilla aprobada:</label>
@@ -85,7 +82,6 @@ body.light.search input{color:#111}
 <button onclick="uploadCamp()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer">Subir Excel y Enviar</button>
 <div id="camps" style="margin-top:12px;font-size:13px"></div>
 </div></div>
-
 <div class="inbox" id="panel-settings" style="display:none">
 <div class="inbox-h">Settings / Ayuda</div>
 <div style="padding:16px;font-size:13px;line-height:1.6;overflow-y:auto">
@@ -94,13 +90,11 @@ body.light.search input{color:#111}
 <b>¿Dónde ver historial de campañas?</b><br>En Campaigns abajo: 📣 nombre - enviados/total. Se envían 50 cada 6 horas automáticamente.<br><br>
 <b>Puntos de colores</b><br>🔴 Nuevo sin responder • 🟡 Respondió a campaña • Sin color = leído.
 </div></div>
-
 <div class="main">
-<div class="chat-h"><div class="av" id="hAv">SN</div><div><b id="hName">Selecciona un chat</b><div style="font-size:12px;color:#7a8bb0" id="hSub">Online • WhatsApp</div></div></div>
+<div class="chat-h"><div class="av" id="hAv">SN</div><div><b id="hName">Selecciona un chat</b><div style="font-size:12px;color:#7a8bb0">Online • WhatsApp</div></div></div>
 <div id="msgs"></div>
 <div class="inputbar"><input id="txt" placeholder="Type a message..." onkeydown="if(event.key==='Enter')send()"><button class="send" onclick="send()">➤</button></div>
 </div>
-
 <div class="profile"><h4>Customer Profile <span style="float:right">✕</span></h4>
 <div style="text-align:center;margin:16px 0"><div class="av" style="width:56px;height:56px;margin:auto" id="pAv">SN</div><b id="pName">-</b><div style="font-size:12px;color:#7a8bb0">Customer • WhatsApp</div></div>
 <div><span class="tag" style="background:#5a3d8a">VIP</span><span class="tag" style="background:#8a3d2e">Hot Lead</span><span class="tag">E-commerce</span></div>
@@ -109,31 +103,27 @@ body.light.search input{color:#111}
 <button style="padding:8px 12px;border-radius:8px;border:0;background:#2f7bff;color:#fff;margin-left:6px">Edit profile</button></div>
 <div style="margin-top:12px"><label style="font-size:12px">Tag:</label> <select id="tagSel" onchange="setTag()"><option value="nuevo">nuevo</option><option value="interesado">interesado</option><option value="cliente">cliente</option><option value="no-interesado">no interesado</option></select></div>
 </div>
-
 <script>
 let AGENCY='',CUR='';
 async function doLogin(){
- AGENCY=ag.value.trim(); let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value})});
- if(!r.ok){alert('Login malo');return;} login.style.display='none'; loadChats(); loadTpl(); setInterval(loadChats,5000);
-}
+AGENCY=ag.value.trim();let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value})});
+if(!r.ok){alert('Login malo');return;}login.style.display='none';loadChats();loadTpl();setInterval(loadChats,5000);}
 async function loadChats(){
- let r=await fetch('/api/chats?agency_id='+AGENCY); let j=await r.json(); window._chats=j;
- chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();
- return `<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;}).join('');
-}
+let r=await fetch('/api/chats?agency_id='+AGENCY);let j=await r.json();window._chats=j;
+chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();
+return `<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;}).join('');}
 function filter(){let q=document.getElementById('q').value.toLowerCase();document.querySelectorAll('.chat').forEach(el=>{el.style.display=el.innerText.toLowerCase().includes(q)?'flex':'none';});}
 async function openChat(wa){
- CUR=wa; let c=window._chats.find(x=>x.wa_id===wa);
- hName.textContent=c.name||wa; pName.textContent=c.name||wa;
- hAv.textContent=(c.name||wa).substring(0,2).toUpperCase(); pAv.textContent=hAv.textContent;
- pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}`; tagSel.value=c.tag||'nuevo';
- await fetch('/api/chats/'+wa+'/read?agency_id='+AGENCY,{method:'POST'});
- let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY); let m=await r.json();
- msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');
- msgs.scrollTop=99999; loadChats();
-}
+CUR=wa;let c=window._chats.find(x=>x.wa_id===wa);
+hName.textContent=c.name||wa;pName.textContent=c.name||wa;
+hAv.textContent=(c.name||wa).substring(0,2).toUpperCase();pAv.textContent=hAv.textContent;
+pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}`;tagSel.value=c.tag||'nuevo';
+await fetch('/api/chats/'+wa+'/read?agency_id='+AGENCY,{method:'POST'});
+let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY);let m=await r.json();
+msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');
+msgs.scrollTop=99999;loadChats();}
 async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';
- await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})});openChat(CUR);}
+await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})});openChat(CUR);}
 async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})});}
 function show(p){['inbox','campaigns','settings'].forEach(x=>{let el=document.getElementById('panel-'+x);if(el)el.style.display=x===p?'flex':'none';});document.querySelectorAll('.sidebar.item').forEach(i=>i.classList.remove('active'));event.target.classList.add('active');}
 async function loadTpl(){let r=await fetch('/api/templates?agency_id='+AGENCY);let j=await r.json();tpl.innerHTML=j.map(t=>`<option>${t.name}</option>`).join('');let c=await (await fetch('/api/campaigns?agency_id='+AGENCY)).json();camps.innerHTML=c.map(x=>`<div>📣 ${x.template} - ${x.sent}/${x.total} (${x.status})</div>`).join('');}
