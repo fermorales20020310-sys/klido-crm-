@@ -7,9 +7,9 @@
 *{box-sizing:border-box;margin:0;font-family:Inter,system-ui}
 body{background:#0a0f1e;color:#e8eefc;height:100vh;display:flex;overflow:hidden}
 .sidebar{width:210px;background:#0d1428;border-right:1px solid #1e2a4a;padding:14px;display:flex;flex-direction:column}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .brand img{width:32px;height:32px;border-radius:8px}
-.brand b{font-size:16px}.pro{background:#2f7bff;font-size:10px;padding:3px 8px;border-radius:20px;margin-left:6px}
+.brand b{font-size:15px}.pro{background:#2f7bff;font-size:10px;padding:3px 8px;border-radius:20px;margin-left:6px}
 .menu{font-size:11px;color:#7a8bb0;margin:10px 0 6px}
 .item{padding:10px 12px;border-radius:10px;color:#aebbdd;cursor:pointer;display:flex;gap:10px;align-items:center;margin:2px 0}
 .item.active,.item:hover{background:#2f7bff;color:#fff}
@@ -42,23 +42,32 @@ body{background:#0a0f1e;color:#e8eefc;height:100vh;display:flex;overflow:hidden}
 .card input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #24365f;background:#131f3d;color:#fff}
 .card button{width:100%;padding:11px;background:#2f7bff;border:0;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
 select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;padding:6px}
+body.light{background:#f2f4f9;color:#1a2338}
+body.light.sidebar,body.light.inbox,body.light.profile{background:#fff;border-color:#e2e8f5}
+body.light.item{color:#4a5a7a}
+body.light.in{background:#e9eefc;color:#111}
+body.light.search,body.light.inputbar input{background:#eef2fb;color:#111}
+body.light.main{background:#f7f9fd}
+body.light.search input{color:#111}
 </style>
 </head>
 <body>
 <div id="login"><div class="card" style="text-align:center">
-<img src="logo.png" style="width:48px;border-radius:12px;margin-bottom:10px"><h3>KLIDO CRM Pro</h3>
+<img src="logo.png" style="width:48px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'"><h3>KLIDO CRM Pro</h3>
 <input id="ag" placeholder="agencia id (ej: acol)"><input id="us" placeholder="usuario"><input id="pw" type="password" placeholder="clave">
 <button onclick="doLogin()">Entrar</button></div></div>
 
 <div class="sidebar">
 <div class="brand"><img src="logo.png" onerror="this.style.display='none'"><div><b>KLIDO CRM Pro</b><span class="pro">Pro Plan</span></div></div>
+<button onclick="document.body.classList.toggle('light')" style="margin:6px 0;padding:8px;border-radius:8px;border:1px solid #2f7bff;background:transparent;color:inherit;cursor:pointer">🌙 / ☀️ Tema</button>
 <div class="menu">MENU</div>
 <div class="item active" onclick="show('inbox')">📥 Inbox</div>
-<div class="item" onclick="show('contacts')">👥 Contacts</div>
+<div class="item" onclick="show('inbox')">👥 Contacts</div>
 <div class="item" onclick="show('campaigns')">📣 Campaigns</div>
-<div class="item" onclick="show('templates')">📄 Templates</div>
+<div class="item" onclick="show('inbox')">📄 Templates</div>
 <div class="menu">SUPPORT</div>
-<div class="item">💡 Help Center</div><div class="item">⚙️ Settings</div>
+<div class="item" onclick="window.open('https://wa.me/573226536669?text=Hola%20necesito%20soporte%20de%20KLIDO%20CRM','_blank')">💡 Help Center</div>
+<div class="item" onclick="show('settings')">⚙️ Settings</div>
 <div class="trial">Trial - 12 days left<br><button>Upgrade now</button></div>
 </div>
 
@@ -70,11 +79,21 @@ select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;
 
 <div class="inbox" id="panel-campaigns" style="display:none">
 <div class="inbox-h">Campaigns</div><div style="padding:14px">
-<select id="tpl" style="width:100%;margin-bottom:10px"></select>
-<input type="file" id="file" accept=".xlsx,.csv" style="color:#fff;margin-bottom:10px">
-<button onclick="uploadCamp()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff">Subir y Enviar</button>
-<div id="camps" style="margin-top:12px;font-size:13px"></div></div>
-</div>
+<label style="font-size:12px">Plantilla aprobada:</label>
+<select id="tpl" style="width:100%;margin:8px 0 10px"></select>
+<input type="file" id="file" accept=".xlsx,.csv" style="color:inherit;margin-bottom:10px;font-size:12px">
+<button onclick="uploadCamp()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer">Subir Excel y Enviar</button>
+<div id="camps" style="margin-top:12px;font-size:13px"></div>
+</div></div>
+
+<div class="inbox" id="panel-settings" style="display:none">
+<div class="inbox-h">Settings / Ayuda</div>
+<div style="padding:16px;font-size:13px;line-height:1.6;overflow-y:auto">
+<b>¿Cómo subir un Excel?</b><br>Ve a Campaigns → elige plantilla → Seleccionar archivo (.xlsx) → Subir Excel y Enviar. Primera columna: números con código país (573...).<br><br>
+<b>¿Cómo saber si la plantilla cargó?</b><br>En Campaigns el desplegable solo muestra plantillas APROBADAS. Si no aparece, verifica en Meta Business → Plantillas que esté Approved y en idioma es.<br><br>
+<b>¿Dónde ver historial de campañas?</b><br>En Campaigns abajo: 📣 nombre - enviados/total. Se envían 50 cada 6 horas automáticamente.<br><br>
+<b>Puntos de colores</b><br>🔴 Nuevo sin responder • 🟡 Respondió a campaña • Sin color = leído.
+</div></div>
 
 <div class="main">
 <div class="chat-h"><div class="av" id="hAv">SN</div><div><b id="hName">Selecciona un chat</b><div style="font-size:12px;color:#7a8bb0" id="hSub">Online • WhatsApp</div></div></div>
@@ -82,28 +101,27 @@ select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;
 <div class="inputbar"><input id="txt" placeholder="Type a message..." onkeydown="if(event.key==='Enter')send()"><button class="send" onclick="send()">➤</button></div>
 </div>
 
-<div class="profile"><h4>Customer Profile <span style="float:right;cursor:pointer">✕</span></h4>
+<div class="profile"><h4>Customer Profile <span style="float:right">✕</span></h4>
 <div style="text-align:center;margin:16px 0"><div class="av" style="width:56px;height:56px;margin:auto" id="pAv">SN</div><b id="pName">-</b><div style="font-size:12px;color:#7a8bb0">Customer • WhatsApp</div></div>
 <div><span class="tag" style="background:#5a3d8a">VIP</span><span class="tag" style="background:#8a3d2e">Hot Lead</span><span class="tag">E-commerce</span></div>
-<div style="margin-top:14px;font-size:13px;color:#aebbdd" id="pDetails">Details</div>
-<div style="margin-top:12px"><button style="padding:8px 12px;border-radius:8px;border:1px solid #2f7bff;background:transparent;color:#fff">Add note</button>
+<div style="margin-top:14px;font-size:13px" id="pDetails">Details</div>
+<div style="margin-top:12px"><button style="padding:8px 12px;border-radius:8px;border:1px solid #2f7bff;background:transparent;color:inherit">Add note</button>
 <button style="padding:8px 12px;border-radius:8px;border:0;background:#2f7bff;color:#fff;margin-left:6px">Edit profile</button></div>
 <div style="margin-top:12px"><label style="font-size:12px">Tag:</label> <select id="tagSel" onchange="setTag()"><option value="nuevo">nuevo</option><option value="interesado">interesado</option><option value="cliente">cliente</option><option value="no-interesado">no interesado</option></select></div>
 </div>
 
 <script>
-let AGENCY='', CUR='';
+let AGENCY='',CUR='';
 async function doLogin(){
  AGENCY=ag.value.trim(); let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value})});
  if(!r.ok){alert('Login malo');return;} login.style.display='none'; loadChats(); loadTpl(); setInterval(loadChats,5000);
 }
 async function loadChats(){
  let r=await fetch('/api/chats?agency_id='+AGENCY); let j=await r.json(); window._chats=j;
- let h=''; j.forEach(c=>{ let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();
- h+=`<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;});
- chatList.innerHTML=h;
+ chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();
+ return `<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;}).join('');
 }
-function filter(){ let q=document.getElementById('q').value.toLowerCase(); document.querySelectorAll('.chat').forEach(el=>{ el.style.display=el.innerText.toLowerCase().includes(q)?'flex':'none'; }); }
+function filter(){let q=document.getElementById('q').value.toLowerCase();document.querySelectorAll('.chat').forEach(el=>{el.style.display=el.innerText.toLowerCase().includes(q)?'flex':'none';});}
 async function openChat(wa){
  CUR=wa; let c=window._chats.find(x=>x.wa_id===wa);
  hName.textContent=c.name||wa; pName.textContent=c.name||wa;
@@ -111,15 +129,14 @@ async function openChat(wa){
  pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}`; tagSel.value=c.tag||'nuevo';
  await fetch('/api/chats/'+wa+'/read?agency_id='+AGENCY,{method:'POST'});
  let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY); let m=await r.json();
- msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:#fff">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');
+ msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');
  msgs.scrollTop=99999; loadChats();
 }
-async function send(){ let t=txt.value.trim(); if(!t||!CUR) return; txt.value='';
- await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})}); openChat(CUR);
-}
-async function setTag(){ await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})}); }
-function show(p){ ['inbox','campaigns'].forEach(x=>document.getElementById('panel-'+x).style.display=x===p?'flex':'none'); document.querySelectorAll('.sidebar.item').forEach(i=>i.classList.remove('active')); event.target.classList.add('active'); }
-async function loadTpl(){ let r=await fetch('/api/templates?agency_id='+AGENCY); let j=await r.json(); tpl.innerHTML=j.map(t=>`<option>${t.name}</option>`).join(''); let c=await (await fetch('/api/campaigns?agency_id='+AGENCY)).json(); camps.innerHTML=c.map(x=>`<div>📣 ${x.template} - ${x.sent}/${x.total}</div>`).join(''); }
-async function uploadCamp(){ let f=file.files[0]; if(!f) return alert('elige excel'); let rd=new FileReader(); rd.onload=async()=>{ let r=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,template:tpl.value,fileBase64:rd.result})}); alert(await r.text()); loadTpl(); }; rd.readAsDataURL(f); }
+async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';
+ await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})});openChat(CUR);}
+async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})});}
+function show(p){['inbox','campaigns','settings'].forEach(x=>{let el=document.getElementById('panel-'+x);if(el)el.style.display=x===p?'flex':'none';});document.querySelectorAll('.sidebar.item').forEach(i=>i.classList.remove('active'));event.target.classList.add('active');}
+async function loadTpl(){let r=await fetch('/api/templates?agency_id='+AGENCY);let j=await r.json();tpl.innerHTML=j.map(t=>`<option>${t.name}</option>`).join('');let c=await (await fetch('/api/campaigns?agency_id='+AGENCY)).json();camps.innerHTML=c.map(x=>`<div>📣 ${x.template} - ${x.sent}/${x.total} (${x.status})</div>`).join('');}
+async function uploadCamp(){let f=file.files[0];if(!f)return alert('elige excel');let rd=new FileReader();rd.onload=async()=>{let r=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,template:tpl.value,fileBase64:rd.result})});alert(await r.text());loadTpl();};rd.readAsDataURL(f);}
 </script>
 </body></html>
