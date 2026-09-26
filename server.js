@@ -26,8 +26,14 @@ await pool.query(`CREATE TABLE IF NOT EXISTS messages(id SERIAL PRIMARY KEY,wa_i
 await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY,agency_id TEXT,template TEXT,total INT DEFAULT 0,sent INT DEFAULT 0,status TEXT DEFAULT 'programada',created_at BIGINT)`);
 await pool.query(`CREATE TABLE IF NOT EXISTS campaign_queue(id SERIAL PRIMARY KEY,campaign_id INT,agency_id TEXT,wa_id TEXT,template TEXT,status TEXT DEFAULT 'queued',created_at BIGINT)`);
 await pool.query(`CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,agency_id TEXT,username TEXT,password_hash TEXT,role TEXT DEFAULT 'trabajador',UNIQUE(agency_id,username))`);
+
 const m=getAgencyMap();const now=Date.now();const ids=new Set(Object.values(m));if(process.env.DEFAULT_AGENCY)ids.add(process.env.DEFAULT_AGENCY);
-for(let aid of ids){const pid=Object.keys(m).find(k=>m[k]===aid)||null;await pool.query(`INSERT INTO agencies(id,name,phone_number_id,created_at) VALUES($1,$1,$2,$3) ON CONFLICT(id) DO NOTHING`,[aid,pid,now]);}
+for(let aid of ids){
+  const pidRaw=Object.keys(m).find(k=>m[k]===aid)||null;
+  const pid=pidRaw? String(pidRaw) : null;
+  const aidStr=String(aid);
+  await pool.query(`INSERT INTO agencies(id,name,phone_number_id,created_at) VALUES($1::text,$1::text,$2::text,$3::bigint) ON CONFLICT(id) DO NOTHING`,[aidStr,pid,now]);
+}
 try{const au=process.env.ADMIN_USER;const aa=process.env.ADMIN_AGENCY||process.env.DEFAULT_AGENCY||'acol';let h=process.env.ADMIN_PASSWORD_HASH;const pl=process.env.ADMIN_PASSWORD||process.env.ADMIN_PASS;if(au&&!h&&pl)h=bcrypt.hashSync(pl,8);if(au&&h)await pool.query(`INSERT INTO users(agency_id,username,password_hash,role) VALUES($1,$2,$3,'jefe') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3`,[aa,au,h]);}catch(e){console.error(e.message);}
 console.log('GOLD TODO-EN-UNO');
 }
@@ -42,9 +48,9 @@ app.post('/api/super/agencies',async(req,res)=>{
 if(!isSuper(req))return res.status(403).json({error:'forbidden'});
 const{id,phone_number_id,waba_id}=req.body;if(!id||!phone_number_id)return res.status(400).json({error:'faltan datos'});
 const c=await pool.query(`SELECT COUNT(*) FROM agencies`);if(parseInt(c.rows[0].count)>=MAX_AGENCIES)return res.status(400).json({error:'limite 10'});
-const nid=id.toLowerCase().trim();
-await pool.query(`INSERT INTO agencies(id,name,phone_number_id,waba_id,created_at) VALUES($1,$1,$2,$3,$4) ON CONFLICT(id) DO UPDATE SET phone_number_id=$2, waba_id=$3`,[nid,phone_number_id,waba_id||null,Date.now()]);
-res.json({ok:true,msg:'Agrega a AGENCY_MAP: "'+phone_number_id+'":"'+nid+'" y redeploy'});
+const nid=String(id).toLowerCase().trim();
+await pool.query(`INSERT INTO agencies(id,name,phone_number_id,waba_id,created_at) VALUES($1::text,$1::text,$2::text,$3::text,$4::bigint) ON CONFLICT(id) DO UPDATE SET phone_number_id=$2::text, waba_id=$3::text`,[nid,String(phone_number_id),waba_id||null,Date.now()]);
+res.json({ok:true,msg:'Agrega a AGENCY_MAP: "'+String(phone_number_id)+'":"'+nid+'" y redeploy'});
 });
 app.post('/api/super/users',async(req,res)=>{
 if(!isSuper(req))return res.status(403).json({error:'forbidden'});
