@@ -43,12 +43,18 @@ body{background:#0a0f1e;color:#e8eefc;height:100vh;display:flex;overflow:hidden}
 .card button{width:100%;padding:11px;background:#2f7bff;border:0;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
 select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;padding:6px}
 body.light{background:#f2f4f9;color:#1a2338}
-body.light.sidebar,body.light.inbox,body.light.profile{background:#fff;border-color:#e2e8f5}
-body.light.item{color:#4a5a7a}
-body.light.in{background:#e9eefc;color:#111}
-body.light.search,body.light.inputbar input{background:#eef2fb;color:#111}
+body.light.sidebar, body.light.inbox, body.light.profile{background:#ffffff;border-color:#e2e8f5}
 body.light.main{background:#f7f9fd}
+body.light.item{color:#4a5a7a}
+body.light.item.active, body.light.item:hover{background:#2f7bff;color:#fff}
+body.light.inbox-h, body.light.chat-h{color:#1a2338}
+body.light.search, body.light.inputbar input{background:#eef2fb}
 body.light.search input{color:#111}
+body.light.chat.active{background:#e3eafc}
+body.light.in{background:#e9eefc;color:#111}
+body.light.trial{background:#eef2fb;border-color:#dbe4f5;color:#1a2338}
+body.light.card{background:#fff;border-color:#e2e8f5;color:#1a2338}
+body.light.card input{background:#f2f4f9;color:#111;border-color:#dbe4f5}
 </style>
 </head>
 <body>
@@ -60,13 +66,13 @@ body.light.search input{color:#111}
 <div class="brand"><img src="logo.png" onerror="this.style.display='none'"><div><b>KLIDO CRM Pro</b><span class="pro">Pro Plan</span></div></div>
 <button onclick="document.body.classList.toggle('light')" style="margin:6px 0;padding:8px;border-radius:8px;border:1px solid #2f7bff;background:transparent;color:inherit;cursor:pointer">🌙 / ☀️ Tema</button>
 <div class="menu">MENU</div>
-<div class="item active" onclick="show('inbox')">📥 Inbox</div>
-<div class="item" onclick="show('inbox')">👥 Contacts</div>
-<div class="item" onclick="show('campaigns')">📣 Campaigns</div>
-<div class="item" onclick="show('inbox')">📄 Templates</div>
+<div class="item active" onclick="show('inbox',this)">📥 Inbox</div>
+<div class="item" onclick="show('inbox',this)">👥 Contacts</div>
+<div class="item" onclick="show('campaigns',this)">📣 Campaigns</div>
+<div class="item" onclick="show('inbox',this)">📄 Templates</div>
 <div class="menu">SUPPORT</div>
 <div class="item" onclick="window.open('https://wa.me/573226536669?text=Hola%20necesito%20soporte%20de%20KLIDO%20CRM','_blank')">💡 Help Center</div>
-<div class="item" onclick="show('settings')">⚙️ Settings</div>
+<div class="item" onclick="show('settings',this)">⚙️ Settings</div>
 <div class="trial">Trial - 12 days left<br><button>Upgrade now</button></div>
 </div>
 <div class="inbox" id="panel-inbox">
@@ -125,7 +131,14 @@ msgs.scrollTop=99999;loadChats();}
 async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';
 await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})});openChat(CUR);}
 async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})});}
-function show(p){['inbox','campaigns','settings'].forEach(x=>{let el=document.getElementById('panel-'+x);if(el)el.style.display=x===p?'flex':'none';});document.querySelectorAll('.sidebar.item').forEach(i=>i.classList.remove('active'));event.target.classList.add('active');}
+function show(p, el){
+  ['inbox','campaigns','settings'].forEach(x=>{
+    let pnl=document.getElementById('panel-'+x);
+    if(pnl) pnl.style.display = x===p? 'flex' : 'none';
+  });
+  document.querySelectorAll('.sidebar.item').forEach(i=>i.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
 async function loadTpl(){let r=await fetch('/api/templates?agency_id='+AGENCY);let j=await r.json();tpl.innerHTML=j.map(t=>`<option>${t.name}</option>`).join('');let c=await (await fetch('/api/campaigns?agency_id='+AGENCY)).json();camps.innerHTML=c.map(x=>`<div>📣 ${x.template} - ${x.sent}/${x.total} (${x.status})</div>`).join('');}
 async function uploadCamp(){let f=file.files[0];if(!f)return alert('elige excel');let rd=new FileReader();rd.onload=async()=>{let r=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,template:tpl.value,fileBase64:rd.result})});alert(await r.text());loadTpl();};rd.readAsDataURL(f);}
 </script>
