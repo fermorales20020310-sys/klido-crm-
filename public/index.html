@@ -6,22 +6,22 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap');
-*{font-family:'Inter',sans-serif} body{background:#070b18}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap');
+*{font-family:'Inter',sans-serif}
+body{background:#070b18; transition:.2s}
+.light body{background:#eef2ff}
 .pro-card{background:#111a2e;border:1px solid #1e2f4f}
 .pro-input{background:#0e1830;border:1px solid #1e2f4f}
 .bubble-in{background:#1a2b4a;color:#dbeafe}.bubble-out{background:#2a4bff;color:white}
+.plan-card{background:#132040;border:1px solid #1e3a5f}
 </style>
 </head>
 <body class="h-screen p-2 md:p-4">
-<div class="h-full w-full max-w-[1600px] mx-auto bg-[#0d152b] rounded-[24px] border border-[#1c2e50] flex overflow-hidden">
+<div class="h-full w-full max-w-[1600px] mx-auto bg-[#0d152b] rounded-[24px] border border-[#1c2e50] flex overflow-hidden" id="mainContainer">
 
 <div id="loginView" class="absolute inset-0 z-50 flex items-center justify-center bg-[#070b18]">
   <div class="bg-[#111a2e] p-8 rounded-[20px] border border-[#1e2f4f] w-full max-w-sm">
-    <div class="flex items-center gap-3 mb-6">
-      <img src="/logo.png" class="h-10 w-10 rounded-xl bg-white p-1 object-contain">
-      <div><b class="text-white">KLIDO CRM Pro</b><div class="text-[10px] bg-blue-600 px-2 py-0.5 rounded-full inline-block text-white">Pro Plan</div></div>
-    </div>
+    <div class="flex items-center gap-3 mb-6"><img src="/logo.png" class="h-10 w-10 rounded-xl bg-white p-1 object-contain"><div><b class="text-white">KLIDO</b> <span class="text-[10px] bg-blue-600 px-2 py-0.5 rounded-full text-white ml-1">Básico</span></div></div>
     <input id="agency" placeholder="Agencia" class="w-full pro-input p-3.5 rounded-xl mb-3 text-sm text-white outline-none">
     <input id="email" placeholder="Correo" class="w-full pro-input p-3.5 rounded-xl mb-3 text-sm text-white outline-none">
     <input id="password" type="password" placeholder="Clave" class="w-full pro-input p-3.5 rounded-xl mb-4 text-sm text-white outline-none">
@@ -31,58 +31,110 @@
   </div>
 </div>
 
+<!-- SIDEBAR -->
 <div class="w-[210px] bg-[#0f1930] border-r border-[#1c2e50] flex flex-col py-5 px-3">
-  <div class="flex items-center gap-2.5 px-2 mb-8">
+  <div class="flex items-center gap-2.5 px-2 mb-3">
     <img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1 object-contain">
-    <div class="leading-none"><div class="font-bold text-[13px] text-white">KLIDO CRM Pro</div><div class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full inline-block mt-1">Pro Plan</div></div>
+    <div class="leading-none"><div class="font-black text-[13px] text-white">KLIDO</div><div class="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full inline-block">Básico</div></div>
   </div>
+  <button onclick="toggleTheme()" class="mx-2 mb-5 flex items-center justify-center gap-2 border border-[#1e3a5f] rounded-xl py-2 text-xs text-[#94a3b8]"><span>🌙 / ☀️</span> Tema</button>
   <div class="text-[10px] text-[#475569] uppercase tracking-widest px-3 mb-2">Menu</div>
   <nav class="space-y-1">
-    <button id="btnInbox" onclick="loadChats()" class="w-full bg-[#2a4bff] text-white flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium"><i class="fa-solid fa-inbox w-4"></i>Inbox</button>
-    <button id="btnContacts" onclick="showContacts()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-regular fa-user w-4"></i>Contacts</button>
+    <button id="btnInbox" onclick="loadChats()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-inbox w-4"></i>Inbox</button>
     <button id="btnCampaigns" onclick="showCampaigns()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-bullhorn w-4"></i>Campaigns</button>
-    <button id="btnAuto" onclick="showAiConfig()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-bolt w-4"></i>Automation</button>
-    <button id="btnAnalytics" onclick="showAnalytics()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-chart-simple w-4"></i>Analytics</button>
-    <button id="btnTemplates" onclick="showTemplates()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-regular fa-file w-4"></i>Templates</button>
-  </nav>
-  <div class="mt-8 text-[10px] text-[#475569] uppercase tracking-widest px-3 mb-2">Support</div>
-  <nav class="space-y-1">
-    <button onclick="openHelp()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-regular fa-circle-question w-4"></i>Help Center</button>
+    <button id="btnPlanes" onclick="showPlanes()" class="w-full bg-[#2a4bff] text-white flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium"><i class="fa-solid fa-credit-card w-4"></i>Planes</button>
     <button id="btnSettings" onclick="showTeam()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-gear w-4"></i>Settings</button>
   </nav>
+  <div class="mt-8 text-[10px] text-[#475569] uppercase tracking-widest px-3 mb-2">Support</div>
+  <nav class="space-y-1"><button onclick="openHelp()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-lightbulb w-4 text-yellow-400"></i>Help Center</button></nav>
   <div class="mt-auto">
-    <div class="bg-[#111f3a] rounded-xl p-3 border border-[#1c2e50]"><div class="text-[11px] text-[#94a3b8]">Trial - 12 days left</div><button onclick="openHelp()" class="mt-2 w-full bg-[#2a4bff] text-white text-xs py-2 rounded-lg font-semibold">Upgrade now</button></div>
+    <div class="bg-[#111f3a] rounded-xl p-3 border border-[#1c2e50]"><div class="text-[11px] text-white font-bold">Plan Básico</div><div class="text-[10px] text-[#64748b]">Gestiona tu suscripción</div><button onclick="showPlanes()" class="mt-2 w-full bg-[#1e293b] text-white text-xs py-2 rounded-lg">Ver planes</button></div>
     <div class="flex items-center justify-between mt-3 px-2"><span id="userLabel" class="text-[10px] text-[#64748b] truncate"></span><button onclick="logout()" class="text-[11px] text-[#64748b]">Salir</button></div>
   </div>
 </div>
 
-<div id="inboxPanel" class="w-[330px] bg-[#0f1c36] border-r border-[#1c2e50] flex flex-col">
-  <div class="p-4 flex items-center justify-between"><h2 class="text-white font-semibold text-[15px]">Inbox</h2><div class="flex gap-3 text-[#64748b]"><i class="fa-solid fa-filter text-xs"></i><div class="bg-[#2a4bff] w-6 h-6 rounded-full flex items-center justify-center text-white text-xs">+</div></div></div>
+<!-- INBOX -->
+<div id="inboxPanel" class="w-[330px] bg-[#0f1c36] border-r border-[#1c2e50] flex flex-col hidden">
+  <div class="p-4 flex items-center justify-between"><h2 class="text-white font-semibold text-[15px]">Inbox</h2><div class="bg-[#2a4bff] w-6 h-6 rounded-full flex items-center justify-center text-white text-xs">+</div></div>
   <div class="px-4 pb-3"><div class="pro-input rounded-full flex items-center px-4 py-2.5 gap-2"><i class="fa-solid fa-magnifying-glass text-[#475569] text-xs"></i><input onkeyup="filterChats(this.value)" placeholder="Search conversations..." class="bg-transparent outline-none text-xs w-full text-white placeholder-[#475569]"></div></div>
   <div id="chats" class="flex-1 overflow-y-auto px-2 pb-2 space-y-1"></div>
 </div>
 
-<div class="flex-1 bg-[#101c35] flex flex-col min-w-0" id="mainPanel">
-  <div id="chatHeader" class="h-[64px] border-b border-[#1c2e50] flex items-center justify-between px-5 bg-[#111f3a]">
-    <div class="flex items-center gap-3"><div id="chatAvatar" class="h-9 w-9 rounded-full bg-[#1e293b] flex items-center justify-center text-xs font-bold text-white">?</div><div><div id="chatName" class="text-white text-[13px] font-semibold">Selecciona un chat</div><div id="chatStatus" class="text-[11px] text-[#22c55e]">Online • WhatsApp</div></div></div>
-    <div class="flex gap-4 text-[#64748b]"><i class="fa-solid fa-phone"></i><i class="fa-solid fa-ellipsis-vertical"></i><i class="fa-solid fa-volume-xmark"></i></div>
+<!-- MAIN PANEL - AQUI VAN PLANES O CHAT -->
+<div class="flex-1 bg-[#0a1226] flex flex-col min-w-0 overflow-y-auto" id="mainPanel">
+  <!-- VISTA PLANES POR DEFECTO -->
+  <div id="planesView" class="p-6 md:p-8">
+    <h1 class="text-white font-bold text-[18px] mb-6">Planes KLIDO - Anual</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl">
+      <!-- BASICO -->
+      <div class="plan-card rounded-2xl p-5 text-center">
+        <h3 class="text-white font-bold">Básico</h3>
+        <div class="text-white font-black text-[22px] mt-2">$800.000</div>
+        <div class="text-[#94a3b8] text-xs">anual</div>
+        <div class="text-[#3b82f6] text-[11px] font-bold mt-1">+ $80.000 mant. c/3 meses</div>
+        <div class="text-left mt-4 space-y-2 text-[12px] text-[#cbd5e1]">
+          <div>✅ 1 envío masivo a la vez</div>
+          <div>✅ 2 usuarios incluidos</div>
+          <div>✅ Inbox ilimitado</div>
+          <div>❌ Sin IA automática</div>
+        </div>
+        <button onclick="goWhatsapp('Básico')" class="mt-5 w-full bg-[#2a4bff] text-white py-2.5 rounded-xl text-sm font-bold">Empezar Básico</button>
+      </div>
+      <!-- PREMIUM -->
+      <div class="plan-card rounded-2xl p-5 text-center border-blue-500/50">
+        <h3 class="text-white font-bold">Premium ⭐</h3>
+        <div class="text-white font-black text-[22px] mt-2">$1.300.000</div>
+        <div class="text-[#94a3b8] text-xs">anual</div>
+        <div class="text-[#3b82f6] text-[11px] font-bold mt-1">+ $95.000 mant. c/3 meses</div>
+        <div class="text-left mt-4 space-y-2 text-[12px] text-[#cbd5e1]">
+          <div>✅ 5 envíos simultáneos</div>
+          <div>✅ 5 usuarios incluidos</div>
+          <div>✅ IA incluida</div>
+          <div>✅ Soporte prioritario</div>
+        </div>
+        <button onclick="goWhatsapp('Premium')" class="mt-5 w-full bg-[#2a4bff] text-white py-2.5 rounded-xl text-sm font-bold">Empezar Premium</button>
+      </div>
+      <!-- GOLD -->
+      <div class="plan-card rounded-2xl p-5 text-center">
+        <h3 class="text-white font-bold">Gold</h3>
+        <div class="text-white font-black text-[22px] mt-2">$2.400.000</div>
+        <div class="text-[#94a3b8] text-xs">anual</div>
+        <div class="text-[#3b82f6] text-[11px] font-bold mt-1">+ $130.000 mant. c/3 meses</div>
+        <div class="text-left mt-4 space-y-2 text-[12px] text-[#cbd5e1]">
+          <div>✅ Envíos ilimitados</div>
+          <div>✅ Usuarios ilimitados</div>
+          <div>✅ IA + Pánico humano</div>
+          <div>✅ 📞 Llamada directa incluida</div>
+        </div>
+        <button onclick="goWhatsapp('Gold')" class="mt-5 w-full bg-[#2a4bff] text-white py-2.5 rounded-xl text-sm font-bold">Empezar Gold</button>
+      </div>
+    </div>
+    <p class="text-[11px] text-[#64748b] mt-6 max-w-4xl">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API y soporte. Factura electrónica. Puedes cambiar de plan en cualquier momento. Cumplimiento Ley 1581.</p>
   </div>
-  <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-  <div class="p-4"><div class="pro-input rounded-full flex items-center gap-3 px-4 py-2"><i class="fa-solid fa-paperclip text-[#475569]"></i><i class="fa-regular fa-face-smile text-[#475569]"></i><input id="msgInput" placeholder="Type a message..." class="flex-1 bg-transparent outline-none text-sm text-white placeholder-[#475569]" onkeydown="if(event.key==='Enter')sendMessage()"><button onclick="sendMessage()" class="bg-[#2a4bff] w-8 h-8 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-paper-plane text-xs"></i></button></div></div>
+
+  <!-- VISTA CHAT (oculta al inicio) -->
+  <div id="chatView" class="hidden flex-1 flex flex-col">
+    <div id="chatHeader" class="h-[64px] border-b border-[#1c2e50] flex items-center justify-between px-5 bg-[#111f3a]">
+      <div class="flex items-center gap-3"><div id="chatAvatar" class="h-9 w-9 rounded-full bg-[#1e293b] flex items-center justify-center text-xs font-bold text-white">SN</div><div><div id="chatName" class="text-white text-[13px] font-semibold">Selecciona un chat</div><div id="chatStatus" class="text-[11px] text-[#22c55e]">WhatsApp Business API</div></div></div>
+    </div>
+    <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+    <div class="p-4 border-t border-[#1c2e50]"><div class="pro-input rounded-full flex items-center gap-3 px-4 py-2"><input id="msgInput" placeholder="Type a message..." class="flex-1 bg-transparent outline-none text-sm text-white" onkeydown="if(event.key==='Enter')sendMessage()"><button onclick="sendMessage()" class="bg-[#2a4bff] w-8 h-8 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-paper-plane text-xs"></i></button></div></div>
+  </div>
 </div>
 
-<div class="w-[300px] bg-[#0f1930] border-l border-[#1c2e50] p-5 overflow-y-auto" id="rightPanel">
-  <div class="flex justify-between items-center mb-6"><h3 class="text-white text-[13px] font-semibold">Customer Profile</h3><span class="text-[#475569]">×</span></div>
+<!-- RIGHT PROFILE -->
+<div class="w-[300px] bg-[#0f1930] border-l border-[#1c2e50] p-5 hidden md:block" id="rightPanel">
+  <h3 class="text-white text-[13px] font-semibold mb-6">Customer Profile</h3>
   <div class="flex flex-col items-center">
-    <div id="profileAvatar" class="h-12 w-12 rounded-full bg-[#1e293b] flex items-center justify-center font-bold text-sm text-white">SN</div>
-    <div id="profileName" class="text-white font-semibold text-sm mt-3">—</div>
-    <div class="text-[#64748b] text-[11px]">Customer - WhatsApp</div>
+    <div id="profileAvatar" class="h-14 w-14 rounded-full bg-[#2a4bff] flex items-center justify-center font-bold text-sm text-white">SN</div>
+    <div id="profileName" class="text-white font-semibold text-sm mt-3">-</div>
+    <div class="text-[#64748b] text-[11px]">Customer • WhatsApp</div>
   </div>
-  <div class="mt-6 space-y-4">
-    <div class="text-[11px] text-[#475569] uppercase">Details</div>
-    <div class="space-y-3 text-[12px] text-[#cbd5e1]"><div class="flex gap-2"><i class="fa-regular fa-envelope text-[#475569] mt-0.5"></i><span id="profileEmail">—</span></div><div class="flex gap-2"><i class="fa-solid fa-phone text-[#475569] mt-0.5"></i><span id="profilePhone">—</span></div></div>
-    <div class="pt-2"><div class="text-[11px] text-[#475569] uppercase mb-2">Tag</div><select id="tagSelect" onchange="changeTag()" class="w-full pro-input rounded-lg p-2.5 text-xs text-white"><option value="nuevo">Nuevo</option><option value="interesado">Interesado</option><option value="cita">Cita</option><option value="cerrado">Cerrado</option></select></div>
-    <div class="pt-2"><div class="text-[11px] text-[#475569] uppercase mb-2">Notes / Panel</div><div id="panelContent" class="pro-card rounded-xl p-3 text-xs text-[#94a3b8] min-h-[200px]">Selecciona Inbox para ver chats.</div></div>
+  <div class="mt-6">
+    <div class="text-[11px] text-[#94a3b8] mb-2">Selecciona un chat</div>
+    <div class="text-[11px] text-[#475569]">Tag:</div>
+    <select id="tagSelect" onchange="changeTag()" class="w-full pro-input rounded-lg p-2.5 text-xs text-white mt-1"><option value="nuevo">nuevo</option><option value="interesado">interesado</option><option value="cita">cita</option><option value="cerrado">cerrado</option></select>
+    <div id="panelContent" class="mt-4 pro-card rounded-xl p-3 text-xs text-[#94a3b8] min-h-[120px]">Panel de acciones</div>
   </div>
 </div>
 </div>
@@ -91,32 +143,27 @@
 let currentWa=null,allChats=[]; let agency_id=localStorage.getItem('agency_id')||'',username=localStorage.getItem('username')||'',role=localStorage.getItem('role')||'';
 if(agency_id)document.getElementById('agency').value=agency_id; if(username)document.getElementById('email').value=username;
 function showLogin(){document.getElementById('loginView').classList.remove('hidden')}
-function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('userLabel').textContent=agency_id+' • '+username; loadChats();}
+function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('userLabel').textContent=agency_id; showPlanes();}
 if(agency_id&&username&&role)showApp();
 async function login(){const a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim(),p=document.getElementById('password').value,m=document.getElementById('loginMsg');if(!a||!e||!p){m.textContent='Completa todo';return}try{let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});let j=await r.json();if(!r.ok){m.textContent=j.error;return}localStorage.setItem('agency_id',j.agency_id);localStorage.setItem('username',j.username);localStorage.setItem('role',j.role);agency_id=j.agency_id;username=j.username;role=j.role;showApp();}catch(err){m.textContent=err.message}}
 function logout(){localStorage.clear();location.reload()}
-function openHelp(){ window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20soporte,%20necesito%20ayuda%20con%20'+encodeURIComponent(agency_id), '_blank'); }
-async function forgot(){let email=prompt('Correo registrado:');if(!email)return;try{let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim()})});let t=await r.text();let j;try{j=JSON.parse(t)}catch{j={error:t}}if(r.ok)alert('✅ Correo enviado');else alert('❌ '+j.error);}catch(e){alert(e.message)}}
-function setActive(btnId){['btnInbox','btnContacts','btnCampaigns','btnAuto','btnAnalytics','btnTemplates','btnSettings'].forEach(id=>{let el=document.getElementById(id); if(el){el.className='w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]';}}); let a=document.getElementById(btnId); if(a) a.className='w-full bg-[#2a4bff] text-white flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium';}
+function goWhatsapp(plan){ window.open(`https://wa.me/573133181851?text=Hola%20KLIDO%20quiero%20empezar%20con%20el%20Plan%20${plan}%20-%20Agencia:%20${encodeURIComponent(agency_id||'nueva')}`, '_blank'); }
+function openHelp(){ window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20soporte%20-%20Agencia:%20'+encodeURIComponent(agency_id), '_blank'); }
+async function forgot(){let email=prompt('Correo:');if(!email)return;try{let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim()})});let t=await r.text();let j;try{j=JSON.parse(t)}catch{j={error:t}}if(r.ok)alert('✅ Correo enviado');else alert('❌ '+j.error);}catch(e){alert(e.message)}}
+function setActive(id){['btnInbox','btnCampaigns','btnPlanes','btnSettings'].forEach(b=>{document.getElementById(b).className='w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]'});document.getElementById(id).className='w-full bg-[#2a4bff] text-white flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium'}
+function toggleTheme(){document.body.classList.toggle('bg-white');}
+function showPlanes(){setActive('btnPlanes');document.getElementById('planesView').classList.remove('hidden');document.getElementById('chatView').classList.add('hidden');document.getElementById('inboxPanel').classList.add('hidden');}
 function initials(s){return (s||'?').substring(0,2).toUpperCase()}
-function renderChats(list){let html='';list.forEach(c=>{let active=currentWa===c.wa_id?'bg-[#162240] border border-[#1e3a5f]':'hover:bg-[#111f3a]';html+=`<div onclick="openChat('${c.wa_id}')" class="cursor-pointer rounded-xl p-3 flex gap-3 ${active}"><div class="h-8 w-8 rounded-full bg-[#1e293b] flex items-center justify-center text-[11px] font-bold text-white shrink-0">${initials(c.name||c.wa_id)}</div><div class="flex-1 min-w-0"><div class="flex justify-between"><b class="text-[13px] text-white truncate">${c.name||c.wa_id}</b><span class="text-[10px] text-[#475569]">${c.unread||''}</span></div><div class="text-[11px] text-[#94a3b8] truncate">${(c.lastMessage||'Sin mensajes').substring(0,32)}</div></div></div>`});document.getElementById('chats').innerHTML=html||'<p class="text-xs text-[#475569] p-4">Sin chats</p>';}
+function renderChats(list){let html='';list.forEach(c=>{html+=`<div onclick="openChat('${c.wa_id}')" class="cursor-pointer rounded-xl p-3 flex gap-3 hover:bg-[#111f3a]"><div class="h-8 w-8 rounded-full bg-[#1e293b] flex items-center justify-center text-[11px] font-bold text-white">${initials(c.name||c.wa_id)}</div><div class="flex-1 min-w-0"><b class="text-[13px] text-white truncate">${c.name||c.wa_id}</b><div class="text-[11px] text-[#94a3b8] truncate">${(c.lastMessage||'').substring(0,30)}</div></div></div>`});document.getElementById('chats').innerHTML=html||'<p class="text-xs text-[#475569] p-4">Sin chats</p>';}
 function filterChats(q){renderChats(q?allChats.filter(c=>(c.name||c.wa_id).toLowerCase().includes(q.toLowerCase())):allChats)}
-async function loadChats(){setActive('btnInbox');document.getElementById('inboxPanel').classList.remove('hidden');let r=await fetch('/api/chats?agency_id='+agency_id);let d=await r.json();allChats=d;renderChats(d);document.getElementById('panelContent').innerHTML='Chats cargados: '+d.length;}
+async function loadChats(){setActive('btnInbox');document.getElementById('planesView').classList.add('hidden');document.getElementById('chatView').classList.remove('hidden');document.getElementById('inboxPanel').classList.remove('hidden');let r=await fetch('/api/chats?agency_id='+agency_id);let d=await r.json();allChats=d;renderChats(d);}
 let interval=null;
-function openChat(wa){currentWa=wa;let c=allChats.find(x=>x.wa_id===wa);document.getElementById('chatName').textContent=c?.name||wa;document.getElementById('profileName').textContent=c?.name||wa;document.getElementById('profilePhone').textContent=wa;document.getElementById('profileEmail').textContent=c?.email||wa+'@whatsapp';document.getElementById('chatAvatar').textContent=initials(c?.name||wa);document.getElementById('profileAvatar').textContent=initials(c?.name||wa);loadMessages();fetch('/api/chats/'+wa+'/read?agency_id='+agency_id,{method:'POST'});if(interval)clearInterval(interval);interval=setInterval(loadMessages,3000);renderChats(allChats);}
-async function loadMessages(){if(!currentWa)return;let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let data=await r.json();let html='<div class="text-center text-[11px] text-[#475569]">Today • 09:23 AM</div>';data.forEach(m=>{let out=m.direction!=='in';html+=`<div class="flex ${out?'justify-end':''}"><div class="${out?'bubble-out':'bubble-in'} max-w-[62%] px-4 py-3 rounded-2xl text-[13px]">${m.text}<div class="text-[10px] opacity-70 mt-1 text-right">${new Date(m.timestamp).toLocaleTimeString().slice(0,5)}</div></div></div>`});document.getElementById('messages').innerHTML=html;document.getElementById('messages').scrollTop=99999;}
+function openChat(wa){currentWa=wa;let c=allChats.find(x=>x.wa_id===wa);document.getElementById('chatName').textContent=c?.name||wa;document.getElementById('profileName').textContent=c?.name||wa;document.getElementById('profileAvatar').textContent=initials(c?.name||wa);document.getElementById('chatAvatar').textContent=initials(c?.name||wa);loadMessages();fetch('/api/chats/'+wa+'/read?agency_id='+agency_id,{method:'POST'});if(interval)clearInterval(interval);interval=setInterval(loadMessages,3000);}
+async function loadMessages(){if(!currentWa)return;let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let data=await r.json();let html='';data.forEach(m=>{let out=m.direction!=='in';html+=`<div class="flex ${out?'justify-end':''}"><div class="${out?'bubble-out':'bubble-in'} max-w-[62%] px-4 py-3 rounded-2xl text-[13px]">${m.text}</div></div>`});document.getElementById('messages').innerHTML=html;document.getElementById('messages').scrollTop=99999;}
 async function sendMessage(){let t=document.getElementById('msgInput').value;if(!t||!currentWa)return;await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t,agency_id,username})});document.getElementById('msgInput').value='';loadMessages();}
-// FUNCIONES DE BOTONES
-async function showContacts(){setActive('btnContacts');let r=await fetch('/api/chats?agency_id='+agency_id);let d=await r.json();let h='<b class="text-white">Contacts</b><br><br>';d.forEach(c=>{h+=`<div class="pro-card p-2 rounded-lg mb-1 text-xs text-white">${c.name||c.wa_id} - ${c.wa_id}</div>`});document.getElementById('panelContent').innerHTML=h;}
-async function showCampaigns(){setActive('btnCampaigns');let r=await fetch('/api/campaigns?agency_id='+agency_id);let d=await r.json();let h='<b class="text-white">Campañas</b><br><br>';d.forEach(c=>{h+=`<div class="pro-card p-2 rounded-lg mb-1 text-xs text-white">${c.template} - ${c.sent}/${c.total}</div>`});h+=`<div class="mt-3"><input type="file" id="excel" class="text-[10px] text-white"><input id="tpl" placeholder="plantilla" class="pro-input w-full p-2 rounded mt-2 text-xs text-white"><button onclick="uploadCampaign()" class="bg-[#2a4bff] w-full py-2 rounded mt-2 text-xs text-white">Subir</button></div>`;document.getElementById('panelContent').innerHTML=h;}
+async function showCampaigns(){setActive('btnCampaigns');document.getElementById('planesView').classList.add('hidden');document.getElementById('chatView').classList.add('hidden');document.getElementById('inboxPanel').classList.add('hidden');let r=await fetch('/api/campaigns?agency_id='+agency_id);let d=await r.json();let main=document.getElementById('mainPanel');let html='<div class="p-8"><h2 class="text-white font-bold">Campaigns</h2><div class="mt-4 grid gap-2">';d.forEach(c=>{html+=`<div class="plan-card p-3 rounded-xl text-xs text-white">${c.template} - ${c.sent}/${c.total}</div>`});html+=`</div><div class="mt-6"><input type="file" id="excel" class="text-xs text-white"><input id="tpl" placeholder="plantilla" class="pro-input w-full p-2 rounded mt-2 text-xs text-white"><button onclick="uploadCampaign()" class="bg-[#2a4bff] w-full py-2 rounded mt-2 text-xs text-white">Subir campaña</button></div></div>`;document.getElementById('planesView').innerHTML=html;document.getElementById('planesView').classList.remove('hidden');}
 async function uploadCampaign(){let f=document.getElementById('excel').files[0],tpl=document.getElementById('tpl').value;if(!f||!tpl)return alert('Falta');let rd=new FileReader();rd.onload=async e=>{let res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,fileBase64:e.target.result})});let j=await res.json();alert(j.ok?'Creada '+j.total:j.error)};rd.readAsDataURL(f);}
-function showAnalytics(){setActive('btnAnalytics');document.getElementById('panelContent').innerHTML=`<b class="text-white">Analytics</b><br><br><div class="pro-card p-3 rounded-xl text-xs">Chats totales: ${allChats.length}<br>Interesados: ${allChats.filter(c=>c.tag==='interesado').length}<br>Citas: ${allChats.filter(c=>c.tag==='cita').length}</div>`;}
-async function showTemplates(){setActive('btnTemplates');let r=await fetch('/api/templates?agency_id='+agency_id);let d=await r.json();let h='<b class="text-white">Plantillas</b><br><br>';d.forEach(t=>{h+=`<div class="pro-card p-2 rounded-lg mb-1 text-xs text-white">${t.name} - ${t.status}</div>`});document.getElementById('panelContent').innerHTML=h;}
-async function showTeam(){setActive('btnSettings');let r=await fetch('/api/team?agency_id='+agency_id);let d=await r.json();let h='<b class="text-white">Settings - Equipo</b><br><br>';d.forEach(u=>{h+=`<div class="flex justify-between text-xs py-1 border-b border-[#1c2e50] text-white">${u.username} - ${u.role} ${u.role==='trabajador'?`<button onclick="delUser('${u.username}')" class="text-red-400">x</button>`:''}</div>`});if(role==='jefe')h+=`<div class="mt-3"><input id="newUser" placeholder="correo" class="pro-input w-full p-2 text-xs text-white"><input id="newPass" placeholder="clave" class="pro-input w-full p-2 text-xs mt-1 text-white"><button onclick="createUser()" class="bg-[#2a4bff] w-full py-2 rounded mt-2 text-xs text-white">Crear trabajador</button></div>`;document.getElementById('panelContent').innerHTML=h;}
-async function createUser(){let u=document.getElementById('newUser').value,p=document.getElementById('newPass').value;let r=await fetch('/api/team/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username:u,password:p,display_name:u,role_req:username})});let j=await r.json();alert(j.ok?'Creado':j.error);showTeam();}
-async function delUser(u){if(!confirm('Borrar '+u+'?'))return;let r=await fetch('/api/team/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username:u,role_req:username})});let j=await r.json();alert(j.ok?'Borrado':j.error);showTeam();}
-async function showAiConfig(){setActive('btnAuto');let r=await fetch('/api/ai-config?agency_id='+agency_id);let c=await r.json();document.getElementById('panelContent').innerHTML=`<b class="text-white">Automation - IA</b><br><br><label class="text-xs text-white"><input type="checkbox" id="aiEnabled" ${c.enabled?'checked':''}> Activa</label><br><label class="text-xs text-white"><input type="checkbox" id="aiHuman" ${c.human_takeover?'checked':''}> Human takeover</label><textarea id="aiPrompt" class="pro-input w-full h-24 text-xs mt-2 p-2 text-white">${c.prompt||''}</textarea><button onclick="saveAi()" class="bg-[#2a4bff] w-full py-2 rounded mt-2 text-xs text-white">Guardar IA</button>`;}
-async function saveAi(){let e=document.getElementById('aiEnabled').checked,h=document.getElementById('aiHuman').checked,p=document.getElementById('aiPrompt').value;await fetch('/api/ai-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,enabled:e,prompt:p,human_takeover:h})});alert('Guardado')}
+async function showTeam(){setActive('btnSettings');document.getElementById('inboxPanel').classList.add('hidden');document.getElementById('chatView').classList.add('hidden');let r=await fetch('/api/team?agency_id='+agency_id);let d=await r.json();let h='<div class="p-8"><h2 class="text-white font-bold">Settings - Equipo</h2><div class="mt-4">';d.forEach(u=>{h+=`<div class="flex justify-between text-xs py-2 border-b border-[#1c2e50] text-white">${u.username} - ${u.role}</div>`});h+=`</div></div>`;document.getElementById('planesView').innerHTML=h;document.getElementById('planesView').classList.remove('hidden');}
 async function changeTag(){if(!currentWa)return;await fetch('/api/chats/'+currentWa+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:document.getElementById('tagSelect').value,agency_id})});}
 </script>
 </body>
