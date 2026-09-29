@@ -7,184 +7,162 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-body{background:#0b1220;color:#e2e8f0}
-.bg-main{background:#0f172a}
-.bg-card{background:#121e35}
-.bg-hover:hover{background:#1a2a4a}
-.border-soft{border-color:#1e334f}
-.text-mute{color:#94a3b8}
-.badge-pro{background:#3b82f6}
-.unread-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-.chat-bubble-in{background:#1c2d4a}
-.chat-bubble-out{background:#3b82f6}
-.scroll::-webkit-scrollbar{width:4px}.scroll::-webkit-scrollbar-thumb{background:#1e3a5f}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{font-family:'Inter',sans-serif}
+body{background:#070b18}
+.pro-card{background:#111a2e;border:1px solid #1e2f4f}
+.pro-input{background:#0e1830;border:1px solid #1e2f4f}
+.bubble-in{background:#1a2b4a;color:#dbeafe}
+.bubble-out{background:#4a8cff;color:white}
+.avatar-sn{background:#ffedd5;color:#9a3412}
+.avatar-ac{background:#dcfce7;color:#166534}
+.avatar-mp{background:#e9d5ff;color:#6b21a8}
+.avatar-jl{background:#fef3c7;color:#92400e}
 </style>
 </head>
-<body class="h-screen overflow-hidden">
-<!-- LOGIN -->
-<div id="loginView" class="flex items-center justify-center min-h-screen bg-[#0b1220]">
-  <div class="bg-[#121e35] p-8 rounded-2xl shadow-2xl w-full max-w-md border border-[#1e334f]">
+<body class="h-screen p-2 md:p-4">
+<!-- CONTENEDOR REDONDEADO COMO LA FOTO -->
+<div class="h-full w-full max-w-[1600px] mx-auto bg-[#0d152b] rounded-[24px] border border-[#1c2e50] flex overflow-hidden shadow-2xl">
+
+<!-- LOGIN OVERLAY -->
+<div id="loginView" class="absolute inset-0 z-50 flex items-center justify-center bg-[#070b18]">
+  <div class="bg-[#111a2e] p-8 rounded-[20px] border border-[#1e2f4f] w-full max-w-sm">
     <div class="flex items-center gap-3 mb-6">
-      <img src="/logo.png" class="h-9 w-9 rounded-lg bg-white p-1" onerror="this.outerHTML='<div class=\'h-9 w-9 rounded-lg bg-blue-500 flex items-center justify-center font-black\'>K</div>'">
-      <div><h1 class="text-xl font-black">KLIDO CRM Pro</h1><span class="text-[10px] bg-blue-500 px-2 py-0.5 rounded-full">Pro Plan</span></div>
+      <img src="/logo.png" class="h-9 w-9 rounded-xl bg-white p-1.5 object-contain" onerror="this.style.display='none'">
+      <div class="h-9 w-9 rounded-xl bg-blue-500 flex items-center justify-center font-black text-white">K</div>
+      <b>KLIDO CRM Pro</b> <span class="text-[10px] bg-blue-600 px-2 py-0.5 rounded-full">Pro Plan</span>
     </div>
-    <input id="agency" placeholder="Agencia (ej: acol)" class="w-full bg-[#0f172a] border border-[#1e334f] p-3 rounded-xl mb-3 text-sm">
-    <input id="email" placeholder="Correo" class="w-full bg-[#0f172a] border border-[#1e334f] p-3 rounded-xl mb-3 text-sm">
-    <input id="password" type="password" placeholder="Clave" class="w-full bg-[#0f172a] border border-[#1e334f] p-3 rounded-xl mb-4 text-sm">
-    <button onclick="login()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Entrar</button>
-    <div class="flex justify-between mt-4 text-xs">
-      <button onclick="forgot()" class="text-blue-400 underline">¿Olvidaste clave?</button>
-      <a href="/reset.html" class="text-mute underline">Tengo token</a>
-    </div>
-    <p id="loginMsg" class="text-center mt-4 text-xs text-red-400"></p>
+    <input id="agency" placeholder="Agencia (ej: acol)" class="w-full pro-input p-3.5 rounded-xl mb-3 text-sm outline-none">
+    <input id="email" placeholder="Correo" class="w-full pro-input p-3.5 rounded-xl mb-3 text-sm outline-none">
+    <input id="password" type="password" placeholder="Clave" class="w-full pro-input p-3.5 rounded-xl mb-4 text-sm outline-none">
+    <button onclick="login()" class="w-full bg-[#3b82f6] py-3.5 rounded-xl font-bold text-sm">Entrar</button>
+    <div class="flex justify-between mt-4 text-xs text-[#64748b]"><button onclick="forgot()" class="text-blue-400">¿Olvidaste clave?</button><a href="/reset.html" class="underline">Tengo token</a></div>
+    <p id="loginMsg" class="text-xs text-red-400 mt-3 text-center"></p>
   </div>
 </div>
 
-<!-- APP PRO -->
-<div id="appView" class="hidden h-screen flex">
-  <!-- MENU IZQ -->
-  <div class="w-[220px] bg-main border-r border-soft flex flex-col p-3">
-    <div class="flex items-center gap-2 px-2 py-3 mb-4">
-      <img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1" onerror="this.outerHTML='<div class=\'h-8 w-8 rounded bg-blue-500\'></div>'">
-      <b class="text-sm">KLIDO CRM Pro</b><span class="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">Pro Plan</span>
-    </div>
-    <div class="space-y-1 text-[13px]">
-      <button onclick="loadChats()" class="w-full text-left bg-blue-600 text-white px-3 py-2 rounded-lg"><i class="fa fa-inbox mr-2"></i>Inbox</button>
-      <button class="w-full text-left text-mute px-3 py-2 rounded-lg bg-hover"><i class="fa fa-users mr-2"></i>Contacts</button>
-      <button onclick="showCampaigns()" class="w-full text-left text-mute px-3 py-2 rounded-lg bg-hover"><i class="fa fa-bullhorn mr-2"></i>Campaigns</button>
-      <button onclick="showAiConfig()" class="w-full text-left text-mute px-3 py-2 rounded-lg bg-hover"><i class="fa fa-robot mr-2"></i>Automation</button>
-      <button class="w-full text-left text-mute px-3 py-2 rounded-lg bg-hover"><i class="fa fa-chart-bar mr-2"></i>Analytics</button>
-      <button onclick="showTemplates()" class="w-full text-left text-mute px-3 py-2 rounded-lg bg-hover"><i class="fa fa-file mr-2"></i>Templates</button>
-      <div class="pt-6 text-[11px] text-mute uppercase">Support</div>
-      <button class="w-full text-left text-mute px-3 py-2"><i class="fa fa-question-circle mr-2"></i>Help Center</button>
-      <button onclick="showTeam()" class="w-full text-left text-mute px-3 py-2"><i class="fa fa-cog mr-2"></i>Settings</button>
-    </div>
-    <div class="mt-auto bg-card p-3 rounded-xl border border-soft">
-      <div class="text-[11px] text-mute">Trial - 12 days left</div>
-      <button class="mt-2 w-full bg-blue-600 text-xs py-1.5 rounded-lg">Upgrade now</button>
-    </div>
-    <div class="pt-3 flex justify-between items-center border-t border-soft mt-3">
-      <small id="userLabel" class="text-[11px] text-mute"></small>
-      <button onclick="logout()" class="text-xs text-mute">Salir</button>
-    </div>
+<!-- SIDEBAR MENU -->
+<div class="w-[200px] bg-[#0f1930] border-r border-[#1c2e50] flex flex-col py-5 px-3 shrink-0">
+  <div class="flex items-center gap-2.5 px-2 mb-8">
+    <img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1" onerror="this.outerHTML=''">
+    <div class="h-8 w-8 rounded-lg bg-[#1e3a8a] flex items-center justify-center"><i class="fa-solid fa-cube text-blue-400"></i></div>
+    <div class="leading-none"><div class="font-bold text-[13px] text-white">KLIDO CRM Pro</div><div class="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded-full inline-block mt-1">Pro Plan</div></div>
   </div>
-
-  <!-- INBOX -->
-  <div class="w-[340px] bg-[#0d182e] border-r border-soft flex flex-col">
-    <div class="p-4 flex justify-between items-center">
-      <h2 class="font-bold">Inbox</h2>
-      <div class="flex gap-2 text-mute"><i class="fa fa-filter"></i><i class="fa fa-plus bg-blue-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i></div>
-    </div>
-    <div class="px-4 pb-3"><input onkeyup="filterChats(this.value)" placeholder="Search conversations..." class="w-full bg-[#121e35] border border-soft rounded-full px-4 py-2 text-xs"></div>
-    <div id="chats" class="flex-1 overflow-y-auto scroll px-2 space-y-1"></div>
-  </div>
-
-  <!-- CHAT CENTER -->
-  <div class="flex-1 flex flex-col bg-[#0f1b32]">
-    <div id="chatHeader" class="h-[64px] bg-card border-b border-soft flex items-center justify-between px-4">
-      <div class="flex items-center gap-3"><div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">SN</div><div><b id="chatName" class="text-sm">Selecciona un chat</b><br><small id="chatStatus" class="text-[11px] text-mute">—</small></div></div>
-      <div class="flex gap-4 text-mute text-sm"><i class="fa fa-phone"></i><i class="fa fa-ellipsis-v"></i><i class="fa fa-volume-mute"></i></div>
-    </div>
-    <div id="messages" class="flex-1 overflow-y-auto scroll p-6 space-y-3"></div>
-    <div class="p-3 bg-card border-t border-soft flex gap-2 items-center">
-      <i class="fa fa-paperclip text-mute"></i><i class="fa fa-face-smile text-mute"></i>
-      <input id="msgInput" placeholder="Type a message..." class="flex-1 bg-[#0f172a] border border-soft rounded-full px-4 py-2.5 text-sm" onkeydown="if(event.key==='Enter')sendMessage()">
-      <button onclick="sendMessage()" class="bg-blue-500 w-9 h-9 rounded-full flex items-center justify-center"><i class="fa fa-paper-plane text-xs"></i></button>
-    </div>
-  </div>
-
-  <!-- CUSTOMER PROFILE -->
-  <div class="w-[300px] bg-main border-l border-soft p-4 overflow-y-auto scroll">
-    <div class="flex justify-between items-center mb-4"><h3 class="text-sm font-bold">Customer Profile</h3><button class="text-mute">✕</button></div>
-    <div id="profileCard" class="flex flex-col items-center py-4">
-      <div class="h-12 w-12 rounded-full bg-[#e9d5ff] text-[#7c3aed] flex items-center justify-center font-bold">SN</div>
-      <b id="profileName" class="mt-2 text-sm">—</b><small class="text-mute text-xs">Customer - WhatsApp</small>
-      <div class="flex gap-2 mt-3"><span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full">VIP</span><span class="text-[10px] bg-orange-500/20 text-orange-300 px-2 py-1 rounded-full">Hot Lead</span><span class="text-[10px] bg-gray-700 px-2 py-1 rounded-full">E-commerce</span></div>
-    </div>
-    <div class="space-y-3 text-xs">
-      <div class="text-mute uppercase text-[11px]">Details</div>
-      <div class="flex gap-2 text-mute"><i class="fa fa-envelope mt-0.5"></i><span id="profileEmail">—</span></div>
-      <div class="flex gap-2 text-mute"><i class="fa fa-phone mt-0.5"></i><span id="profilePhone">—</span></div>
-      <div class="flex gap-2 text-mute"><i class="fa fa-building mt-0.5"></i><span id="profileAgency">—</span></div>
-      <div class="flex gap-2 text-mute"><i class="fa fa-location-dot mt-0.5"></i><span>—</span></div>
-      <div class="pt-4">
-        <label class="text-[11px] uppercase text-mute">Tag conversación</label>
-        <select id="tagSelect" onchange="changeTag()" class="w-full bg-[#121e35] border border-soft p-2 rounded-lg mt-1 text-xs">
-          <option value="nuevo">Nuevo</option><option value="interesado">Interesado</option><option value="cita">Cita</option><option value="cerrado">Cerrado</option>
-        </select>
-      </div>
-      <div class="pt-4"><div class="text-[11px] uppercase text-mute">Notes</div><div id="panelContent" class="mt-2 text-xs text-mute bg-card p-3 rounded-lg border border-soft min-h-[80px]">Selecciona acciones arriba</div></div>
-    </div>
+  <div class="text-[10px] text-[#475569] uppercase tracking-widest px-3 mb-2">Menu</div>
+  <nav class="space-y-1">
+    <button onclick="loadChats()" class="w-full bg-[#2a4bff] text-white flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium"><i class="fa-solid fa-inbox w-4"></i>Inbox</button>
+    <button class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-regular fa-user w-4"></i>Contacts</button>
+    <button onclick="showCampaigns()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-bullhorn w-4"></i>Campaigns</button>
+    <button onclick="showAiConfig()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-bolt w-4"></i>Automation</button>
+    <button class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-solid fa-chart-simple w-4"></i>Analytics</button>
+    <button onclick="showTemplates()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] hover:bg-[#162240]"><i class="fa-regular fa-file w-4"></i>Templates</button>
+  </nav>
+  <div class="mt-8 text-[10px] text-[#475569] uppercase tracking-widest px-3 mb-2">Support</div>
+  <nav class="space-y-1">
+    <button class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px]"><i class="fa-regular fa-circle-question w-4"></i>Help Center</button>
+    <button onclick="showTeam()" class="w-full text-[#94a3b8] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px]"><i class="fa-solid fa-gear w-4"></i>Settings</button>
+  </nav>
+  <div class="mt-auto">
+    <div class="bg-[#111f3a] rounded-xl p-3 border border-[#1c2e50]"><div class="text-[11px] text-[#94a3b8]">Trial - 12 days left</div><button class="mt-2 w-full bg-[#2a4bff] text-white text-xs py-2 rounded-lg font-semibold">Upgrade now</button></div>
+    <div class="flex items-center justify-between mt-3 px-2"><span id="userLabel" class="text-[10px] text-[#64748b] truncate"></span><button onclick="logout()" class="text-[11px] text-[#64748b]">Salir</button></div>
   </div>
 </div>
+
+<!-- INBOX LIST -->
+<div class="w-[330px] bg-[#0f1c36] border-r border-[#1c2e50] flex flex-col shrink-0">
+  <div class="p-4 flex items-center justify-between"><h2 class="text-white font-semibold text-[15px]">Inbox</h2><div class="flex gap-3 text-[#64748b]"><i class="fa-solid fa-filter text-xs"></i><div class="bg-[#2a4bff] w-6 h-6 rounded-full flex items-center justify-center text-white text-xs">+</div></div></div>
+  <div class="px-4 pb-3"><div class="pro-input rounded-full flex items-center px-4 py-2.5 gap-2"><i class="fa-solid fa-magnifying-glass text-[#475569] text-xs"></i><input onkeyup="filterChats(this.value)" placeholder="Search conversations..." class="bg-transparent outline-none text-xs w-full text-white placeholder-[#475569]"></div></div>
+  <div id="chats" class="flex-1 overflow-y-auto px-2 pb-2 space-y-1"></div>
+</div>
+
+<!-- CHAT -->
+<div class="flex-1 bg-[#101c35] flex flex-col min-w-0">
+  <div id="chatHeader" class="h-[64px] border-b border-[#1c2e50] flex items-center justify-between px-5 bg-[#111f3a]">
+    <div class="flex items-center gap-3"><div id="chatAvatar" class="h-9 w-9 rounded-full bg-[#1e293b] flex items-center justify-center text-xs font-bold text-white">?</div><div><div id="chatName" class="text-white text-[13px] font-semibold">Selecciona un chat</div><div id="chatStatus" class="text-[11px] text-[#22c55e]">Online • WhatsApp</div></div></div>
+    <div class="flex gap-4 text-[#64748b]"><i class="fa-solid fa-phone"></i><i class="fa-solid fa-ellipsis-vertical"></i><i class="fa-solid fa-volume-xmark"></i></div>
+  </div>
+  <div id="messages" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+  <div class="p-4"><div class="pro-input rounded-full flex items-center gap-3 px-4 py-2"><i class="fa-solid fa-paperclip text-[#475569]"></i><i class="fa-regular fa-face-smile text-[#475569]"></i><input id="msgInput" placeholder="Type a message..." class="flex-1 bg-transparent outline-none text-sm text-white placeholder-[#475569]" onkeydown="if(event.key==='Enter')sendMessage()"><button onclick="sendMessage()" class="bg-[#2a4bff] w-8 h-8 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-paper-plane text-xs"></i></button></div></div>
+</div>
+
+<!-- PROFILE -->
+<div class="w-[300px] bg-[#0f1930] border-l border-[#1c2e50] p-5 shrink-0 overflow-y-auto">
+  <div class="flex justify-between items-center mb-6"><h3 class="text-white text-[13px] font-semibold">Customer Profile</h3><span class="text-[#475569]">×</span></div>
+  <div class="flex flex-col items-center">
+    <div id="profileAvatar" class="h-12 w-12 rounded-full avatar-sn flex items-center justify-center font-bold text-sm">SN</div>
+    <div id="profileName" class="text-white font-semibold text-sm mt-3">Sofia Nguyen</div>
+    <div class="text-[#64748b] text-[11px]">Customer - WhatsApp</div>
+    <div class="flex gap-2 mt-3"><span class="text-[10px] px-2 py-1 rounded-full bg-[#1e293b] text-[#a78bfa]">VIP</span><span class="text-[10px] px-2 py-1 rounded-full bg-[#1e293b] text-[#fb923c]">Hot Lead</span><span class="text-[10px] px-2 py-1 rounded-full bg-[#1e293b] text-[#94a3b8]">E-commerce</span></div>
+  </div>
+  <div class="mt-6 space-y-4">
+    <div class="text-[11px] text-[#475569] uppercase">Details</div>
+    <div class="space-y-3 text-[12px] text-[#cbd5e1]"><div class="flex gap-2"><i class="fa-regular fa-envelope text-[#475569] mt-0.5"></i><span id="profileEmail">sofia.n@naturagoods.com</span></div><div class="flex gap-2"><i class="fa-solid fa-phone text-[#475569] mt-0.5"></i><span id="profilePhone">+62 812-3456-7890</span></div><div class="flex gap-2"><i class="fa-regular fa-building text-[#475569] mt-0.5"></i><span id="profileCompany">Natura Goods</span></div><div class="flex gap-2"><i class="fa-solid fa-location-dot text-[#475569] mt-0.5"></i><span>Jakarta, Indonesia</span></div></div>
+    <div class="pt-2"><div class="text-[11px] text-[#475569] uppercase mb-2">Tag</div><select id="tagSelect" onchange="changeTag()" class="w-full pro-input rounded-lg p-2.5 text-xs text-white"><option value="nuevo">Nuevo</option><option value="interesado">Interesado</option><option value="cita">Cita</option><option value="cerrado">Cerrado</option></select></div>
+    <div class="pt-2"><div class="text-[11px] text-[#475569] uppercase mb-2">Notes</div><div id="panelContent" class="pro-card rounded-xl p-3 text-xs text-[#94a3b8] min-h-[90px]">Interested in team plan. Follow up scheduled for tomorrow at 10:00 AM. Customer requested Shopify integration demo.<br><br><span class="text-[10px]">Created - 12 Oct 2024</span></div></div>
+    <div class="flex gap-2 pt-2"><button class="flex-1 bg-[#1e293b] text-xs py-2 rounded-lg text-white">Add note</button><button class="flex-1 bg-[#2a4bff] text-xs py-2 rounded-lg text-white">Edit profile</button></div>
+  </div>
+</div>
+
+</div><!-- fin contenedor pro -->
 
 <script>
-let currentWa=null; let allChats=[];
-let agency_id=localStorage.getItem('agency_id')||''; let username=localStorage.getItem('username')||''; let role=localStorage.getItem('role')||'';
+let currentWa=null,allChats=[];
+let agency_id=localStorage.getItem('agency_id')||'',username=localStorage.getItem('username')||'',role=localStorage.getItem('role')||'';
 if(agency_id)document.getElementById('agency').value=agency_id; if(username)document.getElementById('email').value=username;
-function showLogin(){document.getElementById('loginView').classList.remove('hidden');document.getElementById('appView').classList.add('hidden')}
-function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('appView').classList.remove('hidden');document.getElementById('userLabel').textContent=agency_id+' • '+username+' ('+role+')'; document.getElementById('profileAgency').textContent=agency_id; loadChats();}
-if(agency_id && username && role) showApp();
+function showLogin(){document.getElementById('loginView').classList.remove('hidden')}
+function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('userLabel').textContent=agency_id+' • '+username; loadChats();}
+if(agency_id&&username&&role)showApp();
 async function login(){
-  const a=document.getElementById('agency').value.trim().toLowerCase(); const e=document.getElementById('email').value.trim(); const p=document.getElementById('password').value; const msg=document.getElementById('loginMsg');
-  if(!a||!e||!p){msg.textContent='Completa todo';return}
-  try{
-    let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a, username:e, email:e, password:p, acepto_terminos:true})});
-    let j=await r.json(); if(!r.ok){msg.textContent=j.error||'Error';return}
-    localStorage.setItem('agency_id', j.agency_id);localStorage.setItem('username', j.username);localStorage.setItem('role', j.role);
-    agency_id=j.agency_id;username=j.username;role=j.role;showApp();
-  }catch(err){msg.textContent='Error conexion: '+err.message}
+  const a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim(),p=document.getElementById('password').value,m=document.getElementById('loginMsg');
+  if(!a||!e||!p){m.textContent='Completa todo';return}
+  try{let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});let j=await r.json();if(!r.ok){m.textContent=j.error;return}localStorage.setItem('agency_id',j.agency_id);localStorage.setItem('username',j.username);localStorage.setItem('role',j.role);agency_id=j.agency_id;username=j.username;role=j.role;showApp();}catch(err){m.textContent=err.message}
 }
-function logout(){localStorage.clear();showLogin()}
-async function forgot(){
-  let email=prompt('Escribe tu CORREO registrado:'); if(!email) return; email=email.trim();
-  try{
-    let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
-    let txt = await r.text(); let j; try{ j=JSON.parse(txt); }catch{ j={error:txt} }
-    if(r.ok){ alert('✅ Correo enviado a '+email); }else{ alert('❌ ERROR '+r.status+': '+(j.error||txt)); }
-  }catch(e){ alert('❌ Error: '+e.message); }
-}
-function filterChats(q){ if(!q){ renderChats(allChats); return; } renderChats(allChats.filter(c=> (c.name||c.wa_id||'').toLowerCase().includes(q.toLowerCase()))); }
+function logout(){localStorage.clear();location.reload()}
+async function forgot(){let email=prompt('Correo registrado:');if(!email)return;try{let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim()})});let t=await r.text();let j;try{j=JSON.parse(t)}catch{j={error:t}}if(r.ok)alert('✅ Correo enviado a '+email);else alert('❌ '+j.error);}catch(e){alert(e.message)}}
+function initials(s){return (s||'?').substring(0,2).toUpperCase()}
+function colorClass(s){let h=0;for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+h;let colors=['avatar-sn','avatar-ac','avatar-mp','avatar-jl'];return colors[h%4]}
 function renderChats(list){
   let html=''; list.forEach(c=>{
-    let dotColor=c.dot||'transparent'; let initials=(c.name||c.wa_id||'?').substring(0,2).toUpperCase();
-    html+=`<div onclick="openChat('${c.wa_id}')" class="p-3 rounded-xl hover:bg-[#121e35] cursor-pointer flex gap-3 ${currentWa===c.wa_id?'bg-[#121e35] border border-soft':''}">
-      <div class="h-9 w-9 rounded-full bg-[#1e3a5f] flex items-center justify-center text-[11px] font-bold shrink-0">${initials}</div>
-      <div class="flex-1 overflow-hidden"><div class="flex justify-between"><b class="text-[13px] truncate">${c.name||c.wa_id}</b><small class="text-[10px] text-mute">${c.time||''}</small></div><small class="text-[12px] text-mute truncate block">${(c.lastMessage||'').substring(0,35)}</small><small class="text-[10px] text-mute">${c.tag||''}</small></div>
-      <div class="flex flex-col items-end"><span class="unread-dot" style="background:${dotColor}"></span>${c.unread?`<span class='bg-blue-600 text-[10px] px-1.5 rounded-full mt-1'>${c.unread}</span>`:''}</div>
+    let active=currentWa===c.wa_id?'bg-[#162240] border border-[#1e3a5f]':'hover:bg-[#111f3a]';
+    let cls=colorClass(c.name||c.wa_id);
+    html+=`<div onclick="openChat('${c.wa_id}')" class="cursor-pointer rounded-xl p-3 flex gap-3 ${active}">
+      <div class="h-8 w-8 rounded-full ${cls} flex items-center justify-center text-[11px] font-bold shrink-0">${initials(c.name||c.wa_id)}</div>
+      <div class="flex-1 min-w-0"><div class="flex justify-between items-center"><b class="text-[13px] text-white truncate">${c.name||c.wa_id}</b><span class="text-[10px] text-[#475569]">${c.unread?'•':''}</span></div><div class="text-[11px] text-[#94a3b8] truncate">${(c.lastMessage||'Sin mensajes').substring(0,30)}</div><div class="flex justify-between mt-1"><span class="text-[10px] text-[#475569]">${c.tag||''}</span>${c.unread?`<span class="bg-blue-600 text-white text-[10px] px-1.5 rounded-full">${c.unread}</span>`:''}</div></div>
     </div>`;
   });
-  document.getElementById('chats').innerHTML=html||'<p class="p-4 text-xs text-mute">Sin chats</p>';
+  document.getElementById('chats').innerHTML=html||'<p class="text-xs text-[#475569] p-4">Sin chats</p>';
 }
-async function loadChats(){
-  let r=await fetch('/api/chats?agency_id='+agency_id); let data=await r.json(); allChats=data; renderChats(data);
-}
-let chatInterval=null;
+function filterChats(q){renderChats(q?allChats.filter(c=>(c.name||c.wa_id).toLowerCase().includes(q.toLowerCase())):allChats)}
+async function loadChats(){let r=await fetch('/api/chats?agency_id='+agency_id);let d=await r.json();allChats=d;renderChats(d)}
+let interval=null;
 function openChat(wa){
-  currentWa=wa; let c=allChats.find(x=>x.wa_id===wa);
-  document.getElementById('chatName').textContent=c?.name||wa; document.getElementById('chatStatus').textContent='Online - WhatsApp • '+wa;
-  document.getElementById('profileName').textContent=c?.name||wa; document.getElementById('profilePhone').textContent=wa; document.getElementById('profileEmail').textContent=c?.email||'—';
-  loadMessages(); fetch('/api/chats/'+wa+'/read?agency_id='+agency_id,{method:'POST'});
-  if(chatInterval)clearInterval(chatInterval); chatInterval=setInterval(loadMessages,3000); renderChats(allChats);
+  currentWa=wa;let c=allChats.find(x=>x.wa_id===wa);
+  document.getElementById('chatName').textContent=c?.name||wa; document.getElementById('profileName').textContent=c?.name||wa;
+  document.getElementById('chatAvatar').textContent=initials(c?.name||wa); document.getElementById('profileAvatar').textContent=initials(c?.name||wa);
+  document.getElementById('profileAvatar').className='h-12 w-12 rounded-full flex items-center justify-center font-bold text-sm '+colorClass(c?.name||wa);
+  document.getElementById('chatAvatar').className='h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-white '+colorClass(c?.name||wa);
+  document.getElementById('profilePhone').textContent=wa; document.getElementById('profileEmail').textContent=c?.email||wa+'@whatsapp';
+  loadMessages(); fetch('/api/chats/'+wa+'/read?agency_id='+agency_id,{method:'POST'}); if(interval)clearInterval(interval); interval=setInterval(loadMessages,3000); renderChats(allChats);
 }
 async function loadMessages(){
-  if(!currentWa) return; let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id); let data=await r.json();
-  let html='<div class="text-center text-[11px] text-mute py-2">Today • '+new Date().toLocaleTimeString()+'</div>'; data.forEach(m=>{
-    let isOut=m.direction!=='in';
-    html+=`<div class="flex ${isOut?'justify-end':''}"><div class="max-w-[68%] ${isOut?'chat-bubble-out text-white':'chat-bubble-in'} p-3 rounded-2xl text-[13px]"><div>${m.text}</div><small class="text-[10px] opacity-60 block text-right mt-1">${new Date(m.timestamp).toLocaleTimeString().slice(0,5)} ${m.sent_by||''}</small></div></div>`;
+  if(!currentWa)return;let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let data=await r.json();
+  let html='<div class="text-center text-[11px] text-[#475569]">Today • 09:23 AM</div>';
+  data.forEach(m=>{
+    let out=m.direction!=='in';
+    html+=`<div class="flex ${out?'justify-end':''}"><div class="${out?'bubble-out':'bubble-in'} max-w-[62%] px-4 py-3 rounded-2xl text-[13px] leading-[1.4]">${m.text}<div class="text-[10px] opacity-70 mt-1 text-right">${new Date(m.timestamp).toLocaleTimeString().slice(0,5)}</div></div></div>`;
   });
-  document.getElementById('messages').innerHTML=html; document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight;
+  document.getElementById('messages').innerHTML=html; document.getElementById('messages').scrollTop=99999;
 }
-async function sendMessage(){ let t=document.getElementById('msgInput').value; if(!t||!currentWa) return; await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t,agency_id,username})}); document.getElementById('msgInput').value=''; loadMessages(); }
-async function changeTag(){ if(!currentWa) return; let tag=document.getElementById('tagSelect').value; await fetch('/api/chats/'+currentWa+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag,agency_id})}); }
-async function showCampaigns(){ let r=await fetch('/api/campaigns?agency_id='+agency_id);let data=await r.json(); let html='<h4 class="font-bold mb-2">Campañas</h4>';data.forEach(c=>{html+=`<div class="text-xs border border-soft p-2 rounded mb-1">${c.template} - ${c.sent}/${c.total} - ${c.status}</div>`}); html+=`<div class="mt-4"><input type="file" id="excel" class="text-xs"><input id="tpl" placeholder="plantilla" class="border border-soft p-1 w-full mt-2 text-xs bg-[#0f172a]"><button onclick="uploadCampaign()" class="bg-blue-600 text-white w-full py-2 rounded mt-2 text-xs">Subir campaña</button></div>`; document.getElementById('panelContent').innerHTML=html; }
-async function uploadCampaign(){ let file=document.getElementById('excel').files[0]; let tpl=document.getElementById('tpl').value; if(!file||!tpl){alert('Excel y plantilla');return} let reader=new FileReader(); reader.onload=async e=>{ let res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,fileBase64:e.target.result})}); let j=await res.json(); alert(j.ok?'Campaña creada: '+j.total: j.error); }; reader.readAsDataURL(file); }
-async function showTeam(){ let r=await fetch('/api/team?agency_id='+agency_id);let data=await r.json(); let html='<h4 class="font-bold mb-2">Equipo</h4>';data.forEach(u=>{html+=`<div class="text-xs flex justify-between border-b border-soft py-1">${u.username} - ${u.role} ${u.role==='trabajador'?`<button onclick="delUser('${u.username}')" class="text-red-400">x</button>`:''}</div>`}); if(role==='jefe')html+=`<div class="mt-4"><input id="newUser" placeholder="correo" class="bg-[#0f172a] border border-soft p-1 w-full text-xs"><input id="newPass" placeholder="clave" class="bg-[#0f172a] border border-soft p-1 w-full text-xs mt-1"><input id="newName" placeholder="nombre" class="bg-[#0f172a] border border-soft p-1 w-full text-xs mt-1"><button onclick="createUser()" class="bg-blue-600 text-white w-full py-2 rounded mt-2 text-xs">Crear trabajador</button></div>`; document.getElementById('panelContent').innerHTML=html; }
-async function createUser(){ let username=document.getElementById('newUser').value; let password=document.getElementById('newPass').value; let display_name=document.getElementById('newName').value; let r=await fetch('/api/team/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username,password,display_name,role_req:localStorage.getItem('username')})}); let j=await r.json(); alert(j.ok?'Creado':j.error); showTeam(); }
-async function delUser(u){ if(!confirm('Borrar '+u+'?')) return; let r=await fetch('/api/team/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username:u,role_req:localStorage.getItem('username')})}); let j=await r.json(); alert(j.ok?'Borrado':j.error); showTeam(); }
-async function showAiConfig(){ let r=await fetch('/api/ai-config?agency_id='+agency_id);let c=await r.json(); let html=`<h4 class="font-bold mb-2">IA</h4><label class="text-xs"><input type="checkbox" id="aiEnabled" ${c.enabled?'checked':''}> Activada</label><br><label class="text-xs"><input type="checkbox" id="aiHuman" ${c.human_takeover?'checked':''}> Human takeover</label><textarea id="aiPrompt" class="bg-[#0f172a] border border-soft w-full h-24 text-xs mt-2 p-2">${c.prompt||''}</textarea><button onclick="saveAi()" class="bg-blue-600 text-white w-full py-2 rounded mt-2 text-xs">Guardar IA</button>`; document.getElementById('panelContent').innerHTML=html; }
-async function saveAi(){ let enabled=document.getElementById('aiEnabled').checked; let human_takeover=document.getElementById('aiHuman').checked; let prompt=document.getElementById('aiPrompt').value; await fetch('/api/ai-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,enabled,prompt,human_takeover})}); alert('Guardado'); }
-async function showTemplates(){ let r=await fetch('/api/templates?agency_id='+agency_id);let data=await r.json(); let html='<h4 class="font-bold mb-2">Plantillas aprobadas</h4>';data.forEach(t=>{html+=`<div class="text-xs border border-soft p-1 rounded mb-1">${t.name} - ${t.status}</div>`}); document.getElementById('panelContent').innerHTML=html; }
+async function sendMessage(){let t=document.getElementById('msgInput').value;if(!t||!currentWa)return;await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t,agency_id,username})});document.getElementById('msgInput').value='';loadMessages();}
+async function changeTag(){if(!currentWa)return;await fetch('/api/chats/'+currentWa+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:document.getElementById('tagSelect').value,agency_id})});}
+async function showCampaigns(){let r=await fetch('/api/campaigns?agency_id='+agency_id);let d=await r.json();let h='<b>Campañas</b><br><br>';d.forEach(c=>{h+=`<div class="pro-card p-2 rounded-lg mb-1 text-xs">${c.template} - ${c.sent}/${c.total}</div>`});h+=`<div class="mt-3"><input type="file" id="excel" class="text-[10px]"><input id="tpl" placeholder="plantilla" class="pro-input w-full p-2 rounded mt-2 text-xs"><button onclick="uploadCampaign()" class="bg-blue-600 w-full py-2 rounded mt-2 text-xs">Subir</button></div>`;document.getElementById('panelContent').innerHTML=h;}
+async function uploadCampaign(){let f=document.getElementById('excel').files[0],tpl=document.getElementById('tpl').value;if(!f||!tpl)return alert('Falta');let rd=new FileReader();rd.onload=async e=>{let res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,fileBase64:e.target.result})});let j=await res.json();alert(j.ok?'Creada '+j.total:j.error)};rd.readAsDataURL(f);}
+async function showTeam(){let r=await fetch('/api/team?agency_id='+agency_id);let d=await r.json();let h='<b>Equipo</b><br><br>';d.forEach(u=>{h+=`<div class="flex justify-between text-xs py-1 border-b border-[#1c2e50]">${u.username} ${u.role==='trabajador'?`<button onclick="delUser('${u.username}')" class="text-red-400">x</button>`:''}</div>`});if(role==='jefe')h+=`<div class="mt-3"><input id="newUser" placeholder="correo" class="pro-input w-full p-1 text-xs"><input id="newPass" placeholder="clave" class="pro-input w-full p-1 text-xs mt-1"><button onclick="createUser()" class="bg-blue-600 w-full py-1.5 rounded mt-2 text-xs">Crear</button></div>`;document.getElementById('panelContent').innerHTML=h;}
+async function createUser(){let u=document.getElementById('newUser').value,p=document.getElementById('newPass').value;let r=await fetch('/api/team/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username:u,password:p,display_name:u,role_req:username})});let j=await r.json();alert(j.ok?'Creado':j.error);showTeam();}
+async function delUser(u){if(!confirm('Borrar '+u+'?'))return;let r=await fetch('/api/team/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username:u,role_req:username})});let j=await r.json();alert(j.ok?'Borrado':j.error);showTeam();}
+async function showAiConfig(){let r=await fetch('/api/ai-config?agency_id='+agency_id);let c=await r.json();document.getElementById('panelContent').innerHTML=`<b>IA</b><br><label class="text-xs"><input type="checkbox" id="aiEnabled" ${c.enabled?'checked':''}> Activa</label><br><label class="text-xs"><input type="checkbox" id="aiHuman" ${c.human_takeover?'checked':''}> Human takeover</label><textarea id="aiPrompt" class="pro-input w-full h-20 text-xs mt-2 p-2">${c.prompt||''}</textarea><button onclick="saveAi()" class="bg-blue-600 w-full py-1.5 rounded mt-2 text-xs">Guardar</button>`;}
+async function saveAi(){let e=document.getElementById('aiEnabled').checked,h=document.getElementById('aiHuman').checked,p=document.getElementById('aiPrompt').value;await fetch('/api/ai-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,enabled:e,prompt:p,human_takeover:h})});alert('Guardado')}
+async function showTemplates(){let r=await fetch('/api/templates?agency_id='+agency_id);let d=await r.json();let h='<b>Plantillas</b><br><br>';d.forEach(t=>{h+=`<div class="text-xs border border-[#1c2e50] p-1 rounded mb-1">${t.name}</div>`});document.getElementById('panelContent').innerHTML=h;}
 </script>
 </body>
 </html>
