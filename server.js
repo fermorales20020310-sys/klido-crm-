@@ -1,4 +1,4 @@
-// server.js - KLIDO V8.0 PRO FINAL - MULTIAGENCIA + MEDIA + METRICAS + ANTIBANEO + REAL
+// server.js - KLIDO V8.0 PRO FINAL - MULTIAGENCIA + MEDIA + METRICAS + ANTIBANEO + REAL + SYNC
 try{ require('dotenv').config(); }catch(e){}
 const express = require('express');
 const { Pool } = require('pg');
@@ -30,7 +30,7 @@ async function sendWhatsappReal(to, text){
   const j = await r.json(); if(!r.ok) throw new Error(j.error?.message||'Error WA'); return j;
 }
 async function sendTemplateReal(to, templateName){
-  let clean = String(to).replace(/\D/g,''); if(clean.length===10) clean='57'+clean;
+  let clean = String(to).replace(/\D/g,''); if(clean.length===10) clean='57'+clean; if(clean.length<10) return {error:'numero corto'};
   const r = await fetch(`https://graph.facebook.com/v20.0/${WA_PHONE_ID}/messages`,{ method:'POST', headers:{'Authorization':'Bearer '+WA_TOKEN,'Content-Type':'application/json'}, body:JSON.stringify({messaging_product:'whatsapp', to:clean, type:'template', template:{name:templateName, language:{code:'es_CO'}}}) });
   return await r.json();
 }
@@ -80,13 +80,14 @@ app.post('/api/login', async (req,res)=>{
 });
 app.post('/api/forgot-password', async (req,res)=>{
   const {email} = req.body; const clean = email.trim().toLowerCase();
-  const users = await pool.query(`SELECT agency_id FROM users WHERE LOWER(username)=LOWER($1)`,[clean]);
-  if(!users.rows.length) return res.status(404).json({error:'Correo no registrado en ninguna agencia'});
-  for(let u of users.rows){
+  const users = await pool.query(`SELECT agency_id FROM users WHERE LOWER(username)=LOWER($2) OR LOWER(username)=LOWER($1)`,[clean, clean]);
+  const uniq = [...new Map(users.rows.map(r=>[r.agency_id,r])).values()];
+  if(!uniq.length) return res.status(404).json({error:'Correo no registrado'});
+  for(let u of uniq){
     const token = crypto.randomBytes(32).toString('hex'); const expires = Date.now()+1000*60*15;
     await pool.query(`INSERT INTO password_resets(agency_id,email,token,expires_at) VALUES($1,$2,$3,$4)`,[u.agency_id, clean, token, expires]);
     const link = `https://${req.get('host')}/reset.html?token=${token}`;
-    await sendEmail(clean, `KLIDO - Restablecer ${u.agency_id}`, `<h2>KLIDO CRM Pro</h2><p>Agencia: ${u.agency_id}</p><p>Tu usuario: ${clean}</p><a href="${link}" style="background:#2a4bff;color:#fff;padding:14px 20px;border-radius:12px;text-decoration:none;display:inline-block">Cambiar contraseña - Soporte 3133181851</a><p>Expira en 15 min. Ley 1581 Habeas Data</p>`);
+    await sendEmail(clean, `KLIDO - Restablecer ${u.agency_id}`, `<h2>KLIDO</h2><p>Agencia: ${u.agency_id}</p><a href="${link}" style="background:#2a4bff;color:#fff;padding:14px 20px;border-radius:12px;text-decoration:none;display:inline-block">Cambiar contraseña</a>`);
   }
   res.json({ok:true});
 });
@@ -98,14 +99,15 @@ app.post('/api/reset-password', async (req,res)=>{
 });
 app.get('/api/hazme-jefe', async (req,res)=>{
   const {agency_id, username} = req.query;
-  const r = await pool.query(`UPDATE users SET role='jefe', plan='gold' WHERE agency_id=$1 AND LOWER(username)=LOWER($2) RETURNING *`,[agency_id.toLowerCase(), username.toLowerCase()]);
+  const r = await pool.query(`UPDATE users SET role='jefe', plan='gold', display_name='Fernanda Morales' WHERE agency_id=$1 AND LOWER(username)=LOWER($2) RETURNING *`,[agency_id.toLowerCase(), username.toLowerCase()]);
   if(!r.rows.length) return res.json({error:'No encontrado'}); res.json({ok:true, usuario:r.rows[0]});
 });
 app.get('/api/crear-jefe', async (req,res)=>{
-  const {agency_id, username, password} = req.query; if(!agency_id||!username||!password) return res.json({error:'Falta'});
+  const {agency_id, username, password, name} = req.query; if(!agency_id||!username||!password) return res.json({error:'Falta'});
   const hash = await bcrypt.hash(password, 10);
-  await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,'jefe',$4,'gold') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role='jefe', plan='gold'`,[agency_id.toLowerCase(), username.toLowerCase(), hash, username]);
-  res.json({ok:true, login:{agency_id, username}});
+  const display = name || 'Fernanda Morales';
+  await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,'jefe',$4,'gold') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role='jefe', plan='gold', display_name=$4`,[agency_id.toLowerCase(), username.toLowerCase(), hash, display]);
+  res.json({ok:true, login:{agency_id, username, display_name:display}});
 });
 
 app.get('/api/chats', async (req,res)=>{
@@ -130,7 +132,7 @@ app.get('/api/team', async (req,res)=>{ const r=await pool.query(`SELECT agency_
 app.post('/api/team/create', async (req,res)=>{
   const {agency_id,username,password,display_name,role_req} = req.body;
   const check = await pool.query(`SELECT role FROM users WHERE agency_id=$1 AND LOWER(username)=LOWER($2)`,[agency_id, role_req.toLowerCase()]);
-  if(!check.rows.length ||!['jefe','admin'].includes(check.rows[0].role)) return res.status(403).json({error:'Solo jefe/admin puede crear trabajadores reales'});
+  if(!check.rows.length ||!['jefe','admin'].includes(check.rows[0].role)) return res.status(403).json({error:'Solo jefe/admin'});
   const hash=await bcrypt.hash(password,10);
   await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,'trabajador',$4,'basico') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, display_name=$4`,[agency_id.toLowerCase(), username.toLowerCase(), hash, display_name]);
   res.json({ok:true});
@@ -143,10 +145,9 @@ app.get('/api/stats', async (req,res)=>{
   const unread = await pool.query(`SELECT COUNT(*) FROM chats WHERE agency_id=$1 AND unread>0`,[agency_id]);
   const totalMsg = await pool.query(`SELECT COUNT(*) FROM messages WHERE agency_id=$1`,[agency_id]);
   const todayMsg = await pool.query(`SELECT COUNT(*) FROM messages WHERE agency_id=$1 AND timestamp > $2`,[agency_id, Date.now()-86400000]);
-  const weekMsg = await pool.query(`SELECT COUNT(*) FROM messages WHERE agency_id=$1 AND timestamp > $2`,[agency_id, Date.now()-86400000*7]);
   const byWorker = await pool.query(`SELECT sent_by as worker, COUNT(*) as total FROM messages WHERE agency_id=$1 AND direction='out' GROUP BY sent_by ORDER BY total DESC`,[agency_id]);
   const byTag = await pool.query(`SELECT tag, COUNT(*) as total FROM chats WHERE agency_id=$1 GROUP BY tag`,[agency_id]);
-  res.json({totalChats:Number(totalChats.rows[0].count), unread:Number(unread.rows[0].count), totalMessages:Number(totalMsg.rows[0].count), todayMessages:Number(todayMsg.rows[0].count), weekMessages:Number(weekMsg.rows[0].count), byWorker:byWorker.rows, byTag:byTag.rows});
+  res.json({totalChats:Number(totalChats.rows[0].count), unread:Number(unread.rows[0].count), totalMessages:Number(totalMsg.rows[0].count), todayMessages:Number(todayMsg.rows[0].count), weekMessages:0, byWorker:byWorker.rows, byTag:byTag.rows});
 });
 app.get('/api/team/activity', async (req,res)=>{
   const {agency_id} = req.query; const team = await pool.query(`SELECT username,role,display_name,plan FROM users WHERE agency_id=$1 ORDER BY role DESC`,[agency_id]); const act=[];
@@ -154,15 +155,37 @@ app.get('/api/team/activity', async (req,res)=>{
   res.json(act);
 });
 
-app.get('/api/templates', async (req,res)=>{ const r=await pool.query(`SELECT * FROM templates WHERE agency_id=$1 AND status='approved'`,[req.query.agency_id]); res.json(r.rows); });
+// --- PLANTILLAS APROBADAS AUTOMATICO ---
+app.get('/api/templates', async (req,res)=>{ const r=await pool.query(`SELECT * FROM templates WHERE agency_id=$1 AND status='approved' ORDER BY name`,[req.query.agency_id]); res.json(r.rows); });
+app.post('/api/templates/sync-real', async (req,res)=>{
+  try{
+    const {agency_id} = req.query; if(!WA_TOKEN) return res.json({error:'Falta WHATSAPP_TOKEN'});
+    if(!WABA_ID){ const r=await pool.query(`SELECT COUNT(*) FROM templates WHERE agency_id=$1 AND status='approved'`,[agency_id]); return res.json({ok:true, count:Number(r.rows[0].count), note:'Pon WABA_ID para sync directo Meta'}); }
+    const resp = await fetch(`https://graph.facebook.com/v20.0/${WABA_ID}/message_templates?fields=name,status,language&status=APPROVED&limit=100`,{headers:{'Authorization':'Bearer '+WA_TOKEN}});
+    const j = await resp.json(); if(j.error) return res.json({error:j.error.message});
+    let count=0; for(let t of j.data||[]){ await pool.query(`INSERT INTO templates(agency_id,name,status,language) VALUES($1,$2,$3,$4) ON CONFLICT(agency_id,name) DO UPDATE SET status=$3, language=$4`,[agency_id, t.name, 'approved', t.language]); count++; }
+    res.json({ok:true, count});
+  }catch(e){ res.json({error:e.message}); }
+});
+
+// --- CAMPAÑAS ---
 app.get('/api/campaigns', async (req,res)=>{ const r=await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY id DESC LIMIT 100`,[req.query.agency_id]); res.json(r.rows); });
 app.post('/api/campaigns/upload', async (req,res)=>{
-  const {agency_id, template, fileBase64} = req.body;
-  const buffer = Buffer.from(fileBase64.split(',').pop(), 'base64'); const wb = XLSX.read(buffer); const sheet = wb.Sheets[wb.SheetNames[0]]; const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
-  const contacts = rows.slice(1).filter(r=>r[0]).map(r=>({wa_id:String(r[0]).replace(/\D/g,''), name:r[1]||''})).slice(0,5000);
-  if(!contacts.length) return res.status(400).json({error:'Excel vacio'});
-  const result = await pool.query(`INSERT INTO campaigns(agency_id,template,total,created_at,contacts) VALUES($1,$2,$3,$4,$5) RETURNING id`,[agency_id, template, contacts.length, Date.now(), JSON.stringify(contacts)]);
-  res.json({ok:true, id:result.rows[0].id, total:contacts.length});
+  try{
+    const {agency_id, template, fileBase64} = req.body;
+    const buffer = Buffer.from(fileBase64.split(',').pop(), 'base64'); const wb = XLSX.read(buffer); const sheet = wb.Sheets[wb.SheetNames[0]]; const rows = XLSX.utils.sheet_to_json(sheet, {header:1}).filter(r=>r && r.length);
+    if(rows.length<2) return res.status(400).json({error:'Excel vacio'});
+    const headers = rows[0].map(h=>String(h||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""));
+    let phoneIdx = headers.findIndex(h=>['telefono','tel','phone','celular','whatsapp','numero','movil','cel'].some(k=>h.includes(k)));
+    if(phoneIdx===-1){
+      let best=0,cmax=0; for(let col=0;col<headers.length;col++){ let c=0; for(let r=1;r<Math.min(rows.length,40);r++){ let v=String(rows[r][col]||'').replace(/\D/g,''); if(v.length>=10&&v.length<=13) c++; } if(c>cmax){cmax=c; best=col;}} phoneIdx=best;
+    }
+    const contacts = []; for(let i=1;i<rows.length;i++){ let raw=rows[i][phoneIdx]; if(!raw) continue; let num=String(raw).replace(/\D/g,''); if(num.length===10) num='57'+num; if(num.length<10||num.length>15) continue; let nameIdx = phoneIdx===0?1:0; for(let c=0;c<rows[i].length;c++){ if(c!==phoneIdx && String(rows[i][c]).length>2 && isNaN(rows[i][c])){ nameIdx=c; break; } } contacts.push({wa_id:num, name:String(rows[i][nameIdx]||'').slice(0,30)}); }
+    const uniq = [...new Map(contacts.map(c=>[c.wa_id,c])).values()].slice(0,5000);
+    if(!uniq.length) return res.status(400).json({error:'No detecte numeros'});
+    const result = await pool.query(`INSERT INTO campaigns(agency_id,template,total,created_at,contacts) VALUES($1,$2,$3,$4,$5) RETURNING id`,[agency_id, template, uniq.length, Date.now(), JSON.stringify(uniq)]);
+    res.json({ok:true, id:result.rows[0].id, total:uniq.length});
+  }catch(e){ res.status(500).json({error:e.message}); }
 });
 setInterval(async ()=>{
   try{
@@ -170,7 +193,7 @@ setInterval(async ()=>{
     for(let camp of pending.rows){
       const contacts = typeof camp.contacts==='string'?JSON.parse(camp.contacts):camp.contacts; const toSend = contacts.slice(camp.sent, camp.sent+50);
       if(!toSend.length){ await pool.query(`UPDATE campaigns SET status='done' WHERE id=$1`,[camp.id]); continue; }
-      for(let c of toSend){ try{ await sendTemplateReal(c.wa_id, camp.template); await pool.query(`INSERT INTO chats(agency_id,wa_id,name,last_message,source,last_message_at) VALUES($1,$2,$3,$4,'campaign',$5) ON CONFLICT(agency_id,wa_id) DO UPDATE SET source='campaign'`,[camp.agency_id, c.wa_id, c.name, 'Campaña: '+camp.template, Date.now()]); }catch(e){} await new Promise(r=>setTimeout(r, 3000)); }
+      for(let c of toSend){ try{ await sendTemplateReal(c.wa_id, camp.template); await pool.query(`INSERT INTO chats(agency_id,wa_id,name,last_message,source,last_message_at) VALUES($1,$2,$3,$4,'campaign',$5) ON CONFLICT(agency_id,wa_id) DO UPDATE SET source='campaign', name=COALESCE(EXCLUDED.name,chats.name)`,[camp.agency_id, c.wa_id, c.name, 'Campaña: '+camp.template, Date.now()]); }catch(e){} await new Promise(r=>setTimeout(r, 3000)); }
       await pool.query(`UPDATE campaigns SET sent=sent+$1 WHERE id=$2`,[toSend.length, camp.id]);
     }
   }catch(e){ console.error('Camp', e.message); }
@@ -178,13 +201,13 @@ setInterval(async ()=>{
 
 app.get('/api/ai-config', async (req,res)=>{
   const r=await pool.query(`SELECT * FROM ai_config WHERE agency_id=$1`,[req.query.agency_id]); const plan=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 LIMIT 1`,[req.query.agency_id]);
-  const isGold = (plan.rows[0]?.plan||'').toLowerCase()==='gold'; res.json({... (r.rows[0]||{enabled:false,prompt:'',human_takeover:true}), isGold, owner:'3133181851'});
+  const isGold = (plan.rows[0]?.plan||'').toLowerCase()==='gold'; res.json({... (r.rows[0]||{enabled:false,prompt:'',human_takeover:true}), isGold});
 });
 app.post('/api/ai-config', async (req,res)=>{
   const {agency_id,enabled,prompt,human_takeover} = req.body; const plan=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 LIMIT 1`,[agency_id]);
-  if(!plan.rows.length || plan.rows[0].plan!=='gold') return res.status(403).json({error:'Solo Gold - Contacta 3133181851'});
+  if(!plan.rows.length || plan.rows[0].plan!=='gold') return res.status(403).json({error:'Solo Enterprise'});
   await pool.query(`INSERT INTO ai_config(agency_id,enabled,prompt,human_takeover) VALUES($1,$2,$3,$4) ON CONFLICT(agency_id) DO UPDATE SET enabled=$2,prompt=$3,human_takeover=$4`,[agency_id,enabled,prompt,human_takeover]); res.json({ok:true});
 });
 
 const PORT = process.env.PORT || 3000;
-(async()=>{ await ensureTables(); app.listen(PORT, '0.0.0.0', ()=>console.log(`🚀 KLIDO V8 PRO FINAL en ${PORT} - Owner 3133181851`)); })();
+(async()=>{ await ensureTables(); app.listen(PORT, '0.0.0.0', ()=>console.log(`🚀 KLIDO V8 PRO FINAL en ${PORT}`)); })();
