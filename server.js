@@ -1,4 +1,4 @@
-// server.js - KLIDO FINAL FIX ENVIO - ESTE ES EL BUENO
+// server.js - KLIDO FINAL - FIX ENVIO - COMPATIBLE CON TUS VARIABLES
 try{ require('dotenv').config(); }catch(e){}
 const express = require('express');
 const { Pool } = require('pg');
@@ -13,6 +13,13 @@ app.use(express.static(path.join(__dirname,'public')));
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
 
+// --- CONFIG WA - Lee tus nombres actuales de Railway ---
+const WA_TOKEN = (process.env.WHATSAPP_TOKEN||'').trim();
+const WA_PHONE_ID = (process.env.WHATSAPP_PHONE_ID || process.env.PHONE_NUMBER_ID || process.env.PHONE_ID || process.env.WABA_ID || '').trim();
+const WA_VERIFY = (process.env.WHATSAPP_VERIFY_TOKEN || process.env.VERIFY_TOKEN || 'klido123').trim();
+
+console.log('CONFIG WA:', { hasToken:!!WA_TOKEN, phoneId: WA_PHONE_ID, verify: WA_VERIFY });
+
 async function sendEmail(to, subject, html){
   if(!process.env.RESEND_API_KEY) throw new Error('Falta RESEND_API_KEY');
   const r = await fetch('https://api.resend.com/emails',{
@@ -24,27 +31,32 @@ async function sendEmail(to, subject, html){
 }
 
 async function sendWhatsapp(to, text){
-  const token = process.env.WHATSAPP_TOKEN?.trim();
-  const phoneId = process.env.WHATSAPP_PHONE_ID?.trim();
-  if(!token ||!phoneId){ console.log('WA DEMO - falta TOKEN/PHONE_ID'); return {demo:true}; }
+  if(!WA_TOKEN ||!WA_PHONE_ID){ console.log('WA DEMO - falta TOKEN/PHONE_ID'); return {demo:true}; }
   let clean = String(to).replace(/\D/g,''); if(clean.length===10) clean='57'+clean;
   try{
-    const r = await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`,{
+    const r = await fetch(`https://graph.facebook.com/v20.0/${WA_PHONE_ID}/messages`,{
       method:'POST',
-      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      headers:{'Authorization':'Bearer '+WA_TOKEN,'Content-Type':'application/json'},
       body:JSON.stringify({messaging_product:'whatsapp', to:clean, type:'text', text:{body:text}})
     });
-    const j = await r.json(); console.log('WA SEND',clean,r.ok?'OK':JSON.stringify(j)); return j;
+    const j = await r.json();
+    console.log('WA SEND', clean, r.ok? 'OK' : JSON.stringify(j));
+    return j;
   }catch(e){ console.error('WA ERR',e.message); return {error:e.message}; }
 }
 async function sendTemplate(to, templateName){
-  const token = process.env.WHATSAPP_TOKEN?.trim(); const phoneId = process.env.WHATSAPP_PHONE_ID?.trim();
-  if(!token||!phoneId) return;
+  if(!WA_TOKEN ||!WA_PHONE_ID) return;
   let clean = String(to).replace(/\D/g,''); if(clean.length===10) clean='57'+clean;
-  try{ await fetch(`https://graph.facebook.com/v20.0/${phoneId}/messages`,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp', to:clean, type:'template', template:{name:templateName, language:{code:'es'}}})}); }catch(e){ console.error('TPL ERR',e.message); }
+  try{
+    await fetch(`https://graph.facebook.com/v20.0/${WA_PHONE_ID}/messages`,{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+WA_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({messaging_product:'whatsapp', to:clean, type:'template', template:{name:templateName, language:{code:'es'}}})
+    });
+  }catch(e){ console.error('TPL ERR',e.message); }
 }
 
-app.get('/health',(req,res)=>res.json({ok:true, dark:true, light:true, wa:!!process.env.WHATSAPP_TOKEN}));
+app.get('/health',(req,res)=>res.json({ok:true, wa:!!WA_TOKEN, phone:WA_PHONE_ID}));
 
 async function ensureTables(){
   await pool.query(`CREATE TABLE IF NOT EXISTS users(agency_id TEXT, username TEXT, password_hash TEXT, role TEXT, display_name TEXT, plan TEXT DEFAULT 'basico', PRIMARY KEY(agency_id,username))`);
@@ -58,7 +70,11 @@ async function ensureTables(){
 }
 ensureTables();
 
-app.get('/webhook', (req,res)=>{ if(req.query['hub.verify_token']===(process.env.WHATSAPP_VERIFY_TOKEN||'klido123')) return res.send(req.query['hub.challenge']); res.sendStatus(403); });
+// WEBHOOK - Ya lee VERIFY_TOKEN que tienes
+app.get('/webhook', (req,res)=>{
+  if(req.query['hub.verify_token']===WA_VERIFY) return res.send(req.query['hub.challenge']);
+  res.sendStatus(403);
+});
 app.post('/webhook', async (req,res)=>{
   try{
     const val = req.body.entry?.[0]?.changes?.[0]?.value;
@@ -90,7 +106,7 @@ app.post('/api/forgot-password', async (req,res)=>{
     const token = crypto.randomBytes(32).toString('hex'); const expires = Date.now()+1000*60*15;
     await pool.query(`INSERT INTO password_resets(agency_id,email,token,expires_at) VALUES($1,$2,$3,$4)`,[u.agency_id, clean, token, expires]);
     const link = `https://${req.get('host')}/reset.html?token=${token}`;
-    await sendEmail(clean, `Restablecer clave - ${u.agency_id}`, `<div style="font-family:sans-serif"><h2>KLIDO CRM</h2><p>Agencia: <b>${u.agency_id}</b></p><a href="${link}" style="background:#2a4bff;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none">Cambiar mi clave</a><p>Expira 15 min</p><p style="font-size:11px;color:#666">Ley 1581</p></div>`);
+    await sendEmail(clean, `Restablecer clave - ${u.agency_id}`, `<div style="font-family:sans-serif"><h2>KLIDO CRM</h2><p>Agencia: <b>${u.agency_id}</b></p><a href="${link}" style="background:#2a4bff;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none">Cambiar mi clave</a><p>Expira 15 min</p></div>`);
   }
   res.json({ok:true});
 });
@@ -166,4 +182,4 @@ app.get('/api/plans', (req,res)=>res.json([
 app.get('/api/legal', (req,res)=>res.json({ley1581:true, habeasData:true, ownerWpp:'3133181851'}));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=>console.log('KLIDO FINAL en '+PORT+' - FIX ENVIO OK - Wpp 3133181851'));
+app.listen(PORT, ()=>console.log('KLIDO FINAL en '+PORT+' - FIX ENVIO OK - PhoneID:'+WA_PHONE_ID+' - Wpp 3133181851'));
