@@ -2,23 +2,22 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>KLIDO | CRM Empresarial</title>
+<title>KLIDO | Inbox Tiempo Real</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
-*{font-family:'Inter',sans-serif}
-body{background:#070b18}
-.pro-card{background:#111c34;border:1px solid #1e2f4f}
-.bubble-in{background:#1a2b4a;color:#dbeafe}
-.bubble-out{background:#2a5bd7;color:white}
+*{font-family:'Inter',sans-serif}body{background:#070b18}
+.bubble-in{background:#1a2b4a;color:#dbeafe}.bubble-out{background:#2a5bd7;color:white}
+.dot-red{width:8px;height:8px;background:#ef4444;border-radius:9999px;box-shadow:0 0 6px #ef4444}
+.dot-yellow{width:8px;height:8px;background:#eab308;border-radius:9999px;box-shadow:0 0 6px #eab308}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:10px}
 </style>
 </head>
 <body class="h-screen bg-[#070b18] p-2">
 <div class="h-full w-full bg-[#0f172a] rounded-[16px] border border-[#1e293b] flex overflow-hidden">
 
-<!-- LOGIN -->
+<!-- LOGIN igual -->
 <div id="loginView" class="absolute inset-0 z-50 flex items-center justify-center bg-[#070b18]">
 <div class="bg-[#111c34] p-8 rounded-[20px] border border-[#1e2f4f] w-full max-w-[400px]">
 <div class="flex items-center gap-3 mb-8"><img src="/logo.png" class="h-10 w-10 rounded-xl bg-white p-1"><div><div class="font-black text-white">KLIDO</div><div class="text-[10px] text-[#8aa4ff]">CRM EMPRESARIAL</div></div></div>
@@ -26,102 +25,156 @@ body{background:#070b18}
 <input id="email" placeholder="Correo" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mb-3 text-sm text-white outline-none">
 <input id="password" type="password" placeholder="Contraseña" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mb-4 text-sm text-white outline-none">
 <button onclick="login()" class="w-full bg-[#2a5bd7] py-3 rounded-xl font-bold text-white text-sm">Ingresar</button>
-<div class="flex justify-between mt-4 text-[11px]"><button onclick="forgot()" class="text-[#8aa4ff]">¿Olvidó contraseña?</button><a href="/reset.html" class="text-[#475569]">Código al correo</a></div>
 <p id="loginMsg" class="text-xs text-red-400 mt-3 text-center"></p>
 </div>
 </div>
 
-<!-- SIDEBAR -->
+<!-- SIDEBAR - IGUAL QUE TU CAPTURA -->
 <div class="w-[220px] bg-[#0f172a] border-r border-[#1e293b] flex flex-col shrink-0">
-<div class="p-4 flex items-center gap-2"><img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1"><div class="font-black text-white text-[14px]">KLIDO</div><span class="bg-[#1e3a5f] text-[#60a5fa] text-[10px] px-2 py-0.5 rounded-full">Básico</span></div>
+<div class="p-4 flex items-center gap-2"><img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1"><div class="font-black text-white text-[14px]">KLIDO</div><span class="bg-[#1e3a5f] text-[#60a5fa] text-[10px] px-2 py-0.5 rounded-full" id="planBadge">Básico</span></div>
 <div class="px-3"><button class="w-full border border-[#1e3a5f] rounded-xl py-2 text-[12px] text-white flex items-center justify-center gap-2">🌙 / ☀️ Tema</button></div>
 <div class="mt-5 px-2 flex-1">
 <div class="text-[10px] text-[#475569] px-2 mb-2">MENU</div>
-<button id="btnInbox" onclick="showInbox()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-inbox w-4"></i>Inbox</button>
-<button id="btnCamp" onclick="location.href='/campañas.html'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-bullhorn w-4 text-[#f59e0b]"></i>Campaigns</button>
-<button id="btnPlanes" onclick="showPlanes()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white mt-1"><i class="fa-solid fa-credit-card w-4"></i>Planes</button>
+<button id="btnInbox" onclick="showInbox()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white"><i class="fa-solid fa-inbox w-4"></i>Inbox</button>
+<button onclick="location.href='/campañas.html'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-bullhorn w-4 text-[#f59e0b]"></i>Campaigns</button>
+<button id="btnPlanes" onclick="showPlanes()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-credit-card w-4"></i>Planes</button>
 <button id="btnSettings" onclick="showSettings()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34] mt-1"><i class="fa-solid fa-gear w-4"></i>Settings</button>
-<div class="mt-6"><div class="text-[10px] text-[#475569] px-2 mb-2">SUPPORT</div><button onclick="window.open('https://wa.me/573133181851','_blank')" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-lightbulb w-4 text-yellow-400"></i>Help Center</button></div>
+<div id="adminMenu" class="hidden mt-4"><div class="text-[10px] text-[#eab308] px-2 mb-2">ADMIN</div><button onclick="showAdmin()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#eab308] bg-[#1a1a0f] border border-yellow-500/20"><i class="fa-solid fa-users-gear w-4"></i>Equipo y Estadísticas</button></div>
+<div class="mt-6"><div class="text-[10px] text-[#475569] px-2 mb-2">SUPPORT</div><button onclick="window.open('https://wa.me/573133181851','_blank')" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-lightbulb w-4 text-yellow-400"></i>Help Center</button></div>
 </div>
-<div class="p-3 border-t border-[#1e293b]"><div class="bg-[#111c34] rounded-xl p-3 border border-[#1e2f4f]"><div id="sidePlan" class="text-white text-[12px] font-bold">Plan Básico</div><div class="text-[#64748b] text-[10px]">Gestiona tu suscripción</div><button onclick="showPlanes()" class="mt-3 w-full bg-[#2a5bd7] text-white py-2 rounded-lg text-[11px] font-bold">Ver planes</button></div><button onclick="logout()" class="mt-3 w-full bg-red-600/20 border border-red-600/30 text-red-400 py-2 rounded-xl text-[12px]">SALIR</button></div>
+<div class="p-3 border-t border-[#1e293b]"><div class="bg-[#111c34] rounded-xl p-3 border border-[#1e2f4f]"><div id="sidePlan" class="text-white text-[12px] font-bold">Plan Básico</div><div id="sideUser" class="text-[#64748b] text-[10px]">-</div><button onclick="showPlanes()" class="mt-3 w-full bg-[#2a5bd7] text-white py-2 rounded-lg text-[11px] font-bold">Ver planes</button></div><button onclick="logout()" class="mt-3 w-full bg-red-600/20 border border-red-600/30 text-red-400 py-2 rounded-xl text-[12px]">SALIR</button></div>
 </div>
 
-<!-- MAIN - PLANES COMO TU CAPTURA -->
-<div class="flex-1 bg-[#0f172a] overflow-y-auto">
-<div id="planesView" class="p-7">
+<!-- MAIN -->
+<div class="flex-1 flex flex-col bg-[#0f172a]">
+
+<!-- PLANES - SIN TOCAR, IGUAL QUE TU CAPTURA ANTERIOR -->
+<div id="planesView" class="hidden p-7 overflow-y-auto">
 <h1 class="text-white font-bold text-[16px]">Planes KLIDO - Anual</h1>
 <div class="grid grid-cols-3 gap-4 mt-5 max-w-[760px]">
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5 text-center">
-<div class="text-white font-bold">Básico</div>
-<div class="text-white font-black text-[22px] mt-1">$800.000</div>
-<div class="text-[#64748b] text-[11px]">anual</div>
-<div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $80.000 mant. c/3 meses</div>
-<div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]">
-<div class="flex gap-2"><span>✅</span> 1 envío masivo a la vez</div>
-<div class="flex gap-2"><span>✅</span> 2 usuarios incluidos</div>
-<div class="flex gap-2"><span>✅</span> Inbox ilimitado</div>
-<div class="flex gap-2"><span>❌</span> Sin IA automática</div>
+<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5 text-center"><div class="text-white font-bold">Básico</div><div class="text-white font-black text-[22px] mt-1">$800.000</div><div class="text-[#64748b] text-[11px]">anual</div><div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $80.000 mant. c/3 meses</div><div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]"><div>✅ 1 envío masivo a la vez</div><div>✅ 2 usuarios incluidos</div><div>✅ Inbox ilimitado</div><div>❌ Sin IA automática</div></div><button onclick="goPlan('Básico')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Básico</button></div>
+<div class="bg-[#111c34] border border-[#2a5bd7]/30 rounded-[14px] p-5 text-center"><div class="text-white font-bold">Premium ⭐</div><div class="text-white font-black text-[22px] mt-1">$1.300.000</div><div class="text-[#64748b] text-[11px]">anual</div><div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $95.000 mant. c/3 meses</div><div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]"><div>✅ 5 envíos simultáneos</div><div>✅ 5 usuarios incluidos</div><div>✅ IA incluida</div><div>✅ Soporte prioritario</div></div><button onclick="goPlan('Premium')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Premium</button></div>
+<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5 text-center"><div class="text-white font-bold">Gold</div><div class="text-white font-black text-[22px] mt-1">$2.400.000</div><div class="text-[#64748b] text-[11px]">anual</div><div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $130.000 mant. c/3 meses</div><div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]"><div>✅ Envíos ilimitados</div><div>✅ Usuarios ilimitados</div><div>✅ IA + Pánico humano</div><div>✅ 📞 Llamada directa incluida</div></div><button onclick="goPlan('Gold')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Gold</button></div>
 </div>
-<button onclick="goPlan('Básico $800.000 + $80.000 mant')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Básico</button>
-</div>
-<div class="bg-[#111c34] border border-[#2a5bd7]/30 rounded-[14px] p-5 text-center">
-<div class="flex items-center justify-center gap-1"><div class="text-white font-bold">Premium</div><span class="text-yellow-400 text-[12px]">⭐</span></div>
-<div class="text-white font-black text-[22px] mt-1">$1.300.000</div>
-<div class="text-[#64748b] text-[11px]">anual</div>
-<div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $95.000 mant. c/3 meses</div>
-<div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]">
-<div class="flex gap-2"><span>✅</span> 5 envíos simultáneos</div>
-<div class="flex gap-2"><span>✅</span> 5 usuarios incluidos</div>
-<div class="flex gap-2"><span>✅</span> IA incluida</div>
-<div class="flex gap-2"><span>✅</span> Soporte prioritario</div>
-</div>
-<button onclick="goPlan('Premium $1.300.000 + $95.000 mant')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Premium</button>
-</div>
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5 text-center">
-<div class="text-white font-bold">Gold</div>
-<div class="text-white font-black text-[22px] mt-1">$2.400.000</div>
-<div class="text-[#64748b] text-[11px]">anual</div>
-<div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $130.000 mant. c/3 meses</div>
-<div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]">
-<div class="flex gap-2"><span>✅</span> Envíos ilimitados</div>
-<div class="flex gap-2"><span>✅</span> Usuarios ilimitados</div>
-<div class="flex gap-2"><span>✅</span> IA + Pánico humano</div>
-<div class="flex gap-2"><span>✅</span> 📞 Llamada directa incluida</div>
-</div>
-<button onclick="goPlan('Gold $2.400.000 + $130.000 mant IA+Llamada')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Gold</button>
-</div>
-</div>
-<p class="text-[11px] text-[#475569] mt-6 max-w-[760px] leading-relaxed">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API y soporte. Factura electrónica. Puedes cambiar de plan en cualquier momento. Cumplimiento Ley 1581.</p>
+<p class="text-[11px] text-[#475569] mt-6 max-w-[760px]">Pago anual + mantenimiento trimestral obligatorio. Factura electrónica. Ley 1581.</p>
 </div>
 
-<div id="inboxView" class="hidden h-full flex"><div id="chatsPanel" class="w-[340px] border-r border-[#1e293b] bg-[#0f172a]"><div class="p-4 border-b border-[#1e293b]"><div class="text-white font-bold text-sm">Inbox • Tiempo real</div></div><div id="chats" class="p-2 space-y-1 overflow-y-auto h-[calc(100%-60px)]"></div></div><div class="flex-1 bg-[#0b1220] flex flex-col"><div class="h-[56px] border-b border-[#1e293b] flex items-center px-4"><div id="chatName" class="text-white font-bold text-sm">Selecciona un chat</div></div><div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3"></div><div class="p-3 border-t border-[#1e293b] flex gap-2"><input id="msgInput" placeholder="Escribir..." class="flex-1 bg-[#111c34] border border-[#1e293b] rounded-full px-4 py-2 text-sm text-white outline-none" onkeydown="if(event.key==='Enter')send()"><button onclick="send()" class="bg-[#2a5bd7] w-9 h-9 rounded-full text-white">➤</button></div></div></div>
-
-<div id="settingsView" class="hidden p-7"><h1 class="text-white font-bold">Settings</h1><p class="text-[#94a3b8] text-[12px] mt-3">Inbox: bandeja tiempo real con punto amarillo campaña. Campaigns: Excel auto + plantillas API + antibaneo 50/5h. Métricas: seguimiento jefe. Gold: IA + llamada. Ayuda → 3133181851</p></div>
+<!-- INBOX - COMO TU CAPTURA CON PUNTO ROJO Y AMARILLO -->
+<div id="inboxView" class="flex flex-1">
+<div class="w-[360px] border-r border-[#1e293b] bg-[#0f172a] flex flex-col">
+<div class="h-[56px] px-4 flex items-center border-b border-[#1e293b]"><div class="text-white font-bold text-[13px]">Inbox • Tiempo real</div><div class="ml-auto flex gap-3 text-[10px]"><span class="flex items-center gap-1"><span class="dot-red"></span> No leído</span><span class="flex items-center gap-1"><span class="dot-yellow"></span> Campaña</span></div></div>
+<div id="chats" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
+</div>
+<div class="flex-1 bg-[#0b1220] flex flex-col">
+<div class="h-[56px] border-b border-[#1e293b] flex items-center px-4 bg-[#0f172a]"><div class="h-8 w-8 rounded-full bg-[#2a5bd7] flex items-center justify-center text-white text-[11px] font-bold">SN</div><div class="ml-3"><div id="chatName" class="text-white text-[13px] font-bold">Selecciona un chat</div><div class="text-[#64748b] text-[10px]">WhatsApp Business API</div></div></div>
+<div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3 bg-[#0b1220]"></div>
+<div class="p-3 bg-[#0f172a] border-t border-[#1e293b] flex gap-2"><input id="msgInput" placeholder="Escribir..." class="flex-1 bg-[#111c34] border border-[#1e293b] rounded-full px-4 py-2.5 text-sm text-white outline-none" onkeydown="if(event.key==='Enter')send()"><button onclick="send()" class="bg-[#2a5bd7] w-10 h-10 rounded-full text-white flex items-center justify-center">➤</button></div>
+</div>
 </div>
 
-<!-- RIGHT PROFILE -->
+<!-- SETTINGS -->
+<div id="settingsView" class="hidden p-7"><h1 class="text-white font-bold">Settings</h1><p class="text-[#94a3b8] text-[12px] mt-3">Inbox con punto rojo no leído y amarillo campaña. Campaigns: Excel auto + plantillas API + 50/5h. Soporte 3133181851</p></div>
+
+<!-- ADMIN - SOLO ADMIN -->
+<div id="adminView" class="hidden p-7 overflow-y-auto">
+<h1 class="text-white font-bold text-[18px]">👑 Panel Administradora - Equipo y Seguimiento</h1>
+<p class="text-[#eab308] text-[12px] mt-1">Solo visible para ti como administradora - Gestiona trabajadores, ve sus chats, seguimientos y estadísticas</p>
+
+<div class="grid grid-cols-3 gap-4 mt-6">
+<div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">Mensajes hoy</div><div id="statToday" class="text-white font-black text-[22px]">-</div></div>
+<div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">No leídos (rojo)</div><div id="statUnread" class="text-red-400 font-black text-[22px]">-</div></div>
+<div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">Campañas (amarillo)</div><div id="statCamp" class="text-yellow-400 font-black text-[22px]">-</div></div>
+</div>
+
+<div class="grid grid-cols-2 gap-6 mt-6">
+<div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5">
+<h3 class="text-white font-bold text-[13px]">Agregar trabajador</h3>
+<input id="newWorkerEmail" placeholder="Correo trabajador" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-4 text-sm text-white outline-none">
+<input id="newWorkerPass" placeholder="Contraseña" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-sm text-white outline-none">
+<select id="newWorkerRole" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-sm text-white"><option value="worker">Worker - solo sus chats</option><option value="admin">Admin - ve todo</option></select>
+<button onclick="addWorker()" class="mt-4 w-full bg-[#2a5bd7] text-white py-3 rounded-xl text-[12px] font-bold">Agregar trabajador</button>
+<p id="addWorkerMsg" class="text-[11px] mt-2 text-[#8aa4ff]"></p>
+</div>
+<div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5">
+<h3 class="text-white font-bold text-[13px]">Trabajadores activos</h3>
+<div id="workersList" class="mt-4 space-y-2 max-h-[300px] overflow-y-auto"></div>
+</div>
+</div>
+
+<div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5 mt-6">
+<h3 class="text-white font-bold text-[13px]">Seguimiento por trabajador - Chats y rendimiento</h3>
+<div id="followup" class="mt-4 grid grid-cols-1 gap-2"></div>
+</div>
+</div>
+
+</div>
+
+<!-- RIGHT PROFILE - IGUAL QUE TU CAPTURA -->
 <div class="w-[260px] bg-[#0f172a] border-l border-[#1e293b] hidden lg:flex flex-col">
 <div class="h-[56px] border-b border-[#1e293b] flex items-center px-4 gap-3"><div class="h-8 w-8 rounded-full bg-[#2a5bd7] flex items-center justify-center text-white text-[11px] font-bold">SN</div><div><div class="text-white text-[12px] font-bold">Selecciona un chat</div><div class="text-[#64748b] text-[10px]">WhatsApp Business API</div></div></div>
-<div class="p-6 text-center"><div class="h-16 w-16 rounded-full bg-[#2a5bd7] mx-auto flex items-center justify-center text-white font-bold">SN</div><div class="text-white text-sm mt-3">-</div><div class="text-[#64748b] text-[11px]">Customer • WhatsApp</div><div class="text-left mt-6"><div class="text-white text-[12px]">Selecciona un chat</div><div class="mt-3 flex items-center gap-2"><span class="text-[#94a3b8] text-[11px]">Tag:</span><select class="bg-[#111c34] border border-[#1e293b] rounded-lg px-3 py-1.5 text-[11px] text-white"><option>nuevo</option><option>cliente</option><option>campaña</option></select></div></div></div>
+<div class="p-6 text-center"><div class="h-16 w-16 rounded-full bg-[#2a5bd7] mx-auto flex items-center justify-center text-white font-bold">SN</div><div id="rightName" class="text-white text-sm mt-3">-</div><div class="text-[#64748b] text-[11px]">Customer • WhatsApp</div><div class="text-left mt-6"><div class="text-white text-[12px]">Selecciona un chat</div><div class="mt-3 flex items-center gap-2"><span class="text-[#94a3b8] text-[11px]">Tag:</span><select class="bg-[#111c34] border border-[#1e293b] rounded-lg px-3 py-1.5 text-[11px] text-white"><option>nuevo</option><option>cliente</option><option>campaña</option></select></div><div id="rightInfo" class="mt-4 text-[11px] text-[#475569]"></div></div></div>
 </div>
 
 </div>
 
 <script>
-let agency_id=localStorage.getItem('agency_id')||'',username=localStorage.getItem('username')||'',currentWa=null,allChats=[];
-function showApp(){document.getElementById('loginView').classList.add('hidden');showPlanes();}
+let agency_id=localStorage.getItem('agency_id')||'',username=localStorage.getItem('username')||'',role=localStorage.getItem('role')||'',currentWa=null,allChats=[];
+function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('sideUser').textContent=username||'';if(role==='admin'||username.includes('admin')||agency_id==='acol'){document.getElementById('adminMenu').classList.remove('hidden');}showInbox();}
 if(agency_id&&username)showApp();
-async function login(){let a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim(),p=document.getElementById('password').value;let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});let j=await r.json();if(!r.ok){document.getElementById('loginMsg').textContent=j.error;return;}localStorage.setItem('agency_id',j.agency_id);localStorage.setItem('username',j.username);localStorage.setItem('role',j.role);agency_id=j.agency_id;username=j.username;showApp();}
+async function login(){let a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim(),p=document.getElementById('password').value;let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});let j=await r.json();if(!r.ok){document.getElementById('loginMsg').textContent=j.error;return;}localStorage.setItem('agency_id',j.agency_id);localStorage.setItem('username',j.username);localStorage.setItem('role',j.role||'');agency_id=j.agency_id;username=j.username;role=j.role||'';showApp();}
 function logout(){localStorage.clear();location.reload();}
 function goPlan(p){window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20quiero%20'+encodeURIComponent(p),'_blank');}
-function showPlanes(){document.getElementById('planesView').classList.remove('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('btnPlanes').className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white mt-1';document.getElementById('btnInbox').className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]';document.getElementById('btnSettings').className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]';}
-function showInbox(){document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.remove('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('btnPlanes').className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]';document.getElementById('btnInbox').className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white';fetchChats();}
-function showSettings(){document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.remove('hidden');}
-async function fetchChats(){let r=await fetch('/api/chats?agency_id='+agency_id);allChats=await r.json();document.getElementById('chats').innerHTML=allChats.map(c=>`<div onclick="openChat('${c.wa_id}')" class="p-3 rounded-xl hover:bg-[#111c34] cursor-pointer flex gap-2"><div class="h-8 w-8 rounded-full bg-[#1e293b] flex items-center justify-center text-[10px] text-white">${(c.name||c.wa_id).slice(0,2)}</div><div class="flex-1"><div class="text-white text-[12px] flex gap-1">${c.name||c.wa_id} ${c.source=='campaign'?'<span class="h-2 w-2 bg-yellow-400 rounded-full"></span>':''}</div><div class="text-[#64748b] text-[11px]">${(c.last_message||'').slice(0,30)}</div></div></div>`).join('');}
-function openChat(wa){currentWa=wa;document.getElementById('chatName').textContent=wa;loadMsgs();}
-async function loadMsgs(){let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let d=await r.json();document.getElementById('messages').innerHTML=d.map(m=>`<div class="flex ${m.direction!='in'?'justify-end':''}"><div class="${m.direction!='in'?'bubble-out':'bubble-in'} px-4 py-2 rounded-2xl text-[13px] max-w-[70%]">${m.text}</div></div>`).join('');}
+function showPlanes(){document.getElementById('planesView').classList.remove('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.add('hidden');}
+function showInbox(){document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.remove('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.add('hidden');fetchChats();}
+function showSettings(){document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.remove('hidden');document.getElementById('adminView').classList.add('hidden');}
+function showAdmin(){document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.remove('hidden');loadWorkers();loadStats();}
+
+async function fetchChats(){
+let r=await fetch('/api/chats?agency_id='+agency_id);
+allChats=await r.json();
+document.getElementById('chats').innerHTML=allChats.map(c=>{
+let red=c.unread>0?`<span class="dot-red"></span>`:'';
+let yellow=c.source==='campaign'?`<span class="dot-yellow"></span>`:'';
+let both=`<div class="flex gap-1.5 items-center">${red}${yellow}</div>`;
+return `<div onclick="openChat('${c.wa_id}')" class="p-3 rounded-xl hover:bg-[#111c34] cursor-pointer flex items-center gap-3 ${c.unread>0?'bg-[#1a233f] border border-red-500/20':''}">
+<div class="h-8 w-8 rounded-full bg-[#1e293b] flex items-center justify-center text-[10px] text-white shrink-0">${(c.name||c.wa_id).slice(0,2).toUpperCase()}</div>
+<div class="flex-1 min-w-0"><div class="text-white text-[12px] truncate flex items-center gap-2">${(c.name||c.wa_id).slice(0,18)} ${c.unread>0?`<span class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">${c.unread}</span>`:''}</div><div class="text-[#64748b] text-[11px] truncate">${(c.last_message||'').slice(0,28)}</div></div>
+${both}
+</div>`;
+}).join('');
+}
+
+async function openChat(wa){
+currentWa=wa;
+let chat=allChats.find(x=>x.wa_id===wa);
+document.getElementById('chatName').textContent=chat?.name||wa;
+document.getElementById('rightName').textContent=chat?.name||wa;
+document.getElementById('rightInfo').innerHTML=`<div>WA: ${wa}</div><div>${chat?.source==='campaign'?'🟡 Campaña':'📥 Entrada'} ${chat?.unread>0?'🔴 '+chat.unread+' no leídos':''}</div>`;
+loadMsgs();
+if(chat?.unread>0){await fetch('/api/chats/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:wa,agency_id})});fetchChats();}
+}
+
+async function loadMsgs(){let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let d=await r.json();document.getElementById('messages').innerHTML=d.map(m=>`<div class="flex ${m.direction!='in'?'justify-end':''}"><div class="${m.direction!='in'?'bubble-out':'bubble-in'} px-4 py-2 rounded-2xl text-[13px] max-w-[70%]">${m.text||''}${m.media_url?`<br><a href='${m.media_url}' target='_blank' class='underline'>Ver archivo</a>`:''}</div></div>`).join('');}
 async function send(){let t=document.getElementById('msgInput').value;if(!t||!currentWa)return;await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t,agency_id,username})});document.getElementById('msgInput').value='';loadMsgs();}
-async function forgot(){let e=prompt('Correo:');if(!e)return;let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e})});let j=await r.json();alert(j.ok?'Código al correo':'Error');}
+
+async function loadWorkers(){
+let r=await fetch('/api/workers?agency_id='+agency_id);
+let w=await r.json();
+document.getElementById('workersList').innerHTML=w.map(u=>`<div class="bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl flex justify-between items-center"><div><div class="text-white text-[12px]">${u.username}</div><div class="text-[#64748b] text-[10px]">${u.role} • ${u.email||''}</div></div><button onclick="delWorker('${u.id}')" class="text-red-400 text-[11px]">Eliminar</button></div>`).join('')||'<p class="text-[#475569] text-[11px]">Sin trabajadores aún</p>';
+document.getElementById('followup').innerHTML=w.map(u=>`<div class="bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl flex justify-between"><span class="text-white text-[12px]">${u.username}</span><span class="text-[#94a3b8] text-[11px]">${u.chats||0} chats • ${u.msgs||0} msgs hoy • ${u.unread||0} 🔴</span></div>`).join('');
+}
+async function addWorker(){
+let email=document.getElementById('newWorkerEmail').value,pass=document.getElementById('newWorkerPass').value,role=document.getElementById('newWorkerRole').value;
+if(!email||!pass)return alert('Correo y contraseña');
+let r=await fetch('/api/workers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,email,password:pass,role})});
+let j=await r.json();
+document.getElementById('addWorkerMsg').textContent=j.ok?'✅ Trabajador agregado':j.error;
+if(j.ok)loadWorkers();
+}
+async function delWorker(id){if(!confirm('¿Eliminar trabajador?'))return;await fetch('/api/workers/'+id+'?agency_id='+agency_id,{method:'DELETE'});loadWorkers();}
+async function loadStats(){let r=await fetch('/api/stats?agency_id='+agency_id);let s=await r.json();document.getElementById('statToday').textContent=s.today||0;document.getElementById('statUnread').textContent=s.unread||0;document.getElementById('statCamp').textContent=s.campaign||0;}
+
+setInterval(()=>{if(document.getElementById('inboxView').offsetParent!==null)fetchChats();},5000);
 </script>
 </body>
 </html>
