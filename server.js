@@ -1,4 +1,4 @@
-// server.js - KLIDO CRM FINAL V6 - PRODUCCION REAL - TODO COMPLETO
+// server.js - KLIDO CRM V6.1 - FIX RAILWAY NETWORKING - SIN DAÑAR NADA
 try{ require('dotenv').config(); }catch(e){}
 const express = require('express');
 const { Pool } = require('pg');
@@ -11,13 +11,17 @@ const app = express();
 app.use(express.json({limit:'30mb'}));
 app.use(express.static(path.join(__dirname,'public')));
 
+// CORS para que no falle el front
+app.use((req,res,next)=>{ res.header('Access-Control-Allow-Origin','*'); res.header('Access-Control-Allow-Methods','GET,POST,OPTIONS'); res.header('Access-Control-Allow-Headers','Content-Type'); if(req.method==='OPTIONS') return res.sendStatus(200); next(); });
+
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
+pool.on('error', (err)=>console.error('POOL ERROR', err.message));
 
 const WA_TOKEN = (process.env.WHATSAPP_TOKEN||'').trim();
 const WA_PHONE_ID = (process.env.WHATSAPP_PHONE_ID || process.env.PHONE_NUMBER_ID || process.env.PHONE_ID || '').trim();
 const WA_VERIFY = (process.env.WHATSAPP_VERIFY_TOKEN || process.env.VERIFY_TOKEN || 'klido123').trim();
 
-console.log('>>> KLIDO V6 FINAL - WA:', { hasToken:!!WA_TOKEN, phoneId: WA_PHONE_ID, verify: WA_VERIFY });
+console.log('>>> KLIDO V6.1 - WA:', { hasToken:!!WA_TOKEN, phoneId: WA_PHONE_ID, verify: WA_VERIFY });
 
 async function sendEmail(to, subject, html){
   if(!process.env.RESEND_API_KEY) throw new Error('Falta RESEND_API_KEY');
@@ -51,17 +55,19 @@ async function sendTemplateReal(to, templateName){
 }
 
 async function ensureTables(){
-  await pool.query(`CREATE TABLE IF NOT EXISTS users(agency_id TEXT, username TEXT, password_hash TEXT, role TEXT, display_name TEXT, plan TEXT DEFAULT 'basico', PRIMARY KEY(agency_id,username))`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS chats(agency_id TEXT, wa_id TEXT, name TEXT, last_message TEXT, last_message_at BIGINT, unread INT DEFAULT 0, tag TEXT DEFAULT 'nuevo', source TEXT DEFAULT 'direct', PRIMARY KEY(agency_id,wa_id))`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS messages(id SERIAL PRIMARY KEY, agency_id TEXT, wa_id TEXT, text TEXT, direction TEXT, timestamp BIGINT, sent_by TEXT, campaign_id INT)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS password_resets(agency_id TEXT, email TEXT, token TEXT, expires_at BIGINT)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS ai_config(agency_id TEXT PRIMARY KEY, enabled BOOLEAN, prompt TEXT, human_takeover BOOLEAN)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS templates(agency_id TEXT, name TEXT, status TEXT, language TEXT, PRIMARY KEY(agency_id,name))`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY, agency_id TEXT, template TEXT, total INT, sent INT DEFAULT 0, status TEXT DEFAULT 'pending', created_at BIGINT, contacts JSONB)`);
+  try{
+    await pool.query(`CREATE TABLE IF NOT EXISTS users(agency_id TEXT, username TEXT, password_hash TEXT, role TEXT, display_name TEXT, plan TEXT DEFAULT 'basico', PRIMARY KEY(agency_id,username))`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS chats(agency_id TEXT, wa_id TEXT, name TEXT, last_message TEXT, last_message_at BIGINT, unread INT DEFAULT 0, tag TEXT DEFAULT 'nuevo', source TEXT DEFAULT 'direct', PRIMARY KEY(agency_id,wa_id))`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS messages(id SERIAL PRIMARY KEY, agency_id TEXT, wa_id TEXT, text TEXT, direction TEXT, timestamp BIGINT, sent_by TEXT, campaign_id INT)`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS password_resets(agency_id TEXT, email TEXT, token TEXT, expires_at BIGINT)`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS ai_config(agency_id TEXT PRIMARY KEY, enabled BOOLEAN, prompt TEXT, human_takeover BOOLEAN)`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS templates(agency_id TEXT, name TEXT, status TEXT, language TEXT, PRIMARY KEY(agency_id,name))`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY, agency_id TEXT, template TEXT, total INT, sent INT DEFAULT 0, status TEXT DEFAULT 'pending', created_at BIGINT, contacts JSONB)`);
+    console.log('>>> Tablas OK');
+  }catch(e){ console.error('ensureTables error:', e.message); }
 }
-ensureTables();
 
-app.get('/health', (req,res)=>res.json({ok:true, v:'V6 FINAL', phoneId:WA_PHONE_ID, wa:!!WA_TOKEN, owner:'3133181851'}));
+app.get('/health', (req,res)=>res.json({ok:true, v:'V6.1 FIX', phoneId:WA_PHONE_ID, wa:!!WA_TOKEN, owner:'3133181851'}));
 
 // WEBHOOK
 app.get('/webhook', (req,res)=>{ if(req.query['hub.verify_token']===WA_VERIFY) return res.send(req.query['hub.challenge']); res.sendStatus(403); });
@@ -105,7 +111,7 @@ app.post('/api/reset-password', async (req,res)=>{
   await pool.query(`DELETE FROM password_resets WHERE token=$1`,[token]); res.json({ok:true});
 });
 
-// === ARREGLO DEFINITIVO PARA VOLVERTE JEFE ===
+// ARREGLO DEFINITIVO PARA VOLVERTE JEFE
 app.get('/api/hazme-jefe', async (req,res)=>{
   try{
     const {agency_id, username} = req.query;
@@ -201,5 +207,9 @@ app.get('/api/plans', (req,res)=>res.json([
 ]));
 app.get('/api/legal', (req,res)=>res.json({ley1581:true, owner:'3133181851', phoneId:WA_PHONE_ID}));
 
+// START FIXED PARA RAILWAY
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=>console.log(`🚀 KLIDO V6 FINAL en ${PORT} - PhoneID:${WA_PHONE_ID}`));
+(async()=>{
+  await ensureTables();
+  app.listen(PORT, '0.0.0.0', ()=>console.log(`🚀 KLIDO V6.1 FIX en ${PORT} - PhoneID:${WA_PHONE_ID} - 0.0.0.0`));
+})();
