@@ -2,136 +2,213 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Klido CRM - Avanza Consulting | Soporte 24/7 3133181851</title>
+<title>Klido CRM V11 - Avanza Consulting | 3133181851</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0f172a;color:#e2e8f0;font-family:Inter,system-ui}
-.container{max-width:1100px;margin:auto;padding:24px}
-.login-card{max-width:480px;margin:60px auto;background:#1e293b;border:1px solid #334155;border-radius:20px;padding:32px}
-h1{color:#fff;margin:0 0 6px} .sub{color:#94a3b8;font-size:13px;margin-bottom:20px}
-input,select{width:100%;background:#0f172a;border:1px solid #334155;color:#fff;padding:12px 14px;border-radius:10px;margin:8px 0}
-.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0}
-.plan{border:1px solid #334155;border-radius:12px;padding:12px;cursor:pointer;text-align:center}
-.plan.selected{border-color:#38bdf8;background:#0b3a4a} .plan b{display:block;color:#fff}
-.plan span{font-size:11px;color:#94a3b8} .price{color:#38bdf8;font-weight:700;margin-top:6px}
-.btn{width:100%;background:#38bdf8;color:#000;border:0;padding:13px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:12px}
-.btn:disabled{opacity:.5}
-.badge{display:inline-block;background:#10b981;color:#fff;padding:3px 8px;border-radius:20px;font-size:10px;margin-left:6px}
-.legal{font-size:12px;color:#94a3b8;margin:14px 0;display:flex;gap:8px;line-height:1.4}
+.container{max-width:1200px;margin:auto;padding:24px}
+.login-card{max-width:480px;margin:40px auto;background:#1e293b;border:1px solid #334155;border-radius:20px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+h1{color:#fff;margin:0 0 6px;display:flex;align-items:center;gap:10px} h1 img{width:38px;height:38px;border-radius:8px}
+.sub{color:#94a3b8;font-size:12px;margin-bottom:18px}
+input,select{width:100%;background:#0f172a;border:1px solid #334155;color:#fff;padding:12px 14px;border-radius:10px;margin:7px 0;outline:none}
+input:focus{border-color:#38bdf8}
+.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0}
+.plan{border:1px solid #334155;border-radius:12px;padding:10px;cursor:pointer;text-align:center;transition:.2s}
+.plan.selected{border-color:#38bdf8;background:#0b3a4a;transform:scale(1.02)} .plan b{display:block;color:#fff;font-size:13px}
+.plan span{font-size:10px;color:#94a3b8} .price{color:#38bdf8;font-weight:800;margin-top:5px;font-size:11px}
+.btn{width:100%;background:#38bdf8;color:#000;border:0;padding:13px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:10px}
+.btn-outline{background:transparent;color:#38bdf8;border:1px solid #38bdf8}
+.badge{display:inline-block;background:#10b981;color:#fff;padding:3px 10px;border-radius:20px;font-size:10px}
+.badge.gold{background:#f59e0b;color:#000} .badge.premium{background:#38bdf8;color:#000}
+.legal{font-size:11px;color:#94a3b8;margin:12px 0;display:flex;gap:8px;line-height:1.4}
 .legal a{color:#38bdf8}
-.support{margin-top:18px;background:#0b1220;border:1px dashed #334155;padding:12px;border-radius:10px;font-size:12px;text-align:center;color:#94a3b8}
-.support b{color:#fff}
+.support{margin-top:14px;background:#0b1220;border:1px dashed #334155;padding:10px;border-radius:10px;font-size:11px;text-align:center;color:#94a3b8}
 #dashboard{display:none}
-.tabs{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}
-.tab{background:#1e293b;border:1px solid #334155;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px}
-.tab.active{background:#38bdf8;color:#000;font-weight:700}
-.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:20px;margin:16px 0}
-.semaforo{display:flex;gap:8px;margin:10px 0} .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.tabs{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap;position:sticky;top:0;background:#0f172a;padding:10px 0;z-index:10}
+.tab{background:#1e293b;border:1px solid #334155;padding:8px 13px;border-radius:20px;cursor:pointer;font-size:12px}
+.tab.active{background:#38bdf8;color:#000;font-weight:800}
+.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:18px;margin:14px 0}
+.semaforo{display:flex;gap:12px;margin:10px 0;font-size:11px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}.plans{grid-template-columns:1fr}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:99}
+.modalBox{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:22px;max-width:420px;width:90%}
+table{width:100%;border-collapse:collapse;font-size:12px} th{color:#94a3b8;text-align:left;padding:8px;border-bottom:1px solid #334155} td{padding:8px;border-bottom:1px solid #1e293b}
+.wppBtn{background:#25D366;color:#000;padding:10px 14px;border-radius:10px;font-weight:800;text-decoration:none;display:inline-block}
 </style>
 </head>
 <body>
 <div class="container">
 
-<!-- LOGIN -->
 <div id="loginView" class="login-card">
-<h1>Klido CRM <span class="badge">V10.9 LEGAL</span></h1>
-<p class="sub">Avanza Consulting - Inbox con semáforo 🔴 No leídos 🟡 Campaña + Métricas</p>
+<h1><img src="logo.png" onerror="this.style.display='none'">Klido CRM <span class="badge">V11 REAL</span></h1>
+<p class="sub">Avanza Consulting - Multi agencia - API Oficial Meta - Antibaneo 50/5h + 3s - Soporte 24/7 3133181851</p>
 
 <input id="companyId" placeholder="ID Empresa (ej: acol)" required>
-<input id="email" type="email" placeholder="Email" required>
+<input id="email" type="email" placeholder="Email jefe o worker" required>
 <input id="password" type="password" placeholder="Contraseña" required>
 
-<p style="font-size:13px;color:#fff;margin:14px 0 6px">Elige tu plan (se guarda al crear empresa):</p>
+<p style="font-size:12px;color:#fff;margin:12px 0 6px">Elige tu plan - Precios anuales + mantenimiento trimestral:</p>
 <div class="plans">
-<div class="plan selected" data-plan="basico" onclick="selectPlan(this)"><b>Básico</b><span>1 sede, 3 users, inbox</span><div class="price">$800k + $80k trim</div></div>
-<div class="plan" data-plan="premium" onclick="selectPlan(this)"><b>Premium</b><span>3 sedes, campañas Excel</span><div class="price">$1.3M + $95k trim</div></div>
-<div class="plan" data-plan="gold" onclick="selectPlan(this)"><b>Gold</b><span>Ilimitado + IA + Llamadas 📞</span><div class="price">$2.4M + $125k trim</div></div>
+<div class="plan selected" data-plan="basico" data-anual="800000" data-mant="80000" onclick="selectPlan(this)"><b>Básico</b><span>1 sede, 3 users</span><div class="price">$800k/año + $80k trim</div></div>
+<div class="plan" data-plan="premium" data-anual="1300000" data-mant="95000" onclick="selectPlan(this)"><b>Premium</b><span>3 sedes, campañas</span><div class="price">$1.3M/año + $95k trim</div></div>
+<div class="plan" data-plan="gold" data-anual="2400000" data-mant="125000" onclick="selectPlan(this)"><b>Gold</b><span>Ilimitado + IA + 📞</span><div class="price">$2.4M/año + $125k trim</div></div>
 </div>
 
-<label class="legal">
-<input type="checkbox" id="legalCheck" required>
-<span>Acepto <a href="/legal" target="_blank">Términos, Política de Datos Ley 1581 de 2012 y Contrato de Prestación de Servicios</a> y declaro tener autorización de mis contactos para campañas.</span>
-</label>
+<label class="legal"><input type="checkbox" id="legalCheck" required><span>Acepto <a href="/legal" target="_blank">Términos, Ley 1581, Contrato</a> y tengo autorización de contactos para campañas con plantillas aprobadas.</span></label>
 
 <button class="btn" id="loginBtn" onclick="login()">Entrar / Crear Empresa</button>
+<button class="btn btn-outline" onclick="openForgot()">Olvidé mi contraseña - Enviar código al correo</button>
 <div id="msg" style="font-size:12px;color:#f87171;margin-top:10px"></div>
-
-<div class="support">Soporte 24/7 <b>3133181851</b> | Bogotá, Colombia<br>API Oficial Meta | Antibaneo 50/5h + 3s</div>
+<div class="support">Soporte 24/7 <b>3133181851</b> | Bogotá | <a href="https://wa.me/573133181851" target="_blank" style="color:#25D366">WhatsApp Ayuda</a></div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboard">
-<h1>Klido CRM - <span id="compName"></span> <span id="planBadge" class="badge"></span></h1>
+<h1><img src="logo.png" onerror="this.style.display='none'">Klido <span id="compName"></span> <span id="planBadge" class="badge"></span> <span id="roleBadge" class="badge gold"></span></h1>
 <div class="tabs">
-<div class="tab active" onclick="go('inbox')">Inbox 🔴🟡</div>
-<div class="tab" onclick="window.open('/campanas','_blank')">Campañas</div>
-<div class="tab" onclick="alert('Equipo: métricas hoy, no leídos, campañas, IA, llamadas')">Equipo y Métricas</div>
-<div class="tab" onclick="window.open('/legal','_blank')">Legal Ley 1581</div>
+<div class="tab active" data-t="inbox" onclick="switchTab('inbox')">Inbox 🔴🟡</div>
+<div class="tab" data-t="campanas" onclick="switchTab('campanas')">Campañas + Historial</div>
+<div class="tab" data-t="plantillas" onclick="switchTab('plantillas')">Plantillas Aprobadas</div>
+<div class="tab" data-t="equipo" id="tabEquipo" onclick="switchTab('equipo')">Equipo / Workers</div>
+<div class="tab" data-t="metricas" id="tabMetricas" onclick="switchTab('metricas')">Métricas y Seguimiento</div>
+<div class="tab" data-t="planes" onclick="switchTab('planes')">Planes y Pagos</div>
+<div class="tab" data-t="config" onclick="switchTab('config')">Configuración</div>
+<div class="tab" onclick="window.open('https://wa.me/573133181851?text=Ayuda%20Klido%20'+(localStorage.getItem('company')||''), '_blank')">Ayuda WPP</div>
 <div class="tab" onclick="logout()">Salir</div>
 </div>
 
-<div class="card">
-<h3>Inbox - Semáforo</h3>
-<div class="semaforo"><span><span class="dot" style="background:#ef4444"></span> No leídos</span> <span><span class="dot" style="background:#eab308"></span> Campaña</span> <span><span class="dot" style="background:#10b981"></span> IA</span></div>
-<p style="color:#94a3b8;font-size:13px">Aquí verás tus chats. Workers solo ven asignados. Admin ve todo. Este es tu V10.8.3 sin cambios, solo con legal.</p>
-<div id="inboxList" style="color:#94a3b8;font-size:13px">Conectando...</div>
+<div id="view-inbox" class="card">
+<h3>Inbox Profesional - Semáforo Didáctico</h3>
+<div class="semaforo"><span><span class="dot" style="background:#ef4444"></span> No leídos</span><span><span class="dot" style="background:#eab308"></span> Campaña</span><span><span class="dot" style="background:#10b981"></span> IA Resuelta</span><span><span class="dot" style="background:#38bdf8"></span> Worker</span></div>
+<div id="inboxList">Cargando historial real...</div>
 </div>
 
-<div class="card">
-<h3>Plan y Mantenimiento</h3>
-<p id="planInfo" style="color:#94a3b8;font-size:13px"></p>
+<div id="view-campanas" class="card" style="display:none">
+<h3>📢 Campañas con Excel - Solo Plantillas Aprobadas API</h3>
+<p style="color:#94a3b8;font-size:12px">Sube Excel, se eligen números automático, antibaneo 50/5h + 3s. Todo queda en historial con logs.</p>
+<div class="grid2">
+<div><label>Nombre campaña</label><input id="campName" placeholder="Promo Mayo"><label>Plantilla aprobada</label><select id="templateSelect"></select><input type="file" id="excelFile" accept=".xlsx,.xls"><button class="btn" onclick="uploadExcel()">1. Subir Excel y detectar números</button><div id="excelPreview" style="font-size:11px;color:#94a3b8;margin-top:8px"></div><button class="btn" id="btnStartCamp" style="display:none;background:#10b981" onclick="startCampaign()">2. Enviar campaña ahora</button></div>
+<div><h4>Historial de campañas</h4><div id="campHistory"></div></div>
 </div>
 </div>
 
+<div id="view-plantillas" class="card" style="display:none">
+<h3>Plantillas Aprobadas Meta API - Actualización Automática</h3><button class="btn" onclick="syncTemplates()">Sincronizar con Meta ahora</button><div id="templatesList" style="margin-top:12px"></div>
 </div>
+
+<div id="view-equipo" class="card" style="display:none">
+<h3>Equipo - Jefe puede crear y eliminar workers - Workers solo ven lo necesario</h3>
+<div class="grid2"><div><input id="wName" placeholder="Nombre worker"><input id="wEmail" placeholder="Email worker"><input id="wPass" placeholder="Clave"><button class="btn" onclick="createWorker()">Crear Worker</button></div><div><div id="workersList"></div></div></div>
+</div>
+
+<div id="view-metricas" class="card" style="display:none"><h3>Métricas, Seguimiento, Estadísticas - Solo Jefe</h3><div id="metricsBox"></div><h4>Historial Auditoría (todo hace historial)</h4><div id="auditBox"></div></div>
+
+<div id="view-planes" class="card" style="display:none">
+<h3>Planes - Bloqueo y seguridad real - Botón a WPP 3133181851</h3>
+<div class="grid2" id="plansBox"></div>
+<p style="color:#94a3b8;font-size:11px;margin-top:10px">Al adquirir, se verifica plan en cada endpoint. Workers no pueden cambiar plan. Todo queda auditado.</p>
+</div>
+
+<div id="view-config" class="card" style="display:none">
+<h3>Configuración detallada - Funcionamiento didáctico</h3>
+<p style="font-size:12px;color:#94a3b8;line-height:1.6">
+<b style="color:#fff">1. Multi agencia:</b> Cada ID Empresa es independiente, no ve datos de otra.<br>
+<b style="color:#fff">2. Inbox:</b> Azul oscuro #0f172a, azul claro #38bdf8, semáforo 🔴 no leído, 🟡 campaña, 🟢 IA.<br>
+<b style="color:#fff">3. Campañas:</b> Solo plantilla APROBADA por Meta. Subes Excel, sistema extrae números automático, valida, envía 50 cada 5h + 3s pausa para no baneo. Historial con logs por número.<br>
+<b style="color:#fff">4. Plantillas:</b> Botón sincronizar llama a API Meta y actualiza estado automáticamente.<br>
+<b style="color:#fff">5. Workers:</b> Jefe ve métricas, seguimiento, stats, eliminar workers. Worker solo ve inbox asignado y campañas que creó.<br>
+<b style="color:#fff">6. Planes:</b> Básico $800k/año + $80k trim, Premium $1.3M + $95k, Gold $2.4M + $125k. Bloqueo real en server por middleware checkPlan. Botón compra lleva a https://wa.me/573133181851<br>
+<b style="color:#fff">7. Legal:</b> Checkbox obligatorio Ley 1581 de 2012, política en /legal, auditoría de todo.<br>
+<b style="color:#fff">8. Olvide contraseña:</b> Genera código de 6 dígitos, envía al correo vía Nodemailer, expira 15 min.<br>
+<b style="color:#fff">9. Historial:</b> Todo guarda en audit_log, campaign_logs, messages.<br>
+Soporte 24/7 3133181851 - Avanza Consulting
+</p>
+</div>
+
+</div>
+</div>
+
+<div class="modal" id="forgotModal"><div class="modalBox">
+<h3>Olvide contraseña - Código al correo</h3>
+<input id="fCompany" placeholder="ID Empresa"><input id="fEmail" placeholder="Email"><button class="btn" onclick="sendCode()">Enviar código</button>
+<div id="resetArea" style="display:none;margin-top:12px"><input id="fCode" placeholder="Código 6 dígitos"><input id="fNewPass" type="password" placeholder="Nueva clave"><button class="btn" onclick="resetPass()">Cambiar clave</button></div>
+<div id="fMsg" style="font-size:11px;color:#94a3b8;margin-top:8px"></div>
+<button class="btn btn-outline" onclick="closeForgot()">Cerrar</button>
+</div></div>
 
 <script>
-let selectedPlan='basico';
-function selectPlan(el){
-document.querySelectorAll('.plan').forEach(p=>p.classList.remove('selected'));
-el.classList.add('selected'); selectedPlan=el.dataset.plan;
-}
+let selectedPlan='basico', selectedAnual=800000, selectedMant=80000, tempNumeros=[];
+function selectPlan(el){document.querySelectorAll('.plan').forEach(p=>p.classList.remove('selected'));el.classList.add('selected');selectedPlan=el.dataset.plan;selectedAnual=el.dataset.anual;selectedMant=el.dataset.mant;}
 
 async function login(){
 const companyId=document.getElementById('companyId').value.trim().toLowerCase();
 const email=document.getElementById('email').value.trim();
 const password=document.getElementById('password').value.trim();
-const legal=document.getElementById('legalCheck').checked;
-const msg=document.getElementById('msg');
-if(!companyId||!email||!password) return msg.innerText='Completa todos los campos';
-if(!legal) return msg.innerText='Debes aceptar términos y Ley 1581 en /legal';
-msg.innerText='Entrando...';
+if(!companyId||!email||!password) return document.getElementById('msg').innerText='Completa campos';
+if(!document.getElementById('legalCheck').checked) return document.getElementById('msg').innerText='Acepta términos en /legal';
+document.getElementById('msg').innerText='Entrando...';
 try{
 const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,password,plan:selectedPlan})});
-const d=await r.json();
-if(!r.ok) throw new Error(d.error);
-localStorage.setItem('token',d.token); localStorage.setItem('company',JSON.stringify(d.company));
-showDashboard(d.company);
-}catch(e){ msg.innerText=e.message }
+const d=await r.json(); if(!r.ok) throw new Error(d.error);
+localStorage.setItem('token',d.token); localStorage.setItem('company',JSON.stringify(d.company)); localStorage.setItem('user',JSON.stringify(d.user));
+showDashboard(d.company,d.user);
+}catch(e){document.getElementById('msg').innerText=e.message}
 }
-
-function showDashboard(company){
-document.getElementById('loginView').style.display='none';
-document.getElementById('dashboard').style.display='block';
-document.getElementById('compName').innerText=company.id;
-document.getElementById('planBadge').innerText=company.plan+' - $'+(company.mantenimiento||'').toLocaleString()+' trim';
-document.getElementById('planInfo').innerHTML=`Plan <b>${company.plan}</b> | Mantenimiento trimestral <b>$${company.mantenimiento}</b> | Soporte 24/7 3133181851<br><br>✅ Inbox con 🔴 No leídos y 🟡 Campaña<br>✅ Campañas Excel antibaneo (Premium/Gold)<br>✅ IA y Llamadas Gold<br>✅ Legal Ley 1581 en <a href='/legal' style='color:#38bdf8'>/legal</a>`;
-loadInbox();
+function showDashboard(company,user){
+document.getElementById('loginView').style.display='none'; document.getElementById('dashboard').style.display='block';
+document.getElementById('compName').innerText=company.id; document.getElementById('planBadge').innerText=company.plan+' - '+company.plan.toUpperCase();
+document.getElementById('planBadge').className='badge '+(company.plan==='gold'?'gold':company.plan==='premium'?'premium':'');
+document.getElementById('roleBadge').innerText=user.role==='admin'?'JEFE':'WORKER';
+const isAdmin=user.role==='admin';
+document.getElementById('tabEquipo').style.display=isAdmin?'':'none';
+document.getElementById('tabMetricas').style.display=isAdmin?'':'none';
+if(!isAdmin){document.getElementById('view-equipo').innerHTML='<p style=color:#f87171>Acceso solo jefe</p>';}
+loadAll();
 }
+function switchTab(t){
+document.querySelectorAll('[id^=view-]').forEach(v=>v.style.display='none');
+document.getElementById('view-'+t).style.display='block';
+document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+document.querySelector(`[data-t=${t}]`)?.classList.add('active');
+if(t==='campanas') loadTemplatesSelect();
+}
+async function loadAll(){ loadInbox(); loadCampHistory(); loadTemplates(); loadWorkers(); loadMetrics(); loadPlans(); }
 
-async function loadInbox(){
-try{
+async function api(path,opts={}){ const token=localStorage.getItem('token'); opts.headers={...(opts.headers||{}), 'Authorization':'Bearer '+token, 'Content-Type':'application/json'}; const r=await fetch(path,opts); const d=await r.json(); if(!r.ok) throw new Error(d.error||'Error'); return d; }
+
+async function loadInbox(){ try{ const d=await api('/api/messages'); document.getElementById('inboxList').innerHTML=d.length? `<table><tr><th>Numero</th><th>Mensaje</th><th>Estado</th></tr>${d.map(m=>`<tr><td>${m.from_number||'-'}</td><td>${(m.content||'').slice(0,60)}</td><td>${m.status||'nuevo'}</td></tr>`).join('')}</table>` : 'Sin historial aún - todo real'; }catch(e){ document.getElementById('inboxList').innerText=e.message } }
+
+async function uploadExcel(){
+const f=document.getElementById('excelFile').files[0]; if(!f) return alert('Selecciona Excel');
+const fd=new FormData(); fd.append('file',f);
 const token=localStorage.getItem('token');
-const r=await fetch('/api/messages',{headers:{'Authorization':'Bearer '+token}});
-const data=await r.json();
-document.getElementById('inboxList').innerText=data.length?`${data.length} chats cargados (V10.8.3 intacto)`:'Sin chats aún';
-}catch(e){ document.getElementById('inboxList').innerText='Inbox V10.8.3 activo' }
+const r=await fetch('/api/campaigns/upload',{method:'POST', headers:{'Authorization':'Bearer '+token}, body:fd});
+const d=await r.json(); if(!r.ok) return alert(d.error);
+tempNumeros=d.numeros; document.getElementById('excelPreview').innerHTML=`Detectados <b>${d.total}</b> números - Preview: ${d.preview.join(', ')} - Se elegirán automáticamente al enviar`;
+document.getElementById('btnStartCamp').style.display='block';
 }
+async function startCampaign(){
+const name=document.getElementById('campName').value||'Campaña '+Date.now();
+const tpl=document.getElementById('templateSelect').value; if(!tpl) return alert('Elige plantilla aprobada');
+try{ const d=await api('/api/campaigns/start',{method:'POST', body:JSON.stringify({name, templateName:tpl, numeros:tempNumeros})}); alert(d.msg); loadCampHistory(); }catch(e){ alert(e.message) }
+}
+async function loadCampHistory(){ try{ const d=await api('/api/campaigns/history'); document.getElementById('campHistory').innerHTML=d.map(c=>`<div style="border:1px solid #334155;padding:8px;border-radius:8px;margin:6px 0"><b>${c.name}</b> - ${c.template_name} - ${c.total} nums - ${c.status} - ${new Date(c.created_at).toLocaleString()}</div>`).join('')||'Sin campañas'; }catch(e){} }
+async function loadTemplatesSelect(){ try{ const d=await api('/api/templates'); document.getElementById('templateSelect').innerHTML=d.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join(''); }catch(e){} }
+async function loadTemplates(){ try{ const d=await api('/api/templates'); document.getElementById('templatesList').innerHTML=d.map(t=>`<div style="padding:8px;border:1px solid #334155;border-radius:8px;margin:4px 0">${t.name} - <span class="badge">${t.status}</span> - ${t.cuerpo}</div>`).join(''); }catch(e){} }
+async function syncTemplates(){ try{ const d=await api('/api/templates/sync',{method:'POST'}); alert('Plantillas sincronizadas'); loadTemplates(); loadTemplatesSelect(); }catch(e){ alert(e.message)} }
+async function loadWorkers(){ try{ const d=await api('/api/workers'); document.getElementById('workersList').innerHTML=`<table><tr><th>Email</th><th>Rol</th><th>Acción</th></tr>${d.map(w=>`<tr><td>${w.email}</td><td>${w.role}</td><td><button onclick="delWorker(${w.id})" style="background:#ef4444;color:#fff;border:0;padding:4px 8px;border-radius:6px">Eliminar</button></td></tr>`).join('')}</table>`; }catch(e){ document.getElementById('workersList').innerText=e.message.includes('Solo jefe')?'Solo jefe ve esto':'Error' } }
+async function createWorker(){ const email=document.getElementById('wEmail').value, password=document.getElementById('wPass').value, name=document.getElementById('wName').value; try{ await api('/api/workers',{method:'POST', body:JSON.stringify({email,password,name})}); alert('Worker creado'); loadWorkers(); }catch(e){ alert(e.message)} }
+async function delWorker(id){ if(!confirm('Eliminar worker?')) return; await api('/api/workers/'+id,{method:'DELETE'}); loadWorkers(); }
+async function loadMetrics(){ try{ const d=await api('/api/metrics'); document.getElementById('metricsBox').innerHTML=`Empresa <b>${d.company.id}</b> - Plan ${d.company.plan} - Anual $${d.company.precio_anual} - Mant $${d.company.mantenimiento}<br>Workers: ${d.stats.workers} - Mensajes: ${d.stats.mensajes} - Campañas: ${d.stats.campanas}`; const a=await api('/api/audit'); document.getElementById('auditBox').innerHTML=a.map(x=>`<div style="font-size:11px;border-bottom:1px solid #334155;padding:4px">${new Date(x.created_at).toLocaleString()} - ${x.accion} - ${x.detalle||''}</div>`).join(''); }catch(e){} }
+async function loadPlans(){ try{ const d=await fetch('/api/plans').then(r=>r.json()); document.getElementById('plansBox').innerHTML=d.map(p=>`<div class="card"><h3>${p.nombre}</h3><p style="color:#38bdf8;font-weight:800">$${p.precio_anual.toLocaleString()}/año + $${p.mantenimiento.toLocaleString()} trim</p><ul style="font-size:11px;color:#94a3b8">${p.features.map(f=>`<li>${f}</li>`).join('')}</ul><a class="wppBtn" href="${p.wpp}" target="_blank">Adquirir por WhatsApp 3133181851</a></div>`).join(''); }catch(e){} }
 
-function logout(){ localStorage.clear(); location.reload() }
+function openForgot(){ document.getElementById('forgotModal').style.display='flex' }
+function closeForgot(){ document.getElementById('forgotModal').style.display='none' }
+async function sendCode(){ const companyId=document.getElementById('fCompany').value, email=document.getElementById('fEmail').value; const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email})}); const d=await r.json(); document.getElementById('fMsg').innerText=d.demoCode? `Código demo (MAIL no configurado): ${d.demoCode}` : 'Código enviado al correo'; document.getElementById('resetArea').style.display='block'; }
+async function resetPass(){ const companyId=document.getElementById('fCompany').value, email=document.getElementById('fEmail').value, code=document.getElementById('fCode').value, newPassword=document.getElementById('fNewPass').value; const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,code,newPassword})}); const d=await r.json(); if(!r.ok) return document.getElementById('fMsg').innerText=d.error; document.getElementById('fMsg').innerText='Clave cambiada, entra de nuevo'; setTimeout(closeForgot,1500); }
 
-(function(){
-const c=localStorage.getItem('company'); if(c){ try{ showDashboard(JSON.parse(c)) }catch(e){} }
-})();
+function logout(){ localStorage.clear(); location.reload(); }
+(function(){ const c=localStorage.getItem('company'), u=localStorage.getItem('user'); if(c&&u){ try{ showDashboard(JSON.parse(c), JSON.parse(u)) }catch(e){} } })();
 </script>
 </body>
 </html>
