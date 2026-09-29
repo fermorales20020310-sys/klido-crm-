@@ -9,130 +9,138 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
 *{font-family:'Inter',sans-serif}body{background:#070b18}
 .bubble-in{background:#1a2b4a;color:#dbeafe}.bubble-out{background:#2a5bd7;color:white}
-.dot-red{width:8px;height:8px;background:#ef4444;border-radius:9999px;box-shadow:0 0 6px #ef4444}
-.dot-yellow{width:8px;height:8px;background:#eab308;border-radius:9999px;box-shadow:0 0 6px #eab308}
+.dot-red{width:8px;height:8px;background:#ef4444;border-radius:9999px}.dot-yellow{width:8px;height:8px;background:#eab308;border-radius:9999px}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:10px}
+.input-focus:focus{border-color:#2a5bd7;box-shadow:0 0 0 3px rgba(42,91,215,0.15)}
 </style>
 </head>
 <body class="h-screen bg-[#070b18] p-2">
 <div class="h-full w-full bg-[#0f172a] rounded-[16px] border border-[#1e293b] flex overflow-hidden">
 
-<div id="loginView" class="absolute inset-0 z-50 flex items-center justify-center bg-[#070b18]">
-<div class="bg-[#111c34] p-8 rounded-[20px] border border-[#1e2f4f] w-full max-w-[400px]">
-<div class="flex items-center gap-3 mb-8"><img src="/logo.png" class="h-10 w-10 rounded-xl bg-white p-1"><div><div class="font-black text-white">KLIDO</div><div class="text-[10px] text-[#8aa4ff]">CRM EMPRESARIAL</div></div></div>
-<input id="agency" placeholder="ID empresa ej: acol" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mb-3 text-sm text-white outline-none">
-<input id="email" placeholder="Correo corporativo" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mb-3 text-sm text-white outline-none">
-<input id="password" type="password" placeholder="Contraseña" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mb-4 text-sm text-white outline-none">
-<button onclick="login()" class="w-full bg-[#2a5bd7] py-3 rounded-xl font-bold text-white text-sm">Ingresar</button>
+<!-- LOGIN VIEW NUEVO PRO -->
+<div id="loginView" class="absolute inset-0 z-50 flex items-center justify-center bg-[#070b18] p-4">
+<div class="bg-[#0f172a] border border-[#1e293b] rounded-[24px] w-full max-w-[980px] grid grid-cols-1 md:grid-cols-2 overflow-hidden shadow-2xl">
+<!-- Izquierda Branding -->
+<div class="bg-[#111c34] p-8 md:p-10 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-3"><img src="/logo.png" class="h-10 w-10 rounded-xl bg-white p-1"><div><div class="font-black text-white text-[16px]">KLIDO</div><div class="text-[11px] text-[#8aa4ff] tracking-widest">CRM EMPRESARIAL</div></div></div>
+<h1 class="text-white text-[28px] font-black leading-tight mt-10">Gestiona tu<br>WhatsApp Business<br>como empresa real.</h1>
+<p class="text-[#94a3b8] text-[13px] mt-4 leading-relaxed">Inbox con 🔴 No leídos y 🟡 Campañas, antibaneo 50/5h, equipo con roles y estadísticas reales.</p>
+<div class="mt-8 space-y-3 text-[12px] text-[#cbd5e1]"><div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> API oficial de WhatsApp Business</div><div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> Roles Worker / Admin profesionales</div><div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> Soporte directo 3133181851</div></div>
+</div>
+<div class="mt-8 text-[10px] text-[#475569]">© 2026 KLIDO • <a href="/terminos.html" class="underline hover:text-[#8aa4ff]">Términos</a> • <a href="/privacidad.html" class="underline hover:text-[#8aa4ff]">Privacidad</a> Ley 1581</div>
+</div>
+<!-- Derecha Form -->
+<div class="p-8 md:p-10 bg-[#0f172a]">
+<div class="flex gap-2 mb-6"><button id="tabLogin" onclick="switchTab('login')" class="flex-1 bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[13px] font-bold">Ingresar</button><button id="tabRegister" onclick="switchTab('register')" class="flex-1 bg-[#111c34] border border-[#1e293b] text-[#94a3b8] py-2.5 rounded-xl text-[13px] font-bold">Crear empresa</button></div>
+
+<div id="formLogin">
+<input id="agency" placeholder="Nombre de empresa (ID corto ej: acol)" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus">
+<input id="email" placeholder="Correo corporativo" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus">
+<div class="relative"><input id="password" type="password" placeholder="Contraseña" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus pr-10"><button onclick="togglePass('password')" class="absolute right-3 top-3.5 text-[#64748b]"><i class="fa-solid fa-eye"></i></button></div>
+<div class="flex items-center justify-between mt-2"><label class="flex items-center gap-2 text-[11px] text-[#94a3b8]"><input type="checkbox" id="remember" class="rounded"> Recordarme</label><button onclick="openForgot()" class="text-[11px] text-[#8aa4ff] hover:underline">¿Olvidaste tu contraseña?</button></div>
+<button onclick="login()" class="w-full bg-[#2a5bd7] hover:bg-[#1e3a8a] transition py-3.5 rounded-xl font-bold text-white text-[13px] mt-5">Ingresar al CRM →</button>
 <p id="loginMsg" class="text-xs text-red-400 mt-3 text-center"></p>
+</div>
+
+<div id="formRegister" class="hidden">
+<input id="regCompany" placeholder="Nombre legal de la empresa" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus">
+<input id="regId" placeholder="ID corto de empresa (minúsculas ej: acol)" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus">
+<input id="regEmail" placeholder="Correo administrador (será el jefe)" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus">
+<div class="relative"><input id="regPass" type="password" placeholder="Crea contraseña (mín 6)" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus pr-10"><button onclick="togglePass('regPass')" class="absolute right-3 top-3.5 text-[#64748b]"><i class="fa-solid fa-eye"></i></button></div>
+<label class="flex items-start gap-2 text-[11px] text-[#94a3b8] mt-2"><input type="checkbox" id="acceptTerms" class="mt-1 rounded"> <span>Acepto los <a href="/terminos.html" target="_blank" class="text-[#8aa4ff] underline">Términos y Condiciones</a> y <a href="/privacidad.html" target="_blank" class="text-[#8aa4ff] underline">Política de Privacidad</a> Ley 1581. Mis datos serán tratados como Responsable.</span></label>
+<button onclick="register()" class="w-full bg-white text-[#0f172a] hover:bg-gray-200 transition py-3.5 rounded-xl font-black text-[13px] mt-5">Crear empresa en KLIDO</button>
+<p id="regMsg" class="text-xs mt-3 text-center"></p>
+</div>
+
+<!-- Forgot Modal -->
+<div id="forgotBox" class="hidden mt-6 bg-[#111c34] border border-[#1e2f4f] rounded-xl p-4">
+<h3 class="text-white text-[13px] font-bold">Restablecer contraseña</h3><p class="text-[#94a3b8] text-[11px] mt-1">Te enviaremos un código de 6 dígitos a tu correo corporativo registrado.</p>
+<input id="forgotEmail" placeholder="Correo corporativo registrado" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-[13px] text-white outline-none">
+<button onclick="sendCode()" id="btnSendCode" class="w-full bg-[#1e3a5f] text-white py-2.5 rounded-xl text-[12px] font-bold mt-3">Enviar código</button>
+<div id="codeSection" class="hidden">
+<input id="forgotCode" placeholder="Código de 6 dígitos" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-[13px] text-white outline-none tracking-[0.3em] text-center">
+<input id="forgotNewPass" type="password" placeholder="Nueva contraseña" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-[13px] text-white outline-none">
+<button onclick="resetWithCode()" class="w-full bg-[#22c55e] text-black py-2.5 rounded-xl text-[12px] font-bold mt-3">Cambiar contraseña</button>
+</div>
+<p id="forgotMsg" class="text-[11px] mt-2 text-center"></p>
+</div>
+
+</div>
 </div>
 </div>
 
+<!-- RESTO DE TU APP IGUAL - INBOX ETC -->
 <div class="w-[220px] bg-[#0f172a] border-r border-[#1e293b] flex flex-col shrink-0">
 <div class="p-4 flex items-center gap-2"><img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1"><div class="font-black text-white text-[14px]">KLIDO</div><span id="roleBadge" class="bg-[#2a5bd7] text-white text-[10px] px-2 py-0.5 rounded-full">Admin</span></div>
-<div class="px-3"><button class="w-full border border-[#1e3a5f] rounded-xl py-2 text-[12px] text-white">🌙 / ☀️ Tema</button></div>
 <div class="mt-5 px-2 flex-1">
 <div class="text-[10px] text-[#475569] px-2 mb-2">MENU</div>
 <button id="btnInbox" onclick="showInbox()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white"><i class="fa-solid fa-inbox w-4"></i><span id="inboxLabel">Inbox</span></button>
 <button id="btnCamp" onclick="location.href='/campanas.html'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-bullhorn w-4 text-[#f59e0b]"></i>Campaigns</button>
 <button id="btnPlanes" onclick="showPlanes()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-credit-card w-4"></i>Planes</button>
 <button id="btnSettings" onclick="showSettings()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] mt-1"><i class="fa-solid fa-gear w-4"></i>Settings</button>
-<div id="adminSection" class="mt-4"><div class="text-[10px] text-[#eab308] px-2 mb-2 ADMIN">ADMIN</div><button id="btnAdmin" onclick="showAdmin()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#eab308] bg-[#1a1a0f] border border-yellow-500/20"><i class="fa-solid fa-users-gear w-4"></i>Equipo y Estadísticas</button></div>
-<div class="mt-6"><div class="text-[10px] text-[#475569] px-2 mb-2">SUPPORT</div><button onclick="window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20soporte%20Help%20Center','_blank')" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-lightbulb w-4 text-yellow-400"></i>Help Center</button></div>
+<div id="adminSection" class="mt-4"><div class="text-[10px] text-[#eab308] px-2 mb-2">ADMIN</div><button id="btnAdmin" onclick="showAdmin()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#eab308] bg-[#1a1a0f] border border-yellow-500/20"><i class="fa-solid fa-users-gear w-4"></i>Equipo y Estadísticas</button></div>
+<div class="mt-6"><div class="text-[10px] text-[#475569] px-2 mb-2">SUPPORT</div><button onclick="window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20soporte','_blank')" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-lightbulb w-4 text-yellow-400"></i>Help Center</button></div>
 </div>
-<div class="p-3 border-t border-[#1e293b]"><div class="bg-[#111c34] rounded-xl p-3 border border-[#1e2f4f]"><div class="text-white text-[12px] font-bold">KLIDO CRM</div><div id="sideUser" class="text-[#64748b] text-[10px]">-</div><div id="sideRole" class="text-[#8aa4ff] text-[10px] mt-1"></div><button id="btnVerPlanes" onclick="showPlanes()" class="mt-3 w-full bg-[#2a5bd7] text-white py-2 rounded-lg text-[11px] font-bold">Ver planes</button></div><button onclick="logout()" class="mt-3 w-full bg-red-600/20 border border-red-600/30 text-red-400 py-2 rounded-xl text-[12px]">SALIR</button></div>
+<div class="p-3 border-t border-[#1e293b]"><div class="bg-[#111c34] rounded-xl p-3 border border-[#1e2f4f]"><div class="text-white text-[12px] font-bold">KLIDO CRM</div><div id="sideUser" class="text-[#64748b] text-[10px]">-</div><div id="sideRole" class="text-[#8aa4ff] text-[10px] mt-1"></div></div><button onclick="logout()" class="mt-3 w-full bg-red-600/20 border border-red-600/30 text-red-400 py-2 rounded-xl text-[12px]">SALIR</button></div>
 </div>
 
 <div class="flex-1 flex flex-col bg-[#0f172a] overflow-hidden">
-<div id="planesView" class="hidden p-7 overflow-y-auto"><h1 class="text-white font-bold text-[18px]">Planes KLIDO - Anual</h1><div class="grid grid-cols-3 gap-4 mt-5 max-w-[760px]"><div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5 text-center"><div class="text-white font-bold">Básico</div><div class="text-white font-black text-[22px] mt-1">$800.000</div><div class="text-[#64748b] text-[11px]">anual</div><div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $80.000 mant. c/3 meses</div><div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]"><div>✅ 1 envío masivo a la vez</div><div>✅ 2 usuarios incluidos</div><div>✅ Inbox ilimitado</div></div><button onclick="goPlan('Básico')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Básico</button></div><div class="bg-[#111c34] border border-[#2a5bd7]/30 rounded-[14px] p-5 text-center"><div class="text-white font-bold">Premium ⭐</div><div class="text-white font-black text-[22px] mt-1">$1.300.000</div><div class="text-[#64748b] text-[11px]">anual</div><div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $95.000 mant. c/3 meses</div><div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]"><div>✅ 5 envíos simultáneos</div><div>✅ 5 usuarios</div><div>✅ IA incluida</div></div><button onclick="goPlan('Premium')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Premium</button></div><div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5 text-center"><div class="text-white font-bold">Gold</div><div class="text-white font-black text-[22px] mt-1">$2.400.000</div><div class="text-[#64748b] text-[11px]">anual</div><div class="text-[#3b82f6] text-[11px] mt-1 font-bold">+ $130.000 mant. c/3 meses</div><div class="text-left mt-4 space-y-1.5 text-[11px] text-[#cbd5e1]"><div>✅ Envíos ilimitados</div><div>✅ Usuarios ilimitados</div><div>✅ IA + Pánico humano</div></div><button onclick="goPlan('Gold')" class="mt-5 w-full bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[12px] font-bold">Empezar Gold</button></div></div></div>
-
+<div id="planesView" class="hidden p-7 overflow-y-auto"><h1 class="text-white font-bold">Planes</h1><p class="text-[#94a3b8] text-[12px] mt-2">Básico $800k / Premium $1.3M / Gold $2.4M - Info 3133181851</p></div>
 <div id="inboxView" class="flex flex-1 overflow-hidden">
-<div class="w-[360px] border-r border-[#1e293b] bg-[#0f172a] flex flex-col">
-<div class="px-4 py-3 border-b border-[#1e293b]"><div class="flex items-center justify-between"><div class="text-white font-bold text-[13px]">Bandeja de mensajes</div><div class="flex gap-2 text-[9px]"><span class="flex items-center gap-1 text-[#94a3b8]"><span class="dot-red"></span> No leído</span><span class="flex items-center gap-1 text-[#94a3b8]"><span class="dot-yellow"></span> Campaña</span></div></div><div class="flex gap-2 mt-3"><button id="fAll" onclick="filterChats('all')" class="bg-[#2a5bd7] text-white px-3 py-1.5 rounded-full text-[11px]">Todos</button><button id="fUnread" onclick="filterChats('unread')" class="bg-[#1a2744] border border-[#1e3a5f] text-[#94a3b8] px-3 py-1.5 rounded-full text-[11px]">No contestados</button><button id="fCamp" onclick="filterChats('campaign')" class="bg-[#1a2744] border border-[#1e3a5f] text-[#94a3b8] px-3 py-1.5 rounded-full text-[11px]">Campaña 🟡</button></div></div>
-<div id="chats" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
+<div class="w-[360px] border-r border-[#1e293b] bg-[#0f172a] flex flex-col"><div class="px-4 py-3 border-b border-[#1e293b]"><div class="text-white font-bold text-[13px]">Bandeja de mensajes</div><div class="flex gap-2 mt-3"><button id="fAll" onclick="filterChats('all')" class="bg-[#2a5bd7] text-white px-3 py-1.5 rounded-full text-[11px]">Todos</button><button id="fUnread" onclick="filterChats('unread')" class="bg-[#1a2744] border text-[#94a3b8] px-3 py-1.5 rounded-full text-[11px]">No contestados</button><button id="fCamp" onclick="filterChats('campaign')" class="bg-[#1a2744] border text-[#94a3b8] px-3 py-1.5 rounded-full text-[11px]">Campaña 🟡</button></div></div><div id="chats" class="flex-1 overflow-y-auto p-2"></div></div>
+<div class="flex-1 bg-[#0b1220] flex flex-col"><div class="h-[56px] border-b border-[#1e293b] flex items-center px-4 bg-[#0f172a] gap-3"><div id="chatAvatar" class="h-8 w-8 rounded-full bg-[#2a5bd7] flex items-center justify-center text-white text-[11px]">?</div><div><div id="chatName" class="text-white text-[13px] font-bold">Selecciona chat</div></div></div><div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3"></div><div class="p-3 bg-[#0f172a] border-t border-[#1e293b] flex gap-2"><input id="msgInput" placeholder="Escribir..." class="flex-1 bg-[#111c34] border border-[#1e293b] rounded-full px-4 py-2.5 text-sm text-white outline-none" onkeydown="if(event.key==='Enter')send()"><button onclick="send()" class="bg-[#2a5bd7] w-10 h-10 rounded-full text-white">➤</button></div></div>
 </div>
-<div class="flex-1 bg-[#0b1220] flex flex-col"><div class="h-[56px] border-b border-[#1e293b] flex items-center px-4 bg-[#0f172a] gap-3"><div id="chatAvatar" class="h-8 w-8 rounded-full bg-[#2a5bd7] flex items-center justify-center text-white text-[11px] font-bold">?</div><div><div id="chatName" class="text-white text-[13px] font-bold">Selecciona chat</div><div class="text-[#22c55e] text-[11px]">WhatsApp Business API • En vivo</div></div></div><div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3"></div><div class="p-3 bg-[#0f172a] border-t border-[#1e293b] flex gap-2"><input id="msgInput" placeholder="Escribir..." class="flex-1 bg-[#111c34] border border-[#1e293b] rounded-full px-4 py-2.5 text-sm text-white outline-none" onkeydown="if(event.key==='Enter')send()"><button onclick="send()" class="bg-[#2a5bd7] w-10 h-10 rounded-full text-white">➤</button></div></div>
-</div>
-
-<div id="settingsView" class="hidden p-7 overflow-y-auto">
-<h1 class="text-white font-bold text-[18px]">Settings - Configuración Empresarial</h1>
-<p class="text-[#64748b] text-[12px] mt-1">Todo explicado. Soporte directo: 3133181851</p>
-<div class="grid grid-cols-1 gap-4 mt-6 max-w-[850px]">
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5"><h3 class="text-white font-bold text-[13px]">📥 Bandeja de mensajes</h3><p class="text-[#94a3b8] text-[12px] mt-2 leading-relaxed">Llegan chats en tiempo real. 🔴 No leído • 🟡 Campaña. Filtros Todos / No contestados / Campaña. Admin ve todo, Trabajador solo sus chats asignados.</p></div>
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5"><h3 class="text-white font-bold text-[13px]">📢 Campaigns - Antibaneo 50/5h</h3><p class="text-[#94a3b8] text-[12px] mt-2">Excel auto-detecta teléfono, agrega 57, quita duplicados. Sync plantillas API aprobadas Meta. Envío 50 cada 5h + 3 seg delay. Marca 🟡 en bandeja.</p></div>
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5"><h3 class="text-white font-bold text-[13px]">👑 Equipo y Estadísticas</h3><p class="text-[#94a3b8] text-[12px] mt-2">Agregar trabajador: correo + contraseña + rol. Worker = solo sus chats. Admin = ve todo. Eliminar quita acceso inmediato.</p></div>
-<div class="bg-[#0e1830] border border-[#2a5bd7]/30 rounded-[14px] p-5 flex items-center justify-between"><div><h3 class="text-white font-bold text-[13px]">💬 Help Center</h3><p class="text-[#94a3b8] text-[12px] mt-1">Soporte directo WhatsApp oficial</p></div><button onclick="window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20soporte%20Settings','_blank')" class="bg-[#2a5bd7] text-white px-6 py-3 rounded-xl text-[12px] font-bold">WhatsApp 3133181851</button></div>
-</div>
-</div>
-
-<div id="adminView" class="hidden p-7 overflow-y-auto">
-<h1 class="text-white font-bold text-[18px]">Equipo y Estadísticas</h1>
-<div class="grid grid-cols-3 gap-4 mt-6"><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">Mensajes hoy</div><div id="statToday" class="text-white font-black text-[22px]">0</div></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">No leídos 🔴</div><div id="statUnread" class="text-red-400 font-black text-[22px]">0</div></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">Campañas 🟡</div><div id="statCamp" class="text-yellow-400 font-black text-[22px]">0</div></div></div>
-<div class="grid grid-cols-2 gap-6 mt-6"><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5"><h3 class="text-white font-bold text-[13px]">Agregar trabajador</h3><input id="newWorkerEmail" placeholder="Correo corporativo trabajador" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-4 text-sm text-white outline-none"><input id="newWorkerPass" placeholder="Contraseña mínimo 6 caracteres" type="password" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-sm text-white outline-none"><select id="newWorkerRole" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-sm text-white"><option value="worker">Worker - solo sus chats asignados</option><option value="admin">Admin - ve todo el CRM</option></select><button onclick="addWorker()" class="mt-4 w-full bg-[#2a5bd7] text-white py-3 rounded-xl text-[12px] font-bold">Agregar trabajador</button><p id="addWorkerMsg" class="text-[11px] mt-3 text-center font-bold"></p></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5"><h3 class="text-white font-bold text-[13px]">Trabajadores activos</h3><div id="workersList" class="mt-4 space-y-2 max-h-[340px] overflow-y-auto"></div></div></div>
+<div id="settingsView" class="hidden p-7 overflow-y-auto"><h1 class="text-white font-bold">Settings</h1><p class="text-[#94a3b8] text-[12px] mt-2">Bandeja 🔴🟡 / Campaigns 50/5h / Equipo / Planes - Soporte 3133181851</p></div>
+<div id="adminView" class="hidden p-7 overflow-y-auto"><h1 class="text-white font-bold text-[18px]">Equipo y Estadísticas</h1><div class="grid grid-cols-3 gap-4 mt-6"><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">Hoy</div><div id="statToday" class="text-white font-black text-[22px]">0</div></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">No leídos 🔴</div><div id="statUnread" class="text-red-400 font-black text-[22px]">0</div></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">Campañas 🟡</div><div id="statCamp" class="text-yellow-400 font-black text-[22px]">0</div></div></div><div class="grid grid-cols-2 gap-6 mt-6"><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5"><h3 class="text-white font-bold text-[13px]">Agregar trabajador</h3><input id="newWorkerEmail" placeholder="Correo corporativo" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-4 text-sm text-white outline-none"><input id="newWorkerPass" placeholder="Contraseña min 6" type="password" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-sm text-white outline-none"><select id="newWorkerRole" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-sm text-white"><option value="worker">Worker - solo sus chats</option><option value="admin">Admin - ve todo</option></select><button onclick="addWorker()" class="mt-4 w-full bg-[#2a5bd7] text-white py-3 rounded-xl text-[12px] font-bold">Agregar</button><p id="addWorkerMsg" class="text-[11px] mt-3 text-center font-bold"></p></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5"><h3 class="text-white font-bold text-[13px]">Trabajadores</h3><div id="workersList" class="mt-4 space-y-2 max-h-[340px] overflow-y-auto"></div></div></div></div>
 </div>
 
 </div>
-
-<div class="w-[260px] bg-[#0f172a] border-l border-[#1e293b] hidden lg:flex flex-col">
-<div class="h-[56px] border-b border-[#1e293b] flex items-center px-4 gap-3"><div class="h-8 w-8 rounded-full bg-[#2a5bd7] flex items-center justify-center text-white text-[11px] font-bold">FM</div><div><div class="text-white text-[12px] font-bold">Detalle cliente</div><div class="text-[#64748b] text-[10px]">WhatsApp Business API</div></div></div>
-<div class="p-6 text-center"><div class="h-16 w-16 rounded-full bg-[#2a5bd7] mx-auto flex items-center justify-center text-white font-bold">FM</div><div id="rightName" class="text-white text-sm mt-3">-</div><div class="text-[#64748b] text-[11px]">Customer • WhatsApp</div><div id="rightInfo" class="mt-4 text-[11px] text-[#475569]"></div></div>
-</div>
-
 </div>
 
 <script>
 let agency_id=localStorage.getItem('agency_id')||'',username=localStorage.getItem('username')||'',role=localStorage.getItem('role')||'',currentWa=null,allChats=[],currentFilter='all';
-
+function switchTab(t){document.getElementById('formLogin').classList.toggle('hidden',t!=='login');document.getElementById('formRegister').classList.toggle('hidden',t!=='register');document.getElementById('tabLogin').className=t==='login'?'flex-1 bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[13px] font-bold':'flex-1 bg-[#111c34] border border-[#1e293b] text-[#94a3b8] py-2.5 rounded-xl text-[13px] font-bold';document.getElementById('tabRegister').className=t==='register'?'flex-1 bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[13px] font-bold':'flex-1 bg-[#111c34] border border-[#1e293b] text-[#94a3b8] py-2.5 rounded-xl text-[13px] font-bold';}
+function togglePass(id){let i=document.getElementById(id); i.type=i.type==='password'?'text':'password';}
+function openForgot(){document.getElementById('forgotBox').classList.toggle('hidden');}
 function showApp(){
  document.getElementById('loginView').classList.add('hidden');
- document.getElementById('sideUser').textContent=username;
- document.getElementById('sideRole').textContent=role.toUpperCase()+' • '+agency_id;
- document.getElementById('roleBadge').textContent=role.toUpperCase();
- if(role==='trabajador' || role==='worker'){
-   document.getElementById('adminSection').style.display='none';
-   document.getElementById('btnPlanes').style.display='none';
-   document.getElementById('btnSettings').style.display='none';
-   document.getElementById('btnCamp').style.display='none';
-   document.getElementById('btnVerPlanes').style.display='none';
-   document.getElementById('inboxLabel').textContent='Mis chats asignados';
-   document.getElementById('roleBadge').className='bg-yellow-500 text-black text-[10px] px-2 py-0.5 rounded-full';
- } else {
-   document.getElementById('adminSection').style.display='block';
-   document.getElementById('btnPlanes').style.display='flex';
-   document.getElementById('btnSettings').style.display='flex';
-   document.getElementById('btnCamp').style.display='flex';
-   document.getElementById('btnVerPlanes').style.display='block';
-   document.getElementById('inboxLabel').textContent='Inbox';
- }
+ document.getElementById('sideUser').textContent=username; document.getElementById('sideRole').textContent=role.toUpperCase()+' • '+agency_id; document.getElementById('roleBadge').textContent=role.toUpperCase();
+ if(role==='trabajador'||role==='worker'){document.getElementById('adminSection').style.display='none';document.getElementById('btnPlanes').style.display='none';document.getElementById('btnSettings').style.display='none';document.getElementById('btnCamp').style.display='none';document.getElementById('inboxLabel').textContent='Mis chats asignados';}
  showInbox();
 }
 if(agency_id&&username) showApp();
-
-async function login(){
- let a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim().toLowerCase(),p=document.getElementById('password').value;
- let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});
- let j=await r.json(); if(!r.ok){document.getElementById('loginMsg').textContent=j.error; return;}
- localStorage.setItem('agency_id',j.agency_id); localStorage.setItem('username',j.username); localStorage.setItem('role',j.role);
- agency_id=j.agency_id; username=j.username; role=j.role; showApp();
+async function login(){let a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim().toLowerCase(),p=document.getElementById('password').value;if(!a||!e||!p){document.getElementById('loginMsg').textContent='Completa empresa, correo y contraseña';return;}let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});let j=await r.json();if(!r.ok){document.getElementById('loginMsg').textContent=j.error;return;}localStorage.setItem('agency_id',j.agency_id);localStorage.setItem('username',j.username);localStorage.setItem('role',j.role);agency_id=j.agency_id;username=j.username;role=j.role;showApp();}
+async function register(){
+ let company=document.getElementById('regCompany').value.trim();let id=document.getElementById('regId').value.trim().toLowerCase();let email=document.getElementById('regEmail').value.trim().toLowerCase();let pass=document.getElementById('regPass').value;let terms=document.getElementById('acceptTerms').checked;
+ let msg=document.getElementById('regMsg');
+ if(!company||!id||!email||!pass){msg.className='text-xs mt-3 text-center text-red-400';msg.textContent='Completa todos los campos';return;}
+ if(!terms){msg.className='text-xs mt-3 text-center text-red-400';msg.textContent='Debes aceptar términos y privacidad';return;}
+ if(pass.length<6){msg.className='text-xs mt-3 text-center text-red-400';msg.textContent='Contraseña mínimo 6 caracteres';return;}
+ msg.className='text-xs mt-3 text-center text-yellow-400';msg.textContent='Creando empresa...';
+ let r=await fetch('/api/crear-jefe?agency_id='+encodeURIComponent(id)+'&username='+encodeURIComponent(email)+'&password='+encodeURIComponent(pass)+'&name='+encodeURIComponent(company));
+ let j=await r.json();if(!j.ok){msg.className='text-xs mt-3 text-center text-red-400';msg.textContent=j.error||'Ya existe esa empresa o correo';return;}
+ msg.className='text-xs mt-3 text-center text-green-400';msg.textContent='✅ Empresa creada. Ahora ingresa con ID: '+id;
+ switchTab('login'); document.getElementById('agency').value=id; document.getElementById('email').value=email;
 }
-function logout(){localStorage.clear(); location.reload();}
-function goPlan(p){window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20quiero%20'+encodeURIComponent(p),'_blank');}
-function showPlanes(){ if(role==='trabajador'||role==='worker') return; document.getElementById('planesView').classList.remove('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.add('hidden');}
-function showInbox(){document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.remove('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.add('hidden');fetchChats();}
-function showSettings(){ if(role==='trabajador'||role==='worker') return; document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.remove('hidden');document.getElementById('adminView').classList.add('hidden');}
-function showAdmin(){ if(role==='trabajador'||role==='worker') return; document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.remove('hidden');loadWorkers();loadStats();}
-function filterChats(type){currentFilter=type;renderChats();}
-function renderChats(){let f=allChats;if(currentFilter==='unread')f=allChats.filter(c=>c.unread>0);if(currentFilter==='campaign')f=allChats.filter(c=>c.source==='campaign');document.getElementById('chats').innerHTML=f.map(c=>`<div onclick="openChat('${c.wa_id}')" class="p-3 rounded-xl hover:bg-[#111c34] cursor-pointer flex items-center gap-3 ${c.unread>0?'bg-[#1a233f] border border-red-500/20':''}"><div class="h-8 w-8 rounded-full bg-[#1e293b] flex items-center justify-center text-[10px] text-white">${(c.name||c.wa_id).slice(0,2).toUpperCase()}</div><div class="flex-1"><div class="text-white text-[12px]">${(c.name||c.wa_id).slice(0,18)}</div><div class="text-[#64748b] text-[11px]">${(c.last_message||'').slice(0,28)}</div></div><div class="flex gap-1.5">${c.unread>0?'<span class="dot-red"></span>':''}${c.source==='campaign'?'<span class="dot-yellow"></span>':''}</div></div>`).join('') || '<div class="text-[#475569] text-[11px] p-4 text-center">Sin chats asignados</div>';}
-async function fetchChats(){let url='/api/chats?agency_id='+agency_id; if(role==='trabajador'||role==='worker'){ url+='&worker='+encodeURIComponent(username); } let r=await fetch(url); allChats=await r.json(); renderChats();}
-async function openChat(wa){currentWa=wa;let c=allChats.find(x=>x.wa_id===wa);document.getElementById('chatName').textContent=c?.name||wa;document.getElementById('rightName').textContent=c?.name||wa;document.getElementById('chatAvatar').textContent=(c?.name||wa).slice(0,2).toUpperCase();document.getElementById('rightInfo').innerHTML=`WA: ${wa}<br>${c?.source==='campaign'?'🟡 Campaña':'📥 Directo'} ${c?.assigned_to?'• Asignado a: '+c.assigned_to:''}`;loadMsgs();if(c?.unread>0){await fetch('/api/chats/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:wa,agency_id})});fetchChats();}}
-async function loadMsgs(){let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let d=await r.json();document.getElementById('messages').innerHTML=d.map(m=>`<div class="flex ${m.direction!='in'?'justify-end':''}"><div class="${m.direction!='in'?'bubble-out':'bubble-in'} px-4 py-2 rounded-2xl text-[13px] max-w-[70%]">${m.text||''}<div class="text-[9px] opacity-60 mt-1">${m.sent_by||''}</div></div></div>`).join('');}
-async function send(){let t=document.getElementById('msgInput').value;if(!t||!currentWa)return;await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t,agency_id,username})});document.getElementById('msgInput').value='';loadMsgs();}
+async function sendCode(){let email=document.getElementById('forgotEmail').value.trim().toLowerCase();let btn=document.getElementById('btnSendCode');let m=document.getElementById('forgotMsg');if(!email){m.textContent='Pon tu correo';return;}btn.textContent='Enviando...';let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});let j=await r.json();btn.textContent='Enviar código';if(!r.ok){m.className='text-[11px] mt-2 text-center text-red-400';m.textContent=j.error;return;}m.className='text-[11px] mt-2 text-center text-green-400';m.textContent='✅ Código enviado a '+email+' (revisa spam). Expira en 15 min';document.getElementById('codeSection').classList.remove('hidden');}
+async function resetWithCode(){let email=document.getElementById('forgotEmail').value.trim().toLowerCase();let code=document.getElementById('forgotCode').value.trim();let np=document.getElementById('forgotNewPass').value;let m=document.getElementById('forgotMsg');if(!code||!np){m.textContent='Pon código y nueva contraseña';return;}let r=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:code,email,newPassword:np})});let j=await r.json();if(!r.ok){m.className='text-[11px] mt-2 text-center text-red-400';m.textContent=j.error;return;}m.className='text-[11px] mt-2 text-center text-green-400';m.textContent='✅ Contraseña cambiada. Ya puedes ingresar.';document.getElementById('codeSection').classList.add('hidden');}
 
-async function loadWorkers(){try{let r=await fetch('/api/workers?agency_id='+agency_id);let w=await r.json();document.getElementById('workersList').innerHTML=w.map(u=>`<div class="bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl flex justify-between items-center"><div><div class="text-white text-[12px]">${u.username}</div><div class="text-[#64748b] text-[10px]">${u.role} • ${u.display_name||''}</div></div><button onclick="delWorker('${u.username}')" class="text-red-400 text-[11px] border border-red-500/20 px-2 py-1 rounded-lg">Eliminar</button></div>`).join('');}catch(e){}}
-async function addWorker(){let email=document.getElementById('newWorkerEmail').value.trim().toLowerCase();let pass=document.getElementById('newWorkerPass').value;let roleSel=document.getElementById('newWorkerRole').value;let msg=document.getElementById('addWorkerMsg');if(!email||!pass){msg.className='text-[11px] mt-3 text-center font-bold text-red-400';msg.textContent='❌ Completa todos los campos';return;}msg.className='text-[11px] mt-3 text-center font-bold text-yellow-400';msg.textContent='⏳ Agregando...';try{let r=await fetch('/api/workers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,email,password:pass,role:roleSel})});let j=await r.json();if(!r.ok) throw new Error(j.error);msg.className='text-[11px] mt-3 text-center font-bold text-green-400';msg.textContent='✅ Trabajador agregado: '+email;document.getElementById('newWorkerEmail').value='';document.getElementById('newWorkerPass').value='';loadWorkers();}catch(e){msg.className='text-[11px] mt-3 text-center font-bold text-red-400';msg.textContent='❌ '+e.message;}}
-async function delWorker(id){if(!confirm('¿Eliminar '+id+'?'))return;await fetch('/api/workers/'+encodeURIComponent(id)+'?agency_id='+agency_id,{method:'DELETE'});loadWorkers();}
+function logout(){localStorage.clear();location.reload();}
+function showPlanes(){if(role==='trabajador'||role==='worker')return;document.getElementById('planesView').classList.remove('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.add('hidden');}
+function showInbox(){document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.remove('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.add('hidden');fetchChats();}
+function showSettings(){if(role==='trabajador'||role==='worker')return;document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.remove('hidden');document.getElementById('adminView').classList.add('hidden');}
+function showAdmin(){if(role==='trabajador'||role==='worker')return;document.getElementById('planesView').classList.add('hidden');document.getElementById('inboxView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('adminView').classList.remove('hidden');loadWorkers();loadStats();}
+function filterChats(t){currentFilter=t;renderChats();}
+function renderChats(){let f=allChats;if(currentFilter==='unread')f=allChats.filter(c=>c.unread>0);if(currentFilter==='campaign')f=allChats.filter(c=>c.source==='campaign');document.getElementById('chats').innerHTML=f.map(c=>`<div onclick="openChat('${c.wa_id}')" class="p-3 rounded-xl hover:bg-[#111c34] cursor-pointer flex items-center gap-3 ${c.unread>0?'bg-[#1a233f] border border-red-500/20':''}"><div class="h-8 w-8 rounded-full bg-[#1e293b] flex items-center justify-center text-[10px] text-white">${(c.name||c.wa_id).slice(0,2).toUpperCase()}</div><div class="flex-1"><div class="text-white text-[12px]">${(c.name||c.wa_id).slice(0,18)}</div><div class="text-[#64748b] text-[11px]">${(c.last_message||'').slice(0,28)}</div></div></div>`).join('');}
+async function fetchChats(){let url='/api/chats?agency_id='+agency_id;if(role==='trabajador'||role==='worker')url+='&worker='+encodeURIComponent(username);let r=await fetch(url);allChats=await r.json();renderChats();}
+async function openChat(wa){currentWa=wa;let c=allChats.find(x=>x.wa_id===wa);document.getElementById('chatName').textContent=c?.name||wa;loadMsgs();if(c?.unread>0){await fetch('/api/chats/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:wa,agency_id})});fetchChats();}}
+async function loadMsgs(){let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let d=await r.json();document.getElementById('messages').innerHTML=d.map(m=>`<div class="flex ${m.direction!='in'?'justify-end':''}"><div class="${m.direction!='in'?'bubble-out':'bubble-in'} px-4 py-2 rounded-2xl text-[13px] max-w-[70%]">${m.text||''}</div></div>`).join('');}
+async function send(){let t=document.getElementById('msgInput').value;if(!t||!currentWa)return;await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t,agency_id,username})});document.getElementById('msgInput').value='';loadMsgs();}
+async function loadWorkers(){try{let r=await fetch('/api/workers?agency_id='+agency_id);let w=await r.json();document.getElementById('workersList').innerHTML=w.map(u=>`<div class="bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl flex justify-between items-center"><div><div class="text-white text-[12px]">${u.username}</div><div class="text-[#64748b] text-[10px]">${u.role}</div></div><button onclick="delWorker('${u.username}')" class="text-red-400 text-[11px]">Eliminar</button></div>`).join('');}catch(e){}}
+async function addWorker(){let e=document.getElementById('newWorkerEmail').value.trim().toLowerCase();let p=document.getElementById('newWorkerPass').value;let r=document.getElementById('newWorkerRole').value;if(!e||!p)return;let res=await fetch('/api/workers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,email:e,password:p,role:r})});let j=await res.json();document.getElementById('addWorkerMsg').textContent=j.ok?'✅ Agregado':'❌ '+j.error;if(j.ok)loadWorkers();}
+async function delWorker(id){if(!confirm('Eliminar?'))return;await fetch('/api/workers/'+encodeURIComponent(id)+'?agency_id='+agency_id,{method:'DELETE'});loadWorkers();}
 async function loadStats(){let r=await fetch('/api/stats?agency_id='+agency_id);let s=await r.json();document.getElementById('statToday').textContent=s.today||0;document.getElementById('statUnread').textContent=s.unread||0;document.getElementById('statCamp').textContent=s.campaign||0;}
-setInterval(()=>{if(document.getElementById('inboxView').offsetParent!==null)fetchChats();},5000);
 </script>
 </body>
 </html>
