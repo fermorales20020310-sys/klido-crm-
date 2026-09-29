@@ -51,7 +51,6 @@ select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;
 .price-card button{width:100%;padding:10px;border-radius:8px;border:0;background:#2f7bff;color:#fff;font-weight:700;cursor:pointer}
 .ai-box{background:#131f3d;border:1px solid #24365f;border-radius:12px;padding:12px;margin-bottom:12px}
 .ai-box.panic{background:#2a1f1f;border-color:#5a2a2a}
-/* MODO CLARO FIX: AZUL OSCURO -> BLANCO, LETRAS -> NEGRAS */
 body.light{background:#f5f7fb;color:#111827}
 body.light.sidebar{background:#ffffff;border-color:#e5e7eb}
 body.light.inbox{background:#ffffff;border-color:#e5e7eb}
@@ -67,8 +66,6 @@ body.light.ai-box.panic{background:#fef2f2;border-color:#fecaca}
 body.light.search{background:#f3f4f6;border:1px solid #e5e7eb}
 body.light.search input{color:#111827}
 body.light.inbox-h{color:#111827}
-body.light #chatList.chat.meta b{color:#111827}
-body.light #chatList.chat.meta p{color:#6b7280}
 body.light.chat.active{background:#e0e7ff}
 body.light.chat-h{background:#ffffff;border-color:#e5e7eb;color:#111827}
 body.light #msgs{background:#f9fafb}
@@ -103,14 +100,16 @@ body.light select,body.light textarea{background:#f3f4f6;color:#111827;border-co
 </div>
 <div class="inbox" id="panel-inbox"><div class="inbox-h">Inbox</div><div class="search">🔍<input id="q" placeholder="Search..." oninput="filter()"></div><div id="chatList"></div></div>
 <div class="inbox" id="panel-campaigns" style="display:none"><div class="inbox-h">Campaigns</div><div style="padding:14px"><label style="font-size:12px">Plantilla aprobada:</label><select id="tpl" style="width:100%;margin:8px 0 10px"></select><input type="file" id="file" accept=".xlsx,.csv" style="color:inherit;margin-bottom:10px;font-size:12px"><button onclick="uploadCamp()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer">Subir Excel y Enviar</button><div id="camps" style="margin-top:12px;font-size:13px"></div></div></div>
-<div class="inbox" id="panel-pricing" style="display:none; width:620px"><div class="inbox-h">Planes KLIDO</div>
+
+<div class="inbox" id="panel-pricing" style="display:none; width:680px"><div class="inbox-h">Planes KLIDO - Anual</div>
 <div class="pricing">
-<div class="price-card"><h3>Básico</h3><div class="price">$80.000</div><small>/mes + IVA</small><ul><li>✅ 1 envío masivo a la vez</li><li>✅ 2 usuarios incluidos</li><li>✅ Inbox ilimitado</li><li>❌ Sin IA automática</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Basico%20KLIDO','_blank')">Empezar Básico</button></div>
-<div class="price-card popular"><h3>Pro ⭐</h3><div class="price">$130.000</div><small>/mes + IVA</small><ul><li>✅ 5 envíos simultáneos</li><li>✅ 5 usuarios incluidos</li><li>✅ IA incluida</li><li>✅ Soporte prioritario</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Pro%20KLIDO','_blank')">Empezar Pro</button></div>
-<div class="price-card"><h3>Gold</h3><div class="price">$230.000</div><small>/mes + IVA</small><ul><li>✅ Envíos masivos ilimitados</li><li>✅ Usuarios ilimitados</li><li>✅ IA + Bot pánico humano</li><li>✅ API + Pagos Wompi</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Gold%20KLIDO','_blank')">Empezar Gold</button></div>
+<div class="price-card"><h3>Básico</h3><div class="price">$800.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $80.000 mant. c/3 meses</div><ul><li>✅ 1 envío masivo a la vez</li><li>✅ 2 usuarios incluidos</li><li>✅ Inbox ilimitado</li><li>❌ Sin IA automática</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Basico%20anual%20$800k%20%2B%20$80k%20mant','_blank')">Empezar Básico</button></div>
+<div class="price-card popular"><h3>Premium ⭐</h3><div class="price">$1.300.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $95.000 mant. c/3 meses</div><ul><li>✅ 5 envíos simultáneos</li><li>✅ 5 usuarios incluidos</li><li>✅ IA incluida</li><li>✅ Soporte prioritario</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Premium%20anual%20$1.3M%20%2B%20$95k%20mant','_blank')">Empezar Premium</button></div>
+<div class="price-card"><h3>Gold</h3><div class="price">$2.400.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $130.000 mant. c/3 meses</div><ul><li>✅ Envíos ilimitados</li><li>✅ Usuarios ilimitados</li><li>✅ IA + Pánico humano</li><li>✅ 📞 Llamada directa incluida</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Gold%20anual%20$2.4M%20%2B%20$130k%20mant','_blank')">Empezar Gold</button></div>
 </div>
-<div style="padding:0 14px 14px;font-size:11px;color:#7a8bb0;line-height:1.4">Todos los planes incluyen cumplimiento Ley 1581, backups automáticos y facturación. Puedes cambiar de plan en cualquier momento.</div>
+<div style="padding:0 14px 14px;font-size:11px;color:#7a8bb0;line-height:1.4">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API y soporte. Factura electrónica. Puedes cambiar de plan en cualquier momento. Cumplimiento Ley 1581.</div>
 </div>
+
 <div class="inbox" id="panel-settings" style="display:none; width:420px"><div class="inbox-h">Settings / IA</div>
 <div style="padding:14px;overflow-y:auto">
 <div class="ai-box"><label style="display:flex;justify-content:space-between;align-items:center"><b>🤖 IA Automática</b><input type="checkbox" id="aiEnabled" onchange="saveAI()" style="width:20px;height:20px"></label><div style="font-size:11px;color:#7a8bb0;margin-top:6px">Si está activa, responde sola cuando no hay humano.</div></div>
@@ -133,7 +132,38 @@ try{let me=await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());if(me.plan
 loadChats();loadTpl();loadAI();setInterval(loadChats,5000);}
 async function loadChats(){let r=await fetch('/api/chats?agency_id='+AGENCY);let j=await r.json();window._chats=j;chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();return `<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;}).join('');}
 function filter(){let q=document.getElementById('q').value.toLowerCase();document.querySelectorAll('.chat').forEach(el=>{el.style.display=el.innerText.toLowerCase().includes(q)?'flex':'none';});}
-async function openChat(wa){CUR=wa;let c=window._chats.find(x=>x.wa_id===wa);hName.textContent=c.name||wa;pName.textContent=c.name||wa;hAv.textContent=(c.name||wa).substring(0,2).toUpperCase();pAv.textContent=hAv.textContent;pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}`;tagSel.value=c.tag||'nuevo';await fetch('/api/chats/'+wa+'/read?agency_id='+AGENCY,{method:'POST'});let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY);let m=await r.json();msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');msgs.scrollTop=99999;loadChats();}
+async function openChat(wa){
+  CUR=wa;
+  let c=window._chats.find(x=>x.wa_id===wa);
+  hName.textContent=c.name||wa;
+  pName.textContent=c.name||wa;
+  hAv.textContent=(c.name||wa).substring(0,2).toUpperCase();
+  pAv.textContent=hAv.textContent;
+  tagSel.value=c.tag||'nuevo';
+
+  // LLAMADA SOLO GOLD - OPCION 1 GRATIS
+  let callHtml = `<div style="font-size:11px;color:#7a8bb0">Verificando plan...</div>`;
+  pDetails.innerHTML = `📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br>${callHtml}`;
+
+  try{
+    let me = await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());
+    if(me.plan_id==='enterprise'){
+      callHtml = `<a href="tel:+${wa}" style="display:block;text-align:center;margin-top:12px;padding:10px;background:#10b981;border-radius:10px;color:#fff;font-weight:800;text-decoration:none;font-size:13px">📞 Llamar a +${wa}</a><div style="font-size:10px;color:#7a8bb0;margin-top:4px;text-align:center">Abre el discador de tu celular/PC - Solo Gold</div>`;
+    } else {
+      callHtml = `<div style="margin-top:12px;padding:8px;background:#131f3d;border:1px solid #24365f;border-radius:8px;font-size:11px;color:#7a8bb0;text-align:center">🔒 Llamada directa solo disponible en plan Gold<br><a href="#" onclick="show('pricing',null)" style="color:#2f7bff">Ver Gold $2.4M + $130k mant</a></div>`;
+    }
+    pDetails.innerHTML = `📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br>${callHtml}`;
+  }catch(e){
+    pDetails.innerHTML = `📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br><a href="tel:+${wa}" style="display:block;text-align:center;margin-top:12px;padding:10px;background:#2f7bff;border-radius:10px;color:#fff;font-weight:800;text-decoration:none">📞 Llamar</a>`;
+  }
+
+  await fetch('/api/chats/'+wa+'/read?agency_id='+AGENCY,{method:'POST'});
+  let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY);
+  let m=await r.json();
+  msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');
+  msgs.scrollTop=99999;
+  loadChats();
+}
 async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})});openChat(CUR);}
 async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})});}
 function show(p, el){['inbox','campaigns','pricing','settings'].forEach(x=>{let pnl=document.getElementById('panel-'+x);if(pnl) pnl.style.display = x===p? 'flex' : 'none';});document.querySelectorAll('.item').forEach(i=>i.classList.remove('active'));if(el) el.classList.add('active');}
