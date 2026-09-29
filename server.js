@@ -1,9 +1,10 @@
-// server.js V10.8.3 - FIX DEFINITIVO transformParamRef - AVANZA CONSULTING
+// server.js V11.4 - FUSION V10.8.3 REAL + FIX PUBLIC/ROOT - Avanza Consulting 3133181851
 try{ require('dotenv').config(); }catch(e){}
 const express = require('express');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 app.use(express.json({limit:'30mb'}));
 app.use((req,res,next)=>{
@@ -13,7 +14,11 @@ app.use((req,res,next)=>{
   if(req.method==='OPTIONS') return res.sendStatus(200);
   next();
 });
+
+// --- STATIC ROBUSTO - BUSCA EN ROOT Y EN PUBLIC ---
+app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname,'public')));
+
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
 
 async function ensureTables(){
@@ -29,10 +34,14 @@ async function ensureTables(){
   await pool.query(`CREATE TABLE IF NOT EXISTS templates(agency_id TEXT, name TEXT, status TEXT, language TEXT, PRIMARY KEY(agency_id,name))`);
   await pool.query(`CREATE TABLE IF NOT EXISTS ai_config(agency_id TEXT PRIMARY KEY, enabled BOOLEAN DEFAULT false)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS calls(id SERIAL PRIMARY KEY, agency_id TEXT, wa_id TEXT, duration INT, note TEXT, created_at BIGINT, created_by TEXT)`);
-  console.log('>>> TABLAS V10.8.3 OK');
+  console.log('>>> TABLAS V11.4 OK');
 }
 
-app.get('/health',(req,res)=>res.json({ok:true, v:'V10.8.3'}));
+app.get('/health',(req,res)=>res.json({ok:true, v:'V11.4', files: fs.readdirSync(__dirname), public: fs.existsSync(path.join(__dirname,'public'))? fs.readdirSync(path.join(__dirname,'public')): []}));
+app.get('/api/debug/files',(req,res)=>{
+  let pub=[]; try{pub=fs.readdirSync(path.join(__dirname,'public'))}catch{}
+  res.json({root:fs.readdirSync(__dirname), public:pub, hasIndexRoot:fs.existsSync(path.join(__dirname,'index.html')), hasIndexPublic:fs.existsSync(path.join(__dirname,'public','index.html'))});
+});
 
 app.post('/api/login',async(req,res)=>{
   try{
@@ -76,7 +85,6 @@ app.post('/api/forgot-password', async (req,res)=>{
     res.json({ok:true, code:code});
   }catch(e){ res.status(500).json({error:e.message}); }
 });
-
 app.post('/api/reset-password', async (req,res)=>{
   try{
     const token=(req.body.token||'').trim();
@@ -133,5 +141,19 @@ app.post('/api/ai/toggle',async(req,res)=>{ await pool.query(`INSERT INTO ai_con
 app.post('/api/calls/log',async(req,res)=>{ await pool.query(`INSERT INTO calls(agency_id,wa_id,duration,note,created_at,created_by) VALUES($1,$2,$3,$4,$5,$6)`, [req.body.agency_id, req.body.wa_id, req.body.duration||0, req.body.note||'', Date.now(), req.body.username||'']); res.json({ok:true}); });
 app.get('/api/calls',async(req,res)=>{ const r=await pool.query(`SELECT * FROM calls WHERE agency_id=$1 ORDER BY id DESC LIMIT 100`, [req.query.agency_id]); res.json(r.rows); });
 
+// --- SERVE INDEX FINAL QUE NUNCA FALLA ---
+function serveIndex(res){
+  const p1 = path.join(__dirname,'index.html');
+  const p2 = path.join(__dirname,'public','index.html');
+  if(fs.existsSync(p1)) return res.sendFile(p1);
+  if(fs.existsSync(p2)) return res.sendFile(p2);
+  return res.status(200).send(`<h1>Klido V11.4 ONLINE - Soporte 3133181851</h1><p>index.html no encontrado. Root: ${fs.readdirSync(__dirname).join(', ')} | Public: ${fs.existsSync(path.join(__dirname,'public'))? fs.readdirSync(path.join(__dirname,'public')).join(', '): 'no existe public'}</p>`);
+}
+app.get('/', (req,res)=> serveIndex(res));
+app.get('*', (req,res)=>{
+  if(req.path.startsWith('/api/') || req.path.startsWith('/health') ) return res.status(404).json({error:'API no encontrada'});
+  return serveIndex(res);
+});
+
 const PORT=process.env.PORT||3000;
-(async()=>{ await ensureTables(); app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V10.8.3 FIX REAL en ${PORT}`)); })();
+(async()=>{ await ensureTables(); app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V11.4 FUSION REAL en ${PORT}`)); })();
