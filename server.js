@@ -14,10 +14,10 @@ function getAgency(pid){const m=getAgencyMap();if(pid&&m[pid])return m[pid];retu
 function getPidForAgency(a){const m=getAgencyMap();for(let k in m)if(m[k]===a)return k;return process.env.PHONE_NUMBER_ID}
 
 async function init(){
-// ===== NUEVO: PLANES VENDIBLES =====
+// ===== PLANES VENDIBLES ACTUALIZADOS 80/130/230 =====
 await pool.query(`CREATE TABLE IF NOT EXISTS agencies(id TEXT PRIMARY KEY, name TEXT, phone_number_id TEXT UNIQUE, created_at BIGINT, plan_id TEXT DEFAULT 'basico', acepto_terminos BOOLEAN DEFAULT false, fecha_aceptacion BIGINT)`);
 await pool.query(`CREATE TABLE IF NOT EXISTS plans(id TEXT PRIMARY KEY, nombre TEXT, precio INT, max_campanas INT, max_usuarios INT, ia BOOLEAN)`);
-await pool.query(`INSERT INTO plans(id,nombre,precio,max_campanas,max_usuarios,ia) VALUES('basico','Básico',99000,1,2,false),('pro','Pro',199000,5,5,true),('enterprise','Enterprise',399000,999,999,true) ON CONFLICT(id) DO NOTHING`);
+await pool.query(`INSERT INTO plans(id,nombre,precio,max_campanas,max_usuarios,ia) VALUES('basico','Básico',80000,1,2,false),('pro','Pro',130000,5,5,true),('enterprise','Gold',230000,999,999,true) ON CONFLICT(id) DO UPDATE SET nombre=EXCLUDED.nombre, precio=EXCLUDED.precio, max_campanas=EXCLUDED.max_campanas, max_usuarios=EXCLUDED.max_usuarios, ia=EXCLUDED.ia`);
 try{await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS plan_id TEXT DEFAULT 'basico'`)}catch{}
 try{await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS acepto_terminos BOOLEAN DEFAULT false`)}catch{}
 try{await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS fecha_aceptacion BIGINT`)}catch{}
@@ -26,7 +26,9 @@ try{await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS waba_id TEXT
 try{await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS phone_number_id TEXT`)}catch{}
 try{await pool.query(`ALTER TABLE agencies ADD COLUMN IF NOT EXISTS name TEXT`)}catch{}
 
-// ===== TUYO ORIGINAL =====
+// ===== NUEVO: IA CONFIG =====
+await pool.query(`CREATE TABLE IF NOT EXISTS ai_config(agency_id TEXT PRIMARY KEY, enabled BOOLEAN DEFAULT false, prompt TEXT DEFAULT 'Eres un asistente útil de atención al cliente. Responde corto, amable y en español.', human_takeover BOOLEAN DEFAULT false, updated_at BIGINT)`);
+
 await pool.query(`CREATE TABLE IF NOT EXISTS conversations(wa_id TEXT,agency_id TEXT,name TEXT,last_message TEXT,last_time BIGINT,unread BOOLEAN DEFAULT true,unread_dot TEXT DEFAULT 'transparent',last_type TEXT DEFAULT 'text',tag TEXT DEFAULT 'nuevo',updated_at BIGINT,UNIQUE(wa_id,agency_id))`);
 await pool.query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS name TEXT`);
 await pool.query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS last_message TEXT`);
@@ -52,16 +54,31 @@ const m=getAgencyMap();const now=Date.now();const ids=new Set(Object.values(m));
 for(let aid of ids){const pidRaw=Object.keys(m).find(k=>m[k]===aid)||null;const pid=pidRaw?String(pidRaw):null;const aidStr=String(aid);
 await pool.query(`INSERT INTO agencies(id,name,phone_number_id,created_at,plan_id) VALUES($1,$2,$3,$4,'basico') ON CONFLICT(id) DO NOTHING`,[aidStr,aidStr,pid,now]);}
 try{const au=process.env.ADMIN_USER;const aa=process.env.ADMIN_AGENCY||process.env.DEFAULT_AGENCY||'acol';let h=process.env.ADMIN_PASSWORD_HASH;const pl=process.env.ADMIN_PASSWORD||process.env.ADMIN_PASS;if(au&&!h&&pl)h=bcrypt.hashSync(pl,8);if(au&&h)await pool.query(`INSERT INTO users(agency_id,username,password_hash,role) VALUES($1,$2,$3,'jefe') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3`,[aa,au,h]);}catch(e){console.error(e.message)}
-console.log('GOLD VENDIBLE');
+console.log('GOLD VENDIBLE FINAL');
 }
 init();
 app.use(express.static(path.join(__dirname,'public')));
 
-// ===== NUEVO: ENDPOINTS VENDIBLES =====
 app.get('/api/plans', async (req,res)=>{ const r=await pool.query(`SELECT * FROM plans ORDER BY precio`); res.json(r.rows); });
 app.get('/api/me', async (req,res)=>{ const r=await pool.query(`SELECT a.*, p.nombre as plan_nombre, p.precio, p.ia FROM agencies a LEFT JOIN plans p ON p.id=a.plan_id WHERE a.id=$1`,[req.query.agency_id]); res.json(r.rows[0]||{}); });
 function requireFeature(feat){ return async (req,res,next)=>{ const ag=req.query.agency_id||req.body.agency_id; if(!ag) return next(); const r=await pool.query(`SELECT p.ia FROM agencies a JOIN plans p ON p.id=a.plan_id WHERE a.id=$1`,[ag]); if(feat==='ia' &&!r.rows[0]?.ia) return res.status(403).json({error:'Tu plan no incluye IA. Actualiza a Pro'}); next(); }; }
 app.get('/health', (req,res)=>res.json({ok:true, time:Date.now()}));
+
+// ===== NUEVO: AI ENDPOINTS =====
+app.get('/api/ai-config', async (req,res)=>{
+ const {agency_id} = req.query;
+ let r = await pool.query('SELECT * FROM ai_config WHERE agency_id=$1',[agency_id]);
+ if(r.rows.length===0){
+   await pool.query('INSERT INTO ai_config(agency_id) VALUES($1)',[agency_id]);
+   r = await pool.query('SELECT * FROM ai_config WHERE agency_id=$1',[agency_id]);
+ }
+ res.json(r.rows[0]);
+});
+app.post('/api/ai-config', async (req,res)=>{
+ const {agency_id, enabled, prompt, human_takeover} = req.body;
+ await pool.query(`INSERT INTO ai_config(agency_id,enabled,prompt,human_takeover,updated_at) VALUES($1,$2,$3,$4,$5) ON CONFLICT(agency_id) DO UPDATE SET enabled=$2,prompt=$3,human_takeover=$4,updated_at=$5`,[agency_id, enabled, prompt, human_takeover, Date.now()]);
+ res.json({ok:true});
+});
 
 app.get('/super',(req,res)=>{res.send(`<h2>KLIDO Super Admin</h2><p>usa /api/super/* con x-super-key</p>`)});
 function isSuper(req){return req.headers['x-super-key']===process.env.SUPER_ADMIN_KEY}
@@ -74,9 +91,8 @@ if(m){const wa=m.from;const nm=v.contacts?.[0]?.profile?.name||wa;let tx='',mt='
 if(m.type==='text')tx=m.text.body;else if(m.image){tx='📷 Imagen';mt='image';mid=m.image.id}else if(m.audio){tx='🎤 Audio';mt='audio';mid=m.audio.id}else if(m.video){tx='🎥 Video';mt='video';mid=m.video.id}else if(m.document){tx='📄 Documento';mt='document';mid=m.document.id}else tx='['+m.type+']';
 const now=Date.now();const dot=isc?'yellow':'red';
 await pool.query(`INSERT INTO conversations(wa_id,agency_id,name,last_message,last_time,unread,unread_dot,last_type,updated_at) VALUES($1,$2,$3,$4,$5,true,$6,$7,$5) ON CONFLICT(wa_id,agency_id) DO UPDATE SET last_message=$4,last_time=$5,unread=true,unread_dot=$6,last_type=$7,updated_at=$5,name=$3`,[wa,ag,nm,tx,now,dot,mt]);
-await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,is_campaign,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6,$7)`,[wa,ag,tx,mt,mid,isc,now]);}}catch(e){console.error(e.message)}res.sendStatus(200)});
+await pool.query(`INSERT INTO messages(wa_id,agency_id,direction,text,media_type,media_url,is_campaign,timestamp) VALUES($1,$2,'in',$3,$4,$5,$6,$7)`,[wa][ag][tx][mt][mid][isc][now]);}}catch(e){console.error(e.message)}res.sendStatus(200)});
 
-// ===== LOGIN FIX VENDIBLE =====
 app.post('/api/login',async(req,res)=>{
   const {email, username, password, acepto_terminos}=req.body;
   const userEmail = email || username;
@@ -101,4 +117,4 @@ app.get('/api/templates',async(req,res)=>{try{const ar=await pool.query(`SELECT 
 app.post('/api/campaigns/upload',async(req,res)=>{try{const{agency_id,template,fileBase64}=req.body;const buf=Buffer.from(fileBase64.split(',').pop(),'base64');const wb=xlsx.read(buf,{type:'buffer'});const ws=wb.Sheets[wb.SheetNames[0]];const rows=xlsx.utils.sheet_to_json(ws,{header:1});let phones=[];rows.flat().forEach(c=>{let s=String(c||'').replace(/\D/g,'');if(s.length>=10)phones.push(s)});phones=[...new Set(phones)];const now=Date.now();const cr=await pool.query(`INSERT INTO campaigns(agency_id,template,total,sent,status,created_at) VALUES($1,$2,$3,0,'enviando',$4) RETURNING id`,[agency_id,template,phones.length,now]);for(let p of phones)await pool.query(`INSERT INTO campaign_queue(campaign_id,agency_id,wa_id,template,status,created_at) VALUES($1,$2,$3,$4,'queued',$5)`,[cr.rows[0].id,agency_id,p,template,now]);res.json({ok:true,total:phones.length})}catch(e){console.error(e);res.status(500).json({error:'excel_error'})}});
 app.get('/api/campaigns',async(req,res)=>{const r=await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC LIMIT 50`,[req.query.agency_id]);res.json(r.rows)});
 cron.schedule('0 */6 * * *',async()=>{const ags=await pool.query(`SELECT id FROM agencies`);for(let a of ags.rows){const q=await pool.query(`SELECT * FROM campaign_queue WHERE status='queued' AND agency_id=$1 ORDER BY id ASC LIMIT 50`,[a.id]);const pid=getPidForAgency(a.id);for(let row of q.rows){try{await axios.post(`https://graph.facebook.com/${G}/${pid}/messages`,{messaging_product:'whatsapp',to:row.wa_id,type:'template',template:{name:row.template,language:{code:'es'}}},{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});await pool.query(`UPDATE campaign_queue SET status='sent' WHERE id=$1`,[row.id]);await pool.query(`UPDATE campaigns SET sent=sent+1 WHERE id=$1`,[row.campaign_id])}catch(e){await pool.query(`UPDATE campaign_queue SET status='error' WHERE id=$1`,[row.id])}}}});
-app.listen(process.env.PORT||3000,()=>console.log('GOLD VENDIBLE'));
+app.listen(process.env.PORT||3000,()=>console.log('GOLD VENDIBLE FINAL'));
