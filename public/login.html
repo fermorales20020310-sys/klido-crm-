@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO AVANZA CRM PRO - Login</title>
-<style>*{box-sizing:border-box;font-family:Inter,Arial}body{margin:0;background:#0f1420;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh}.card{background:#151b2d;padding:40px;border-radius:18px;width:380px;text-align:center}.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:15px}.logo img{height:48px}.logo span{font-weight:800;font-size:20px;text-align:left;line-height:1.1}.badge{background:#2f6bff;font-size:11px;padding:3px 8px;border-radius:20px}input{width:100%;padding:13px;margin:8px 0;border-radius:10px;border:none;background:#1e263f;color:#fff}button{width:100%;padding:13px;margin-top:12px;border:none;border-radius:10px;background:#2f6bff;color:#fff;font-weight:bold;cursor:pointer}.error{color:#ff6b6b;margin-top:10px;min-height:20px}</style>
+<style>*{box-sizing:border-box;font-family:Inter,Arial}body{margin:0;background:#0f1420;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh}.card{background:#151b2d;padding:40px;border-radius:18px;width:380px;text-align:center}.logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:15px}.logo img{height:48px}.logo span{font-weight:800;font-size:20px;text-align:left;line-height:1.1}.badge{background:#2f6bff;font-size:11px;padding:3px 8px;border-radius:20px}input{width:100%;padding:13px;margin:8px 0;border-radius:10px;border:none;background:#1e263f;color:#fff}button{width:100%;padding:13px;margin-top:12px;border:none;border-radius:10px;background:#2f6bff;color:#fff;font-weight:bold;cursor:pointer}.error{color:#ff6b6b;margin-top:10px;min-height:20px}.legal{font-size:11px;color:#8a94ad;margin-top:14px;text-align:left;display:flex;gap:8px;align-items:flex-start}.legal a{color:#2f6bff;text-decoration:none}.legal input{width:16px;margin:0}.foot{margin-top:18px;font-size:11px;color:#5a6580}.foot a{color:#5a6580}</style>
 </head><body>
 <div class="card">
 <div class="logo"><img src="/logo.png" onerror="this.style.display='none'"><span>KLIDO AVANZA<br><span class="badge">CRM PRO</span></span></div>
 <h2>Bienvenido</h2>
 <input id="email" type="email" placeholder="Correo"><input id="password" type="password" placeholder="Contraseña">
+<label class="legal"><input type="checkbox" id="acepto"><span>Al ingresar acepto <a href="/terminos.html" target="_blank">Términos</a> y <a href="/privacidad.html" target="_blank">Política de Datos</a></span></label>
 <button onclick="doLogin()">Ingresar</button><div class="error" id="err"></div>
+<div class="foot"><a href="/terminos.html" target="_blank">Términos</a> • <a href="/privacidad.html" target="_blank">Privacidad</a></div>
 </div>
 <script>
-async function doLogin(){const email=document.getElementById('email').value;const password=document.getElementById('password').value;const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(j.ok)location.href='/';else document.getElementById('err').innerText=j.error||'Error';}
+async function doLogin(){
+  if(!document.getElementById('acepto').checked){document.getElementById('err').innerText='Debes aceptar términos y privacidad';return;}
+  const email=document.getElementById('email').value;const password=document.getElementById('password').value;
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,acepto_terminos:true})});
+  const j=await r.json();if(j.ok)location.href='/campanas.html';else document.getElementById('err').innerText=j.error||'Error';
+}
 document.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 </script>
 </body></html>
