@@ -127,7 +127,7 @@ let AGENCY='',CUR='';
 async function doLogin(){
 if(!acc.checked){alert('Acepta terminos y privacidad');return;}
 AGENCY=ag.value.trim();let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value,acepto_terminos:true})});
-if(!r.ok){alert('Login incorrecto');return;}login.style.display='none';
+if(!r.ok){let j=await r.json().catch(()=>({})); alert(j.error||'Login incorrecto'); return;}login.style.display='none';
 try{let me=await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());if(me.plan_nombre){planBadge.textContent=me.plan_nombre;planName.textContent='Plan '+me.plan_nombre;}}catch(e){}
 loadChats();loadTpl();loadAI();setInterval(loadChats,5000);}
 async function loadChats(){let r=await fetch('/api/chats?agency_id='+AGENCY);let j=await r.json();window._chats=j;chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();return `<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;}).join('');}
@@ -153,7 +153,7 @@ async function openChat(wa){
   let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY);let m=await r.json();
   msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');msgs.scrollTop=99999;loadChats();
 }
-async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})});openChat(CUR);}
+async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY,username:us.value})});openChat(CUR);}
 async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})});}
 function show(p, el){['inbox','campaigns','pricing','settings'].forEach(x=>{let pnl=document.getElementById('panel-'+x);if(pnl) pnl.style.display=x===p?'flex':'none';});document.querySelectorAll('.item').forEach(i=>i.classList.remove('active'));if(el) el.classList.add('active');}
 async function loadTpl(){let r=await fetch('/api/templates?agency_id='+AGENCY);let j=await r.json();tpl.innerHTML=j.map(t=>`<option>${t.name}</option>`).join('');let c=await (await fetch('/api/campaigns?agency_id='+AGENCY)).json();camps.innerHTML=c.map(x=>`<div>📣 ${x.template} - ${x.sent}/${x.total} (${x.status})</div>`).join('');}
@@ -162,14 +162,17 @@ async function uploadCamp(){
   if(!f) return alert('elige excel');
   let rd=new FileReader();
   rd.onload=async()=>{
-    let r=await fetch('/api/campaigns/upload',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({agency_id:AGENCY,template:tpl.value,fileBase64:rd.result})
-    });
-    let txt=await r.text();
-    alert(txt);
-    loadTpl();
+    try{
+      let r=await fetch('/api/campaigns/upload',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({agency_id:AGENCY,template:tpl.value,fileBase64:rd.result})
+      });
+      let j=await r.json();
+      if(r.ok) alert('Campaña creada: '+j.total+' números');
+      else alert(j.error||'Error campaña');
+      loadTpl();
+    }catch(e){ alert('Error subiendo: '+e.message); }
   };
   rd.readAsDataURL(f);
 }
@@ -192,7 +195,7 @@ async function forgot(){
       alert(j.error||'Error');
     }
   }catch(e){
-    alert('Error de conexion');
+    alert('Error de conexion: '+e.message);
   }
 }
 </script>
