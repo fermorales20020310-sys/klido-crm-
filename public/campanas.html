@@ -2,141 +2,34 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>KLIDO | Campaigns</title>
+<title>KLIDO | Campanas</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-*{font-family:'Inter',sans-serif}body{background:#070b18}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:10px}
-</style>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');*{font-family:'Inter',sans-serif}body{background:#070b18}</style>
 </head>
 <body class="h-screen bg-[#070b18] p-2">
 <div class="h-full w-full bg-[#0f172a] rounded-[16px] border border-[#1e293b] flex overflow-hidden">
-
-<div class="w-[220px] bg-[#0f172a] border-r border-[#1e293b] flex flex-col shrink-0">
-<div class="p-4 flex items-center gap-2"><img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1"><div class="font-black text-white text-[14px]">KLIDO</div><span class="bg-[#2a5bd7] text-white text-[10px] px-2 py-0.5 rounded-full">Admin</span></div>
-<div class="mt-5 px-2 flex-1">
-<div class="text-[10px] text-[#475569] px-2 mb-2">MENU</div>
-<button onclick="location.href='/index.html'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-inbox w-4"></i>Inbox</button>
-<button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white"><i class="fa-solid fa-bullhorn w-4 text-[#f59e0b]"></i>Campaigns</button>
-<button onclick="location.href='/index.html'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-credit-card w-4"></i>Planes</button>
-<button onclick="location.href='/index.html'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-gear w-4"></i>Settings</button>
-<div class="mt-6"><div class="text-[10px] text-[#475569] px-2 mb-2">SUPPORT</div><button onclick="window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20soporte%20Campaigns','_blank')" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-lightbulb w-4 text-yellow-400"></i>Help Center</button></div>
-</div>
-<div class="p-3 border-t border-[#1e293b]"><button onclick="location.href='/index.html'" class="w-full bg-[#2a5bd7] text-white py-2 rounded-xl text-[12px] font-bold">Volver a Bandeja</button></div>
-</div>
-
+<div class="w-[220px] bg-[#0f172a] border-r border-[#1e293b] flex flex-col"><div class="p-4 flex items-center gap-2"><img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1"><div class="font-black text-white">KLIDO</div></div>
+<div class="mt-5 px-2 flex-1"><button onclick="location.href='/index.html'" class="w-full flex gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-inbox w-4"></i>Inbox - Bandeja</button><button class="w-full flex gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white mt-1"><i class="fa-solid fa-bullhorn w-4"></i>Campaigns</button></div>
+<div class="p-3 border-t border-[#1e293b]"><button onclick="window.open('https://wa.me/573133181851','_blank')" class="w-full bg-[#111c34] border border-[#1e2f4f] text-[#94a3b8] py-2 rounded-xl text-[11px]">Help Center → 3133181851</button></div></div>
 <div class="flex-1 bg-[#0f172a] overflow-y-auto p-7">
-<h1 class="text-white font-bold text-[18px]">Campaigns - Envío masivo antibaneo</h1>
-<p class="text-[#64748b] text-[12px] mt-1">50 contactos cada 5 horas + 3 seg entre mensaje. Cada contacto queda con 🟡 Campaña en bandeja. Soporte 3133181851</p>
-
-<div class="grid grid-cols-2 gap-6 mt-6 max-w-[1000px]">
-
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5">
-<h3 class="text-white font-bold text-[13px]">1. Plantilla aprobada Meta API</h3>
-<div class="flex gap-2 mt-4">
-<select id="templateSelect" class="flex-1 bg-[#0e1830] border border-[#1e2f4f] rounded-xl px-3 py-3 text-[12px] text-white outline-none"><option>Cargando plantillas...</option></select>
-<button onclick="syncTemplates()" class="bg-[#1e3a5f] border border-[#2a5bd7]/30 text-white px-4 rounded-xl text-[11px]">🔄 Sync</button>
-</div>
-<p id="tplStatus" class="text-[10px] text-[#94a3b8] mt-2">Si no aparece tu plantilla, créala en Meta Business Manager y dale Sync.</p>
-
-<h3 class="text-white font-bold text-[13px] mt-6">2. Subir Excel - Auto detecta teléfono</h3>
-<input type="file" id="excelFile" accept=".xlsx,.xls" class="w-full mt-3 text-[11px] text-[#94a3b8] file:bg-[#2a5bd7] file:text-white file:border-0 file:rounded-lg file:px-4 file:py-2">
-<div id="excelInfo" class="mt-3 text-[11px] text-[#22c55e]"></div>
-<div id="preview" class="mt-3 max-h-[200px] overflow-y-auto bg-[#0e1830] rounded-xl border border-[#1e2f4f] p-2 text-[11px] text-[#94a3b8]"></div>
-
-<button onclick="startCampaign()" id="btnStart" class="mt-6 w-full bg-[#2a5bd7] text-white py-3 rounded-xl text-[12px] font-bold disabled:opacity-40" disabled>🚀 Iniciar campaña 50/5h</button>
-<p id="campMsg" class="text-[11px] mt-2 text-[#8aa4ff]"></p>
-</div>
-
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5">
-<h3 class="text-white font-bold text-[13px]">Progreso y Antibaneo</h3>
-<div class="mt-4">
-<div class="flex justify-between text-[11px] text-[#94a3b8]"><span>Enviados</span><span id="progText">0 / 0</span></div>
-<div class="w-full bg-[#0e1830] h-2 rounded-full mt-2"><div id="progBar" class="bg-[#2a5bd7] h-2 rounded-full" style="width:0%"></div></div>
-<div class="mt-4 text-[11px] text-[#94a3b8] space-y-1">
-<div>✅ Bloque: 50 contactos</div>
-<div>⏳ Pausa: 5 horas</div>
-<div>⏱️ Delay: 3 seg entre mensaje</div>
-<div>🟡 Marca: Campaña en bandeja</div>
-</div>
-<div id="log" class="mt-4 bg-[#0e1830] rounded-xl border border-[#1e2f4f] p-3 h-[200px] overflow-y-auto text-[11px] text-[#94a3b8]"></div>
-</div>
-
-<h3 class="text-white font-bold text-[13px] mt-6">Historial de campañas</h3>
-<div id="history" class="mt-3 space-y-2 max-h-[200px] overflow-y-auto"></div>
-</div>
-
-</div>
-</div>
-
-</div>
-
+<h1 class="text-white font-bold text-[18px]">Campaigns - Envío masivo antibaneo 50/5h</h1>
+<p class="text-[#64748b] text-[12px]">Excel auto detecta teléfono, agrega 57, quita duplicados. Sync plantillas API. Marca 🟡 en Bandeja de mensajes</p>
+<div class="grid grid-cols-2 gap-6 mt-6"><div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5">
+<h3 class="text-white font-bold text-[13px]">1. Plantilla aprobada</h3>
+<div class="flex gap-2 mt-4"><select id="templateSelect" class="flex-1 bg-[#0e1830] border border-[#1e2f4f] rounded-xl px-3 py-3 text-[12px] text-white"><option>Cargando...</option></select><button onclick="syncTemplates()" class="bg-[#1e3a5f] text-white px-4 rounded-xl text-[11px]">🔄 Sync</button></div>
+<h3 class="text-white font-bold text-[13px] mt-6">2. Excel</h3><input type="file" id="excelFile" accept=".xlsx,.xls" class="w-full mt-3 text-[11px] text-[#94a3b8] file:bg-[#2a5bd7] file:text-white file:border-0 file:rounded-lg file:px-4 file:py-2"><div id="excelInfo" class="mt-3 text-[11px] text-[#22c55e]"></div><div id="preview" class="mt-3 max-h-[200px] overflow-y-auto bg-[#0e1830] rounded-xl border border-[#1e2f4f] p-2 text-[11px] text-[#94a3b8]"></div>
+<button onclick="startCampaign()" id="btnStart" class="mt-6 w-full bg-[#2a5bd7] text-white py-3 rounded-xl text-[12px] font-bold disabled:opacity-40" disabled>🚀 Iniciar 50/5h</button><p id="campMsg" class="text-[11px] mt-2 text-[#8aa4ff]"></p></div>
+<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5"><h3 class="text-white font-bold text-[13px]">Progreso</h3><div class="flex justify-between text-[11px] text-[#94a3b8] mt-4"><span>Enviados</span><span id="progText">0/0</span></div><div class="w-full bg-[#0e1830] h-2 rounded-full mt-2"><div id="progBar" class="bg-[#2a5bd7] h-2 rounded-full" style="width:0%"></div></div><div id="log" class="mt-4 bg-[#0e1830] rounded-xl border border-[#1e2f4f] p-3 h-[200px] overflow-y-auto text-[11px] text-[#94a3b8]"></div><div id="history" class="mt-4 space-y-2"></div></div></div></div></div>
 <script>
-let agency_id=localStorage.getItem('agency_id')||'',contacts=[],currentTpl='';
-async function syncTemplates(){
-let sel=document.getElementById('templateSelect');let status=document.getElementById('tplStatus');
-sel.innerHTML='<option>Sincronizando...</option>';
-try{
-let r=await fetch('/api/templates/sync?agency_id='+agency_id,{method:'POST'});
-let j=await r.json();
-if(!r.ok) throw new Error(j.error||'Error sync');
-status.textContent='✅ '+j.count+' plantillas sincronizadas';
+let agency_id=localStorage.getItem('agency_id')||'',contacts=[];
+async function syncTemplates(){let sel=document.getElementById('templateSelect');sel.innerHTML='<option>Sincronizando...</option>';try{let r=await fetch('/api/templates/sync?agency_id='+agency_id,{method:'POST'});let j=await r.json();loadTemplates();}catch(e){sel.innerHTML='<option>Error sync</option>';}}
+async function loadTemplates(){let r=await fetch('/api/templates?agency_id='+agency_id);let j=await r.json();let sel=document.getElementById('templateSelect');sel.innerHTML=j.length?j.map(t=>`<option value="${t.name}">${t.name}</option>`).join(''):'<option>Sin plantillas - crea en Meta y Sync</option>';}
+document.getElementById('excelFile').addEventListener('change',function(e){let file=e.target.files[0];if(!file)return;let reader=new FileReader();reader.onload=function(ev){let data=new Uint8Array(ev.target.result);let wb=XLSX.read(data,{type:'array'});let ws=wb.Sheets[wb.SheetNames[0]];let json=XLSX.utils.sheet_to_json(ws,{header:1});let headers=json[0].map(h=>String(h).toLowerCase());let phoneIdx=headers.findIndex(h=>h.includes('tel')||h.includes('cel')||h.includes('phone')||h.includes('numero'));if(phoneIdx==-1)phoneIdx=0;contacts=[];json.slice(1).forEach(row=>{let raw=String(row[phoneIdx]||'').replace(/\D/g,'');if(raw.length>=7){if(raw.length<=10)raw='57'+raw;contacts.push({wa_id:raw,name:String(row[0]||'')});}});contacts=[...new Map(contacts.map(c=>[c.wa_id,c])).values()];document.getElementById('excelInfo').textContent=`✅ ${contacts.length} contactos válidos`;document.getElementById('preview').innerHTML=contacts.slice(0,20).map(c=>`<div>${c.wa_id}</div>`).join('');document.getElementById('btnStart').disabled=false;};reader.readAsArrayBuffer(file);});
+async function startCampaign(){let tpl=document.getElementById('templateSelect').value;let r=await fetch('/api/campaigns/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,contacts})});let j=await r.json();document.getElementById('campMsg').textContent=j.ok?'✅ Campaña iniciada 50/5h':'Error';pollProgress(j.campaign_id);}
+async function pollProgress(id){let iv=setInterval(async()=>{let r=await fetch('/api/campaigns/'+id+'?agency_id='+agency_id);let j=await r.json();document.getElementById('progText').textContent=j.sent+'/'+j.total;document.getElementById('progBar').style.width=Math.round(j.sent/j.total*100)+'%';if(j.status=='finished')clearInterval(iv);},3000);}
 loadTemplates();
-}catch(e){sel.innerHTML='<option>Error: '+e.message+'</option>';}
-}
-async function loadTemplates(){
-let r=await fetch('/api/templates?agency_id='+agency_id);let j=await r.json();
-let sel=document.getElementById('templateSelect');
-if(!j.length){sel.innerHTML='<option>No hay plantillas aprobadas - crea en Meta y dale Sync</option>';return;}
-sel.innerHTML=j.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join('');
-currentTpl=j[0].name;
-sel.onchange=()=>currentTpl=sel.value;
-}
-document.getElementById('excelFile').addEventListener('change',function(e){
-let file=e.target.files[0];if(!file)return;
-let reader=new FileReader();
-reader.onload=function(ev){
-let data=new Uint8Array(ev.target.result);let wb=XLSX.read(data,{type:'array'});let ws=wb.Sheets[wb.SheetNames[0]];let json=XLSX.utils.sheet_to_json(ws,{header:1});
-let headers=json[0].map(h=>String(h).toLowerCase());let phoneIdx=headers.findIndex(h=>h.includes('tel')||h.includes('cel')||h.includes('phone')||h.includes('numero')||h.includes('whatsapp'));
-if(phoneIdx==-1)phoneIdx=0;
-contacts=[];
-json.slice(1).forEach(row=>{
-let raw=String(row[phoneIdx]||'').replace(/\D/g,'');
-if(raw.length>=7){if(raw.length<=10)raw='57'+raw; if(!raw.startsWith('57')&&raw.length==10)raw='57'+raw; contacts.push({wa_id:raw,name:String(row[0]||'')});}
-});
-let uniq=[...new Map(contacts.map(c=>[c.wa_id,c])).values()];
-contacts=uniq;
-document.getElementById('excelInfo').textContent=`✅ ${contacts.length} contactos válidos - duplicados eliminados - 57 agregado`;
-document.getElementById('preview').innerHTML=contacts.slice(0,20).map(c=>`<div>${c.wa_id} - ${c.name||'sin nombre'}</div>`).join('')+(contacts.length>20?`<div>...y ${contacts.length-20} más</div>`:'');
-document.getElementById('btnStart').disabled=contacts.length==0;
-};
-reader.readAsArrayBuffer(file);
-});
-async function startCampaign(){
-if(!contacts.length)return alert('Sube Excel');let tpl=document.getElementById('templateSelect').value;if(!tpl)return alert('Elige plantilla');
-document.getElementById('btnStart').disabled=true;document.getElementById('campMsg').textContent='Iniciando campaña antibaneo...';
-let r=await fetch('/api/campaigns/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,contacts})});
-let j=await r.json();if(!r.ok){document.getElementById('campMsg').textContent='❌ '+j.error;document.getElementById('btnStart').disabled=false;return;}
-document.getElementById('campMsg').textContent='✅ Campaña iniciada - 50 cada 5h';
-pollProgress(j.campaign_id);
-}
-async function pollProgress(id){
-let interval=setInterval(async()=>{
-let r=await fetch('/api/campaigns/'+id+'?agency_id='+agency_id);let j=await r.json();
-document.getElementById('progText').textContent=j.sent+' / '+j.total;
-document.getElementById('progBar').style.width=(j.total?Math.round(j.sent/j.total*100):0)+'%';
-document.getElementById('log').innerHTML=(j.logs||[]).slice(-20).map(l=>`<div>${l}</div>`).join('');
-if(j.status==='finished'){clearInterval(interval);document.getElementById('campMsg').textContent='✅ Campaña terminada - contactos con 🟡 en bandeja';loadHistory();}
-},3000);
-}
-async function loadHistory(){
-let r=await fetch('/api/campaigns?agency_id='+agency_id);let j=await r.json();
-document.getElementById('history').innerHTML=j.map(c=>`<div class="bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl flex justify-between"><div><div class="text-white text-[11px]">${c.template}</div><div class="text-[#64748b] text-[10px]">${new Date(c.created_at).toLocaleString()} - ${c.total} contactos</div></div><div class="text-[10px] ${c.status=='finished'?'text-green-400':'text-yellow-400'}">${c.status} ${c.sent}/${c.total}</div></div>`).join('');
-}
-loadTemplates();loadHistory();
 </script>
 </body>
 </html>
