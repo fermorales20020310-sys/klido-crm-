@@ -1,51 +1,159 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas KLIDO Pro - Antibaneo</title>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO | Campañas Antibaneo</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-*{font-family:'Inter',sans-serif} body{background:#070b18}
-.pro-card{background:#111a2e;border:1px solid #1e2f4f}
-.pro-input{background:#0e1830;border:1px solid #1e2f4f}
-</style></head>
-<body class="p-2 md:p-3">
-<div class="max-w-[1480px] mx-auto bg-[#0d152b] rounded-[24px] border border-[#1c2e50] overflow-hidden">
-<div class="flex items-center justify-between p-4 border-b border-[#1e3a5f] bg-[#0f1930]">
-<div class="flex items-center gap-3"><img src="/logo.png" class="h-9 w-9 bg-white p-1 rounded-xl"><div><b class="text-white">KLIDO - Campañas Antibaneo</b><br><span class="text-[10px] text-[#22c55e]">● Solo plantillas aprobadas API • 50 cada 5h • Punto amarillo</span></div></div>
-<div class="flex gap-2"><button onclick="syncTemplates()" class="bg-[#1a2744] border border-[#1e3a5f] text-[#8aa4ff] px-4 py-2 rounded-xl text-xs">🔄 Sync aprobadas API</button><button onclick="location.href='/index.html'" class="bg-[#2a4bff] text-white px-5 py-2 rounded-xl text-xs font-bold">← Inbox</button></div>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');*{font-family:'Inter',sans-serif}body{background:#070b18}.pro-card{background:#111a2e;border:1px solid #1e2f4f}.pro-input{background:#0e1830;border:1px solid #1e2f4f}</style>
+</head>
+<body class="p-3">
+<div class="max-w-[1400px] mx-auto bg-[#0d152b] rounded-[24px] border border-[#1c2e50] overflow-hidden">
+<div class="flex items-center justify-between p-5 border-b border-[#1e2f4f] bg-[#0f1930]">
+<div class="flex items-center gap-3"><img src="/logo.png" class="h-10 w-10 bg-white rounded-xl p-1"><div><b class="text-white text-[15px]">KLIDO - Campañas</b><div class="text-[11px] text-[#22c55e]">● Plantillas aprobadas API • Auto números • 50 cada 5h antibaneo • Punto amarillo 🟡</div></div></div>
+<div class="flex gap-2"><button onclick="sync()" class="bg-[#1a2744] border border-[#1e3a5f] text-[#8aa4ff] px-4 py-2 rounded-xl text-xs font-bold">🔄 Sync plantillas aprobadas API</button><a href="/" class="bg-[#2a4bff] text-white px-5 py-2 rounded-xl text-xs font-bold">← Inbox</a></div>
 </div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 p-6">
-<div class="lg:col-span-2 pro-card rounded-2xl p-6">
-<h3 class="text-white font-bold text-[15px]">📢 Subir Excel - Auto detección</h3>
-<p class="text-[11px] text-[#60a5fa]">KLIDO detecta automáticamente teléfonos y nombres aunque estén desordenados</p>
-<label class="text-[11px] text-[#94a3b8] mt-4 block">Plantilla aprobada por Meta (solo aprobadas):</label>
-<select id="tpl" class="pro-input w-full p-3 rounded-xl text-sm text-white mt-1 mb-2"><option>Cargando aprobadas...</option></select>
-<div id="tplInfo" class="text-[10px] text-[#475569] mb-4">Se sincronizan solas cada hora desde WhatsApp Business API oficial</div>
-<div id="drop" class="border-2 border-dashed border-[#2563eb] rounded-2xl p-10 text-center cursor-pointer hover:bg-[#0f1c36]" onclick="document.getElementById('file').click()">
-<div class="text-4xl">📁</div><div class="text-[#60a5fa] text-sm font-bold mt-2">Click para subir Excel / CSV</div><div class="text-[11px] text-[#94a3b8] mt-1">Auto detecta columna teléfono • Agrega 57 automático • Antibaneo 50/5h</div>
-<input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+<div class="lg:col-span-2 space-y-6">
+<div class="pro-card rounded-2xl p-7">
+<h3 class="text-white font-bold">1. Plantilla aprobada por Meta (obligatorio)</h3>
+<p class="text-[#94a3b8] text-[13px] mt-1">Se sincronizan solas desde tu WABA_ID - solo aprobadas, legal API oficial</p>
+<select id="tpl" class="w-full pro-input p-4 rounded-xl text-white mt-4 text-sm"><option>Cargando aprobadas...</option></select>
+<div id="tplInfo" class="text-[11px] text-[#475569] mt-2"></div>
 </div>
-<div id="autoStatus" class="hidden mt-4 bg-[#0a1226] rounded-2xl p-4 border border-green-500/30">
-<div id="numsPreview" class="text-[11px] text-[#cbd5e1]"></div>
-<div id="sendProgress" class="text-[11px] mt-3 bg-[#111a2e] p-3 rounded-xl border border-[#1e2f4f]"></div>
+
+<div class="pro-card rounded-2xl p-7">
+<h3 class="text-white font-bold">2. Subir Excel - Auto detecta teléfonos</h3>
+<p class="text-[#8aa4ff] text-[12px] mt-1">No importa el orden de columnas, agrega 57 automático, quita duplicados</p>
+<div onclick="document.getElementById('file').click()" class="mt-5 border-2 border-dashed border-[#2a4bff] rounded-2xl p-10 text-center cursor-pointer hover:bg-[#0f1c36]">
+<div class="text-3xl">📁</div><div class="text-white font-bold mt-2">Click para subir Excel</div><div class="text-[#94a3b8] text-[11px] mt-1">.xlsx.xls - Auto selección de números</div>
+<input type="file" id="file" accept=".xlsx,.xls" style="display:none">
 </div>
-</div>
-<div class="pro-card rounded-2xl p-5">
-<h3 class="text-white font-bold text-sm">📊 Historial de Campañas</h3><p class="text-[10px] text-[#22c55e] mb-3">● 50 cada 5h antibaneo • Actualiza cada 10s</p>
-<div id="hist" class="space-y-3 max-h-[650px] overflow-y-auto"></div>
+<div id="preview" class="mt-5 hidden bg-[#070b18] border border-[#1e2f4f] rounded-xl p-4">
+<div id="previewText" class="text-[12px] text-[#cbd5e1]"></div>
+<div id="progress" class="text-[12px] text-[#22c55e] mt-3"></div>
 </div>
 </div>
 </div>
+
+<div class="pro-card rounded-2xl p-6">
+<h3 class="text-white font-bold text-[14px]">📊 Historial de Campañas - Seguimiento jefe</h3>
+<p class="text-[11px] text-[#22c55e] mt-1">Actualiza cada 10s • 50 cada 5h antibaneo • Punto amarillo 🟡 en inbox</p>
+<div id="hist" class="mt-5 space-y-3 max-h-[700px] overflow-y-auto"></div>
+</div>
+</div>
+</div>
+
 <script>
-let agency_id=localStorage.getItem('agency_id')||''; if(!agency_id) location.href='/index.html';
-async function loadTpl(){let r=await fetch('/api/templates?agency_id='+agency_id);let d=await r.json();let s=document.getElementById('tpl');if(!d.length){s.innerHTML='<option value="">No hay aprobadas - dale Sync</option>';document.getElementById('tplInfo').innerHTML='<span class="text-yellow-400">⚠️ Crea plantillas en Meta Business Manager y dale a Sync</span>';}else{s.innerHTML=d.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join('');document.getElementById('tplInfo').innerHTML=`✅ ${d.length} plantillas aprobadas por API cargadas`}}
+let agency_id=localStorage.getItem('agency_id')||'acol';
+if(!agency_id){alert('Entra primero al Inbox');location.href='/';}
+
+async function loadTpl(){
+let r=await fetch('/api/templates?agency_id='+agency_id);
+let d=await r.json();
+let s=document.getElementById('tpl');
+if(!d.length){
+s.innerHTML='<option value="">No hay aprobadas - dale Sync</option>';
+document.getElementById('tplInfo').innerHTML='<span class="text-yellow-400">Crea plantillas en Meta Business Manager y dale a Sync</span>';
+}else{
+s.innerHTML=d.map(t=>`<option value="${t.name}">${t.name} - ${t.language} - Aprobada</option>`).join('');
+document.getElementById('tplInfo').innerHTML=`✅ ${d.length} plantillas aprobadas por API`;
+}
+}
 loadTpl();
-async function syncTemplates(){document.getElementById('tpl').innerHTML='<option>Sincronizando con Meta API...</option>';let r=await fetch('/api/templates/sync-real?agency_id='+agency_id,{method:'POST'});let j=await r.json();alert(j.ok?`✅ ${j.count} aprobadas sincronizadas`:j.error);loadTpl();}
-function detectPhoneColumn(rows){let headers=rows[0].map(h=>String(h||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""));let idx=headers.findIndex(h=>['telefono','tel','phone','celular','whatsapp','numero','movil','cel','whats'].some(k=>h.includes(k)));if(idx===-1){let best=0,cmax=0;for(let col=0;col<(rows[0]?.length||5);col++){let c=0;for(let r=1;r<Math.min(rows.length,30);r++){let v=String(rows[r][col]||'').replace(/\D/g,'');if(v.length>=10&&v.length<=13)c++;}if(c>cmax){cmax=c;best=col;}}idx=best;}return idx;}
-function extractPhones(rows,phoneIdx){let phones=[];for(let i=1;i<rows.length;i++){let raw=rows[i][phoneIdx];if(!raw)continue;let num=String(raw).replace(/\D/g,'');if(num.length===10)num='57'+num;if(num.length>=10&&num.length<=15){let nameIdx=phoneIdx===0?1:0;for(let c=0;c<rows[i].length;c++){if(c!==phoneIdx&&String(rows[i][c]).length>2&&isNaN(rows[i][c])){nameIdx=c;break;}}phones.push({wa_id:num,name:String(rows[i][nameIdx]||'').trim().slice(0,30)});}}return [...new Map(phones.map(p=>[p.wa_id,p])).values()];}
-document.getElementById('file').onchange=e=>{let f=e.target.files[0];if(!f)return;document.getElementById('autoStatus').classList.remove('hidden');document.getElementById('numsPreview').innerHTML='📖 Leyendo Excel...';let reader=new FileReader();reader.onload=evt=>{let data=new Uint8Array(evt.target.result);let wb=XLSX.read(data,{type:'array'});let sheet=wb.Sheets[wb.SheetNames[0]];let rows=XLSX.utils.sheet_to_json(sheet,{header:1}).filter(r=>r.length);let phoneIdx=detectPhoneColumn(rows);let phones=extractPhones(rows,phoneIdx);if(!phones.length){document.getElementById('numsPreview').innerHTML='<span class="text-red-400">❌ No detecté números</span>';return;}document.getElementById('numsPreview').innerHTML=`✅ Detecté <b class="text-white text-[14px]">${phones.length}</b> números en columna "${rows[0][phoneIdx]||phoneIdx+1}"<br><div class="mt-2 max-h-[120px] overflow-y-auto bg-[#070b18] p-2 rounded-xl border border-[#1e2f4f]">${phones.slice(0,12).map(p=>`📱 ${p.wa_id} ${p.name?'- '+p.name:''}`).join('<br>')}${phones.length>12?'<br>...y '+(phones.length-12)+' más':''}</div><div class="mt-2 text-[10px] text-[#94a3b8]">Bloques: ${Math.ceil(phones.length/50)} • Tiempo total ~${Math.ceil(phones.length/50)*5}h antibaneo</div>`;autoSend(f);};reader.readAsArrayBuffer(f);};
-async function autoSend(file){let tpl=document.getElementById('tpl').value;if(!tpl){alert('Elige plantilla aprobada');return;}document.getElementById('sendProgress').innerHTML='⏳ Creando campaña con bloques 50/5h...';let r2=new FileReader();r2.onload=async e2=>{let res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,fileBase64:e2.target.result})});let d=await res.json();if(d.ok){document.getElementById('sendProgress').innerHTML=`✅ Campaña ${d.total} contactos creada<br>🚀 50 cada 5h antibaneo activo<br>🟡 Inbox: punto amarillo<br>📱 Soporte: <a href="https://wa.me/573133181851" class="text-[#3b82f6] underline">3133181851</a>`;loadHist();}else document.getElementById('sendProgress').innerHTML='❌ '+d.error;};r2.readAsDataURL(file);}
-async function loadHist(){let r=await fetch('/api/campaigns?agency_id='+agency_id);let h=await r.json();document.getElementById('hist').innerHTML=h.map(c=>{let pct=c.total?Math.round((c.sent/c.total)*100):0;return `<div class="bg-[#0a1226] p-3 rounded-xl border border-[#1e2f4f]"><div class="flex justify-between"><div><b class="text-white text-[12px]">${c.template}</b><br><span class="text-[#94a3b8] text-[11px]">${c.total} contactos</span></div><div class="text-right"><span class="text-white font-bold">${c.sent||0}/${c.total}</span><br><span class="bg-[#1e3a5f] text-[#60a5fa] px-2 py-0.5 rounded-full text-[10px]">${c.status}</span></div></div><div class="w-full bg-[#1e293b] h-1.5 rounded-full mt-2"><div class="bg-[#2a4bff] h-1.5 rounded-full" style="width:${pct}%"></div></div><div class="text-[10px] text-[#64748b] mt-1">${pct}% • 50/5h antibaneo</div></div>`}).join('')||'<p class="text-[11px] text-[#475569]">Sin campañas</p>';}
-loadHist();setInterval(loadHist,10000);
+
+async function sync(){
+document.getElementById('tpl').innerHTML='<option>Sincronizando con Meta API...</option>';
+let r=await fetch('/api/templates/sync-real?agency_id='+agency_id,{method:'POST'});
+let j=await r.json();
+alert(j.ok?`✅ ${j.count} aprobadas sincronizadas`:`Error: ${j.error}`);
+loadTpl();
+}
+
+function detectPhone(rows){
+let headers=rows[0].map(h=>String(h||'').toLowerCase());
+let idx=headers.findIndex(h=>['tel','phone','cel','whatsapp','numero','movil'].some(k=>h.includes(k)));
+if(idx==-1){
+let best=0,max=0;
+for(let c=0;c<rows[0].length;c++){
+let cnt=0;
+for(let i=1;i<Math.min(rows.length,30);i++){
+let v=String(rows[i][c]||'').replace(/\D/g,'');
+if(v.length>=10&&v.length<=13)cnt++;
+}
+if(cnt>max){max=cnt;best=c;}
+}
+idx=best;
+}
+return idx;
+}
+
+document.getElementById('file').onchange=e=>{
+let f=e.target.files[0];
+if(!f)return;
+let reader=new FileReader();
+reader.onload=evt=>{
+let data=new Uint8Array(evt.target.result);
+let wb=XLSX.read(data,{type:'array'});
+let sheet=wb.Sheets[wb.SheetNames[0]];
+let rows=XLSX.utils.sheet_to_json(sheet,{header:1}).filter(r=>r&&r.length);
+if(rows.length<2){alert('Excel vacío');return;}
+let phoneIdx=detectPhone(rows);
+let phones=[];
+for(let i=1;i<rows.length;i++){
+let raw=rows[i][phoneIdx];
+if(!raw)continue;
+let num=String(raw).replace(/\D/g,'');
+if(num.length==10)num='57'+num;
+if(num.length>=10&&num.length<=15){
+let nameIdx=phoneIdx==0?1:0;
+for(let c=0;c<rows[i].length;c++){if(c!=phoneIdx&&String(rows[i][c]).length>2&&isNaN(rows[i][c])){nameIdx=c;break;}}
+phones.push({wa_id:num,name:String(rows[i][nameIdx]||'').slice(0,30)});
+}
+}
+let uniq=[...new Map(phones.map(p=>[p.wa_id,p])).values()];
+document.getElementById('preview').classList.remove('hidden');
+document.getElementById('previewText').innerHTML=`✅ Detecté <b class="text-white text-[14px]">${uniq.length}</b> números únicos en columna "${rows[0][phoneIdx]||phoneIdx+1}"<br><div class="mt-2 max-h-[120px] overflow-y-auto text-[11px]">${uniq.slice(0,10).map(p=>`📱 ${p.wa_id} ${p.name?' - '+p.name:''}`).join('<br>')}${uniq.length>10?`<br>... y ${uniq.length-10} más`:''}</div><div class="mt-2 text-[11px] text-[#94a3b8]">Bloques: ${Math.ceil(uniq.length/50)} • Tiempo total ~${Math.ceil(uniq.length/50)*5}h antibaneo</div>`;
+window._phonesToSend=f;
+};
+reader.readAsArrayBuffer(f);
+};
+
+async function uploadExcelAndCreate(){
+alert('Primero selecciona el archivo Excel - el sistema lo creará automático');
+}
+
+document.getElementById('file').addEventListener('change', async e=>{
+let f=e.target.files[0];
+if(!f)return;
+let tpl=document.getElementById('tpl').value;
+if(!tpl){alert('Primero elige plantilla aprobada');return;}
+document.getElementById('progress').textContent='⏳ Creando campaña 50/5h antibaneo...';
+let r2=new FileReader();
+r2.onload=async ev=>{
+let res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,fileBase64:ev.target.result})});
+let d=await res.json();
+if(d.ok){
+document.getElementById('progress').innerHTML=`✅ Campaña creada: ${d.total} contactos<br>🚀 Envío protegido: 50 cada 5h + 3s entre mensaje<br>🟡 Punto amarillo activo en inbox<br>Soporte 3133181851`;
+loadHist();
+}else{
+document.getElementById('progress').textContent='❌ '+d.error;
+}
+};
+r2.readAsDataURL(f);
+});
+
+async function loadHist(){
+let r=await fetch('/api/campaigns?agency_id='+agency_id);
+let h=await r.json();
+document.getElementById('hist').innerHTML=h.map(c=>{
+let pct=c.total?Math.round((c.sent/c.total)*100):0;
+return `<div class="bg-[#0a1226] p-4 rounded-xl border border-[#1e2f4f]"><div class="flex justify-between"><div><b class="text-white text-[12px]">${c.template}</b><br><span class="text-[#94a3b8] text-[11px]">${c.total} contactos</span></div><div class="text-right"><span class="text-white font-bold text-[12px]">${c.sent||0}/${c.total}</span><br><span class="bg-[#1e3a5f] text-[#60a5fa] px-2 py-0.5 rounded-full text-[10px]">${c.status}</span></div></div><div class="w-full bg-[#1e293b] h-1.5 rounded-full mt-3"><div class="bg-[#2a4bff] h-1.5 rounded-full" style="width:${pct}%"></div></div><div class="text-[10px] text-[#64748b] mt-2">${pct}% • 50/5h antibaneo • 🟡 punto amarillo</div></div>`;
+}).join('')||'<p class="text-[#475569] text-[12px]">Sin campañas aún - sube tu primer Excel</p>';
+}
+loadHist();
+setInterval(loadHist,10000);
 </script>
-</body></html>
+</body>
+</html>
