@@ -15,17 +15,19 @@ function getAgencyMap(){try{return JSON.parse(process.env.AGENCY_MAP||'{}')}catc
 function getAgency(pid){const m=getAgencyMap();if(pid&&m[pid])return m[pid];return process.env.DEFAULT_AGENCY||'acol'}
 function getPidForAgency(a){const m=getAgencyMap();for(let k in m)if(m[k]===a)return k;return process.env.PHONE_NUMBER_ID}
 
-// FIX CORREO - SOPORTA 465 y 587 - SIN VERIFY PARA RAILWAY
+// FIX DEFINITIVO CORREO - 587 ES EL QUE FUNCIONA EN RAILWAY
 function getTransporter(){
-  const port=parseInt(process.env.SMTP_PORT||'465');
+  const port=parseInt(process.env.SMTP_PORT||'587');
+  const is465 = port===465;
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST||'smtp.gmail.com',
     port: port,
-    secure: port===465,
+    secure: is465,
+    requireTLS:!is465,
     auth:{user:process.env.SMTP_USER, pass:(process.env.SMTP_PASS||'').replace(/\s/g,'')},
     tls:{rejectUnauthorized:false},
-    connectionTimeout:20000,
-    greetingTimeout:20000,
+    connectionTimeout:15000,
+    greetingTimeout:15000,
     socketTimeout:20000
   });
 }
@@ -57,14 +59,14 @@ await pool.query(`CREATE TABLE IF NOT EXISTS password_resets(id SERIAL PRIMARY K
 const m=getAgencyMap();const now=Date.now();const ids=new Set(Object.values(m));if(process.env.DEFAULT_AGENCY)ids.add(process.env.DEFAULT_AGENCY);
 for(let aid of ids){const pidRaw=Object.keys(m).find(k=>m[k]===aid)||null;const pid=pidRaw?String(pidRaw):null;const aidStr=String(aid);await pool.query(`INSERT INTO agencies(id,name,phone_number_id,created_at,plan_id) VALUES($1,$2,$3,$4,'basico') ON CONFLICT(id) DO NOTHING`,[aidStr,aidStr,pid,now]);}
 try{const au=process.env.ADMIN_USER;const aa=process.env.ADMIN_AGENCY||process.env.DEFAULT_AGENCY||'acol';let h=process.env.ADMIN_PASSWORD_HASH;const pl=process.env.ADMIN_PASSWORD||process.env.ADMIN_PASS;if(au&&!h&&pl)h=bcrypt.hashSync(pl,8);if(au&&h)await pool.query(`INSERT INTO users(agency_id,username,password_hash,role) VALUES($1,$2,$3,'jefe') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3`,[aa,au,h]);}catch(e){console.error(e.message)}
-console.log('KLIDO ANUAL FINAL + EMAIL FIX 465 - NO VERIFY');
+console.log('KLIDO ANUAL FINAL + EMAIL FIX 587');
 }
 init();
 app.use(express.static(path.join(__dirname,'public')));
 
 app.get('/api/plans', async (req,res)=>{ const r=await pool.query(`SELECT * FROM plans ORDER BY precio`); res.json(r.rows); });
 app.get('/api/me', async (req,res)=>{ const r=await pool.query(`SELECT a.id, a.plan_id, a.name, p.nombre as plan_nombre, p.precio, p.mantenimiento, p.ia, p.max_usuarios, p.max_campanas FROM agencies a LEFT JOIN plans p ON p.id=a.plan_id WHERE a.id=$1`,[req.query.agency_id]); res.json(r.rows[0]||{}); });
-app.get('/health', (req,res)=>res.json({ok:true, time:Date.now(), version:'ANUAL + FIX 465 NO VERIFY'}));
+app.get('/health', (req,res)=>res.json({ok:true, time:Date.now(), version:'ANUAL + FIX 587'}));
 
 app.get('/api/ai-config', async (req,res)=>{ const {agency_id}=req.query; let r=await pool.query('SELECT * FROM ai_config WHERE agency_id=$1',[agency_id]); if(r.rows.length===0){ await pool.query('INSERT INTO ai_config(agency_id) VALUES($1)',[agency_id]); r=await pool.query('SELECT * FROM ai_config WHERE agency_id=$1',[agency_id]); } res.json(r.rows[0]); });
 app.post('/api/ai-config', async (req,res)=>{ const {agency_id, enabled, prompt, human_takeover}=req.body; await pool.query(`INSERT INTO ai_config(agency_id,enabled,prompt,human_takeover,updated_at) VALUES($1,$2,$3,$4,$5) ON CONFLICT(agency_id) DO UPDATE SET enabled=$2,prompt=$3,human_takeover=$4,updated_at=$5`,[agency_id, enabled, prompt, human_takeover, Date.now()]); res.json({ok:true}); });
@@ -161,27 +163,23 @@ app.post('/api/campaigns/upload',async(req,res)=>{
 });
 app.get('/api/campaigns',async(req,res)=>{const r=await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC LIMIT 50`,[req.query.agency_id]);res.json(r.rows)});
 
-// ===== RESET POR CORREO FIX DEFINITIVO - SIN VERIFY =====
+// ===== RESET POR CORREO - SIN VERIFY - RAILWAY SAFE =====
 app.post('/api/forgot-password', async (req,res)=>{
   console.log('FORGOT REQ', req.body);
   const {email}=req.body;
   if(!email) return res.status(400).json({error:'Escribe tu correo'});
   const clean=email.trim().toLowerCase();
   const users=await pool.query(`SELECT agency_id, username FROM users WHERE LOWER(username)=LOWER($1)`,[clean]);
-  if(!users.rows.length){
-    console.log('USER NOT FOUND', clean);
-    return res.status(404).json({error:'Ese correo no está registrado: '+clean});
-  }
+  if(!users.rows.length) return res.status(404).json({error:'Ese correo no está registrado: '+clean});
   try{
     const transporter=getTransporter();
     console.log('SMTP TRY', process.env.SMTP_HOST, process.env.SMTP_PORT, process.env.SMTP_USER, 'len', (process.env.SMTP_PASS||'').length);
-    // SIN verify - Railway lo bloquea
     for(let u of users.rows){
       const token=crypto.randomBytes(32).toString('hex');
       const expires=Date.now()+1000*60*15;
       await pool.query(`INSERT INTO password_resets(agency_id,email,token,expires_at) VALUES($1,$2,$3,$4)`,[u.agency_id, clean, token, expires]);
       const link=`https://${req.get('host')}/reset.html?token=${token}`;
-      console.log('SENDING TO', clean, 'AG', u.agency_id);
+      console.log('SENDING TO', clean, 'AG', u.agency_id, 'LINK', link);
       const info = await transporter.sendMail({
         from: process.env.SMTP_FROM || `"KLIDO CRM" <${process.env.SMTP_USER}>`,
         to: clean,
@@ -191,10 +189,7 @@ app.post('/api/forgot-password', async (req,res)=>{
       console.log('MAIL OK', info.messageId, 'a', clean);
     }
     res.json({ok:true, count: users.rows.length});
-  }catch(e){
-    console.error('MAIL ERR FULL', e.message, e);
-    res.status(500).json({error:'SMTP: '+e.message});
-  }
+  }catch(e){ console.error('MAIL ERR FULL', e); res.status(500).json({error:'SMTP: '+e.message}); }
 });
 
 app.post('/api/reset-password-secure', async (req,res)=>{
@@ -219,4 +214,4 @@ app.post('/api/reset-password', async (req,res)=>{
 });
 
 cron.schedule('0 */6 * * *',async()=>{const ags=await pool.query(`SELECT id FROM agencies`);for(let a of ags.rows){const q=await pool.query(`SELECT * FROM campaign_queue WHERE status='queued' AND agency_id=$1 ORDER BY id ASC LIMIT 50`,[a.id]);const pid=getPidForAgency(a.id);for(let row of q.rows){try{await axios.post(`https://graph.facebook.com/${G}/${pid}/messages`,{messaging_product:'whatsapp',to:row.wa_id,type:'template',template:{name:row.template,language:{code:'es'}}},{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});await pool.query(`UPDATE campaign_queue SET status='sent' WHERE id=$1`,[row.id]);await pool.query(`UPDATE campaigns SET sent=sent+1 WHERE id=$1`,[row.campaign_id])}catch(e){await pool.query(`UPDATE campaign_queue SET status='error' WHERE id=$1`,[row.id])}}}});
-app.listen(process.env.PORT||3000,()=>console.log('KLIDO ANUAL FINAL + EMAIL FIX 465 - NO VERIFY'));
+app.listen(process.env.PORT||3000,()=>console.log('KLIDO ANUAL FINAL + EMAIL FIX 587'));
