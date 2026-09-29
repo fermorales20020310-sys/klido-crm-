@@ -9,6 +9,7 @@
     "axios": "^1.6.2",
     "xlsx": "^0.18.5",
     "bcryptjs": "^2.4.3",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.13"
   }
 }
