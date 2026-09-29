@@ -33,12 +33,12 @@
 <div class="px-3"><button class="w-full border border-[#1e3a5f] rounded-xl py-2 text-[12px] text-white">🌙 / ☀️ Tema</button></div>
 <div class="mt-5 px-2 flex-1">
 <div class="text-[10px] text-[#475569] px-2 mb-2">MENU</div>
-<button id="btnInbox" onclick="showInbox()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-inbox w-4"></i>Inbox</button>
-<button onclick="location.href='/campañas.html'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-bullhorn w-4 text-[#f59e0b]"></i>Campaigns</button>
+<button id="btnInbox" onclick="showInbox()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white"><i class="fa-solid fa-inbox w-4"></i>Inbox</button>
+<button id="btnCamp" onclick="location.href='/campanas.html'" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-bullhorn w-4 text-[#f59e0b]"></i>Campaigns</button>
 <button id="btnPlanes" onclick="showPlanes()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8]"><i class="fa-solid fa-credit-card w-4"></i>Planes</button>
-<button id="btnSettings" onclick="showSettings()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] bg-[#2a5bd7] text-white mt-1"><i class="fa-solid fa-gear w-4"></i>Settings</button>
+<button id="btnSettings" onclick="showSettings()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#94a3b8] mt-1"><i class="fa-solid fa-gear w-4"></i>Settings</button>
 <div class="mt-4"><div class="text-[10px] text-[#eab308] px-2 mb-2">ADMIN</div><button id="btnAdmin" onclick="showAdmin()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] text-[#eab308] bg-[#1a1a0f] border border-yellow-500/20"><i class="fa-solid fa-users-gear w-4"></i>Equipo y Estadísticas</button></div>
-<div class="mt-6"><div class="text-[10px] text-[#475569] px-2 mb-2">SUPPORT</div><button onclick="window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20necesito%20soporte%20Help%20Center','_blank')" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-lightbulb w-4 text-yellow-400"></i>Help Center</button></div>
+<div class="mt-6"><div class="text-[10px] text-[#475569] px-2 mb-2">SUPPORT</div><button onclick="window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20soporte%20Help%20Center','_blank')" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] text-[#94a3b8] hover:bg-[#111c34]"><i class="fa-solid fa-lightbulb w-4 text-yellow-400"></i>Help Center</button></div>
 </div>
 <div class="p-3 border-t border-[#1e293b]"><div class="bg-[#111c34] rounded-xl p-3 border border-[#1e2f4f]"><div class="text-white text-[12px] font-bold">Plan Básico</div><div id="sideUser" class="text-[#64748b] text-[10px]">fermorales20020310@gmail.com</div><button onclick="showPlanes()" class="mt-3 w-full bg-[#2a5bd7] text-white py-2 rounded-lg text-[11px] font-bold">Ver planes</button></div><button onclick="logout()" class="mt-3 w-full bg-red-600/20 border border-red-600/30 text-red-400 py-2 rounded-xl text-[12px]">SALIR</button></div>
 </div>
@@ -54,7 +54,7 @@
 </div>
 </div>
 
-<div id="inboxView" class="hidden flex flex-1 overflow-hidden">
+<div id="inboxView" class="flex flex-1 overflow-hidden">
 <div class="w-[360px] border-r border-[#1e293b] bg-[#0f172a] flex flex-col">
 <div class="px-4 py-3 border-b border-[#1e293b]"><div class="flex items-center justify-between"><div class="text-white font-bold text-[13px]">Bandeja de mensajes</div><div class="flex gap-2 text-[9px]"><span class="flex items-center gap-1 text-[#94a3b8]"><span class="dot-red"></span> No leído</span><span class="flex items-center gap-1 text-[#94a3b8]"><span class="dot-yellow"></span> Campaña</span></div></div><div class="flex gap-2 mt-3"><button id="fAll" onclick="filterChats('all')" class="bg-[#2a5bd7] text-white px-3 py-1.5 rounded-full text-[11px]">Todos</button><button id="fUnread" onclick="filterChats('unread')" class="bg-[#1a2744] border border-[#1e3a5f] text-[#94a3b8] px-3 py-1.5 rounded-full text-[11px]">No contestados</button><button id="fCamp" onclick="filterChats('campaign')" class="bg-[#1a2744] border border-[#1e3a5f] text-[#94a3b8] px-3 py-1.5 rounded-full text-[11px]">Campaña 🟡</button></div></div>
 <div id="chats" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
@@ -62,56 +62,15 @@
 <div class="flex-1 bg-[#0b1220] flex flex-col"><div class="h-[56px] border-b border-[#1e293b] flex items-center px-4 bg-[#0f172a] gap-3"><div id="chatAvatar" class="h-8 w-8 rounded-full bg-[#2a5bd7] flex items-center justify-center text-white text-[11px] font-bold">?</div><div><div id="chatName" class="text-white text-[13px] font-bold">Selecciona chat</div><div class="text-[#22c55e] text-[11px]">WhatsApp Business API • En vivo • Directo/Campaña 🟡</div></div></div><div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3"></div><div class="p-3 bg-[#0f172a] border-t border-[#1e293b] flex gap-2"><input id="msgInput" placeholder="Escribir..." class="flex-1 bg-[#111c34] border border-[#1e293b] rounded-full px-4 py-2.5 text-sm text-white outline-none" onkeydown="if(event.key==='Enter')send()"><button onclick="send()" class="bg-[#2a5bd7] w-10 h-10 rounded-full text-white">➤</button></div></div>
 </div>
 
-<div id="settingsView" class="p-7 overflow-y-auto">
+<div id="settingsView" class="hidden p-7 overflow-y-auto">
 <h1 class="text-white font-bold text-[18px]">Settings - Configuración Empresarial</h1>
 <p class="text-[#64748b] text-[12px] mt-1">Todo explicado. Soporte directo: 3133181851 • Admin</p>
 <div class="grid grid-cols-1 gap-4 mt-6 max-w-[850px]">
-
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5">
-<h3 class="text-white font-bold text-[13px]">📥 Bandeja de mensajes</h3>
-<p class="text-[#94a3b8] text-[12px] mt-2 leading-relaxed">Llegan todos los chats en tiempo real desde WhatsApp Business API oficial.
-<br>🔴 <b class="text-red-400">Punto rojo</b> = mensaje no leído o no contestado. Se marca con fondo azul y contador.
-<br>🟡 <b class="text-yellow-400">Punto amarillo</b> = cliente que vino de una Campaña masiva. Para que tu equipo sepa que es seguimiento de campaña.
-<br><b class="text-white">Filtros:</b> Todos / No contestados / Campaña. Al abrir el chat se quita el rojo automáticamente. Admin ve todo, Worker solo sus chats asignados.</p>
-</div>
-
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5">
-<h3 class="text-white font-bold text-[13px]">📢 Campaigns - Envío masivo antibaneo 50 cada 5h</h3>
-<p class="text-[#94a3b8] text-[12px] mt-2 leading-relaxed">
-<b class="text-white">1. Plantillas:</b> Solo aprobadas por Meta. Botón 🔄 Sync plantillas aprobadas API trae directo de tu WABA_ID. Si no aparece, créala en Business Manager y dale Sync.<br>
-<b class="text-white">2. Excel auto:</b> Sube.xlsx en cualquier orden. KLIDO auto-detecta columna teléfono aunque esté desordenada, agrega 57 si falta, quita duplicados y guarda nombre.<br>
-<b class="text-white">3. Antibaneo:</b> Tu server envía 50 contactos cada 5 horas + 3 segundos entre mensaje. Es legal, cuida reputación del número.<br>
-<b class="text-white">4. Historial:</b> Ves % enviado, barra de progreso y tiempo total estimado. Soporte directo 3133181851.</p>
-</div>
-
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5">
-<h3 class="text-white font-bold text-[13px]">💳 Planes - Básico / Premium / Gold</h3>
-<p class="text-[#94a3b8] text-[12px] mt-2 leading-relaxed">
-<b class="text-white">Básico $800.000/año + $80.000 mant c/3m:</b> 1 envío a la vez, 2 usuarios, inbox ilimitado, sin IA.<br>
-<b class="text-white">Premium $1.300.000/año + $95.000 mant:</b> 5 envíos simultáneos, 5 usuarios, IA incluida, soporte prioritario.<br>
-<b class="text-white">Gold $2.400.000/año + $130.000 mant:</b> Envíos y usuarios ilimitados, IA + botón pánico humano + llamada directa incluida.<br>
-Todos los botones Empezar redirigen a tu WhatsApp 3133181851 para cierre anual. Factura electrónica, Ley 1581.</p>
-</div>
-
-<div class="bg-[#111c34] border border-yellow-500/20 rounded-[14px] p-5">
-<h3 class="text-yellow-400 font-bold text-[13px]">👑 Equipo y Estadísticas - Panel Administradora</h3>
-<p class="text-[#94a3b8] text-[12px] mt-2 leading-relaxed">
-<b class="text-white">Agregar trabajador:</b> Pones correo + contraseña temporal + rol. Worker = solo ve chats que tú le asignas. Admin = ve todo como tú.<br>
-<b class="text-white">Eliminar:</b> Botón Eliminar quita acceso inmediato. Su historial queda para auditoría.<br>
-<b class="text-white">Seguimiento:</b> En la lista ves por cada trabajador: chats asignados, mensajes de hoy, cuántos 🔴 no leídos tiene pendientes y cuántos 🟡 de campaña.<br>
-<b class="text-white">Estadísticas arriba:</b> Mensajes hoy, total no leídos y total campañas. Para control de jefe.</p>
-</div>
-
-<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5">
-<h3 class="text-white font-bold text-[13px]">🔒 Seguridad y Legal - Ley 1581</h3>
-<p class="text-[#94a3b8] text-[12px] mt-2 leading-relaxed">Cada agencia es Responsable de los datos que sube. KLIDO es Encargado, datos cifrados por agency_id. Recuperación por código al correo (15 min expiración). Ver <a href="/terminos.html" class="text-[#8aa4ff] underline">Términos</a> y <a href="/privacidad.html" class="text-[#8aa4ff] underline">Privacidad</a>.</p>
-</div>
-
-<div class="bg-[#0e1830] border border-[#2a5bd7]/30 rounded-[14px] p-5 flex items-center justify-between">
-<div><h3 class="text-white font-bold text-[13px]">💬 Help Center - Soporte directo a mi WPP</h3><p class="text-[#94a3b8] text-[12px] mt-1">Dudas de configuración, campañas o equipo → atención directa Fernanda al WhatsApp oficial.</p></div>
-<button onclick="window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20necesito%20soporte%20Settings','_blank')" class="bg-[#2a5bd7] text-white px-6 py-3 rounded-xl text-[12px] font-bold shrink-0">WhatsApp 3133181851</button>
-</div>
-
+<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5"><h3 class="text-white font-bold text-[13px]">📥 Bandeja de mensajes</h3><p class="text-[#94a3b8] text-[12px] mt-2 leading-relaxed">Llegan todos los chats en tiempo real desde API oficial.<br>🔴 Punto rojo = no leído. 🟡 Punto amarillo = vino de Campaña. Filtros Todos / No contestados / Campaña.</p></div>
+<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5"><h3 class="text-white font-bold text-[13px]">📢 Campaigns - Antibaneo 50/5h</h3><p class="text-[#94a3b8] text-[12px] mt-2 leading-relaxed"><b class="text-white">1. Plantillas:</b> Solo aprobadas Meta. Botón Sync trae de tu WABA_ID.<br><b class="text-white">2. Excel auto:</b> Detecta teléfono en cualquier columna, agrega 57, quita duplicados.<br><b class="text-white">3. Antibaneo:</b> 50 contactos cada 5h + 3 seg delay. Marca 🟡 en bandeja.</p></div>
+<div class="bg-[#111c34] border border-[#1e293b] rounded-[14px] p-5"><h3 class="text-white font-bold text-[13px]">💳 Planes</h3><p class="text-[#94a3b8] text-[12px] mt-2">Básico $800k + $80k / Premium $1.3M + $95k / Gold $2.4M + $130k. Todos los botones a tu 3133181851.</p></div>
+<div class="bg-[#111c34] border border-yellow-500/20 rounded-[14px] p-5"><h3 class="text-yellow-400 font-bold text-[13px]">👑 Equipo y Estadísticas</h3><p class="text-[#94a3b8] text-[12px] mt-2">Agregar trabajador: correo + pass + rol Worker/Admin. Eliminar quita acceso. Seguimiento: chats, msgs hoy, 🔴 no leídos, 🟡 campaña.</p></div>
+<div class="bg-[#0e1830] border border-[#2a5bd7]/30 rounded-[14px] p-5 flex items-center justify-between"><div><h3 class="text-white font-bold text-[13px]">💬 Help Center</h3><p class="text-[#94a3b8] text-[12px] mt-1">Soporte directo a mi WPP 3133181851</p></div><button onclick="window.open('https://wa.me/573133181851?text=Hola%20KLIDO%20soporte%20Settings','_blank')" class="bg-[#2a5bd7] text-white px-6 py-3 rounded-xl text-[12px] font-bold">WhatsApp 3133181851</button></div>
 </div>
 </div>
 
@@ -133,7 +92,7 @@ Todos los botones Empezar redirigen a tu WhatsApp 3133181851 para cierre anual. 
 
 <script>
 let agency_id=localStorage.getItem('agency_id')||'',username=localStorage.getItem('username')||'',currentWa=null,allChats=[],currentFilter='all';
-function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('sideUser').textContent=username||'fermorales20020310@gmail.com';showSettings();}
+function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('sideUser').textContent=username||'fermorales20020310@gmail.com';showInbox();}
 if(agency_id&&username)showApp();
 async function login(){let a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim(),p=document.getElementById('password').value;let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});let j=await r.json();if(!r.ok){document.getElementById('loginMsg').textContent=j.error;return;}localStorage.setItem('agency_id',j.agency_id);localStorage.setItem('username',j.username);localStorage.setItem('role',j.role||'admin');agency_id=j.agency_id;username=j.username;showApp();}
 function logout(){localStorage.clear();location.reload();}
