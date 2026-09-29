@@ -1,10 +1,9 @@
-// server.js - KLIDO V10.6 AVANZA CONSULTING - IA + LLAMADAS + TODO ANTERIOR
+// server.js - KLIDO V10.8 AVANZA CONSULTING - PLAN AL CREAR + IA + LLAMADAS
 try{ require('dotenv').config(); }catch(e){}
 const express = require('express');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-
 const app = express();
 app.use(express.json({limit:'30mb'}));
 app.use((req,res,next)=>{
@@ -17,7 +16,6 @@ app.use((req,res,next)=>{
 app.get('/campañas.html',(req,res)=>res.redirect(301,'/campanas.html'));
 app.get('/campa%C3%B1as.html',(req,res)=>res.redirect(301,'/campanas.html'));
 app.use(express.static(path.join(__dirname,'public')));
-
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
 const WA_TOKEN = (process.env.WHATSAPP_TOKEN||'').trim();
 const WA_PHONE_ID = (process.env.WHATSAPP_PHONE_ID || process.env.PHONE_NUMBER_ID || '').trim();
@@ -31,9 +29,7 @@ async function sendEmail(to, subject, html){
     headers:{'Authorization':'Bearer '+process.env.RESEND_API_KEY,'Content-Type':'application/json'},
     body:JSON.stringify({ from: process.env.RESEND_FROM || 'KLIDO <onboarding@resend.dev>', to:[to], subject, html })
   });
-  const data = await r.json();
-  if(!r.ok) throw new Error(JSON.stringify(data));
-  return data;
+  const data = await r.json(); if(!r.ok) throw new Error(JSON.stringify(data)); return data;
 }
 async function sendWhatsappReal(to,text){
   let clean = String(to).replace(/\D/g,''); if(clean.length===10) clean='57'+clean;
@@ -47,7 +43,7 @@ async function sendTemplateReal(to,template){
 }
 async function ensureTables(){
   await pool.query(`CREATE TABLE IF NOT EXISTS users(agency_id TEXT, username TEXT, password_hash TEXT, role TEXT, display_name TEXT, plan TEXT DEFAULT 'basico', PRIMARY KEY(agency_id,username))`);
-  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'basico'`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'premium'`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name TEXT`);
   await pool.query(`CREATE TABLE IF NOT EXISTS chats(agency_id TEXT, wa_id TEXT, name TEXT, last_message TEXT, last_message_at BIGINT, unread INT DEFAULT 0, tag TEXT DEFAULT 'nuevo', source TEXT DEFAULT 'direct', assigned_to TEXT, PRIMARY KEY(agency_id,wa_id))`);
   await pool.query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS assigned_to TEXT`);
@@ -58,16 +54,15 @@ async function ensureTables(){
   await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY, agency_id TEXT, template TEXT, total INT, sent INT DEFAULT 0, status TEXT DEFAULT 'pending', created_at BIGINT, contacts JSONB)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS ai_config(agency_id TEXT PRIMARY KEY, enabled BOOLEAN DEFAULT false)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS calls(id SERIAL PRIMARY KEY, agency_id TEXT, wa_id TEXT, duration INT, note TEXT, created_at BIGINT, created_by TEXT)`);
-  console.log('>>> TABLAS V10.6 AVANZA + IA + LLAMADAS OK');
+  console.log('>>> TABLAS V10.8 OK - PLAN AL CREAR');
 }
 async function aiReply(text){
   const t = (text||'').toLowerCase();
-  if(t.includes('precio')||t.includes('costo')||t.includes('cuanto')) return '¡Hola! En Avanza Consulting tenemos planes: Básico $800k + $80k mant. cada 3 meses, Premium $1.3M + $95k (con IA), Gold $2.4M + $125k (con IA + llamadas). ¿Cuál te interesa? - IA';
-  if(t.includes('hola')||t.includes('buenas')) return '¡Hola! Soy el asistente de Avanza Consulting 🤖 ¿En qué puedo ayudarte hoy? - IA';
-  return 'Gracias por escribir a Avanza Consulting, un asesor te responderá en breve. Si es urgente: 3133181851 - IA';
+  if(t.includes('precio')||t.includes('costo')||t.includes('cuanto')) return '¡Hola! En Avanza Consulting: Básico $800k + $80k mant/3m, Premium $1.3M + $95k (con IA), Gold $2.4M + $125k (IA + llamadas). ¿Cuál te interesa? - IA';
+  if(t.includes('hola')||t.includes('buenas')) return '¡Hola! Soy asistente de Avanza Consulting 🤖 ¿En qué te ayudo? - IA';
+  return 'Gracias por escribir a Avanza Consulting, un asesor te responderá pronto. Soporte 24/7: 3133181851 - IA';
 }
-
-app.get('/health',(req,res)=>res.json({ok:true, v:'V10.6 AVANZA IA+CALLS', owner:'3133181851'}));
+app.get('/health',(req,res)=>res.json({ok:true, v:'V10.8 PLAN+IA+CALLS', owner:'3133181851'}));
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']===WA_VERIFY) return res.send(req.query['hub.challenge']); res.sendStatus(403); });
 app.post('/webhook',async(req,res)=>{
   try{
@@ -79,16 +74,15 @@ app.post('/webhook',async(req,res)=>{
       try{ const ag=await pool.query(`SELECT agency_id FROM users WHERE role='jefe' LIMIT 1`); if(ag.rows.length) agency_id=ag.rows[0].agency_id; }catch(e){}
       await pool.query(`INSERT INTO chats(agency_id,wa_id,name,last_message,last_message_at,unread,source) VALUES($1,$2,$3,$4,$5,1,'direct') ON CONFLICT(agency_id,wa_id) DO UPDATE SET last_message=$4,last_message_at=$5,unread=chats.unread+1,name=$3`,[agency_id,wa_id,name,text,Date.now()]);
       await pool.query(`INSERT INTO messages(agency_id,wa_id,text,direction,timestamp,media_type) VALUES($1,$2,$3,'in',$4,$5)`,[agency_id,wa_id,text,Date.now(),media_type]);
-      // IA AUTO SI PREMIUM/GOLD ACTIVADA
       try{
         const cfg=await pool.query(`SELECT enabled FROM ai_config WHERE agency_id=$1`,[agency_id]);
         const usr=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 ORDER BY CASE WHEN role='jefe' THEN 0 ELSE 1 END LIMIT 1`,[agency_id]);
         const plan=(usr.rows[0]?.plan||'basico').toLowerCase();
-        if(cfg.rows[0]?.enabled && (plan==='premium' || plan==='gold' || plan==='gold empresarial')){
+        if(cfg.rows[0]?.enabled && (plan.includes('premium') || plan.includes('gold'))){
           const reply=await aiReply(text);
           setTimeout(async()=>{
             const lastOut=await pool.query(`SELECT timestamp FROM messages WHERE agency_id=$1 AND wa_id=$2 AND direction='out' ORDER BY timestamp DESC LIMIT 1`,[agency_id, wa_id]);
-            if(lastOut.rows.length && Date.now() - Number(lastOut.rows[0].timestamp) < 100000) return; // si humano respondió en <100s no envia IA
+            if(lastOut.rows.length && Date.now() - Number(lastOut.rows[0].timestamp) < 100000) return;
             await pool.query(`INSERT INTO messages(agency_id,wa_id,text,direction,timestamp,sent_by) VALUES($1,$2,$3,'out',$4,'IA')`,[agency_id,wa_id,reply,Date.now()]);
             await pool.query(`UPDATE chats SET last_message=$1, last_message_at=$2 WHERE agency_id=$3 AND wa_id=$4`,[reply,Date.now(),agency_id,wa_id]);
             try{ await sendWhatsappReal(wa_id, reply); }catch(e){}
@@ -98,19 +92,22 @@ app.post('/webhook',async(req,res)=>{
     }
   }catch(e){} res.sendStatus(200);
 });
-
 app.post('/api/login',async(req,res)=>{
   const {agency_id,username,email,password}=req.body; const u=(username||email||'').toLowerCase().trim(); const ag=(agency_id||'').toLowerCase().trim();
-  const r=await pool.query(`SELECT * FROM users WHERE agency_id=$1 AND LOWER(username)=LOWER($2)`,[ag][u]);
+  const r=await pool.query(`SELECT * FROM users WHERE agency_id=$1 AND LOWER(username)=LOWER($2)`,[ag, u]);
   if(!r.rows.length) return res.status(401).json({error:'Credenciales no válidas'});
   const ok=await bcrypt.compare(password,r.rows[0].password_hash); if(!ok) return res.status(401).json({error:'Contraseña incorrecta'});
   res.json({agency_id:r.rows[0].agency_id,username:r.rows[0].username,role:r.rows[0].role,display_name:r.rows[0].display_name,plan:r.rows[0].plan});
 });
+// CREAR JEFE CON PLAN ELEGIDO
 app.get('/api/crear-jefe', async (req,res)=>{
-  const {agency_id,username,password,name}=req.query; if(!agency_id||!username||!password) return res.json({error:'Falta datos'});
-  const hash=await bcrypt.hash(password,10); const display=name||username;
-  await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,'jefe',$4,'gold') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role='jefe', display_name=$4`,[agency_id.toLowerCase().trim(),username.toLowerCase().trim(),hash,display]);
-  res.json({ok:true});
+  const {agency_id,username,password,name,plan}=req.query;
+  if(!agency_id||!username||!password) return res.json({ok:false, error:'Falta datos'});
+  const hash=await bcrypt.hash(password,10);
+  const display=name||username;
+  const finalPlan=(plan||'premium').toLowerCase();
+  await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,'jefe',$4,$5) ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role='jefe', display_name=$4, plan=$5`,[agency_id.toLowerCase().trim(),username.toLowerCase().trim(),hash,display,finalPlan]);
+  res.json({ok:true, plan:finalPlan});
 });
 app.post('/api/forgot-password', async (req,res)=>{
   const {email}=req.body; const clean=email.trim().toLowerCase();
@@ -127,13 +124,11 @@ app.post('/api/forgot-password', async (req,res)=>{
 });
 app.post('/api/reset-password', async (req,res)=>{
   const {token,email,newPassword}=req.body; const clean=email.trim().toLowerCase();
-  const r=await pool.query(`SELECT * FROM password_resets WHERE token=$1 AND LOWER(email)=LOWER($2) ORDER BY expires_at DESC LIMIT 1`,[token][clean]);
+  const r=await pool.query(`SELECT * FROM password_resets WHERE token=$1 AND LOWER(email)=LOWER($2) ORDER BY expires_at DESC LIMIT 1`,[token, clean]);
   if(!r.rows.length) return res.status(400).json({error:'Código incorrecto'}); if(Date.now()>Number(r.rows[0].expires_at)) return res.status(400).json({error:'Código expirado'});
-  const hash=await bcrypt.hash(newPassword,10); await pool.query(`UPDATE users SET password_hash=$1 WHERE LOWER(username)=LOWER($2)`,[hash][clean]);
+  const hash=await bcrypt.hash(newPassword,10); await pool.query(`UPDATE users SET password_hash=$1 WHERE LOWER(username)=LOWER($2)`,[hash, clean]);
   await pool.query(`DELETE FROM password_resets WHERE LOWER(email)=LOWER($1)`,[clean]); res.json({ok:true});
 });
-
-// CHATS, MESSAGES, WORKERS, STATS
 app.get('/api/chats',async(req,res)=>{
   const {agency_id,worker}=req.query; const ag=(agency_id||'').toLowerCase().trim(); if(!ag) return res.json([]);
   if(worker && worker!=='undefined' && worker!==''){ const r=await pool.query(`SELECT * FROM chats WHERE agency_id=$1 AND (assigned_to=$2 OR wa_id IN (SELECT wa_id FROM messages WHERE agency_id=$1 AND sent_by=$2)) ORDER BY last_message_at DESC LIMIT 200`,[ag,worker.toLowerCase().trim()]); return res.json(r.rows); }
@@ -147,11 +142,12 @@ app.post('/api/messages/send',async(req,res)=>{
 });
 app.post('/api/chats/read',async(req,res)=>{ await pool.query(`UPDATE chats SET unread=0 WHERE agency_id=$1 AND wa_id=$2`,[req.body.agency_id,req.body.wa_id]); res.json({ok:true}); });
 app.post('/api/chats/:wa_id/read',async(req,res)=>{ const ag=req.query.agency_id||req.body.agency_id; await pool.query(`UPDATE chats SET unread=0 WHERE agency_id=$1 AND wa_id=$2`,[ag,req.params.wa_id]); res.json({ok:true}); });
-app.get('/api/workers',async(req,res)=>{ const ag=req.query.agency_id.toLowerCase().trim(); const r=await pool.query(`SELECT agency_id,username,role,display_name,plan, username as id FROM users WHERE agency_id=$1 ORDER BY role DESC`,[ag]); res.json(r.rows); });
+app.get('/api/workers',async(req,res)=>{ const ag=req.query.agency_id.toLowerCase().trim(); const r=await pool.query(`SELECT agency_id,username,role,display_name,plan, username as id FROM users WHERE agency_id=$1 ORDER BY CASE WHEN role='jefe' THEN 0 ELSE 1 END`,[ag]); res.json(r.rows); });
 app.post('/api/workers',async(req,res)=>{
   const {agency_id,email,password,role}=req.body; if(!agency_id||!email||!password) return res.status(400).json({error:'Todos los campos obligatorios'}); if(password.length<6) return res.status(400).json({error:'Mínimo 6'});
   const ag=agency_id.toLowerCase().trim(); const em=email.toLowerCase().trim(); const hash=await bcrypt.hash(password,10); const finalRole=(role==='admin'?'admin':'trabajador');
-  await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,$4,$5,'basico') ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role=$4`,[ag,em,hash,finalRole,em]); res.json({ok:true});
+  const boss=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 AND role='jefe' LIMIT 1`,[ag]); const plan=boss.rows[0]?.plan||'premium';
+  await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role=$4`,[ag,em,hash,finalRole,em,plan]); res.json({ok:true});
 });
 app.delete('/api/workers/:id',async(req,res)=>{ const ag=req.query.agency_id.toLowerCase().trim(); const id=decodeURIComponent(req.params.id).toLowerCase().trim(); const del=await pool.query(`DELETE FROM users WHERE agency_id=$1 AND LOWER(username)=LOWER($2) AND role!='jefe' RETURNING username`,[ag,id]); if(!del.rows.length) return res.status(404).json({error:'No se puede eliminar jefe'}); res.json({ok:true}); });
 app.get('/api/stats',async(req,res)=>{
@@ -162,34 +158,18 @@ app.get('/api/stats',async(req,res)=>{
   const today=await pool.query(`SELECT COUNT(*) FROM messages WHERE agency_id=$1 AND timestamp>$2`,[ag,Date.now()-86400000]);
   const ia=await pool.query(`SELECT COUNT(*) FROM messages WHERE agency_id=$1 AND sent_by='IA'`,[ag]);
   const calls=await pool.query(`SELECT COUNT(*) FROM calls WHERE agency_id=$1`,[ag]);
-  res.json({totalChats:Number(total.rows[0].count),unread:Number(unread.rows[0].count),campaign:Number(camp.rows[0].count),today:Number(today.rows[0].count),todayMessages:Number(today.rows[0].count),ia:Number(ia.rows[0].count),calls:Number(calls.rows[0].count)});
+  const boss=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 AND role='jefe' LIMIT 1`,[ag]);
+  res.json({totalChats:Number(total.rows[0].count),unread:Number(unread.rows[0].count),campaign:Number(camp.rows[0].count),today:Number(today.rows[0].count),todayMessages:Number(today.rows[0].count),ia:Number(ia.rows[0].count),calls:Number(calls.rows[0].count),currentPlan:boss.rows[0]?.plan||'premium'});
 });
-
-// IA CONFIG
-app.get('/api/ai/config',async(req,res)=>{
-  const r=await pool.query(`SELECT enabled FROM ai_config WHERE agency_id=$1`,[req.query.agency_id]);
-  res.json({enabled: r.rows[0]?.enabled || false});
-});
-app.post('/api/ai/toggle',async(req,res)=>{
-  const {agency_id, enabled} = req.body;
-  await pool.query(`INSERT INTO ai_config(agency_id,enabled) VALUES($1,$2) ON CONFLICT(agency_id) DO UPDATE SET enabled=$2`,[agency_id, enabled]);
-  res.json({ok:true, enabled});
-});
-// CALLS GOLD
+app.get('/api/ai/config',async(req,res)=>{ const r=await pool.query(`SELECT enabled FROM ai_config WHERE agency_id=$1`,[req.query.agency_id]); res.json({enabled: r.rows[0]?.enabled || false}); });
+app.post('/api/ai/toggle',async(req,res)=>{ const {agency_id, enabled} = req.body; await pool.query(`INSERT INTO ai_config(agency_id,enabled) VALUES($1,$2) ON CONFLICT(agency_id) DO UPDATE SET enabled=$2`,[agency_id, enabled]); res.json({ok:true, enabled}); });
 app.post('/api/calls/log',async(req,res)=>{
   const {agency_id, wa_id, duration, note, username} = req.body;
   const u=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 ORDER BY CASE WHEN role='jefe' THEN 0 ELSE 1 END LIMIT 1`,[agency_id]);
-  const plan=(u.rows[0]?.plan||'basico').toLowerCase();
-  if(!plan.includes('gold')) return res.status(403).json({error:'Solo Gold tiene llamadas'});
-  await pool.query(`INSERT INTO calls(agency_id,wa_id,duration,note,created_at,created_by) VALUES($1,$2,$3,$4,$5,$6)`,[agency_id, wa_id, duration||0, note||'', Date.now(), username||'']);
-  res.json({ok:true});
+  const plan=(u.rows[0]?.plan||'basico').toLowerCase(); if(!plan.includes('gold')) return res.status(403).json({error:'Solo Gold tiene llamadas'});
+  await pool.query(`INSERT INTO calls(agency_id,wa_id,duration,note,created_at,created_by) VALUES($1,$2,$3,$4,$5,$6)`,[agency_id, wa_id, duration||0, note||'', Date.now(), username||'']); res.json({ok:true});
 });
-app.get('/api/calls',async(req,res)=>{
-  const r=await pool.query(`SELECT * FROM calls WHERE agency_id=$1 ORDER BY id DESC LIMIT 100`,[req.query.agency_id]);
-  res.json(r.rows);
-});
-
-// TEMPLATES Y CAMPAÑAS
+app.get('/api/calls',async(req,res)=>{ const r=await pool.query(`SELECT * FROM calls WHERE agency_id=$1 ORDER BY id DESC LIMIT 100`,[req.query.agency_id]); res.json(r.rows); });
 app.get('/api/templates',async(req,res)=>{ const r=await pool.query(`SELECT * FROM templates WHERE agency_id=$1 AND status='approved' ORDER BY name`,[req.query.agency_id]); res.json(r.rows); });
 app.post('/api/templates/sync',async(req,res)=>{
   if(!WABA_ID) return res.json({ok:true,count:0}); const resp=await fetch(`https://graph.facebook.com/v20.0/${WABA_ID}/message_templates?fields=name,status&status=APPROVED&limit=100`,{headers:{'Authorization':'Bearer '+WA_TOKEN}}); const j=await resp.json(); let c=0; for(let t of j.data||[]){ await pool.query(`INSERT INTO templates(agency_id,name,status,language) VALUES($1,$2,$3,'es_CO') ON CONFLICT(agency_id,name) DO UPDATE SET status=$3`,[req.query.agency_id,t.name,'approved']); c++; } res.json({ok:true,count:c});
@@ -212,6 +192,5 @@ setInterval(async()=>{
     }
   }catch(e){}
 }, 1000*60*60*5);
-
 const PORT=process.env.PORT||3000;
-(async()=>{ await ensureTables(); app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V10.6 AVANZA IA+CALLS en ${PORT}`)); })();
+(async()=>{ await ensureTables(); app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V10.8 PLAN AL CREAR en ${PORT}`)); })();
