@@ -2,238 +2,160 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Klido CRM V12.1 - Avanza Consulting | 3133181851</title>
+<title>Klido CRM V12.1 - El mejor CRM que tu empresa pueda tener - Avanza Consulting 3133181851</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0a0f1c;color:#e2e8f0;font-family:Inter,system-ui}
-.container{max-width:1200px;margin:auto;padding:24px}
-.main-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:24px;align-items:start}
-@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
-.left-hero{background:#0f1a2e;border:1px solid #1e2d50;border-radius:20px;padding:28px;min-height:600px}
-.badge-top{background:#0ea5e933;color:#38bdf8;border:1px solid #0ea5e9;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.5px}
-.left-hero h1{color:#fff;font-size:38px;line-height:1.1;margin:18px 0 12px;font-weight:900}
-.left-hero.desc{color:#94a3b8;font-size:13px;line-height:1.6;margin-bottom:18px}
-.checks{display:flex;flex-direction:column;gap:10px;margin-top:18px}
-.checks div{background:#0d1428;border:1px solid #1e2d50;padding:10px 12px;border-radius:10px;font-size:12px;color:#cbd5e1}
-.login-card{background:#111d33;border:1px solid #1e2d50;border-radius:20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-.tabs-login{display:flex;gap:8px;margin-bottom:14px}
-.tab-login{flex:1;padding:10px;border-radius:10px;border:1px solid #1e2d50;background:#0d1428;color:#7c8db0;cursor:pointer;font-size:12px;font-weight:700;text-align:center}
-.tab-login.active{background:#2563eb;color:#fff;border-color:#2563eb}
-h1.mini{color:#fff;margin:0 0 6px;display:flex;align-items:center;gap:10px;font-size:20px} h1.mini img{width:32px;height:32px;border-radius:8px}
-.sub{color:#94a3b8;font-size:11px;margin-bottom:14px}
+*{box-sizing:border-box}body{margin:0;background:#080e1e;color:#e2e8f0;font-family:Inter,system-ui,sans-serif}
+.container{max-width:1250px;margin:0 auto;padding:20px}
+.main{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+.left{background:linear-gradient(180deg,#111e3a,#0b1224);border:1px solid #1e2d50;border-radius:20px;padding:32px}
+.badge-top{background:rgba(14,165,233,.15);color:#38bdf8;border:1px solid #0ea5e9;padding:5px 12px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.6px}
+.left h1{color:#fff;font-size:42px;line-height:1.05;margin:18px 0 14px;font-weight:900}
+.left .desc{color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 20px}
+.checks{display:flex;flex-direction:column;gap:10px}
+.checks div{background:#0d1a32;border:1px solid #1e2d50;padding:12px 14px;border-radius:12px;font-size:12px;color:#cbd5e1}
+.right{background:#101c36;border:1px solid #1e2d50;border-radius:20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;padding:10px;border-radius:12px;border:1px solid #1e2d50;background:#0d1428;color:#7c8db0;cursor:pointer;font-size:12px;font-weight:800;text-align:center}
+.tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+h2.mini{color:#fff;margin:0 0 4px;font-size:19px;display:flex;align-items:center;gap:8px}
+.sub{color:#94a3b8;font-size:11px;margin-bottom:14px;line-height:1.4}
 input,select{width:100%;background:#0f172a;border:1px solid #334155;color:#fff;padding:12px 14px;border-radius:10px;margin:6px 0;outline:none;font-size:13px}
 input:focus{border-color:#38bdf8}
 .plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
-.plan{border:1px solid #334155;border-radius:12px;padding:10px;cursor:pointer;text-align:center;transition:.2s;background:#0f172a}
-.plan.selected{border-color:#38bdf8;background:#0b3a4a;transform:scale(1.02)}.plan b{display:block;color:#fff;font-size:12px}
-.plan span{font-size:10px;color:#94a3b8}.price{color:#38bdf8;font-weight:800;margin-top:5px;font-size:10px}
-.btn{width:100%;background:#2563eb;color:#fff;border:0;padding:12px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:10px;font-size:13px}
+.plan{border:1px solid #334155;border-radius:12px;padding:10px;cursor:pointer;text-align:center;background:#0f172a}
+.plan.selected{border-color:#38bdf8;background:#0b3a4a;transform:scale(1.02)}
+.plan b{display:block;color:#fff;font-size:12px}.plan span{font-size:10px;color:#94a3b8}.price{color:#38bdf8;font-weight:800;margin-top:5px;font-size:10px}
+.btn{width:100%;background:#2563eb;color:#fff;border:0;padding:12px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:10px}
 .btn-outline{background:transparent;color:#38bdf8;border:1px solid #38bdf8}
 .btn-green{background:#22c55e;color:#000}
-.badge{display:inline-block;background:#10b981;color:#fff;padding:3px 10px;border-radius:20px;font-size:10px}
-.badge.gold{background:#f59e0b;color:#000}.badge.premium{background:#38bdf8;color:#000}
-.legal{font-size:11px;color:#94a3b8;margin:12px 0;display:flex;gap:8px;line-height:1.4}
+.legal{font-size:10px;color:#94a3b8;margin:10px 0;display:flex;gap:6px;line-height:1.3}
 .legal a{color:#38bdf8}
-.support{margin-top:12px;background:#0b1220;border:1px dashed #334155;padding:10px;border-radius:10px;font-size:11px;text-align:center;color:#94a3b8}
+.support{margin-top:14px;background:#0b1220;border:1px dashed #334155;padding:10px;border-radius:10px;font-size:11px;text-align:center;color:#94a3b8}
 #dashboard{display:none}
-.tabs{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap;position:sticky;top:0;background:#0a0f1c;padding:10px 0;z-index:10}
-.tab{background:#1e293b;border:1px solid #334155;padding:8px 13px;border-radius:20px;cursor:pointer;font-size:12px}
-.tab.active{background:#38bdf8;color:#000;font-weight:800}
+.tabs2{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap;position:sticky;top:0;background:#080e1e;padding:10px 0;z-index:10}
+.tab2{background:#1e293b;border:1px solid #334155;padding:8px 13px;border-radius:20px;cursor:pointer;font-size:12px}
+.tab2.active{background:#38bdf8;color:#000;font-weight:800}
 .card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:18px;margin:14px 0}
-.semaforo{display:flex;gap:12px;margin:10px 0;font-size:11px}
-.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:700px){.grid2{grid-template-columns:1fr}.plans{grid-template-columns:1fr}}
+.wpp{background:#25D366;color:#000;padding:10px 14px;border-radius:10px;font-weight:800;text-decoration:none;display:inline-block;text-align:center}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:99}
 .modalBox{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:22px;max-width:420px;width:90%}
-table{width:100%;border-collapse:collapse;font-size:12px} th{color:#94a3b8;text-align:left;padding:8px;border-bottom:1px solid #334155} td{padding:8px;border-bottom:1px solid #1e293b}
-.wppBtn{background:#25D366;color:#000;padding:10px 14px;border-radius:10px;font-weight:800;text-decoration:none;display:inline-block}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="main-grid" id="loginView">
+<div class="main" id="loginView">
 
-<!-- IZQUIERDA ACTUALIZADA -->
-<div class="left-hero">
-<span class="badge-top">CRM EMPRESARIAL</span>
+<div class="left">
+<span class="badge-top">CRM EMPRESARIAL • API OFICIAL META</span>
 <h1>El mejor CRM que tu empresa pueda tener</h1>
 <p class="desc">
-Manejo API oficial Meta, roles Worker y administración profesional, soporte directo 24/7.<br><br>
-Inbox con 🔴 No leídos y 🟡 Campañas, antibaneo 50/5h, equipo con roles y estadísticas reales.
+Manejo API oficial Meta, roles worker y administración profesional, soporte directo 24/7.<br><br>
+Inbox con semáforo 🔴 No leídos • 🟡 Campañas, antibaneo 50/5h, equipo y estadísticas reales. Multiagencia independiente.
 </p>
 <div class="checks">
-<div>✓ Manejo API oficial Meta - API oficial de WhatsApp Business</div>
+<div>✓ Manejo API oficial Meta - WhatsApp Business Oficial</div>
 <div>✓ Roles Worker y administración profesional</div>
-<div>✓ Soporte directo 24/7 - 3133181851</div>
+<div>✓ Soporte directo 24/7 - WhatsApp 3133181851</div>
 </div>
-<p style="margin-top:30px;font-size:11px;color:#5a6a8a">KLIDO - Avanza Consulting - Bogotá - Multiagencia real - Cada ID Empresa independiente - Bloqueo por plan</p>
-</div>
-
-<!-- DERECHA LOGIN + CREAR EMPRESA CON CODIGO -->
-<div class="login-card">
-<div class="tabs-login">
-<div class="tab-login active" id="tabIngresar" onclick="showTabLogin('ingresar')">Ingresar</div>
-<div class="tab-login" id="tabCrear" onclick="showTabLogin('crear')">Crear empresa</div>
+<div style="margin-top:26px;font-size:10px;color:#5a6a8a">KLIDO - Avanza Consulting - Bogotá - Cada ID Empresa independiente - Desbloqueo por código post-compra solo plan pagado</div>
 </div>
 
-<div id="viewIngresar">
-<h1 class="mini"><img src="logo.png" onerror="this.style.display='none'">Klido CRM <span class="badge">V12.1 REAL</span></h1>
-<p class="sub">Avanza Consulting - API Oficial - 3133181851</p>
-
-<input id="companyId" placeholder="ID Empresa (ej: acol)" required>
-<input id="email" type="email" placeholder="Correo corporativo" required>
-<div style="position:relative"><input id="password" type="password" placeholder="Contraseña" required><span onclick="togglePass()" style="position:absolute;right:12px;top:14px;cursor:pointer">👁️</span></div>
-
-<div style="display:flex;justify-content:space-between;margin:8px 0">
-<label style="font-size:11px;color:#94a3b8"><input type="checkbox" id="recordarme"> Recordarme</label>
-<a style="font-size:11px;color:#38bdf8;cursor:pointer" onclick="openForgot()">¿Olvidaste tu contraseña?</a>
+<div class="right">
+<div class="tabs">
+<div class="tab active" id="tLogin" onclick="showLogin('login')">Ingresar</div>
+<div class="tab" id="tCreate" onclick="showLogin('create')">Crear empresa</div>
 </div>
 
-<label class="legal"><input type="checkbox" id="legalCheck" required><span>Acepto <a href="/legal" target="_blank">Términos, Ley 1581, Contrato</a> y autorización de contactos para campañas con plantillas aprobadas.</span></label>
-
-<button class="btn" id="loginBtn" onclick="login()">Ingresar al CRM →</button>
+<div id="viewLogin">
+<h2 class="mini">Klido CRM V12.1 REAL</h2>
+<p class="sub">Avanza Consulting - API Oficial - 3133181851 - /legal</p>
+<input id="companyId" placeholder="ID Empresa (ej: acol)">
+<input id="email" type="email" placeholder="Correo corporativo">
+<div style="position:relative"><input id="password" type="password" placeholder="Contraseña"><span onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password'" style="position:absolute;right:12px;top:14px;cursor:pointer">👁️</span></div>
+<div style="display:flex;justify-content:space-between;margin:6px 0"><label style="font-size:11px;color:#94a3b8"><input type="checkbox" id="recordarme"> Recordarme</label><a style="font-size:11px;color:#38bdf8;cursor:pointer" onclick="document.getElementById('forgotModal').style.display='flex'">¿Olvidaste contraseña?</a></div>
+<label class="legal"><input type="checkbox" id="legalCheck"><span>Acepto <a href="/legal" target="_blank">Términos, Ley 1581, Contrato</a> y plantillas aprobadas.</span></label>
+<button class="btn" onclick="login()">Ingresar al CRM →</button>
 <div id="msg" style="font-size:12px;color:#f87171;margin-top:8px"></div>
 
 <div style="margin-top:14px;background:#0f172a;border:1px solid #1e2d50;border-radius:12px;padding:12px">
-<h3 style="font-size:13px;color:#fff;margin:0 0 6px">Restablecer contraseña</h3>
-<p style="font-size:10px;color:#94a3b8;margin:0 0 8px">Te enviaremos un código de 6 dígitos a tu correo corporativo registrado.</p>
-<input id="rEmail" placeholder="fermorales20020310@gmail.com" style="margin:6px 0">
-<button class="btn btn-outline" style="padding:10px" onclick="sendCodeInline()">Enviar código</button>
-<input id="rCode" placeholder="Código de 6 dígitos" style="margin-top:8px;display:none">
-<input id="rNewPass" type="password" placeholder="Nueva contraseña" style="margin-top:6px;display:none">
+<h3 style="font-size:12px;color:#fff;margin:0 0 6px">Restablecer contraseña</h3>
+<input id="rEmail" placeholder="Correo donde llega el código">
+<button class="btn btn-outline" style="padding:9px" onclick="sendCodeInline()">Enviar código al correo</button>
+<input id="rCode" placeholder="Código de 6 dígitos del correo" style="display:none;margin-top:8px">
+<input id="rNewPass" type="password" placeholder="Nueva contraseña" style="display:none;margin-top:6px">
 <button id="btnCambiar" class="btn btn-green" style="display:none" onclick="resetPassInline()">Cambiar contraseña</button>
 <div id="rMsg" style="font-size:10px;color:#22c55e;margin-top:6px"></div>
 </div>
 </div>
 
-<div id="viewCrear" style="display:none">
-<h1 class="mini">Crear empresa - Activa solo con código post-compra</h1>
-<p class="sub">Inscríbete, elige plan, paga y desbloquea SOLO el plan que pagaste con el código que llega al correo.</p>
-
+<div id="viewCreate" style="display:none">
+<h2 class="mini">Crear empresa - Con código post-compra</h2>
+<p class="sub">1. Inscríbete 2. Elige plan y paga por WhatsApp 3. Te llega código de 6 dígitos al correo después de la compra 4. Con ese código desbloqueas SOLAMENTE el plan que pagaste.</p>
 <input id="cCompanyId" placeholder="Nuevo ID Empresa (ej: inmobiliaria1)">
-<input id="cEmail" placeholder="Correo administrador - allí llega el código">
+<input id="cEmail" placeholder="Correo admin - allí llega el código">
 <input id="cPass" type="password" placeholder="Crear contraseña">
 <input id="cName" placeholder="Nombre empresa">
-
-<p style="font-size:12px;color:#fff;margin:10px 0 6px">Elige tu plan - Se desbloquea SOLO con código:</p>
 <div class="plans">
-<div class="plan selected" data-plan="basico" data-anual="800000" data-mant="80000" onclick="selectPlanCreate(this)"><b>Básico</b><span>1 sede, 3 users</span><div class="price">$800k/año + $80k trim</div></div>
-<div class="plan" data-plan="premium" data-anual="1300000" data-mant="95000" onclick="selectPlanCreate(this)"><b>Premium</b><span>3 sedes, campañas</span><div class="price">$1.3M/año + $95k trim</div></div>
-<div class="plan" data-plan="gold" data-anual="2400000" data-mant="125000" onclick="selectPlanCreate(this)"><b>Gold</b><span>Ilimitado + IA + 📞</span><div class="price">$2.4M/año + $125k trim</div></div>
+<div class="plan selected" data-plan="basico" onclick="selectPlan(this)"><b>Básico</b><span>1 sede</span><div class="price">$800k/año + $80k trim</div></div>
+<div class="plan" data-plan="premium" onclick="selectPlan(this)"><b>Premium</b><span>3 sedes</span><div class="price">$1.3M + $95k</div></div>
+<div class="plan" data-plan="gold" onclick="selectPlan(this)"><b>Gold</b><span>Ilimitado + IA</span><div class="price">$2.4M + $125k</div></div>
 </div>
-
-<label class="legal"><input type="checkbox" id="legalCheck2" required><span>Acepto <a href="/legal" target="_blank">Términos, Ley 1581, Contrato</a></span></label>
-
-<button class="btn" onclick="crearEmpresaPaso1()">1. Inscribir y generar código</button>
-<a id="btnPagarWPP" class="btn" style="display:none;background:#25D366;color:#000;text-align:center;text-decoration:none" target="_blank">2. Pagar plan por WhatsApp 3133181851</a>
-
-<div id="activacionBox" style="display:none;margin-top:12px;background:#0b1220;border:1px solid #1e2d50;border-radius:10px;padding:10px">
-<p style="font-size:11px;color:#fff;margin:0 0 6px">Paso 3: Código que llega al correo después de la compra</p>
-<input id="actCode" placeholder="Código de 6 dígitos del correo">
-<button class="btn btn-green" onclick="activarPlanConCodigo()">3. Activar y desbloquear SOLO mi plan pagado</button>
+<label class="legal"><input type="checkbox" id="legalCheck2"><span>Acepto <a href="/legal" target="_blank">Términos y Ley 1581</a></span></label>
+<button class="btn" onclick="crearEmpresa()">1. Inscribir y generar código</button>
+<a id="btnPagar" class="wpp" style="display:none;width:100%;margin-top:10px" target="_blank">2. Pagar plan por WhatsApp 3133181851</a>
+<div id="boxAct" style="display:none;margin-top:12px;background:#0b1220;border:1px solid #1e2d50;border-radius:10px;padding:10px">
+<input id="actCode" placeholder="Código de 6 dígitos que llegó al correo después de la compra">
+<button class="btn btn-green" onclick="activarCodigo()">3. Activar y desbloquear SOLO mi plan pagado</button>
 <div id="actMsg" style="font-size:10px;color:#22c55e;margin-top:6px"></div>
 </div>
 <div id="msgCreate" style="font-size:11px;color:#f87171;margin-top:8px"></div>
 </div>
 
-<div class="support">Soporte 24/7 <b>3133181851</b> | <a href="https://wa.me/573133181851" target="_blank" style="color:#25D366">WhatsApp Ayuda</a> | <a href="/legal" style="color:#38bdf8">/legal</a></div>
+<div class="support">Soporte 24/7 <b>3133181851</b> | <a href="https://wa.me/573133181851" style="color:#25D366">WhatsApp Ayuda</a> | <a href="/legal" style="color:#38bdf8">/legal</a></div>
+</div>
 </div>
 
+<div id="dashboard"><h2>Klido <span id="compName"></span> <span id="planBadge" style="background:#38bdf8;color:#000;padding:3px 10px;border-radius:20px;font-size:11px"></span></h2><div class="tabs2"><div class="tab2 active" onclick="logout()">Salir</div><div class="tab2" onclick="window.open('https://wa.me/573133181851')">Ayuda WPP</div></div><div class="card"><p style="font-size:12px;color:#94a3b8">Login OK - Dashboard V12.1 - Si ves esto, el nuevo index ya cargó.</p><p>Empresa: <b id="compIdShow"></b> - Plan desbloqueado con código post-compra.</p></div></div>
 </div>
 
-<div id="dashboard">
-<h1><img src="logo.png" onerror="this.style.display='none'">Klido <span id="compName"></span> <span id="planBadge" class="badge"></span> <span id="roleBadge" class="badge gold"></span></h1>
-<div class="tabs">
-<div class="tab active" data-t="inbox" onclick="switchTab('inbox')">Inbox 🔴🟡</div>
-<div class="tab" data-t="campanas" onclick="switchTab('campanas')">Campañas + Historial</div>
-<div class="tab" data-t="plantillas" onclick="switchTab('plantillas')">Plantillas Aprobadas</div>
-<div class="tab" data-t="equipo" id="tabEquipo" onclick="switchTab('equipo')">Equipo / Workers</div>
-<div class="tab" data-t="metricas" id="tabMetricas" onclick="switchTab('metricas')">Métricas</div>
-<div class="tab" data-t="planes" onclick="switchTab('planes')">Planes y Pagos</div>
-<div class="tab" data-t="config" onclick="switchTab('config')">Configuración</div>
-<div class="tab" onclick="window.open('https://wa.me/573133181851?text=Ayuda%20Klido%20'+(localStorage.getItem('company')||''), '_blank')">Ayuda WPP</div>
-<div class="tab" onclick="logout()">Salir</div>
-</div>
-<div id="view-inbox" class="card"><h3>Inbox Profesional - Semáforo</h3><div class="semaforo"><span><span class="dot" style="background:#ef4444"></span> No leídos</span><span><span class="dot" style="background:#eab308"></span> Campaña</span><span><span class="dot" style="background:#10b981"></span> IA</span><span><span class="dot" style="background:#38bdf8"></span> Worker</span></div><div id="inboxList">Cargando...</div></div>
-<div id="view-campanas" class="card" style="display:none"><h3>📢 Campañas con Excel - Solo Plantillas Aprobadas</h3><div class="grid2"><div><input id="campName" placeholder="Nombre campaña"><select id="templateSelect"></select><input type="file" id="excelFile" accept=".xlsx,.xls"><button class="btn" onclick="uploadExcel()">1. Subir Excel</button><div id="excelPreview" style="font-size:11px;color:#94a3b8;margin-top:8px"></div><button class="btn" id="btnStartCamp" style="display:none;background:#10b981" onclick="startCampaign()">2. Enviar campaña</button></div><div><h4>Historial</h4><div id="campHistory"></div></div></div></div>
-<div id="view-plantillas" class="card" style="display:none"><h3>Plantillas Aprobadas Meta</h3><button class="btn" onclick="syncTemplates()">Sincronizar con Meta</button><div id="templatesList" style="margin-top:12px"></div></div>
-<div id="view-equipo" class="card" style="display:none"><h3>Equipo</h3><div class="grid2"><div><input id="wName" placeholder="Nombre worker"><input id="wEmail" placeholder="Email worker"><input id="wPass" placeholder="Clave"><button class="btn" onclick="createWorker()">Crear Worker</button></div><div><div id="workersList"></div></div></div></div>
-<div id="view-metricas" class="card" style="display:none"><h3>Métricas - Solo Jefe</h3><div id="metricsBox"></div></div>
-<div id="view-planes" class="card" style="display:none"><h3>Planes - Solo se desbloquea con código post-compra</h3><div class="grid2" id="plansBox"></div></div>
-<div id="view-config" class="card" style="display:none"><h3>Configuración</h3><p style="font-size:12px;color:#94a3b8">Multiagencia real. Cada empresa independiente. API Oficial Meta. Roles Worker/Admin. Soporte 24/7 3133181851. Desbloqueo por código post-pago solo plan pagado. Ley 1581 en /legal.</p></div>
-</div>
-
-</div>
-<div class="modal" id="forgotModal"><div class="modalBox"><h3>Olvide contraseña</h3><input id="fCompany" placeholder="ID Empresa"><input id="fEmail" placeholder="Email"><button class="btn" onclick="sendCode()">Enviar código</button><div id="resetArea" style="display:none;margin-top:12px"><input id="fCode" placeholder="Código 6 dígitos"><input id="fNewPass" type="password" placeholder="Nueva clave"><button class="btn" onclick="resetPass()">Cambiar clave</button></div><div id="fMsg" style="font-size:11px;color:#94a3b8;margin-top:8px"></div><button class="btn btn-outline" onclick="closeForgot()">Cerrar</button></div></div>
+<div class="modal" id="forgotModal"><div class="modalBox"><h3>Recuperar</h3><input id="fCompany" placeholder="ID Empresa"><input id="fEmail" placeholder="Email"><button class="btn" onclick="sendCode()">Enviar código</button><div id="resetArea" style="display:none;margin-top:12px"><input id="fCode" placeholder="Código 6 dígitos"><input id="fNewPass" type="password" placeholder="Nueva clave"><button class="btn btn-green" onclick="resetPass()">Cambiar</button></div><div id="fMsg" style="font-size:11px;color:#94a3b8;margin-top:8px"></div><button class="btn btn-outline" onclick="document.getElementById('forgotModal').style.display='none'">Cerrar</button></div></div>
 
 <script>
-let selectedPlan='basico', selectedAnual=800000, selectedMant=80000, tempNumeros=[], planCreate='basico';
-function showTabLogin(t){document.getElementById('viewIngresar').style.display=t==='ingresar'?'block':'none';document.getElementById('viewCrear').style.display=t==='crear'?'block':'none';document.getElementById('tabIngresar').classList.toggle('active',t==='ingresar');document.getElementById('tabCrear').classList.toggle('active',t==='crear');}
-function selectPlanCreate(el){document.querySelectorAll('#viewCrear.plan').forEach(p=>p.classList.remove('selected'));el.classList.add('selected');planCreate=el.dataset.plan;selectedPlan=el.dataset.plan;}
-function togglePass(){const p=document.getElementById('password');p.type=p.type==='password'?'text':'password';}
+let planCreate='basico';
+function showLogin(t){document.getElementById('viewLogin').style.display=t==='login'?'block':'none';document.getElementById('viewCreate').style.display=t==='create'?'block':'none';document.getElementById('tLogin').classList.toggle('active',t==='login');document.getElementById('tCreate').classList.toggle('active',t==='create');}
+function selectPlan(el){document.querySelectorAll('.plan').forEach(p=>p.classList.remove('selected'));el.classList.add('selected');planCreate=el.dataset.plan;}
 async function login(){
-const companyId=document.getElementById('companyId').value.trim().toLowerCase();
-const email=document.getElementById('email').value.trim();
-const password=document.getElementById('password').value.trim();
+const companyId=document.getElementById('companyId').value.trim().toLowerCase(),email=document.getElementById('email').value.trim(),password=document.getElementById('password').value.trim();
 if(!companyId||!email||!password) return document.getElementById('msg').innerText='Completa campos';
-if(!document.getElementById('legalCheck').checked) return document.getElementById('msg').innerText='Acepta términos en /legal';
+if(!document.getElementById('legalCheck').checked) return document.getElementById('msg').innerText='Acepta términos';
 document.getElementById('msg').innerText='Entrando...';
-try{
-const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,password,plan:selectedPlan})});
-const d=await r.json(); if(!r.ok) throw new Error(d.error + (d.demoCode?` (Demo code: ${d.demoCode})`:'' ));
-localStorage.setItem('token',d.token); localStorage.setItem('company',JSON.stringify(d.company)); localStorage.setItem('user',JSON.stringify(d.user));
-showDashboard(d.company,d.user);
-}catch(e){document.getElementById('msg').innerText=e.message}
+try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,password,plan:planCreate})});const d=await r.json();if(!r.ok) throw new Error(d.error+(d.demoCode?' - Código demo: '+d.demoCode:''));localStorage.setItem('token',d.token);localStorage.setItem('company',JSON.stringify(d.company));localStorage.setItem('user',JSON.stringify(d.user));showDash(d.company);}catch(e){document.getElementById('msg').innerText=e.message}
 }
-async function crearEmpresaPaso1(){
-const cid=document.getElementById('cCompanyId').value.trim().toLowerCase();const em=document.getElementById('cEmail').value.trim();const pw=document.getElementById('cPass').value;
+async function crearEmpresa(){
+const cid=document.getElementById('cCompanyId').value.trim().toLowerCase(),em=document.getElementById('cEmail').value.trim(),pw=document.getElementById('cPass').value;
 if(!cid||!em||!pw) return document.getElementById('msgCreate').innerText='Completa ID, correo y clave';
 if(!document.getElementById('legalCheck2').checked) return document.getElementById('msgCreate').innerText='Acepta términos';
-document.getElementById('msgCreate').innerText='Generando código...';
-try{
-const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,password:pw,plan:planCreate})});
-const d=await r.json();
+document.getElementById('msgCreate').innerText='Generando...';
+try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,password:pw,plan:planCreate})});const d=await r.json();
 if(r.status===403 && d.demoCode){
-document.getElementById('btnPagarWPP').style.display='block';
-document.getElementById('btnPagarWPP').href=`https://wa.me/573133181851?text=Quiero%20pagar%20Klido%20Plan%20${planCreate.toUpperCase()}%20Empresa%20${cid}%20Codigo%20${d.demoCode}`;
-document.getElementById('activacionBox').style.display='block';
-document.getElementById('actMsg').innerText=`Empresa pre-creada. Código: ${d.demoCode}. Paga por WhatsApp 3133181851 y luego activa. Este código desbloquea SOLO plan ${planCreate.toUpperCase()}. En producción llega al correo ${em}.`;
-document.getElementById('msgCreate').innerText=`Código generado: ${d.demoCode}. Revisa correo (demo) y paga.`;
-return;
-}
-document.getElementById('msgCreate').innerText=d.error||'Empresa ya existe, usa Ingresar';
+document.getElementById('btnPagar').style.display='block';document.getElementById('btnPagar').href=`https://wa.me/573133181851?text=Quiero%20pagar%20Klido%20${planCreate.toUpperCase()}%20Empresa%20${cid}%20Codigo%20${d.demoCode}`;
+document.getElementById('boxAct').style.display='block';document.getElementById('actMsg').innerText=`Código generado: ${d.demoCode}. En producción llega a ${em} después de la compra. Desbloquea SOLO ${planCreate.toUpperCase()}.`;document.getElementById('msgCreate').innerText=`Pre-creada. Paga y activa con código. Demo: ${d.demoCode}`;return;}
+document.getElementById('msgCreate').innerText=d.error||'Ya existe, usa Ingresar';
 }catch(e){document.getElementById('msgCreate').innerText=e.message}
 }
-async function activarPlanConCodigo(){
-const cid=document.getElementById('cCompanyId').value.trim().toLowerCase();const em=document.getElementById('cEmail').value.trim();const code=document.getElementById('actCode').value.trim();
-if(!code) return alert('Ingresa código de 6 dígitos que llegó al correo después de la compra');
-const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,code:code,newPassword:document.getElementById('cPass').value})});
-const d=await r.json(); if(!r.ok) return alert(d.error);
-document.getElementById('actMsg').innerText=`✅ Plan ${planCreate.toUpperCase()} activado. Solo ese plan quedó desbloqueado. Ya puedes entrar en pestaña Ingresar.`;
+async function activarCodigo(){
+const cid=document.getElementById('cCompanyId').value.trim().toLowerCase(),em=document.getElementById('cEmail').value.trim(),code=document.getElementById('actCode').value.trim();
+if(!code) return alert('Pon el código de 6 dígitos que llegó al correo');
+const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,code,newPassword:document.getElementById('cPass').value})});const d=await r.json();if(!r.ok) return alert(d.error);
+document.getElementById('actMsg').innerText=`✅ Plan ${planCreate.toUpperCase()} activado. Solo ese plan quedó habilitado. Ve a Ingresar.`;
 }
-function showDashboard(company,user){document.getElementById('loginView').style.display='none'; document.getElementById('dashboard').style.display='block';document.getElementById('compName').innerText=company.id; document.getElementById('planBadge').innerText=company.plan+' - '+company.plan.toUpperCase();document.getElementById('planBadge').className='badge '+(company.plan==='gold'?'gold':company.plan==='premium'?'premium':'');document.getElementById('roleBadge').innerText=user.role==='admin'?'JEFE':'WORKER';loadAll();}
-function switchTab(t){document.querySelectorAll('[id^=view-]').forEach(v=>{if(v.id.startsWith('view-')&&!v.id.includes('Ingresar')&&!v.id.includes('Crear'))v.style.display='none';});const el=document.getElementById('view-'+t);if(el)el.style.display='block';document.querySelectorAll('.tabs.tab').forEach(x=>x.classList.remove('active'));document.querySelector(`[data-t=${t}]`)?.classList.add('active');if(t==='campanas')loadTemplatesSelect();}
-async function api(path,opts={}){const token=localStorage.getItem('token');opts.headers={...(opts.headers||{}),'Authorization':'Bearer '+token,'Content-Type':'application/json'};const r=await fetch(path,opts);const d=await r.json();if(!r.ok)throw new Error(d.error||'Error');return d;}
-async function loadAll(){try{loadInbox();loadCampHistory();loadTemplates();loadWorkers();loadMetrics();loadPlans();}catch{}}
-async function loadInbox(){try{const d=await api('/api/messages');document.getElementById('inboxList').innerHTML=d.length?`<table><tr><th>Numero</th><th>Mensaje</th><th>Estado</th></tr>${d.map(m=>`<tr><td>${m.from_number||'-'}</td><td>${(m.content||'').slice(0,60)}</td><td>${m.status||'nuevo'}</td></tr>`).join('')}</table>`:'Sin mensajes';}catch(e){document.getElementById('inboxList').innerText=e.message}}
-async function uploadExcel(){const f=document.getElementById('excelFile').files[0];if(!f)return alert('Selecciona Excel');const fd=new FormData();fd.append('file',f);const token=localStorage.getItem('token');const r=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});const d=await r.json();if(!r.ok)return alert(d.error);tempNumeros=d.numeros;document.getElementById('excelPreview').innerHTML=`Detectados <b>${d.total}</b> números`;document.getElementById('btnStartCamp').style.display='block';}
-async function startCampaign(){const name=document.getElementById('campName').value||'Campaña '+Date.now();const tpl=document.getElementById('templateSelect').value;if(!tpl)return alert('Elige plantilla');try{const d=await api('/api/campaigns/start',{method:'POST',body:JSON.stringify({name,templateName:tpl,numeros:tempNumeros})});alert(d.msg);loadCampHistory();}catch(e){alert(e.message)}}
-async function loadCampHistory(){try{const d=await api('/api/campaigns/history');document.getElementById('campHistory').innerHTML=d.map(c=>`<div style="border:1px solid #334155;padding:8px;border-radius:8px;margin:6px 0"><b>${c.name}</b> - ${c.template_name} - ${c.total} nums - ${c.status}</div>`).join('')||'Sin campañas';}catch{}}
-async function loadTemplatesSelect(){try{const d=await api('/api/templates');document.getElementById('templateSelect').innerHTML=d.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join('');}catch{}}
-async function loadTemplates(){try{const d=await api('/api/templates');document.getElementById('templatesList').innerHTML=d.map(t=>`<div style="padding:8px;border:1px solid #334155;border-radius:8px;margin:4px 0">${t.name} - <span class="badge">${t.status}</span> - ${t.cuerpo}</div>`).join('');}catch{}}
-async function syncTemplates(){try{await api('/api/templates/sync',{method:'POST'});alert('Sincronizadas');loadTemplates();loadTemplatesSelect();}catch(e){alert(e.message)}}
-async function loadWorkers(){try{const d=await api('/api/workers');document.getElementById('workersList').innerHTML=`<table><tr><th>Email</th><th>Rol</th><th>Acción</th></tr>${d.map(w=>`<tr><td>${w.email}</td><td>${w.role}</td><td><button onclick="delWorker(${w.id})" style="background:#ef4444;color:#fff;border:0;padding:4px 8px;border-radius:6px">Eliminar</button></td></tr>`).join('')}</table>`;}catch{}}
-async function createWorker(){const email=document.getElementById('wEmail').value,password=document.getElementById('wPass').value,name=document.getElementById('wName').value;try{await api('/api/workers',{method:'POST',body:JSON.stringify({email,password,name})});alert('Worker creado');loadWorkers();}catch(e){alert(e.message)}}
-async function delWorker(id){if(!confirm('Eliminar worker?'))return;await api('/api/workers/'+id,{method:'DELETE'});loadWorkers();}
-async function loadMetrics(){try{const d=await api('/api/metrics');document.getElementById('metricsBox').innerHTML=`Empresa <b>${d.company.id}</b> - Plan ${d.company.plan} - Activa: ${d.company.is_active?'SI':'NO - requiere código'}`;}catch{}}
-async function loadPlans(){try{const d=await fetch('/api/plans').then(r=>r.json());document.getElementById('plansBox').innerHTML=d.map(p=>`<div class="card"><h3>${p.nombre}</h3><p style="color:#38bdf8;font-weight:800">$${p.precio_anual.toLocaleString()}/año + $${p.mantenimiento.toLocaleString()} trim</p><a class="wppBtn" href="${p.wpp}" target="_blank">Adquirir 3133181851</a></div>`).join('');}catch{}}
-function openForgot(){document.getElementById('forgotModal').style.display='flex'}function closeForgot(){document.getElementById('forgotModal').style.display='none'}
-async function sendCode(){const companyId=document.getElementById('fCompany').value,email=document.getElementById('fEmail').value;const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email})});const d=await r.json();document.getElementById('fMsg').innerText=d.demoCode?`Código demo: ${d.demoCode}`:'Código enviado';document.getElementById('resetArea').style.display='block';}
-async function resetPass(){const companyId=document.getElementById('fCompany').value,email=document.getElementById('fEmail').value,code=document.getElementById('fCode').value,newPassword=document.getElementById('fNewPass').value;const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,code,newPassword})});const d=await r.json();if(!r.ok)return document.getElementById('fMsg').innerText=d.error;document.getElementById('fMsg').innerText='Clave cambiada';setTimeout(closeForgot,1500);}
-async function sendCodeInline(){const em=document.getElementById('rEmail').value||document.getElementById('email').value;const cid=document.getElementById('companyId').value;if(!em)return alert('Pon correo');const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em})});const d=await r.json();document.getElementById('rMsg').innerText=`Código enviado a ${em} (demo: ${d.demoCode}) - revisa spam, expira 15 min`;document.getElementById('rCode').style.display='block';document.getElementById('rNewPass').style.display='block';document.getElementById('btnCambiar').style.display='block';document.getElementById('rCode').value=d.demoCode;}
-async function resetPassInline(){const em=document.getElementById('rEmail').value||document.getElementById('email').value;const cid=document.getElementById('companyId').value;const code=document.getElementById('rCode').value;const np=document.getElementById('rNewPass').value;const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,code,newPassword:np})});const d=await r.json();if(!r.ok)return document.getElementById('rMsg').innerText=d.error;document.getElementById('rMsg').innerText='✅ Contraseña cambiada y plan activado. Ya puedes entrar.';}
+async function sendCodeInline(){const em=document.getElementById('rEmail').value||document.getElementById('email').value,cid=document.getElementById('companyId').value;const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em})});const d=await r.json();document.getElementById('rMsg').innerText=`Código a ${em} demo:${d.demoCode}`;document.getElementById('rCode').style.display='block';document.getElementById('rNewPass').style.display='block';document.getElementById('btnCambiar').style.display='block';document.getElementById('rCode').value=d.demoCode;}
+async function resetPassInline(){const em=document.getElementById('rEmail').value||document.getElementById('email').value,cid=document.getElementById('companyId').value,code=document.getElementById('rCode').value,np=document.getElementById('rNewPass').value;const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,code,newPassword:np})});const d=await r.json();if(!r.ok) return document.getElementById('rMsg').innerText=d.error;document.getElementById('rMsg').innerText='Clave cambiada y plan desbloqueado.';}
+async function sendCode(){const cid=document.getElementById('fCompany').value,em=document.getElementById('fEmail').value;const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em})});const d=await r.json();document.getElementById('fMsg').innerText=`Código demo:${d.demoCode}`;document.getElementById('resetArea').style.display='block';document.getElementById('fCode').value=d.demoCode;}
+async function resetPass(){const cid=document.getElementById('fCompany').value,em=document.getElementById('fEmail').value,code=document.getElementById('fCode').value,np=document.getElementById('fNewPass').value;const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,code,newPassword:np})});const d=await r.json();if(!r.ok) return document.getElementById('fMsg').innerText=d.error;document.getElementById('fMsg').innerText='OK';}
+function showDash(c){document.getElementById('loginView').style.display='none';document.getElementById('dashboard').style.display='block';document.getElementById('compName').innerText=c.id;document.getElementById('compIdShow').innerText=c.id;document.getElementById('planBadge').innerText=c.plan;}
 function logout(){localStorage.clear();location.reload();}
-(function(){const c=localStorage.getItem('company'),u=localStorage.getItem('user');if(c&&u){try{showDashboard(JSON.parse(c),JSON.parse(u))}catch{}}})();
 </script>
 </body>
 </html>
