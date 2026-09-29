@@ -1,10 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO CRM Pro</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:Inter,system-ui}
+body{background:#0a0f1e;color:#e8eefc;height:100vh;display:flex;overflow:hidden}
+.sidebar{width:210px;background:#0d1428;border-right:1px solid #1e2a4a;padding:14px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.brand img{width:32px;height:32px;border-radius:8px}
+.brand b{font-size:15px}.pro{background:#2f7bff;font-size:10px;padding:3px 8px;border-radius:20px;margin-left:6px}
+.menu{font-size:11px;color:#7a8bb0;margin:10px 0 6px}
+.item{padding:10px 12px;border-radius:10px;color:#aebbdd;cursor:pointer;display:flex;gap:10px;align-items:center;margin:2px 0}
+.item.active,.item:hover{background:#2f7bff;color:#fff}
+.plan-box{margin-top:auto;background:#131f3d;border:1px solid #24365f;border-radius:12px;padding:12px;font-size:12px}
+.plan-box button{background:#2f7bff;border:0;color:#fff;padding:8px;border-radius:8px;width:100%;margin-top:8px;cursor:pointer}
+.inbox{width:300px;background:#0d1428;border-right:1px solid #1e2a4a;display:flex;flex-direction:column}
+.inbox-h{padding:14px;font-weight:700;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+.search{margin:0 14px 10px;background:#131f3d;border-radius:10px;padding:8px 12px;display:flex;gap:8px}
+.search input{background:transparent;border:0;color:#fff;width:100%;outline:none}
+#chatList{overflow-y:auto;flex:1;padding:0 10px}
+.chat{padding:10px;border-radius:12px;display:flex;gap:10px;cursor:pointer;align-items:center}
+.chat.active{background:#1a2748}
+.av{width:38px;height:38px;border-radius:50%;background:#2f7bff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.chat.meta{flex:1;min-width:0}.chat.meta b{font-size:13px}.chat.meta p{font-size:12px;color:#8a9cc5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:10px;height:10px;border-radius:50%}
+.main{flex:1;display:flex;flex-direction:column;background:#0a0f1e}
+.chat-h{padding:12px 18px;border-bottom:1px solid #1e2a4a;display:flex;align-items:center;gap:12px}
+#msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
+.bub{max-width:70%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4}
+.in{background:#1a2748;align-self:flex-start;border-bottom-left-radius:4px}
+.out{background:#2f7bff;align-self:flex-end;border-bottom-right-radius:4px}
+.camp{border:1px dashed #f5c518}
+.inputbar{padding:14px 18px;display:flex;gap:10px;align-items:center}
+.inputbar input{flex:1;background:#131f3d;border:1px solid #24365f;border-radius:20px;padding:12px 16px;color:#fff;outline:none}
+.send{width:42px;height:42px;border-radius:50%;background:#2f7bff;border:0;color:#fff;font-size:18px;cursor:pointer}
+.profile{width:280px;background:#0d1428;border-left:1px solid #1e2a4a;padding:16px;overflow-y:auto}
+.tag{display:inline-block;background:#2a3a65;padding:4px 10px;border-radius:20px;font-size:11px;margin:4px 4px 0 0}
+#login{position:fixed;inset:0;background:#0a0f1e;display:flex;align-items:center;justify-content:center;z-index:99}
+.card{background:#0d1428;border:1px solid #24365f;padding:28px;border-radius:16px;width:320px}
+.card input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #24365f;background:#131f3d;color:#fff}
+.card button{width:100%;padding:11px;background:#2f7bff;border:0;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
+select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;padding:6px}
+.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px}
+.price-card{background:#131f3d;border:1px solid #24365f;border-radius:14px;padding:16px;text-align:center}
+.price-card.popular{border-color:#2f7bff;box-shadow:0 0 20px rgba(47,123,255,.25)}
+.price-card h3{margin-bottom:6px}.price{font-size:22px;font-weight:800;margin:8px 0}
+.price-card ul{font-size:12px;text-align:left;margin:10px 0;list-style:none;padding:0}
+.price-card ul li{margin:5px 0}
+.price-card button{width:100%;padding:10px;border-radius:8px;border:0;background:#2f7bff;color:#fff;font-weight:700;cursor:pointer}
+.ai-box{background:#131f3d;border:1px solid #24365f;border-radius:12px;padding:12px;margin-bottom:12px}
+.ai-box.panic{background:#2a1f1f;border-color:#5a2a2a}
+body.light{background:#ffffff;color:#111827}
+body.light.sidebar{background:#ffffff;border-color:#e5e7eb}
+body.light.inbox{background:#ffffff;border-color:#e5e7eb}
+body.light.profile{background:#ffffff;border-color:#e5e7eb}
+body.light.main{background:#f9fafb}
+body.light.brand b{color:#111827}
+body.light.item{color:#111827}
+body.light.item.active,body.light.item:hover{background:#2f7bff;color:#fff}
+body.light.menu{color:#6b7280}
+body.light.plan-box{background:#ffffff;border-color:#e5e7eb;color:#111827}
+body.light.ai-box{background:#ffffff;border-color:#e5e7eb;color:#111827}
+body.light.ai-box.panic{background:#fef2f2;border-color:#fecaca}
+body.light.search{background:#ffffff;border:1px solid #e5e7eb}
+body.light.search input{color:#111827}
+body.light.inbox-h{color:#111827}
+body.light.chat.active{background:#e0e7ff}
+body.light.chat-h{background:#ffffff;border-color:#e5e7eb;color:#111827}
+body.light #msgs{background:#ffffff}
+body.light.bub.in{background:#f3f4f6;border:1px solid #e5e7eb;color:#111827}
+body.light.bub.out{background:#2f7bff;color:#fff}
+body.light.inputbar{background:#ffffff;border-top:1px solid #e5e7eb}
+body.light.inputbar input{background:#ffffff;border-color:#e5e7eb;color:#111827}
+body.light.card{background:#ffffff;border-color:#e5e7eb;color:#111827}
+body.light.card input{background:#ffffff;color:#111827;border-color:#e5e7eb}
+body.light.price-card{background:#ffffff;border-color:#e5e7eb;color:#111827}
+body.light select,body.light textarea{background:#ffffff;color:#111827;border-color:#e5e7eb}
+body.light.chat.meta b{color:#111827}
+body.light.chat.meta p{color:#6b7280}
+</style>
+</head>
+<body>
+<div id="login"><div class="card" style="text-align:center">
+<img src="logo.png" style="width:48px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'"><h3>KLIDO CRM Pro</h3>
+<input id="ag" placeholder="agencia id"><input id="us" placeholder="usuario"><input id="pw" type="password" placeholder="clave">
+<label style="font-size:11px;display:flex;gap:6px;margin:8px 0;text-align:left"><input type="checkbox" id="acc" style="width:16px"> Acepto <a href="/terminos.html" target="_blank" style="color:#2f7bff">Términos</a> y <a href="/privacidad.html" target="_blank" style="color:#2f7bff">Privacidad</a></label>
+<button onclick="doLogin()">Entrar</button>
+<div style="margin-top:10px;display:flex;justify-content:space-between;font-size:11px"><a href="#" onclick="forgot()" style="color:#7a8bb0">¿Olvidaste clave?</a><a href="#" onclick="logout()" style="color:#ff6b6b">Salir</a></div>
+</div></div>
+<div class="sidebar">
+<div class="brand"><img src="logo.png" onerror="this.style.display='none'"><div><b>KLIDO</b><span class="pro" id="planBadge">Básico</span></div></div>
+<button onclick="document.body.classList.toggle('light')" style="margin:6px 0;padding:8px;border-radius:8px;border:1px solid #2f7bff;background:transparent;color:inherit;cursor:pointer">🌙 / ☀️ Tema</button>
+<div class="menu">MENU</div>
+<div class="item active" onclick="show('inbox',this)">📥 Inbox</div>
+<div class="item" onclick="show('campaigns',this)">📣 Campaigns</div>
+<div class="item" onclick="show('pricing',this)">💳 Planes</div>
+<div class="item" onclick="show('settings',this)">⚙️ Settings</div>
+<div class="menu">SUPPORT</div>
+<div class="item" onclick="window.open('https://wa.me/573226536669?text=Hola%20soporte%20KLIDO','_blank')">💡 Help Center</div>
+<div class="item" onclick="logout()" style="color:#ff8a8a">🚪 Salir</div>
+<div class="plan-box" id="planBox"><b id="planName">Plan Básico</b><div style="font-size:11px;color:#7a8bb0;margin-top:4px">Gestiona tu suscripción</div><button onclick="show('pricing',null)">Ver planes</button></div>
+</div>
+<div class="inbox" id="panel-inbox"><div class="inbox-h">Inbox</div><div class="search">🔍<input id="q" placeholder="Search..." oninput="filter()"></div><div id="chatList"></div></div>
+<div class="inbox" id="panel-campaigns" style="display:none"><div class="inbox-h">Campaigns</div><div style="padding:14px"><label style="font-size:12px">Plantilla aprobada:</label><select id="tpl" style="width:100%;margin:8px 0 10px"></select><input type="file" id="file" accept=".xlsx,.csv" style="color:inherit;margin-bottom:10px;font-size:12px"><button onclick="uploadCamp()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer">Subir Excel y Enviar</button><div id="camps" style="margin-top:12px;font-size:13px"></div></div></div>
+<div class="inbox" id="panel-pricing" style="display:none; width:680px"><div class="inbox-h">Planes KLIDO - Anual</div>
+<div class="pricing">
+<div class="price-card"><h3>Básico</h3><div class="price">$800.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $80.000 mant. c/3 meses</div><ul><li>✅ 1 envío masivo a la vez</li><li>✅ 2 usuarios incluidos</li><li>✅ Inbox ilimitado</li><li>❌ Sin IA automática</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Basico%20anual%20$800k%20%2B%20$80k%20mant','_blank')">Empezar Básico</button></div>
+<div class="price-card popular"><h3>Premium ⭐</h3><div class="price">$1.300.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $95.000 mant. c/3 meses</div><ul><li>✅ 5 envíos simultáneos</li><li>✅ 5 usuarios incluidos</li><li>✅ IA incluida</li><li>✅ Soporte prioritario</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Premium%20anual%20$1.3M%20%2B%20$95k%20mant','_blank')">Empezar Premium</button></div>
+<div class="price-card"><h3>Gold</h3><div class="price">$2.400.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $130.000 mant. c/3 meses</div><ul><li>✅ Envíos ilimitados</li><li>✅ Usuarios ilimitados</li><li>✅ IA + Pánico humano</li><li>✅ 📞 Llamada directa incluida</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Gold%20anual%20$2.4M%20%2B%20$130k%20mant','_blank')">Empezar Gold</button></div>
+</div>
+<div style="padding:0 14px 14px;font-size:11px;color:#7a8bb0;line-height:1.4">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API y soporte. Factura electrónica. Puedes cambiar de plan en cualquier momento. Cumplimiento Ley 1581.</div>
+</div>
+<div class="inbox" id="panel-settings" style="display:none; width:420px"><div class="inbox-h">Settings / IA</div>
+<div style="padding:14px;overflow-y:auto">
+<div class="ai-box"><label style="display:flex;justify-content:space-between;align-items:center"><b>🤖 IA Automática</b><input type="checkbox" id="aiEnabled" onchange="saveAI()" style="width:20px;height:20px"></label><div style="font-size:11px;color:#7a8bb0;margin-top:6px">Si está activa, responde sola cuando no hay humano.</div></div>
+<div class="ai-box panic"><label style="display:flex;justify-content:space-between;align-items:center"><b style="color:#ff6b6b">🚨 Pánico - Pasar a Humano</b><input type="checkbox" id="humanTake" onchange="saveAI()" style="width:20px;height:20px"></label><div style="font-size:11px;color:#ffb0b0;margin-top:6px">Actívalo y la IA deja de responder TODO. Control total humano.</div></div>
+<label style="font-size:12px"><b>Prompt de la IA:</b></label>
+<textarea id="aiPrompt" style="width:100%;height:110px;background:#131f3d;border:1px solid #24365f;border-radius:8px;color:#fff;padding:8px;margin:8px 0;font-size:12px"></textarea>
+<button onclick="saveAI()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer;font-weight:700">Guardar IA</button>
+</div></div>
+<div class="main"><div class="chat-h"><div class="av" id="hAv">SN</div><div><b id="hName">Selecciona un chat</b><div style="font-size:12px;color:#7a8bb0">WhatsApp Business API</div></div></div><div id="msgs"></div><div class="inputbar"><input id="txt" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')send()"><button class="send" onclick="send()">➤</button></div></div>
+<div class="profile"><h4>Customer Profile</h4><div style="text-align:center;margin:16px 0"><div class="av" style="width:56px;height:56px;margin:auto" id="pAv">SN</div><b id="pName">-</b><div style="font-size:12px;color:#7a8bb0">Customer • WhatsApp</div></div><div id="pDetails" style="margin-top:14px;font-size:13px">Selecciona un chat</div><div style="margin-top:12px"><label style="font-size:12px">Tag:</label> <select id="tagSel" onchange="setTag()"><option value="nuevo">nuevo</option><option value="interesado">interesado</option><option value="cliente">cliente</option><option value="no-interesado">no interesado</option></select></div></div>
+<script>
+let AGENCY='',CUR='';
+async function doLogin(){
+if(!acc.checked){alert('Acepta terminos y privacidad');return;}
+AGENCY=ag.value.trim();let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value,acepto_terminos:true})});
+if(!r.ok){alert('Login incorrecto');return;}login.style.display='none';
+try{let me=await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());if(me.plan_nombre){planBadge.textContent=me.plan_nombre;planName.textContent='Plan '+me.plan_nombre;}}catch(e){}
+loadChats();loadTpl();loadAI();setInterval(loadChats,5000);}
+async function loadChats(){let r=await fetch('/api/chats?agency_id='+AGENCY);let j=await r.json();window._chats=j;chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();return `<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;}).join('');}
+function filter(){let q=document.getElementById('q').value.toLowerCase();document.querySelectorAll('.chat').forEach(el=>{el.style.display=el.innerText.toLowerCase().includes(q)?'flex':'none';});}
+async function openChat(wa){
+  CUR=wa;
+  let c=window._chats.find(x=>x.wa_id===wa);
+  hName.textContent=c.name||wa;pName.textContent=c.name||wa;
+  hAv.textContent=(c.name||wa).substring(0,2).toUpperCase();pAv.textContent=hAv.textContent;
+  tagSel.value=c.tag||'nuevo';
+  let callHtml=`<div style="font-size:11px;color:#7a8bb0">Verificando plan...</div>`;
+  pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br>${callHtml}`;
+  try{
+    let me=await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());
+    if(me.plan_id==='enterprise'){
+      callHtml=`<a href="tel:+${wa}" style="display:block;text-align:center;margin-top:12px;padding:10px;background:#10b981;border-radius:10px;color:#fff;font-weight:800;text-decoration:none;font-size:13px">📞 Llamar a +${wa}</a><div style="font-size:10px;color:#7a8bb0;margin-top:4px;text-align:center">Abre discador - Solo Gold</div>`;
+    }else{
+      callHtml=`<div style="margin-top:12px;padding:8px;background:#131f3d;border:1px solid #24365f;border-radius:8px;font-size:11px;color:#7a8bb0;text-align:center">🔒 Llamada directa solo Gold<br><a href="#" onclick="show('pricing',null)" style="color:#2f7bff">Ver Gold</a></div>`;
+    }
+    pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br>${callHtml}`;
+  }catch(e){pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br><a href="tel:+${wa}" style="display:block;text-align:center;margin-top:12px;padding:10px;background:#2f7bff;border-radius:10px;color:#fff;font-weight:800;text-decoration:none">📞 Llamar</a>`;}
+  await fetch('/api/chats/'+wa+'/read?agency_id='+AGENCY,{method:'POST'});
+  let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY);let m=await r.json();
+  msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');msgs.scrollTop=99999;loadChats();
+}
+async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})});openChat(CUR);}
+async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})});}
+function show(p, el){['inbox','campaigns','pricing','settings'].forEach(x=>{let pnl=document.getElementById('panel-'+x);if(pnl) pnl.style.display=x===p?'flex':'none';});document.querySelectorAll('.item').forEach(i=>i.classList.remove('active'));if(el) el.classList.add('active');}
+async function loadTpl(){let r=await fetch('/api/templates?agency_id='+AGENCY);let j=await r.json();tpl.innerHTML=j.map(t=>`<option>${t.name}</option>`).join('');let c=await (await fetch('/api/campaigns?agency_id='+AGENCY)).json();camps.innerHTML=c.map(x=>`<div>📣 ${x.template} - ${x.sent}/${x.total} (${x.status})</div>`).join('');}
+async function uploadCamp(){
+  let f=document.getElementById('file').files[0];
+  if(!f) return alert('elige excel');
+  let rd=new FileReader();
+  rd.onload=async()=>{
+    let r=await fetch('/api/campaigns/upload',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({agency_id:AGENCY,template:tpl.value,fileBase64:rd.result})
+    });
+    let txt=await r.text();
+    alert(txt);
+    loadTpl();
+  };
+  rd.readAsDataURL(f);
+}
+async function loadAI(){try{let r=await fetch('/api/ai-config?agency_id='+AGENCY).then(x=>x.json());aiEnabled.checked=!!r.enabled;humanTake.checked=!!r.human_takeover;aiPrompt.value=r.prompt||'';}catch(e){}}
+async function saveAI(){await fetch('/api/ai-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY, enabled:aiEnabled.checked, prompt:aiPrompt.value, human_takeover:humanTake.checked})});alert('IA guardada');}
+function logout(){AGENCY='';CUR='';location.reload();}
 async function forgot(){
-  let email=prompt('Escribe tu CORREO registrado (ej: tu@gmail.com):');
+  let email=prompt('Escribe tu CORREO registrado:');
   if(!email) return;
   try{
-    let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    let r=await fetch('/api/forgot-password',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email})
+    });
     let j=await r.json();
-    if(r.ok) alert('Te enviamos correo a '+email+'\nRevisa bandeja y SPAM.\nAgencias: '+(j.agencies||[]).join(', ')+'\nLink dura 15 min');
-    else alert(j.error||'Error');
-  }catch(e){ alert('Error de conexión'); }
+    if(r.ok){
+      alert('Correo enviado a '+email+'. Revisa bandeja y SPAM. Agencias: '+(j.agencies||[]).join(', '));
+    }else{
+      alert(j.error||'Error');
+    }
+  }catch(e){
+    alert('Error de conexion');
+  }
 }
+</script>
+</body>
+</html>
