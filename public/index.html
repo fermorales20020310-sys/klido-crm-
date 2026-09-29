@@ -17,20 +17,21 @@
 <body class="h-screen bg-[#070b18] p-2">
 <div class="h-full w-full bg-[#0f172a] rounded-[16px] border border-[#1e293b] flex overflow-hidden">
 
-<!-- LOGIN VIEW NUEVO PRO -->
 <div id="loginView" class="absolute inset-0 z-50 flex items-center justify-center bg-[#070b18] p-4">
 <div class="bg-[#0f172a] border border-[#1e293b] rounded-[24px] w-full max-w-[980px] grid grid-cols-1 md:grid-cols-2 overflow-hidden shadow-2xl">
-<!-- Izquierda Branding -->
 <div class="bg-[#111c34] p-8 md:p-10 flex flex-col justify-between">
 <div>
 <div class="flex items-center gap-3"><img src="/logo.png" class="h-10 w-10 rounded-xl bg-white p-1"><div><div class="font-black text-white text-[16px]">KLIDO</div><div class="text-[11px] text-[#8aa4ff] tracking-widest">CRM EMPRESARIAL</div></div></div>
-<h1 class="text-white text-[28px] font-black leading-tight mt-10">Gestiona tu<br>WhatsApp Business<br>como empresa real.</h1>
-<p class="text-[#94a3b8] text-[13px] mt-4 leading-relaxed">Inbox con 🔴 No leídos y 🟡 Campañas, antibaneo 50/5h, equipo con roles y estadísticas reales.</p>
-<div class="mt-8 space-y-3 text-[12px] text-[#cbd5e1]"><div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> API oficial de WhatsApp Business</div><div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> Roles Worker / Admin profesionales</div><div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> Soporte directo 3133181851</div></div>
+<h1 class="text-white text-[28px] font-black leading-tight mt-10">El mejor CRM<br>que tu empresa<br>pueda tener.</h1>
+<p class="text-[#94a3b8] text-[13px] mt-4 leading-relaxed">Potencia tu WhatsApp con tecnología empresarial real, segura y escalable.</p>
+<div class="mt-8 space-y-3 text-[12px] text-[#cbd5e1]">
+  <div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> Manejo API oficial Meta</div>
+  <div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> Roles Worker y administración profesional</div>
+  <div class="flex gap-2"><i class="fa-solid fa-check text-[#22c55e] mt-0.5"></i> Soporte directo 24/7</div>
+</div>
 </div>
 <div class="mt-8 text-[10px] text-[#475569]">© 2026 KLIDO • <a href="/terminos.html" class="underline hover:text-[#8aa4ff]">Términos</a> • <a href="/privacidad.html" class="underline hover:text-[#8aa4ff]">Privacidad</a> Ley 1581</div>
 </div>
-<!-- Derecha Form -->
 <div class="p-8 md:p-10 bg-[#0f172a]">
 <div class="flex gap-2 mb-6"><button id="tabLogin" onclick="switchTab('login')" class="flex-1 bg-[#2a5bd7] text-white py-2.5 rounded-xl text-[13px] font-bold">Ingresar</button><button id="tabRegister" onclick="switchTab('register')" class="flex-1 bg-[#111c34] border border-[#1e293b] text-[#94a3b8] py-2.5 rounded-xl text-[13px] font-bold">Crear empresa</button></div>
 
@@ -48,12 +49,11 @@
 <input id="regId" placeholder="ID corto de empresa (minúsculas ej: acol)" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus">
 <input id="regEmail" placeholder="Correo administrador (será el jefe)" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus">
 <div class="relative"><input id="regPass" type="password" placeholder="Crea contraseña (mín 6)" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3.5 rounded-xl mb-3 text-[13px] text-white outline-none input-focus pr-10"><button onclick="togglePass('regPass')" class="absolute right-3 top-3.5 text-[#64748b]"><i class="fa-solid fa-eye"></i></button></div>
-<label class="flex items-start gap-2 text-[11px] text-[#94a3b8] mt-2"><input type="checkbox" id="acceptTerms" class="mt-1 rounded"> <span>Acepto los <a href="/terminos.html" target="_blank" class="text-[#8aa4ff] underline">Términos y Condiciones</a> y <a href="/privacidad.html" target="_blank" class="text-[#8aa4ff] underline">Política de Privacidad</a> Ley 1581. Mis datos serán tratados como Responsable.</span></label>
+<label class="flex items-start gap-2 text-[11px] text-[#94a3b8] mt-2"><input type="checkbox" id="acceptTerms" class="mt-1 rounded"> <span>Acepto los <a href="/terminos.html" target="_blank" class="text-[#8aa4ff] underline">Términos y Condiciones</a> y <a href="/privacidad.html" target="_blank" class="text-[#8aa4ff] underline">Política de Privacidad</a> Ley 1581.</span></label>
 <button onclick="register()" class="w-full bg-white text-[#0f172a] hover:bg-gray-200 transition py-3.5 rounded-xl font-black text-[13px] mt-5">Crear empresa en KLIDO</button>
 <p id="regMsg" class="text-xs mt-3 text-center"></p>
 </div>
 
-<!-- Forgot Modal -->
 <div id="forgotBox" class="hidden mt-6 bg-[#111c34] border border-[#1e2f4f] rounded-xl p-4">
 <h3 class="text-white text-[13px] font-bold">Restablecer contraseña</h3><p class="text-[#94a3b8] text-[11px] mt-1">Te enviaremos un código de 6 dígitos a tu correo corporativo registrado.</p>
 <input id="forgotEmail" placeholder="Correo corporativo registrado" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-[13px] text-white outline-none">
@@ -70,7 +70,6 @@
 </div>
 </div>
 
-<!-- RESTO DE TU APP IGUAL - INBOX ETC -->
 <div class="w-[220px] bg-[#0f172a] border-r border-[#1e293b] flex flex-col shrink-0">
 <div class="p-4 flex items-center gap-2"><img src="/logo.png" class="h-8 w-8 rounded-lg bg-white p-1"><div class="font-black text-white text-[14px]">KLIDO</div><span id="roleBadge" class="bg-[#2a5bd7] text-white text-[10px] px-2 py-0.5 rounded-full">Admin</span></div>
 <div class="mt-5 px-2 flex-1">
@@ -91,11 +90,10 @@
 <div class="w-[360px] border-r border-[#1e293b] bg-[#0f172a] flex flex-col"><div class="px-4 py-3 border-b border-[#1e293b]"><div class="text-white font-bold text-[13px]">Bandeja de mensajes</div><div class="flex gap-2 mt-3"><button id="fAll" onclick="filterChats('all')" class="bg-[#2a5bd7] text-white px-3 py-1.5 rounded-full text-[11px]">Todos</button><button id="fUnread" onclick="filterChats('unread')" class="bg-[#1a2744] border text-[#94a3b8] px-3 py-1.5 rounded-full text-[11px]">No contestados</button><button id="fCamp" onclick="filterChats('campaign')" class="bg-[#1a2744] border text-[#94a3b8] px-3 py-1.5 rounded-full text-[11px]">Campaña 🟡</button></div></div><div id="chats" class="flex-1 overflow-y-auto p-2"></div></div>
 <div class="flex-1 bg-[#0b1220] flex flex-col"><div class="h-[56px] border-b border-[#1e293b] flex items-center px-4 bg-[#0f172a] gap-3"><div id="chatAvatar" class="h-8 w-8 rounded-full bg-[#2a5bd7] flex items-center justify-center text-white text-[11px]">?</div><div><div id="chatName" class="text-white text-[13px] font-bold">Selecciona chat</div></div></div><div id="messages" class="flex-1 overflow-y-auto p-6 space-y-3"></div><div class="p-3 bg-[#0f172a] border-t border-[#1e293b] flex gap-2"><input id="msgInput" placeholder="Escribir..." class="flex-1 bg-[#111c34] border border-[#1e293b] rounded-full px-4 py-2.5 text-sm text-white outline-none" onkeydown="if(event.key==='Enter')send()"><button onclick="send()" class="bg-[#2a5bd7] w-10 h-10 rounded-full text-white">➤</button></div></div>
 </div>
-<div id="settingsView" class="hidden p-7 overflow-y-auto"><h1 class="text-white font-bold">Settings</h1><p class="text-[#94a3b8] text-[12px] mt-2">Bandeja 🔴🟡 / Campaigns 50/5h / Equipo / Planes - Soporte 3133181851</p></div>
+<div id="settingsView" class="hidden p-7 overflow-y-auto"><h1 class="text-white font-bold">Settings</h1><p class="text-[#94a3b8] text-[12px] mt-2">Bandeja 🔴🟡 / Campaigns 50/5h / Equipo / Planes - Soporte 24/7</p></div>
 <div id="adminView" class="hidden p-7 overflow-y-auto"><h1 class="text-white font-bold text-[18px]">Equipo y Estadísticas</h1><div class="grid grid-cols-3 gap-4 mt-6"><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">Hoy</div><div id="statToday" class="text-white font-black text-[22px]">0</div></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">No leídos 🔴</div><div id="statUnread" class="text-red-400 font-black text-[22px]">0</div></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-4"><div class="text-[#94a3b8] text-[11px]">Campañas 🟡</div><div id="statCamp" class="text-yellow-400 font-black text-[22px]">0</div></div></div><div class="grid grid-cols-2 gap-6 mt-6"><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5"><h3 class="text-white font-bold text-[13px]">Agregar trabajador</h3><input id="newWorkerEmail" placeholder="Correo corporativo" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-4 text-sm text-white outline-none"><input id="newWorkerPass" placeholder="Contraseña min 6" type="password" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-sm text-white outline-none"><select id="newWorkerRole" class="w-full bg-[#0e1830] border border-[#1e2f4f] p-3 rounded-xl mt-3 text-sm text-white"><option value="worker">Worker - solo sus chats</option><option value="admin">Admin - ve todo</option></select><button onclick="addWorker()" class="mt-4 w-full bg-[#2a5bd7] text-white py-3 rounded-xl text-[12px] font-bold">Agregar</button><p id="addWorkerMsg" class="text-[11px] mt-3 text-center font-bold"></p></div><div class="bg-[#111c34] border border-[#1e293b] rounded-xl p-5"><h3 class="text-white font-bold text-[13px]">Trabajadores</h3><div id="workersList" class="mt-4 space-y-2 max-h-[340px] overflow-y-auto"></div></div></div></div>
 </div>
 
-</div>
 </div>
 
 <script>
