@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KLIDO - Básico</title>
+<title>KLIDO - Admin</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -25,10 +25,9 @@ body.light.pro-input{background:#ffffff!important; border-color:#bfdbfe!importan
 <body class="h-screen p-2 md:p-3">
 <div id="mainContainer" class="h-full w-full mx-auto bg-[#0d152b] rounded-[24px] border border-[#1c2e50] flex overflow-hidden">
 
-<!-- LOGIN CON OLVIDE -->
 <div id="loginView" class="absolute inset-0 z-50 flex items-center justify-center bg-[#070b18]">
   <div class="bg-[#111a2e] p-8 rounded-[20px] border border-[#1e2f4f] w-full max-w-sm">
-    <div class="flex items-center gap-3 mb-6"><img src="/logo.png" class="h-10 w-10 rounded-xl bg-white p-1 object-contain"><div><b class="text-white">KLIDO</b> <span class="text-[10px] bg-blue-600 px-2 py-0.5 rounded-full text-white ml-1">Básico</span></div></div>
+    <div class="flex items-center gap-3 mb-6"><img src="/logo.png" class="h-10 w-10 rounded-xl bg-white p-1 object-contain"><div><b class="text-white">KLIDO</b> <span id="loginPlanTag" class="text-[10px] bg-blue-600 px-2 py-0.5 rounded-full text-white ml-1">Básico</span></div></div>
     <input id="agency" placeholder="Agencia" class="w-full pro-input p-3.5 rounded-xl mb-3 text-sm text-white outline-none">
     <input id="email" placeholder="Correo" class="w-full pro-input p-3.5 rounded-xl mb-3 text-sm text-white outline-none">
     <input id="password" type="password" placeholder="Clave" class="w-full pro-input p-3.5 rounded-xl mb-4 text-sm text-white outline-none">
@@ -49,6 +48,8 @@ body.light.pro-input{background:#ffffff!important; border-color:#bfdbfe!importan
   <div class="text-[10px] text-[#3a4a6a] uppercase px-3 mb-2 font-bold">Menu</div>
   <nav class="space-y-1">
     <button id="btnInbox" onclick="loadChats()" class="w-full text-[#6b7a9a] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] hover:bg-[#162240]"><i class="fa-solid fa-inbox w-5"></i>Inbox <span id="unreadCount" class="ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span></button>
+    <button id="btnEquipo" onclick="showEquipo()" class="w-full text-[#6b7a9a] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] hover:bg-[#162240]"><i class="fa-solid fa-users w-5"></i>Equipo <span id="teamCount" class="ml-auto bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span></button>
+    <button id="btnMetrics" onclick="showMetrics()" class="w-full text-[#6b7a9a] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] hover:bg-[#162240]"><i class="fa-solid fa-chart-line w-5"></i>Métricas</button>
     <button id="btnCampaigns" onclick="showCampaignsView()" class="w-full text-[#6b7a9a] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] hover:bg-[#162240]"><i class="fa-solid fa-bullhorn w-5"></i>Campaigns</button>
     <button id="btnPlanes" onclick="showPlanes()" class="w-full bg-[#2a4bff] text-white flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-medium"><i class="fa-solid fa-credit-card w-5"></i>Planes</button>
     <button id="btnSettings" onclick="showSettings()" class="w-full text-[#6b7a9a] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] hover:bg-[#162240]"><i class="fa-solid fa-gear w-5"></i>Settings</button>
@@ -56,7 +57,7 @@ body.light.pro-input{background:#ffffff!important; border-color:#bfdbfe!importan
   <div class="mt-8 text-[10px] text-[#3a4a6a] uppercase px-3 mb-2 font-bold">Support</div>
   <button onclick="openHelp()" class="w-full text-[#6b7a9a] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] hover:bg-[#162240]"><i class="fa-solid fa-lightbulb w-5 text-yellow-400"></i>Help Center</button>
   <div class="mt-auto">
-    <div class="bg-[#121f3d] rounded-2xl p-4 border border-[#1e2f4f]"><div class="text-[13px] text-white font-bold">Plan <span id="planName">Básico</span></div><div class="text-[11px] text-[#6b7a9a]">Gestiona tu suscripción</div><div id="roleInfo" class="text-[10px] text-[#3b82f6] mt-1"></div><button onclick="showPlanes()" class="mt-3 w-full bg-[#1a2744] text-white text-[13px] py-2.5 rounded-xl font-medium">Ver planes</button></div>
+    <div class="bg-[#121f3d] rounded-2xl p-4 border border-[#1e2f4f]"><div class="text-[13px] text-white font-bold"><span id="roleTitle">Plan</span> <span id="planName">Básico</span></div><div class="text-[11px] text-[#6b7a9a]">Gestiona tu suscripción</div><div id="roleInfo" class="text-[10px] text-[#3b82f6] mt-1"></div><button onclick="showPlanes()" class="mt-3 w-full bg-[#1a2744] text-white text-[13px] py-2.5 rounded-xl font-medium">Ver planes</button></div>
     <div class="flex items-center justify-between mt-3 px-2"><span id="userLabel" class="text-[11px] text-[#6b7a9a] truncate"></span><button onclick="logout()" class="text-[11px] text-[#6b7a9a]">Salir</button></div>
   </div>
 </div>
@@ -70,6 +71,7 @@ body.light.pro-input{background:#ffffff!important; border-color:#bfdbfe!importan
       <button onclick="filterBy('unanswered')" id="fUn" class="text-[11px] bg-[#1a2744] text-[#94a3b8] px-3 py-1 rounded-full">No contestados</button>
       <button onclick="filterBy('campaign')" id="fCamp" class="text-[11px] bg-[#1a2744] text-[#94a3b8] px-3 py-1 rounded-full">Campaña</button>
     </div>
+    <div id="workerFilterInfo" class="hidden mt-3 text-[11px] bg-[#1a2744] text-[#8aa4ff] px-3 py-2 rounded-xl flex justify-between"><span id="workerFilterText"></span><button onclick="clearWorkerFilter()" class="underline">Quitar</button></div>
   </div>
   <div id="chats" class="flex-1 overflow-y-auto px-2 space-y-1"></div>
 </div>
@@ -98,6 +100,29 @@ body.light.pro-input{background:#ffffff!important; border-color:#bfdbfe!importan
     </div>
   </div>
   <p class="text-[11px] text-[#64748b] mt-6 max-w-4xl">Pago anual + mantenimiento trimestral obligatorio. Factura electrónica. Ley 1581 Habeas Data. WhatsApp owner: 3133181851</p>
+</div>
+
+<!-- NUEVA VISTA EQUIPO -->
+<div id="equipoView" class="hidden p-8">
+  <div class="flex items-center justify-between mb-6"><h1 class="text-white font-bold text-[20px]">👥 Equipo - Administrador</h1><button onclick="toggleAddWorker()" class="bg-[#2a4bff] text-white px-5 py-2.5 rounded-xl text-sm font-bold">+ Añadir Trabajador</button></div>
+  <div id="addWorkerForm" class="hidden pro-card rounded-2xl p-5 mb-6 max-w-2xl">
+    <h3 class="text-white font-bold text-sm mb-3">Nuevo trabajador</h3>
+    <div class="grid grid-cols-2 gap-3"><input id="newWorkerEmail" placeholder="Email trabajador" class="pro-input p-3 rounded-xl text-sm text-white"><input id="newWorkerName" placeholder="Nombre visible" class="pro-input p-3 rounded-xl text-sm text-white"><input id="newWorkerPass" type="password" placeholder="Contraseña" class="pro-input p-3 rounded-xl text-sm text-white col-span-2"></div>
+    <div class="flex gap-3 mt-4"><button onclick="createWorker()" class="bg-[#2a4bff] text-white px-6 py-2.5 rounded-xl text-sm font-bold">Crear</button><button onclick="toggleAddWorker()" class="bg-[#1a2744] text-white px-6 py-2.5 rounded-xl text-sm">Cancelar</button></div>
+    <p class="text-[11px] text-[#64748b] mt-2">Solo el jefe/admin puede crear trabajadores. Entran con agencia + email + clave.</p>
+  </div>
+  <div id="teamTable" class="pro-card rounded-2xl overflow-hidden max-w-5xl"></div>
+  <p class="text-[11px] text-[#475569] mt-4">Haz click en "Ver chats" para ver el trabajo de cada uno. Solo jefe ve todo.</p>
+</div>
+
+<!-- NUEVA VISTA METRICAS -->
+<div id="metricsView" class="hidden p-8">
+  <h1 class="text-white font-bold text-[20px] mb-6">📊 Métricas y Estadísticas</h1>
+  <div id="metricsCards" class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mb-6"></div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl">
+    <div class="pro-card rounded-2xl p-5"><h3 class="text-white font-bold text-sm mb-3">Rendimiento por trabajador</h3><div id="metricsByWorker"></div></div>
+    <div class="pro-card rounded-2xl p-5"><h3 class="text-white font-bold text-sm mb-3">Chats por etiqueta</h3><div id="metricsByTag"></div></div>
+  </div>
 </div>
 
 <div id="chatView" class="hidden h-full flex flex-col">
@@ -151,42 +176,113 @@ body.light.pro-input{background:#ffffff!important; border-color:#bfdbfe!importan
 </div>
 
 <script>
-let currentWa=null,allChats=[],filtered=[],currentFilter='all';
+let currentWa=null,allChats=[],filtered=[],currentFilter='all',currentWorkerFilter=null;
 let agency_id=localStorage.getItem('agency_id')||'',username=localStorage.getItem('username')||'',role=localStorage.getItem('role')||'';
 if(agency_id)document.getElementById('agency').value=agency_id;
 function showLogin(){document.getElementById('loginView').classList.remove('hidden')}
-function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('userLabel').textContent=agency_id;document.getElementById('roleInfo').textContent=role+' • '+username;document.getElementById('planName').textContent=localStorage.getItem('plan')||'Básico'; showPlanes();}
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('userLabel').textContent=agency_id;
+  let plan = localStorage.getItem('plan')||'Básico';
+  let isJefe = (role||'').toLowerCase()==='jefe' || (role||'').toLowerCase()==='admin';
+  let isGold = plan.toLowerCase()==='gold';
+  // NUEVO: mostrar Administrador
+  if(isJefe){
+    document.getElementById('planBadge').textContent = isGold? '👑 Administrador Gold' : '👑 Administrador';
+    document.getElementById('planBadge').className = 'text-[11px] bg-yellow-500 text-black border border-yellow-400 px-2.5 py-0.5 rounded-full font-bold';
+    document.getElementById('roleTitle').textContent = 'Administrador';
+    document.getElementById('roleInfo').innerHTML = `<b class="text-yellow-400">${role.toUpperCase()}</b> • ${username} • <span class="text-green-400">${plan}</span>`;
+    document.getElementById('btnEquipo').classList.remove('hidden');
+    document.getElementById('btnMetrics').classList.remove('hidden');
+  } else {
+    document.getElementById('planBadge').textContent = plan;
+    document.getElementById('roleTitle').textContent = 'Plan';
+    document.getElementById('roleInfo').textContent=role+' • '+username;
+  }
+  document.getElementById('planName').textContent=plan;
+  showPlanes();
+  loadTeamCount();
+}
 if(agency_id&&username&&role)showApp();
-async function login(){const a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim(),p=document.getElementById('password').value,m=document.getElementById('loginMsg');if(!a||!e||!p){m.textContent='Completa';return}let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});let j=await r.json();if(!r.ok){m.textContent=j.error;return}localStorage.setItem('agency_id',j.agency_id);localStorage.setItem('username',j.username);localStorage.setItem('role',j.role);if(j.plan)localStorage.setItem('plan',j.plan);agency_id=j.agency_id;username=j.username;role=j.role;showApp();}
+async function login(){const a=document.getElementById('agency').value.trim().toLowerCase(),e=document.getElementById('email').value.trim(),p=document.getElementById('password').value,m=document.getElementById('loginMsg');if(!a||!e||!p){m.textContent='Completa';return}let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a,username:e,email:e,password:p})});let j=await r.json();if(!r.ok){m.textContent=j.error;return}localStorage.setItem('agency_id',j.agency_id);localStorage.setItem('username',j.username);localStorage.setItem('role',j.role);if(j.plan)localStorage.setItem('plan',j.plan);if(j.display_name)localStorage.setItem('display_name',j.display_name);agency_id=j.agency_id;username=j.username;role=j.role;showApp();}
 function logout(){localStorage.clear();location.reload()}
 async function forgot(){let email=prompt('Correo registrado:');if(!email)return;let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim()})});let j=await r.json();alert(j.ok?'✅ Correo enviado revisa tu inbox':j.error);}
 function goWhatsapp(plan){window.open(`https://wa.me/573133181851?text=Hola%20KLIDO%20quiero%20Plan%20${encodeURIComponent(plan)}%20Agencia:%20${encodeURIComponent(agency_id||'nueva')}`, '_blank')}
 function openHelp(){window.open('https://wa.me/573133181851?text=Hola%20soporte%20KLIDO%20Agencia:'+encodeURIComponent(agency_id||'nueva'), '_blank')}
-function setActive(id){['btnInbox','btnCampaigns','btnPlanes','btnSettings'].forEach(b=>{let el=document.getElementById(b); if(el) el.className='w-full text-[#6b7a9a] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] hover:bg-[#162240]'}); let a=document.getElementById(id); if(a) a.className='w-full bg-[#2a4bff] text-white flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-medium'}
-function hideAll(){document.getElementById('planesView').classList.add('hidden');document.getElementById('chatView').classList.add('hidden');document.getElementById('campaignsView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('inboxPanel').classList.add('hidden');document.getElementById('inboxPanel').classList.remove('flex');}
+function setActive(id){['btnInbox','btnEquipo','btnMetrics','btnCampaigns','btnPlanes','btnSettings'].forEach(b=>{let el=document.getElementById(b); if(el) el.className='w-full text-[#6b7a9a] flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] hover:bg-[#162240]'}); let a=document.getElementById(id); if(a) a.className='w-full bg-[#2a4bff] text-white flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-medium'}
+function hideAll(){document.getElementById('planesView').classList.add('hidden');document.getElementById('chatView').classList.add('hidden');document.getElementById('campaignsView').classList.add('hidden');document.getElementById('settingsView').classList.add('hidden');document.getElementById('equipoView').classList.add('hidden');document.getElementById('metricsView').classList.add('hidden');document.getElementById('inboxPanel').classList.add('hidden');document.getElementById('inboxPanel').classList.remove('flex');}
 function showPlanes(){setActive('btnPlanes');hideAll();document.getElementById('planesView').classList.remove('hidden');}
 function loadChats(){setActive('btnInbox');hideAll();document.getElementById('chatView').classList.remove('hidden');document.getElementById('inboxPanel').classList.remove('hidden');document.getElementById('inboxPanel').classList.add('flex'); fetchChats();}
 function showCampaignsView(){setActive('btnCampaigns');hideAll();document.getElementById('campaignsView').classList.remove('hidden'); loadCampaignsList(); loadTemplatesSelect();}
 function showSettings(){setActive('btnSettings');hideAll();document.getElementById('settingsView').classList.remove('hidden'); loadAi(); loadTeam(); loadTemplatesInfo();}
+function showEquipo(){setActive('btnEquipo');hideAll();document.getElementById('equipoView').classList.remove('hidden'); loadEquipoFull();}
+function showMetrics(){setActive('btnMetrics');hideAll();document.getElementById('metricsView').classList.remove('hidden'); loadMetrics();}
 function initials(s){return (s||'?').substring(0,2).toUpperCase()}
 function filterBy(f){currentFilter=f; ['fAll','fUn','fCamp'].forEach(id=>{document.getElementById(id).className='text-[11px] bg-[#1a2744] text-[#94a3b8] px-3 py-1 rounded-full'}); document.getElementById(f==='all'?'fAll':f==='unanswered'?'fUn':'fCamp').className='text-[11px] bg-[#2a4bff] text-white px-3 py-1 rounded-full'; applyFilter();}
 function applyFilter(){if(currentFilter==='all')filtered=allChats;else if(currentFilter==='unanswered')filtered=allChats.filter(c=>c.unread>0);else filtered=allChats.filter(c=>c.source==='campaign'); renderChats(filtered);}
 function renderChats(list){let html=''; let unread=0; list.forEach(c=>{ if(c.unread>0) unread+=c.unread; let dot = c.unread>0?'<span class="dot-red"></span>':c.source==='campaign'?'<span class="dot-yellow"></span>':'<span class="dot-green"></span>'; html+=`<div onclick="openChat('${c.wa_id}')" class="cursor-pointer rounded-xl p-3 flex gap-3 hover:bg-[#111f3a] ${currentWa===c.wa_id?'bg-[#162240] border border-[#1e3a5f]':''}"><div class="relative"><div class="h-9 w-9 rounded-full bg-[#1e293b] flex items-center justify-center text-[11px] font-bold text-white">${initials(c.name||c.wa_id)}</div><div class="absolute -top-1 -right-1">${dot}</div></div><div class="flex-1 min-w-0"><div class="flex justify-between"><b class="text-[13px] text-white truncate">${c.name||c.wa_id}</b>${c.unread>0?`<span class="bg-red-500 text-white text-[10px] px-1.5 rounded-full">${c.unread}</span>`:''}</div><div class="text-[11px] text-[#94a3b8] truncate">${(c.last_message||c.lastMessage||'').substring(0,32)}</div><div class="text-[10px] text-[#475569]">${c.tag||'nuevo'} • ${c.source==='campaign'?'Campaña':'Directo'}</div></div></div>`}); document.getElementById('chats').innerHTML=html||'<p class="text-xs text-[#475569] p-4">Sin chats</p>'; let badge=document.getElementById('unreadCount'); if(unread>0){badge.textContent=unread;badge.classList.remove('hidden')} else badge.classList.add('hidden');}
-async function fetchChats(){let r=await fetch('/api/chats?agency_id='+agency_id);let d=await r.json();allChats=d; applyFilter();}
+async function fetchChats(){let url='/api/chats?agency_id='+agency_id; if(currentWorkerFilter) url+='&worker='+encodeURIComponent(currentWorkerFilter); let r=await fetch(url);let d=await r.json();allChats=d; applyFilter();}
 function openChat(wa){currentWa=wa;let c=allChats.find(x=>x.wa_id===wa);document.getElementById('profileName').textContent=c?.name||wa;document.getElementById('profileAvatar').textContent=initials(c?.name||wa);document.getElementById('chatAvatar').textContent=initials(c?.name||wa);document.getElementById('chatName').textContent=c?.name||wa;document.getElementById('profilePhone').textContent=wa;document.getElementById('chatSource').textContent=c?.source==='campaign'?'Campaña (punto amarillo)':'Directo';document.getElementById('panelExtra').innerHTML=`Tel: ${wa}<br>Tag: ${c?.tag||'nuevo'}<br>Fuente: ${c?.source||'directo'}<br>Trabajador: ${c?.assigned_to||'sin asignar'}`; let isGold=(localStorage.getItem('plan')||'').toLowerCase()==='gold'; document.getElementById('callBtn').classList.toggle('hidden',!isGold); loadMessages();fetch('/api/chats/'+wa+'/read?agency_id='+agency_id,{method:'POST'});}
-async function loadMessages(){if(!currentWa)return;let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let data=await r.json();let html='<div class="text-center text-[11px] text-[#475569]">Historial de mensajes</div>';data.forEach(m=>{let out=m.direction!=='in';html+=`<div class="flex ${out?'justify-end':''}"><div class="${out?'bubble-out':'bubble-in'} max-w-[62%] px-4 py-3 rounded-2xl text-[13px]">${m.text}<div class="text-[10px] opacity-70 mt-1 text-right">${new Date(m.timestamp).toLocaleTimeString().slice(0,5)}</div></div></div>`});document.getElementById('messages').innerHTML=html;document.getElementById('messages').scrollTop=99999;}
+async function loadMessages(){if(!currentWa)return;let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let data=await r.json();let html='<div class="text-center text-[11px] text-[#475569]">Historial de mensajes</div>';data.forEach(m=>{let out=m.direction!=='in';let by = m.sent_by? `<div class="text-[9px] opacity-60">${m.sent_by}</div>` : ''; html+=`<div class="flex ${out?'justify-end':''}"><div class="${out?'bubble-out':'bubble-in'} max-w-[62%] px-4 py-3 rounded-2xl text-[13px]">${m.text}<div class="text-[10px] opacity-70 mt-1 text-right">${new Date(m.timestamp).toLocaleTimeString().slice(0,5)}</div>${by}</div></div>`});document.getElementById('messages').innerHTML=html;document.getElementById('messages').scrollTop=99999;}
 async function sendMessage(){let t=document.getElementById('msgInput').value;if(!t||!currentWa)return;await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t,agency_id,username})});document.getElementById('msgInput').value='';loadMessages(); fetchChats();}
 async function loadCampaignsList(){let r=await fetch('/api/campaigns?agency_id='+agency_id);let d=await r.json();let html='';d.forEach(c=>{html+=`<div class="p-2 bg-[#0e1830] rounded-lg flex justify-between text-[11px] text-white"><span>${c.template}</span><span>${c.sent}/${c.total} ${c.status}</span></div>`});document.getElementById('campaignList').innerHTML=html||'Sin campañas';}
 async function loadTemplatesSelect(){let r=await fetch('/api/templates?agency_id='+agency_id);let d=await r.json();let sel=document.getElementById('tpl'); sel.innerHTML='<option value="">Elige plantilla aprobada</option>'+d.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join('');}
 async function loadTemplatesInfo(){let r=await fetch('/api/templates?agency_id='+agency_id);let d=await r.json();document.getElementById('templatesInfo').innerHTML=d.length?d.slice(0,3).map(t=>`✅ ${t.name} (${t.status})`).join('<br>'):'No hay plantillas aún';}
 async function uploadCampaign(){let f=document.getElementById('excel').files[0],tpl=document.getElementById('tpl').value;if(!f||!tpl)return alert('Falta Excel y plantilla aprobada');let rd=new FileReader();rd.onload=async e=>{let res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,fileBase64:e.target.result})});let j=await res.json();alert(j.ok?'Campaña creada '+j.total+' - Se enviará 50 cada 5h':j.error);loadCampaignsList();};rd.readAsDataURL(f);}
-async function loadAi(){try{let r=await fetch('/api/ai-config?agency_id='+agency_id);let c=await r.json();document.getElementById('aiEnabled').checked=c.enabled;document.getElementById('aiHuman').checked=c.human_takeover;document.getElementById('aiPrompt').value=c.prompt||'';document.getElementById('aiStatusText').textContent=c.enabled?'Activa ✅':'Desactivada';document.getElementById('isGoldBadge').innerHTML=c.isGold?'<span class="bg-yellow-400 text-black text-[9px] px-1.5 rounded-full ml-2">GOLD</span>':'<span class="text-[9px] text-red-400 ml-2">Requiere Gold - Habla al 3133181851</span>'; if(!c.canUseAI){document.getElementById('aiEnabled').disabled=true;}}catch(e){document.getElementById('aiStatusText').textContent='No configurada - Requiere Gold';}}
+async function loadAi(){try{let r=await fetch('/api/ai-config?agency_id='+agency_id);let c=await r.json();document.getElementById('aiEnabled').checked=c.enabled;document.getElementById('aiHuman').checked=c.human_takeover;document.getElementById('aiPrompt').value=c.prompt||'';document.getElementById('aiStatusText').textContent=c.enabled?'Activa ✅':'Desactivada';document.getElementById('isGoldBadge').innerHTML=c.isGold?'<span class="bg-yellow-400 text-black text-[9px] px-1.5 rounded-full ml-2">GOLD</span>':'<span class="text-[9px] text-red-400 ml-2">Requiere Gold - Habla al 3133181851</span>';}catch(e){document.getElementById('aiStatusText').textContent='No configurada - Requiere Gold';}}
 async function saveAi(){let e=document.getElementById('aiEnabled').checked,h=document.getElementById('aiHuman').checked,p=document.getElementById('aiPrompt').value;let r=await fetch('/api/ai-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,enabled:e,prompt:p,human_takeover:h})});let j=await r.json();if(!r.ok) return alert(j.error); alert('IA Gold guardada ✅');}
 async function loadTeam(){let r=await fetch('/api/team?agency_id='+agency_id);let d=await r.json();let html='<div class="mt-2 space-y-1">';d.forEach(u=>{html+=`<div class="flex justify-between py-1 border-b border-[#1c2e50] text-white text-[11px]"><span>${u.username} - ${u.role} ${u.plan? '('+u.plan+')':''}</span></div>`});html+='</div>';document.getElementById('teamList').innerHTML=html;}
 async function changeTag(){if(!currentWa)return;await fetch('/api/chats/'+currentWa+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:document.getElementById('tagSelect').value,agency_id})}); fetchChats();}
 function callClient(){if(!currentWa)return; let isGold=(localStorage.getItem('plan')||'').toLowerCase()==='gold'; if(!isGold) return goWhatsapp('Quiero Gold para llamada directa'); window.open(`tel:+${currentWa}`, '_blank');}
 function toggleTheme(){document.body.classList.toggle('light'); localStorage.setItem('theme', document.body.classList.contains('light')?'light':'dark');}
 (function(){ if(localStorage.getItem('theme')==='light') document.body.classList.add('light'); })();
+
+// === NUEVO ADMIN FUNCIONES ===
+function toggleAddWorker(){ document.getElementById('addWorkerForm').classList.toggle('hidden'); }
+async function loadTeamCount(){ try{ let r=await fetch('/api/team?agency_id='+agency_id); let d=await r.json(); let tc=document.getElementById('teamCount'); if(d.length>1){ tc.textContent=d.length; tc.classList.remove('hidden'); } }catch(e){} }
+async function loadEquipoFull(){
+  let r=await fetch('/api/team/activity?agency_id='+agency_id); let data=await r.json();
+  let html=`<table class="w-full text-[12px] text-white"><thead class="text-[#64748b] text-[11px] uppercase"><tr><th class="text-left p-3">Trabajador</th><th class="text-left p-3">Rol</th><th class="text-left p-3">Mensajes</th><th class="text-left p-3">Chats tocados</th><th class="text-left p-3">Último</th><th class="text-left p-3">Acciones</th></tr></thead><tbody>`;
+  data.forEach(u=>{
+    let last = u.last_active? new Date(Number(u.last_active)).toLocaleString() : 'Nunca';
+    let isTrab = u.role==='trabajador';
+    html+=`<tr class="border-t border-[#1e2f4f]"><td class="p-3"><b>${u.display_name||u.username}</b><br><span class="text-[10px] text-[#64748b]">${u.username}</span></td><td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] ${u.role==='jefe'?'bg-yellow-500 text-black':'bg-[#1a2744] text-[#8aa4ff]'}">${u.role}</span></td><td class="p-3 font-bold">${u.messages}</td><td class="p-3">${u.chats_touched||0}</td><td class="p-3 text-[11px] text-[#94a3b8]">${last}</td><td class="p-3 flex gap-2"><button onclick="filterWorkerChats('${u.username}')" class="bg-[#1e293b] px-3 py-1.5 rounded-lg text-[11px]">Ver chats</button>${isTrab?`<button onclick="deleteWorker('${u.username}')" class="bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg text-[11px]">Eliminar</button>`:''}</td></tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('teamTable').innerHTML=html;
+}
+async function createWorker(){
+  let email=document.getElementById('newWorkerEmail').value.trim().toLowerCase();
+  let name=document.getElementById('newWorkerName').value.trim();
+  let pass=document.getElementById('newWorkerPass').value;
+  if(!email||!pass) return alert('Email y clave obligatorios');
+  let res=await fetch('/api/team/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username:email,password:pass,display_name:name||email,role_req:username})});
+  let j=await res.json();
+  if(!res.ok) return alert(j.error);
+  alert('✅ Trabajador creado: '+email);
+  document.getElementById('newWorkerEmail').value=''; document.getElementById('newWorkerPass').value=''; document.getElementById('newWorkerName').value='';
+  toggleAddWorker(); loadEquipoFull(); loadTeamCount();
+}
+async function deleteWorker(u){ if(!confirm('¿Eliminar trabajador '+u+'?'))return; await fetch('/api/team/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username:u})}); loadEquipoFull(); }
+function filterWorkerChats(worker){
+  currentWorkerFilter=worker;
+  document.getElementById('workerFilterInfo').classList.remove('hidden');
+  document.getElementById('workerFilterText').textContent='Filtrando chats de: '+worker;
+  loadChats();
+}
+function clearWorkerFilter(){ currentWorkerFilter=null; document.getElementById('workerFilterInfo').classList.add('hidden'); fetchChats(); }
+async function loadMetrics(){
+  let r=await fetch('/api/stats?agency_id='+agency_id); let s=await r.json();
+  if(s.error){ document.getElementById('metricsCards').innerHTML=s.error; return; }
+  document.getElementById('metricsCards').innerHTML=`
+    <div class="pro-card rounded-2xl p-5 text-center"><div class="text-[11px] text-[#64748b]">Chats totales</div><div class="text-white text-[28px] font-black">${s.totalChats}</div></div>
+    <div class="pro-card rounded-2xl p-5 text-center border-red-500/20"><div class="text-[11px] text-[#64748b]">Sin contestar</div><div class="text-red-400 text-[28px] font-black">${s.unread}</div></div>
+    <div class="pro-card rounded-2xl p-5 text-center"><div class="text-[11px] text-[#64748b]">Mensajes hoy</div><div class="text-white text-[28px] font-black">${s.todayMessages}</div></div>
+    <div class="pro-card rounded-2xl p-5 text-center"><div class="text-[11px] text-[#64748b]">Total mensajes</div><div class="text-white text-[28px] font-black">${s.totalMessages}</div><div class="text-[10px] text-[#475569]">Semana: ${s.weekMessages}</div></div>
+  `;
+  document.getElementById('metricsByWorker').innerHTML = s.byWorker.length? s.byWorker.map(w=>`<div class="flex justify-between py-2 border-b border-[#1c2e50] text-[12px] text-white"><span>${w.worker||'sistema'}</span><b>${w.total} mensajes</b><button onclick="filterWorkerChats('${w.worker}')" class="text-[10px] text-blue-400 underline">ver</button></div>`).join('') : '<span class="text-[11px] text-[#475569]">Sin actividad aún</span>';
+  document.getElementById('metricsByTag').innerHTML = s.byTag.map(t=>`<div class="flex justify-between py-2 border-b border-[#1c2e50] text-[12px] text-white"><span class="capitalize">${t.tag}</span><b>${t.total}</b></div>`).join('');
+}
 </script>
 </body>
 </html>
