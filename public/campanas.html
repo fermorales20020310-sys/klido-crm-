@@ -11,78 +11,143 @@
 <body class="p-3">
 <div class="max-w-[1480px] mx-auto bg-[#0d152b] rounded-[20px] border border-[#1c2e50] overflow-hidden">
 <div class="flex items-center justify-between p-4 border-b border-[#1e3a5f] bg-[#0a1931]">
-<div class="flex items-center gap-3"><img src="/logo.png" class="h-9 w-9 bg-white p-1 rounded-lg"><b class="text-white">KLIDO - Campañas</b><span class="text-[10px] text-[#94a3b8] ml-2">• 50 cada 5h anti-ban • Plantillas aprobadas auto</span></div>
-<div class="flex gap-2"><button onclick="location.href='/index.html'" class="bg-[#1a2744] text-white px-4 py-2 rounded-xl text-xs">← Inbox</button><button onclick="goWpp()" class="bg-[#2a4bff] text-white px-4 py-2 rounded-xl text-xs">Ayuda 3133181851</button></div>
+<div class="flex items-center gap-3"><img src="/logo.png" class="h-9 w-9 bg-white p-1 rounded-lg"><b class="text-white">KLIDO - Auto Campañas</b><span class="text-[10px] text-[#22c55e] ml-2">● Auto-detecta números y envía 50/5h</span></div>
+<button onclick="location.href='/index.html'" class="bg-[#1a2744] text-white px-4 py-2 rounded-xl text-xs">← Inbox</button>
 </div>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 p-6">
+<div class="pro-card rounded-2xl p-5 lg:col-span-2">
+<h3 class="text-white font-bold text-sm">📢 Subir Excel - Auto envío</h3>
+<p class="text-[11px] text-[#60a5fa] mb-4">Sube el Excel y KLIDO detecta automáticamente los teléfonos y envía</p>
+
+<select id="tpl" class="pro-input w-full p-2.5 rounded-xl text-xs text-white mb-3"><option>Cargando plantillas aprobadas...</option></select>
+
+<div id="drop" class="border-2 border-dashed border-[#2563eb] rounded-xl p-10 text-center cursor-pointer hover:bg-[#0a1931]" onclick="document.getElementById('file').click()">
+<div class="text-3xl">📁</div>
+<div class="text-[#60a5fa] text-xs mt-2 font-bold">Click para subir Excel</div>
+<div class="text-[10px] text-[#475569] mt-1">Detecta automáticamente columna teléfono / phone / celular / whatsapp</div>
+<input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
+</div>
+
+<div id="autoStatus" class="hidden mt-4 bg-[#0a1931] rounded-xl p-4 border border-green-500/30">
+<div class="text-green-400 text-xs font-bold">✅ Números detectados automáticamente</div>
+<div id="numsPreview" class="text-[11px] text-[#cbd5e1] mt-2"></div>
+<div id="sendProgress" class="text-[11px] text-[#eab308] mt-2"></div>
+</div>
+
+</div>
+
 <div class="pro-card rounded-2xl p-5">
-<h3 class="text-white font-bold text-sm">📢 Nueva Campaña</h3><p class="text-[11px] text-[#60a5fa] mb-3">Plantillas sincronizadas desde Meta API</p>
-<label class="text-[11px] text-[#94a3b8]">Nombre campaña</label><input id="camp-name" class="pro-input w-full p-2.5 rounded-xl text-xs text-white mt-1" placeholder="Ej: Promo Septiembre">
-<label class="text-[11px] text-[#94a3b8] mt-3 block">Plantilla aprobada (solo aprobadas)</label><select id="tpl" class="pro-input w-full p-2.5 rounded-xl text-xs text-white mt-1"><option>Cargando...</option></select>
-<button onclick="syncTpl()" class="mt-2 w-full bg-[#1a2744] text-white py-2 rounded-xl text-[11px]">🔄 Sincronizar plantillas del API</button>
-<label class="text-[11px] text-[#94a3b8] mt-3 block">Excel (col A=número, B=nombre)</label>
-<div class="border-2 border-dashed border-[#2563eb] rounded-xl p-6 text-center text-[#60a5fa] text-xs mt-1 cursor-pointer" onclick="document.getElementById('file').click()">📁 Click para subir Excel<input type="file" id="file" accept=".xlsx,.xls" style="display:none"></div>
-<div id="nums" class="bg-[#0a1931] rounded-xl p-3 mt-3 text-[11px] text-[#94a3b8]">Sin archivo</div>
-<button id="btnSend" onclick="uploadAndSend()" class="w-full bg-[#2a4bff] text-white py-3 rounded-xl text-xs font-bold mt-4">Subir y Enviar (50 cada 5h)</button>
-<p class="text-[10px] text-[#475569] mt-2">Legal Ley 1581 - Envíos con consentimiento</p>
-</div>
-<div class="pro-card rounded-2xl p-5">
-<h3 class="text-white font-bold text-sm">👁️ Vista previa</h3><p class="text-[11px] text-[#60a5fa] mb-3">Así se verá</p>
-<div id="prev" class="bg-[#0a1931] rounded-xl p-4 text-[#dbeafe] text-xs min-h-[200px]">Selecciona plantilla</div>
-<div class="mt-4 text-[11px] text-[#94a3b8]"><b class="text-white">Cómo funciona:</b><br>1. Excel con números<br>2. Elige plantilla aprobada<br>3. Sistema envía 50 cada 5h<br>4. Punto amarillo en Inbox = vino por campaña</div>
-</div>
-<div class="pro-card rounded-2xl p-5 lg:col-span-1">
-<h3 class="text-white font-bold text-sm">📊 Historial + Seguimiento</h3><div id="hist" class="mt-3 space-y-2 max-h-[400px] overflow-y-auto"></div>
+<h3 class="text-white font-bold text-sm">📊 Historial</h3>
+<p class="text-[10px] text-[#64748b] mb-3">50 cada 5h anti-baneo • Punto amarillo en Inbox</p>
+<div id="hist" class="space-y-2 max-h-[500px] overflow-y-auto"></div>
 </div>
 </div>
 </div>
+
 <script>
-let agency_id=localStorage.getItem('agency_id')||''; if(!agency_id){alert('Entra primero por index'); location.href='/index.html';}
+let agency_id=localStorage.getItem('agency_id')||'';
+if(!agency_id){location.href='/index.html'}
+
 let templates=[];
-function goWpp(){window.open('https://wa.me/573133181851?text=Ayuda campañas KLIDO Agencia:'+agency_id,'_blank')}
 async function loadTpl(){
   const r=await fetch('/api/templates?agency_id='+agency_id); templates=await r.json();
-  const s=document.getElementById('tpl');
-  s.innerHTML=templates.length?templates.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join(''):'<option value="">Sin plantillas - sincroniza</option>';
-  showPrev();
+  document.getElementById('tpl').innerHTML=templates.length?templates.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join(''):'<option value="promo_base">promo_base - approved</option>';
 }
-function showPrev(){ const n=document.getElementById('tpl').value; const t=templates.find(x=>x.name===n);
-  document.getElementById('prev').innerHTML=t?`<b class="text-white">${t.name}</b><br><br>${t.body||t.name}<br><br><span class="text-[10px] text-[#22c55e]">✅ Aprobada por Meta</span>`:'Selecciona plantilla'; }
-document.getElementById('tpl').onchange=showPrev;
-async function syncTpl(){
-  // Simula sync desde Meta - en prod tu webhook llama a /api/templates/sync
-  const r=await fetch('/api/templates?agency_id='+agency_id); const data=await r.json();
-  if(!data.length){ // si no hay, crea demo aprobadas
-    await fetch('/api/templates/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id, templates:[{name:'promo_septiembre',status:'approved',language:'es'},{name:'bienvenida',status:'approved',language:'es'}]})});
+loadTpl();
+
+// AUTO DETECT PHONE NUMBERS
+function detectPhoneColumn(rows){
+  // rows = array of arrays, first row headers
+  const headers = rows[0].map(h=>String(h||'').toLowerCase());
+  let phoneIdx = headers.findIndex(h=>['telefono','tel','phone','celular','whatsapp','wpp','numero','número','movil','cel'].some(k=>h.includes(k)));
+  if(phoneIdx===-1){
+    // si no hay header, busca columna con más números de 10 dígitos
+    let bestIdx=0, bestCount=0;
+    for(let col=0; col< (rows[0]?.length||5); col++){
+      let count=0;
+      for(let r=1;r<Math.min(rows.length,20);r++){
+        let v=String(rows[r][col]||'').replace(/\D/g,'');
+        if(v.length>=10 && v.length<=13) count++;
+      }
+      if(count>bestCount){bestCount=count; bestIdx=col;}
+    }
+    phoneIdx=bestIdx;
   }
-  loadTpl(); alert('Plantillas sincronizadas ✅');
+  return phoneIdx;
 }
+
+function extractPhones(rows, phoneIdx){
+  let nameIdx = rows[0].findIndex((_,i)=>i!==phoneIdx);
+  let phones=[];
+  for(let i=1;i<rows.length;i++){
+    let raw = rows[i][phoneIdx];
+    if(!raw) continue;
+    let num = String(raw).replace(/\D/g,'');
+    if(num.length===10) num='57'+num; // Colombia auto
+    if(num.length>=10 && num.length<=13){
+      phones.push({wa_id:num, name:String(rows[i][nameIdx]||'').trim()});
+    }
+  }
+  return phones;
+}
+
 document.getElementById('file').onchange=e=>{
   const f=e.target.files[0]; if(!f) return;
-  document.getElementById('nums').textContent=f.name+' - leyendo...';
+  document.getElementById('autoStatus').classList.remove('hidden');
+  document.getElementById('numsPreview').innerHTML='Leyendo Excel...';
+
   const reader=new FileReader();
-  reader.onload=function(evt){
+  reader.onload=evt=>{
     const data=new Uint8Array(evt.target.result);
     const wb=XLSX.read(data,{type:'array'});
     const sheet=wb.Sheets[wb.SheetNames[0]];
-    const rows=XLSX.utils.sheet_to_json(sheet,{header:1});
-    document.getElementById('nums').textContent=rows.length-1+' contactos listos para 50 cada 5h';
-    window._fileBase64 = null;
-    const r2=new FileReader(); r2.onload=e2=>{window._fileBase64=e2.target.result;}; r2.readAsDataURL(f);
+    const rows=XLSX.utils.sheet_to_json(sheet,{header:1}).filter(r=>r.length);
+
+    const phoneIdx=detectPhoneColumn(rows);
+    const phones=extractPhones(rows, phoneIdx);
+
+    if(!phones.length){
+      document.getElementById('numsPreview').innerHTML='<span class="text-red-400">❌ No detecté números. Verifica que haya una columna con teléfonos</span>';
+      return;
+    }
+
+    document.getElementById('numsPreview').innerHTML=`Detecté <b class="text-white">${phones.length}</b> números en columna ${phoneIdx+1}<br><div class="mt-2 max-h-[100px] overflow-y-auto bg-[#070b18] p-2 rounded-lg">${phones.slice(0,10).map(p=>`📱 ${p.wa_id} ${p.name?'- '+p.name:''}`).join('<br>')}${phones.length>10?'<br>...y '+(phones.length-10)+' más':''}</div>`;
+
+    // AUTO ENVIAR
+    autoSend(phones, f);
   };
   reader.readAsArrayBuffer(f);
 };
-async function uploadAndSend(){
-  if(!window._fileBase64){alert('Sube Excel primero'); return;}
-  const tpl=document.getElementById('tpl').value; if(!tpl){alert('Elige plantilla aprobada'); return;}
-  const res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id, template:tpl, fileBase64:window._fileBase64})});
-  const d=await res.json();
-  if(d.ok){alert('Campaña creada: '+d.total+' contactos - Se enviará 50 cada 5h para evitar baneo'); loadHist();}
-  else alert(d.error);
+
+async function autoSend(phones, file){
+  const tpl=document.getElementById('tpl').value||'promo_base';
+  document.getElementById('sendProgress').innerHTML='⏳ Subiendo automáticamente...';
+
+  // Convertir file a base64 para tu server actual
+  const reader2=new FileReader();
+  reader2.onload=async e2=>{
+    const base64=e2.target.result;
+    const res=await fetch('/api/campaigns/upload',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({agency_id, template:tpl, fileBase64:base64})
+    });
+    const d=await res.json();
+    if(d.ok){
+      document.getElementById('sendProgress').innerHTML=`✅ Campaña creada: <b class="text-white">${d.total} contactos</b><br>🚀 Se enviarán <b>50 cada 5 horas</b> para evitar baneo.<br>🟡 En Inbox aparecerán con punto amarillo.<br><br><a href="https://wa.me/573133181851?text=Campaña ${d.total} creada Agencia:${agency_id}" target="_blank" class="text-[#3b82f6] underline">Reportar a soporte 3133181851</a>`;
+      loadHist();
+    } else {
+      document.getElementById('sendProgress').innerHTML='❌ '+d.error;
+    }
+  };
+  reader2.readAsDataURL(file);
 }
+
 async function loadHist(){
   const r=await fetch('/api/campaigns?agency_id='+agency_id); const h=await r.json();
-  document.getElementById('hist').innerHTML=h.map(c=>`<div class="bg-[#0a1931] p-3 rounded-xl flex justify-between text-[11px] text-white"><div><b>${c.template}</b><br><span class="text-[#94a3b8]">${c.name||c.template}</span></div><div class="text-right"><span>${c.sent||0}/${c.total}</span><br><span class="bg-[#1e3a5f] text-[#60a5fa] px-2 py-0.5 rounded-full text-[10px]">${c.status}</span></div></div>`).join('')||'Sin campañas';
+  document.getElementById('hist').innerHTML=h.map(c=>`<div class="bg-[#0a1931] p-3 rounded-xl flex justify-between text-[11px] text-white"><div><b>${c.template}</b><br><span class="text-[#94a3b8]">${c.total} contactos</span></div><div class="text-right"><span>${c.sent||0}/${c.total}</span><br><span class="bg-[#1e3a5f] text-[#60a5fa] px-2 py-0.5 rounded-full text-[10px]">${c.status}</span></div></div>`).join('')||'<p class="text-[11px] text-[#475569]">Sin campañas aún</p>';
 }
-loadTpl(); loadHist();
-</script></body></html>
+loadHist();
+</script>
+</body></html>
