@@ -1,4 +1,4 @@
-// server.js V10.8.7 FINAL - TU V10.8.4 INTACTO + CODIGO POST-COMPRA SOLO PLAN PAGADO - 3133181851
+// server.js V10.8.8 FINAL - V10.8.4 de las 3am INTACTO + Legal + Bloqueo Planes + Código única vez - 3133181851
 try{ require('dotenv').config(); }catch(e){}
 const express = require('express');
 const { Pool } = require('pg');
@@ -27,7 +27,7 @@ async function ensureTables(){
   await pool.query(`CREATE TABLE IF NOT EXISTS ai_config(agency_id TEXT PRIMARY KEY, enabled BOOLEAN DEFAULT false)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS calls(id SERIAL PRIMARY KEY, agency_id TEXT, wa_id TEXT, duration INT, note TEXT, created_at BIGINT, created_by TEXT)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS activations(agency_id TEXT, email TEXT, plan TEXT, code TEXT, is_used BOOLEAN DEFAULT false, expires_at BIGINT, PRIMARY KEY(agency_id, plan))`);
-  console.log('>>> TABLAS V10.8.7 OK');
+  console.log('>>> TABLAS V10.8.8 OK - TODO DE LAS 3AM INTACTO');
 }
 
 const PLANS = {
@@ -70,12 +70,12 @@ async function checkPlan(ag, feature){
   try{ const r=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 AND role='jefe' LIMIT 1`, [ag.toLowerCase()]); const plan=(r.rows[0]?.plan||'basico').toLowerCase(); return (PLANS[plan]?.permite||PLANS.basico.permite).includes(feature); }catch{return true;}
 }
 
-app.get('/health',(req,res)=>res.json({ok:true, v:'V10.8.7', msg:'El mejor CRM que tu empresa pueda tener'}));
+app.get('/health',(req,res)=>res.json({ok:true, v:'V10.8.8', msg:'Klido Avanza Consulting - El mejor CRM para tu empresa'}));
 
 app.get('/legal', (req,res)=>{
   const fp = path.join(__dirname,'public','legal.html');
   if(fs.existsSync(fp)) return res.sendFile(fp);
-  res.send(`<h1>Klido CRM - El mejor CRM que tu empresa pueda tener</h1><p>API Oficial Meta - Soporte 24/7 3133181851 - Ley 1581</p>`);
+  res.send(`<h1>Klido Avanza Consulting - Legal</h1><p>API Oficial Meta - Soporte 24/7 3133181851 - Ley 1581 de 2012</p>`);
 });
 
 app.post('/api/login',async(req,res)=>{
@@ -138,12 +138,10 @@ app.get('/api/chats',async(req,res)=>{
   const r=await pool.query(`SELECT * FROM chats WHERE agency_id=$1 ORDER BY last_message_at DESC LIMIT 400`, [ag]);
   res.json(r.rows);
 });
-
 app.get('/api/messages/:wa_id',async(req,res)=>{
   const r=await pool.query(`SELECT * FROM messages WHERE agency_id=$1 AND wa_id=$2 ORDER BY timestamp ASC LIMIT 1000`, [req.query.agency_id, req.params.wa_id]);
   res.json(r.rows);
 });
-
 app.post('/api/messages/send',async(req,res)=>{
   const ag=(req.body.agency_id||'').toLowerCase().trim();
   if(!(await checkPlan(ag,'messages'))) return res.status(403).json({error:'Tu plan no permite mensajes'});
@@ -151,12 +149,10 @@ app.post('/api/messages/send',async(req,res)=>{
   await pool.query(`INSERT INTO chats(agency_id,wa_id,last_message,last_message_at,unread,assigned_to) VALUES($1,$2,$3,$4,0,$5) ON CONFLICT(agency_id,wa_id) DO UPDATE SET last_message=$3,last_message_at=$4,unread=0`, [ag, req.body.wa_id, req.body.text, Date.now(), (req.body.username||'').toLowerCase().trim()]);
   res.json({ok:true});
 });
-
 app.get('/api/workers',async(req,res)=>{
   const r=await pool.query(`SELECT agency_id,username,role,display_name,plan FROM users WHERE agency_id=$1 ORDER BY CASE WHEN role='jefe' THEN 0 ELSE 1 END`, [(req.query.agency_id||'').toLowerCase().trim()]);
   res.json(r.rows);
 });
-
 app.post('/api/workers',async(req,res)=>{
   const ag=(req.body.agency_id||'').toLowerCase().trim();
   if(!(await checkPlan(ag,'workers'))) return res.status(403).json({error:'Plan básico no permite workers, actualiza a Gold'});
@@ -168,12 +164,10 @@ app.post('/api/workers',async(req,res)=>{
   await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role=$4`, [ag, em, hash, role, em, plan]);
   res.json({ok:true});
 });
-
 app.delete('/api/workers/:id',async(req,res)=>{
   await pool.query(`DELETE FROM users WHERE agency_id=$1 AND LOWER(username)=LOWER($2) AND role!='jefe'`, [(req.query.agency_id||'').toLowerCase().trim(), decodeURIComponent(req.params.id).toLowerCase().trim()]);
   res.json({ok:true});
 });
-
 app.get('/api/stats',async(req,res)=>{
   const ag=(req.query.agency_id||'').toLowerCase().trim();
   const boss=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 AND role='jefe' LIMIT 1`, [ag]);
@@ -181,21 +175,18 @@ app.get('/api/stats',async(req,res)=>{
   const unread=await pool.query(`SELECT COUNT(*) FROM chats WHERE agency_id=$1 AND unread>0`, [ag]);
   res.json({totalChats:Number(total.rows[0].count), unread:Number(unread.rows[0].count), currentPlan:boss.rows[0]?.plan||'basico'});
 });
-
 function serveIndex(res){
   const p = path.join(__dirname,'public','index.html');
   if(fs.existsSync(p)) return res.sendFile(p);
-  return res.status(200).send(`<h1>KLIDO V10.8.7 ONLINE - Sube public/index.html</h1>`);
+  return res.status(200).send(`<h1>KLIDO V10.8.8 ONLINE</h1>`);
 }
-
 app.get('/', (req,res)=> serveIndex(res));
 app.get('*', (req,res)=>{
   if(req.path.startsWith('/api/')||req.path.startsWith('/health')) return res.status(404).json({error:'API no encontrada'});
   return serveIndex(res);
 });
-
 const PORT=process.env.PORT||3000;
 (async()=>{
   await ensureTables();
-  app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V10.8.7 en ${PORT}`));
+  app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V10.8.8 en ${PORT}`));
 })();
