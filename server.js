@@ -40,7 +40,6 @@ await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY,age
 await pool.query(`CREATE TABLE IF NOT EXISTS campaign_queue(id SERIAL PRIMARY KEY,campaign_id INT,agency_id TEXT,wa_id TEXT,template TEXT,status TEXT DEFAULT 'queued',created_at BIGINT)`);
 await pool.query(`CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY,agency_id TEXT,username TEXT,password_hash TEXT,role TEXT DEFAULT 'trabajador',display_name TEXT,UNIQUE(agency_id,username))`);
 await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name TEXT`);
-// NUEVO PARA RESET POR CORREO REGISTRADO
 await pool.query(`CREATE TABLE IF NOT EXISTS password_resets(id SERIAL PRIMARY KEY, agency_id TEXT, email TEXT, token TEXT UNIQUE, expires_at BIGINT)`);
 
 const m=getAgencyMap();const now=Date.now();const ids=new Set(Object.values(m));if(process.env.DEFAULT_AGENCY)ids.add(process.env.DEFAULT_AGENCY);
@@ -52,7 +51,6 @@ init();
 app.use(express.static(path.join(__dirname,'public')));
 
 app.get('/api/plans', async (req,res)=>{ const r=await pool.query(`SELECT * FROM plans ORDER BY precio`); res.json(r.rows); });
-// FIX: devolver plan_id para detectar Gold en frontend
 app.get('/api/me', async (req,res)=>{ const r=await pool.query(`SELECT a.id, a.plan_id, a.name, p.nombre as plan_nombre, p.precio, p.mantenimiento, p.ia, p.max_usuarios, p.max_campanas FROM agencies a LEFT JOIN plans p ON p.id=a.plan_id WHERE a.id=$1`,[req.query.agency_id]); res.json(r.rows[0]||{}); });
 app.get('/health', (req,res)=>res.json({ok:true, time:Date.now(), version:'ANUAL'}));
 
@@ -145,7 +143,6 @@ app.post('/api/chats/:wa/read',async(req,res)=>{await pool.query(`UPDATE convers
 app.post('/api/chats/:wa/tag',async(req,res)=>{await pool.query(`UPDATE conversations SET tag=$1 WHERE wa_id=$2 AND agency_id=$3`,[req.body.tag,req.params.wa,req.body.agency_id]);res.json({ok:true})});
 app.get('/api/templates',async(req,res)=>{try{const ar=await pool.query(`SELECT waba_id FROM agencies WHERE id=$1`,[req.query.agency_id]);const waba=ar.rows[0]?.waba_id||process.env.WABA_ID;const r=await axios.get(`https://graph.facebook.com/${G}/${waba}/message_templates?fields=name,status`,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});res.json(r.data.data.filter(t=>t.status==='APPROVED'))}catch(e){res.json([])}});
 
-// CAMPAÑAS CON LIMITE POR PLAN
 app.post('/api/campaigns/upload',async(req,res)=>{
  try{
   const{agency_id,template,fileBase64}=req.body;
@@ -158,29 +155,43 @@ app.post('/api/campaigns/upload',async(req,res)=>{
 });
 app.get('/api/campaigns',async(req,res)=>{const r=await pool.query(`SELECT * FROM campaigns WHERE agency_id=$1 ORDER BY created_at DESC LIMIT 50`,[req.query.agency_id]);res.json(r.rows)});
 
-// ===== RESET POR CORREO REGISTRADO (TRABAJADOR O ADMIN) - SOLO CORREO =====
+// ===== FIX RESET POR CORREO - SOPORTA 465 Y 587 =====
+function getTransporter(){
+  const port = parseInt(process.env.SMTP_PORT || '465');
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: port,
+    secure: port === 465,
+    auth:{ user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    tls:{ rejectUnauthorized:false },
+    connectionTimeout: 20000,
+    greetingTimeout: 20000
+  });
+}
+
 app.post('/api/forgot-password', async (req,res)=>{
   const {email}=req.body;
   if(!email) return res.status(400).json({error:'Escribe tu correo'});
   const clean=email.trim().toLowerCase();
   const users=await pool.query(`SELECT agency_id, username FROM users WHERE LOWER(username)=LOWER($1)`,[clean]);
-  if(!users.rows.length) return res.status(404).json({error:'Ese correo no está registrado en ninguna agencia'});
+  if(!users.rows.length) return res.status(404).json({error:'Ese correo no está registrado'});
   try{
-    const transporter=nodemailer.createTransport({host:process.env.SMTP_HOST, port: parseInt(process.env.SMTP_PORT||'587'), secure:false, auth:{user:process.env.SMTP_USER, pass:process.env.SMTP_PASS}});
+    const transporter=getTransporter();
     for(let u of users.rows){
       const token=crypto.randomBytes(32).toString('hex');
       const expires=Date.now()+1000*60*15;
       await pool.query(`INSERT INTO password_resets(agency_id,email,token,expires_at) VALUES($1,$2,$3,$4)`,[u.agency_id, clean, token, expires]);
       const link=`https://${req.get('host')}/reset.html?token=${token}`;
       await transporter.sendMail({
-        from:`"KLIDO CRM" <${process.env.SMTP_USER}>`,
+        from: process.env.SMTP_FROM || `"KLIDO CRM" <${process.env.SMTP_USER}>`,
         to: clean,
         subject:`Restablecer clave - Agencia ${u.agency_id}`,
-        html:`<div style="font-family:sans-serif;padding:20px"><h2>KLIDO CRM</h2><p>Agencia: <b>${u.agency_id}</b></p><p>Correo registrado: <b>${clean}</b></p><p>Solicitaste cambiar tu clave. Clic aquí (15 min):</p><p><a href="${link}" style="background:#2f7bff;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;display:inline-block">Cambiar mi clave</a></p><p style="font-size:12px;color:#666">Link: ${link}</p><p style="font-size:11px;color:#999">Si no fuiste tú, ignora este correo.</p></div>`
+        html:`<div style="font-family:sans-serif;padding:20px"><h2>KLIDO CRM</h2><p>Agencia: <b>${u.agency_id}</b></p><p>Correo: <b>${clean}</b></p><p>Solicitaste cambiar tu clave. Clic aquí (15 min):</p><p><a href="${link}" style="background:#2f7bff;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;display:inline-block">Cambiar mi clave</a></p><p style="font-size:12px;color:#666">Link: ${link}</p></div>`
       });
+      console.log('MAIL OK a', clean, 'ag', u.agency_id);
     }
     res.json({ok:true, count: users.rows.length, agencies: users.rows.map(x=>x.agency_id)});
-  }catch(e){ console.error('MAIL ERR', e.message); res.status(500).json({error:'Error enviando correo. Verifica SMTP_USER / SMTP_PASS'}); }
+  }catch(e){ console.error('MAIL ERR', e.message, e); res.status(500).json({error:'Error enviando correo: '+e.message}); }
 });
 
 app.post('/api/reset-password-secure', async (req,res)=>{
@@ -195,7 +206,6 @@ app.post('/api/reset-password-secure', async (req,res)=>{
   res.json({ok:true, agency_id:r.rows[0].agency_id});
 });
 
-// Reset interno para jefe (sigue igual)
 app.post('/api/reset-password', async (req,res)=>{
   const {agency_id, username, new_password, requester}=req.body;
   const reqUser=await pool.query(`SELECT role FROM users WHERE agency_id=$1 AND username=$2`,[agency_id, requester||username]);
@@ -206,4 +216,4 @@ app.post('/api/reset-password', async (req,res)=>{
 });
 
 cron.schedule('0 */6 * * *',async()=>{const ags=await pool.query(`SELECT id FROM agencies`);for(let a of ags.rows){const q=await pool.query(`SELECT * FROM campaign_queue WHERE status='queued' AND agency_id=$1 ORDER BY id ASC LIMIT 50`,[a.id]);const pid=getPidForAgency(a.id);for(let row of q.rows){try{await axios.post(`https://graph.facebook.com/${G}/${pid}/messages`,{messaging_product:'whatsapp',to:row.wa_id,type:'template',template:{name:row.template,language:{code:'es'}}},{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});await pool.query(`UPDATE campaign_queue SET status='sent' WHERE id=$1`,[row.id]);await pool.query(`UPDATE campaigns SET sent=sent+1 WHERE id=$1`,[row.campaign_id])}catch(e){await pool.query(`UPDATE campaign_queue SET status='error' WHERE id=$1`,[row.id])}}}});
-app.listen(process.env.PORT||3000,()=>console.log('KLIDO ANUAL FINAL + EMAIL'));
+app.listen(process.env.PORT||3000,()=>console.log('KLIDO ANUAL FINAL + EMAIL FIX 465'));
