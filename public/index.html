@@ -7,62 +7,71 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-.chat-active{background:#e8f0fe}
+:root{ --azul-oscuro:#0f2a44; --azul-claro:#e6f0ff; --azul-medio:#1e4b8a; }
+.bg-azul-oscuro{ background:var(--azul-oscuro) }
+.bg-azul-claro{ background:var(--azul-claro) }
+.text-azul-oscuro{ color:var(--azul-oscuro) }
+.chat-active{ background:#dbeafe }
 .unread-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 </style>
 </head>
-<body class="bg-gray-100 h-screen overflow-hidden">
+<body class="bg-azul-claro h-screen overflow-hidden">
 <!-- LOGIN -->
-<div id="loginView" class="flex items-center justify-center min-h-screen">
-  <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-    <h1 class="text-3xl font-black mb-1">KLIDO CRM</h1>
-    <p class="text-sm text-gray-500 mb-6">Inmobiliaria - WhatsApp</p>
-    <input id="agency" placeholder="Agencia (ej: acol)" class="w-full border p-3 rounded-xl mb-3">
-    <input id="email" placeholder="Correo" class="w-full border p-3 rounded-xl mb-3">
-    <input id="password" type="password" placeholder="Clave" class="w-full border p-3 rounded-xl mb-4">
-    <button onclick="login()" class="w-full bg-black text-white py-3 rounded-xl font-bold">Entrar</button>
+<div id="loginView" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#e6f0ff] to-[#c7d9f5]">
+  <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border-t-4 border-[#0f2a44]">
+    <div class="flex flex-col items-center mb-6">
+      <img src="/logo.png" alt="KLIDO" class="h-14 mb-3 object-contain" onerror="this.style.display='none'">
+      <h1 class="text-3xl font-black text-azul-oscuro">KLIDO CRM</h1>
+      <p class="text-sm text-[#1e4b8a] font-semibold">Inmobiliaria - WhatsApp</p>
+    </div>
+    <input id="agency" placeholder="Agencia (ej: acol)" class="w-full border border-blue-200 p-3 rounded-xl mb-3 focus:ring-2 focus:ring-[#1e4b8a] outline-none">
+    <input id="email" placeholder="Correo" class="w-full border border-blue-200 p-3 rounded-xl mb-3 focus:ring-2 focus:ring-[#1e4b8a] outline-none">
+    <input id="password" type="password" placeholder="Clave" class="w-full border border-blue-200 p-3 rounded-xl mb-4 focus:ring-2 focus:ring-[#1e4b8a] outline-none">
+    <button onclick="login()" class="w-full bg-azul-oscuro text-white py-3 rounded-xl font-bold hover:bg-[#12365f] transition">Entrar</button>
     <div class="flex justify-between mt-4 text-sm">
-      <button onclick="forgot()" class="text-blue-600 underline">¿Olvidaste clave?</button>
+      <button onclick="forgot()" class="text-[#1e4b8a] underline font-semibold">¿Olvidaste clave?</button>
       <a href="/reset.html" class="text-gray-500 underline">Tengo token</a>
     </div>
     <p id="loginMsg" class="text-center mt-4 text-sm text-red-500"></p>
-    <p class="text-center mt-6 text-xs text-gray-400">¿No tienes cuenta? Registra tu agencia con /register</p>
   </div>
 </div>
 
 <!-- APP -->
 <div id="appView" class="hidden h-screen flex">
   <!-- SIDEBAR CHATS -->
-  <div class="w-[380px] bg-white border-r flex flex-col">
-    <div class="p-4 border-b flex justify-between items-center">
-      <div><b id="agencyLabel"></b><br><small id="userLabel" class="text-gray-500"></small></div>
-      <button onclick="logout()" class="text-sm bg-gray-100 px-3 py-1 rounded">Salir</button>
+  <div class="w-[380px] bg-white border-r border-blue-100 flex flex-col">
+    <div class="p-4 border-b bg-azul-oscuro text-white flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <img src="/logo.png" class="h-8 bg-white rounded p-1" onerror="this.style.display='none'">
+        <div><b id="agencyLabel"></b><br><small id="userLabel" class="text-blue-200"></small></div>
+      </div>
+      <button onclick="logout()" class="text-sm bg-white/20 px-3 py-1 rounded hover:bg-white/30">Salir</button>
     </div>
-    <div class="p-3 flex gap-2">
-      <button onclick="loadChats()" class="flex-1 bg-black text-white py-2 rounded text-sm">Chats</button>
-      <button onclick="showCampaigns()" class="flex-1 bg-gray-100 py-2 rounded text-sm">Campañas</button>
-      <button onclick="showTeam()" class="flex-1 bg-gray-100 py-2 rounded text-sm">Equipo</button>
+    <div class="p-3 flex gap-2 bg-[#f0f6ff]">
+      <button onclick="loadChats()" class="flex-1 bg-azul-oscuro text-white py-2 rounded text-sm">Chats</button>
+      <button onclick="showCampaigns()" class="flex-1 bg-white border border-blue-200 py-2 rounded text-sm">Campañas</button>
+      <button onclick="showTeam()" class="flex-1 bg-white border border-blue-200 py-2 rounded text-sm">Equipo</button>
     </div>
     <div id="chats" class="flex-1 overflow-y-auto"></div>
   </div>
   <!-- MAIN -->
-  <div class="flex-1 flex flex-col bg-[#efeae2]">
-    <div id="chatHeader" class="bg-white p-4 border-b font-bold">Selecciona un chat</div>
+  <div class="flex-1 flex flex-col bg-[#e6f0ff]">
+    <div id="chatHeader" class="bg-white p-4 border-b border-blue-100 font-bold text-azul-oscuro shadow-sm">Selecciona un chat</div>
     <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
-    <div class="bg-white p-3 flex gap-2">
-      <input id="msgInput" placeholder="Escribe mensaje..." class="flex-1 border p-3 rounded-xl" onkeydown="if(event.key==='Enter')sendMessage()">
-      <button onclick="sendMessage()" class="bg-black text-white px-6 rounded-xl"><i class="fa fa-paper-plane"></i></button>
+    <div class="bg-white p-3 flex gap-2 border-t border-blue-100">
+      <input id="msgInput" placeholder="Escribe mensaje..." class="flex-1 border border-blue-200 p-3 rounded-xl focus:ring-2 focus:ring-[#1e4b8a] outline-none" onkeydown="if(event.key==='Enter')sendMessage()">
+      <button onclick="sendMessage()" class="bg-azul-oscuro text-white px-6 rounded-xl"><i class="fa fa-paper-plane"></i></button>
     </div>
   </div>
   <!-- PANEL DERECHO -->
-  <div class="w-[300px] bg-white border-l p-4 overflow-y-auto" id="rightPanel">
-    <h3 class="font-bold mb-3">Acciones</h3>
+  <div class="w-[300px] bg-white border-l border-blue-100 p-4 overflow-y-auto" id="rightPanel">
+    <h3 class="font-bold mb-3 text-azul-oscuro">Acciones</h3>
     <div class="space-y-2">
-      <button onclick="showAiConfig()" class="w-full text-left p-2 bg-gray-50 rounded text-sm">🤖 Config IA</button>
-      <button onclick="showTemplates()" class="w-full text-left p-2 bg-gray-50 rounded text-sm">📋 Plantillas</button>
+      <button onclick="showAiConfig()" class="w-full text-left p-2 bg-[#f0f6ff] rounded text-sm">🤖 Config IA</button>
+      <button onclick="showTemplates()" class="w-full text-left p-2 bg-[#f0f6ff] rounded text-sm">📋 Plantillas</button>
       <div class="pt-4">
-        <label class="text-xs">Tag conversación</label>
-        <select id="tagSelect" onchange="changeTag()" class="w-full border p-2 rounded mt-1 text-sm">
+        <label class="text-xs font-bold text-azul-oscuro">Tag conversación</label>
+        <select id="tagSelect" onchange="changeTag()" class="w-full border border-blue-200 p-2 rounded mt-1 text-sm">
           <option value="nuevo">Nuevo</option>
           <option value="interesado">Interesado</option>
           <option value="cita">Cita</option>
@@ -81,12 +90,9 @@ let username=localStorage.getItem('username')||'';
 let role=localStorage.getItem('role')||'';
 if(agency_id)document.getElementById('agency').value=agency_id;
 if(username)document.getElementById('email').value=username;
-
 function showLogin(){document.getElementById('loginView').classList.remove('hidden');document.getElementById('appView').classList.add('hidden')}
 function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('appView').classList.remove('hidden');document.getElementById('agencyLabel').textContent=agency_id;document.getElementById('userLabel').textContent=username+' ('+role+')'; loadChats();}
-
 if(agency_id && username && role) showApp();
-
 async function login(){
   const a=document.getElementById('agency').value.trim().toLowerCase();
   const e=document.getElementById('email').value.trim();
@@ -102,37 +108,23 @@ async function login(){
   }catch(err){msg.textContent='Error conexion: '+err.message}
 }
 function logout(){localStorage.clear();showLogin()}
-
-// FIX DEFINITIVO FORGOT - MUESTRA ERROR REAL
 async function forgot(){
   let email=prompt('Escribe tu CORREO registrado:');
   if(!email) return;
   email=email.trim();
   try{
-    let r=await fetch('/api/forgot-password',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email})
-    });
-    let txt = await r.text();
-    let j;
-    try{ j=JSON.parse(txt); }catch{ j={error:txt} }
-    if(r.ok){
-      alert('✅ Correo enviado a '+email+'. Revisa bandeja y SPAM. Agencias encontradas: '+(j.count||1));
-    }else{
-      alert('❌ ERROR '+r.status+': '+(j.error||txt));
-    }
-  }catch(e){
-    alert('❌ Error de conexion: '+e.message);
-  }
+    let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
+    let txt = await r.text(); let j; try{ j=JSON.parse(txt); }catch{ j={error:txt} }
+    if(r.ok){ alert('✅ Correo enviado a '+email+'. Revisa bandeja y SPAM. Agencias encontradas: '+(j.count||1)); }
+    else{ alert('❌ ERROR '+r.status+': '+(j.error||txt)); }
+  }catch(e){ alert('❌ Error de conexion: '+e.message); }
 }
-
 async function loadChats(){
   let r=await fetch('/api/chats?agency_id='+agency_id);let data=await r.json();
   let html='';data.forEach(c=>{
     let dotColor=c.dot||'transparent';
-    html+=`<div onclick="openChat('${c.wa_id}')" class="p-3 border-b hover:bg-gray-50 cursor-pointer flex justify-between">
-      <div><b>${c.name||c.wa_id}</b><br><small class="text-gray-500">${(c.lastMessage||'').substring(0,40)}</small><br><small class="text-xs">${c.tag||''} ${c.assigned_to||''}</small></div>
+    html+=`<div onclick="openChat('${c.wa_id}')" class="p-3 border-b border-blue-50 hover:bg-[#e6f0ff] cursor-pointer flex justify-between">
+      <div><b class="text-azul-oscuro">${c.name||c.wa_id}</b><br><small class="text-gray-500">${(c.lastMessage||'').substring(0,40)}</small><br><small class="text-xs text-[#1e4b8a]">${c.tag||''} ${c.assigned_to||''}</small></div>
       <div><span class="unread-dot" style="background:${dotColor}"></span></div>
     </div>`;
   });
@@ -151,7 +143,7 @@ async function loadMessages(){
   if(!currentWa) return;
   let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let data=await r.json();
   let html='';data.forEach(m=>{
-    let cls=m.direction==='in'?'bg-white':'bg-[#d9fdd3] ml-auto';
+    let cls=m.direction==='in'?'bg-white':'bg-[#d9fdd3] ml-auto border border-blue-100';
     html+=`<div class="max-w-[70%] ${cls} p-2 rounded-lg shadow text-sm"><div>${m.text}</div><small class="text-[10px] text-gray-500">${new Date(m.timestamp).toLocaleTimeString()} ${m.sent_by||''}</small></div>`;
   });
   document.getElementById('messages').innerHTML=html;
@@ -168,8 +160,8 @@ async function changeTag(){
 }
 async function showCampaigns(){
   let r=await fetch('/api/campaigns?agency_id='+agency_id);let data=await r.json();
-  let html='<h4 class="font-bold mb-2">Campañas</h4>';data.forEach(c=>{html+=`<div class="text-xs border p-2 rounded mb-1">${c.template} - ${c.sent}/${c.total} - ${c.status}</div>`});
-  html+=`<div class="mt-4"><input type="file" id="excel" class="text-xs"><input id="tpl" placeholder="plantilla" class="border p-1 w-full mt-2 text-xs"><button onclick="uploadCampaign()" class="bg-black text-white w-full py-2 rounded mt-2 text-xs">Subir campaña</button></div>`;
+  let html='<h4 class="font-bold mb-2 text-azul-oscuro">Campañas</h4>';data.forEach(c=>{html+=`<div class="text-xs border border-blue-100 p-2 rounded mb-1">${c.template} - ${c.sent}/${c.total} - ${c.status}</div>`});
+  html+=`<div class="mt-4"><input type="file" id="excel" class="text-xs"><input id="tpl" placeholder="plantilla" class="border border-blue-200 p-1 w-full mt-2 text-xs"><button onclick="uploadCampaign()" class="bg-azul-oscuro text-white w-full py-2 rounded mt-2 text-xs">Subir campaña</button></div>`;
   document.getElementById('panelContent').innerHTML=html;
 }
 async function uploadCampaign(){
@@ -181,8 +173,8 @@ async function uploadCampaign(){
 }
 async function showTeam(){
   let r=await fetch('/api/team?agency_id='+agency_id);let data=await r.json();
-  let html='<h4 class="font-bold mb-2">Equipo</h4>';data.forEach(u=>{html+=`<div class="text-xs flex justify-between border-b py-1">${u.username} - ${u.role} ${u.role==='trabajador'?`<button onclick="delUser('${u.username}')" class="text-red-500">x</button>`:''}</div>`});
-  if(role==='jefe')html+=`<div class="mt-4"><input id="newUser" placeholder="correo" class="border p-1 w-full text-xs"><input id="newPass" placeholder="clave" class="border p-1 w-full text-xs mt-1"><input id="newName" placeholder="nombre" class="border p-1 w-full text-xs mt-1"><button onclick="createUser()" class="bg-black text-white w-full py-2 rounded mt-2 text-xs">Crear trabajador</button></div>`;
+  let html='<h4 class="font-bold mb-2 text-azul-oscuro">Equipo</h4>';data.forEach(u=>{html+=`<div class="text-xs flex justify-between border-b py-1">${u.username} - ${u.role} ${u.role==='trabajador'?`<button onclick="delUser('${u.username}')" class="text-red-500">x</button>`:''}</div>`});
+  if(role==='jefe')html+=`<div class="mt-4"><input id="newUser" placeholder="correo" class="border p-1 w-full text-xs"><input id="newPass" placeholder="clave" class="border p-1 w-full text-xs mt-1"><input id="newName" placeholder="nombre" class="border p-1 w-full text-xs mt-1"><button onclick="createUser()" class="bg-azul-oscuro text-white w-full py-2 rounded mt-2 text-xs">Crear trabajador</button></div>`;
   document.getElementById('panelContent').innerHTML=html;
 }
 async function createUser(){
@@ -197,7 +189,7 @@ async function delUser(u){
 }
 async function showAiConfig(){
   let r=await fetch('/api/ai-config?agency_id='+agency_id);let c=await r.json();
-  let html=`<h4 class="font-bold mb-2">IA</h4><label class="text-xs"><input type="checkbox" id="aiEnabled" ${c.enabled?'checked':''}> Activada</label><br><label class="text-xs"><input type="checkbox" id="aiHuman" ${c.human_takeover?'checked':''}> Human takeover</label><textarea id="aiPrompt" class="border w-full h-24 text-xs mt-2 p-2">${c.prompt||''}</textarea><button onclick="saveAi()" class="bg-black text-white w-full py-2 rounded mt-2 text-xs">Guardar IA</button>`;
+  let html=`<h4 class="font-bold mb-2 text-azul-oscuro">IA</h4><label class="text-xs"><input type="checkbox" id="aiEnabled" ${c.enabled?'checked':''}> Activada</label><br><label class="text-xs"><input type="checkbox" id="aiHuman" ${c.human_takeover?'checked':''}> Human takeover</label><textarea id="aiPrompt" class="border border-blue-200 w-full h-24 text-xs mt-2 p-2">${c.prompt||''}</textarea><button onclick="saveAi()" class="bg-azul-oscuro text-white w-full py-2 rounded mt-2 text-xs">Guardar IA</button>`;
   document.getElementById('panelContent').innerHTML=html;
 }
 async function saveAi(){
@@ -206,7 +198,7 @@ async function saveAi(){
 }
 async function showTemplates(){
   let r=await fetch('/api/templates?agency_id='+agency_id);let data=await r.json();
-  let html='<h4 class="font-bold mb-2">Plantillas aprobadas</h4>';data.forEach(t=>{html+=`<div class="text-xs border p-1 rounded mb-1">${t.name} - ${t.status}</div>`});
+  let html='<h4 class="font-bold mb-2 text-azul-oscuro">Plantillas aprobadas</h4>';data.forEach(t=>{html+=`<div class="text-xs border border-blue-100 p-1 rounded mb-1">${t.name} - ${t.status}</div>`});
   document.getElementById('panelContent').innerHTML=html;
 }
 </script>
