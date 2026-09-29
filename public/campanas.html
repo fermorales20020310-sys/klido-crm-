@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - KLIDO Pro</title>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas KLIDO Pro - Antibaneo</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -11,156 +11,41 @@
 <body class="p-2 md:p-3">
 <div class="max-w-[1480px] mx-auto bg-[#0d152b] rounded-[24px] border border-[#1c2e50] overflow-hidden">
 <div class="flex items-center justify-between p-4 border-b border-[#1e3a5f] bg-[#0f1930]">
-<div class="flex items-center gap-3"><img src="/logo.png" class="h-9 w-9 bg-white p-1 rounded-xl object-contain"><div><b class="text-white">KLIDO - Campañas Pro</b><br><span class="text-[10px] text-[#22c55e]">● Auto-detecta números • Solo plantillas aprobadas API • 50/5h antibaneo</span></div></div>
-<div class="flex gap-2"><button onclick="syncTemplates()" class="bg-[#1a2744] border border-[#1e3a5f] text-[#8aa4ff] px-4 py-2 rounded-xl text-xs">🔄 Sync plantillas aprobadas</button><button onclick="location.href='/index.html'" class="bg-[#2a4bff] text-white px-4 py-2 rounded-xl text-xs font-bold">← Inbox</button></div>
+<div class="flex items-center gap-3"><img src="/logo.png" class="h-9 w-9 bg-white p-1 rounded-xl"><div><b class="text-white">KLIDO - Campañas Antibaneo</b><br><span class="text-[10px] text-[#22c55e]">● Solo plantillas aprobadas API • 50 cada 5h • Punto amarillo</span></div></div>
+<div class="flex gap-2"><button onclick="syncTemplates()" class="bg-[#1a2744] border border-[#1e3a5f] text-[#8aa4ff] px-4 py-2 rounded-xl text-xs">🔄 Sync aprobadas API</button><button onclick="location.href='/index.html'" class="bg-[#2a4bff] text-white px-5 py-2 rounded-xl text-xs font-bold">← Inbox</button></div>
 </div>
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 p-6">
-<div class="pro-card rounded-2xl p-5 lg:col-span-2">
-<h3 class="text-white font-bold text-[15px]">📢 Subir Excel - Envío Automático Antibaneo</h3>
-<p class="text-[11px] text-[#60a5fa] mb-1">El sistema detecta automáticamente la columna de teléfono y nombre</p>
-<p class="text-[10px] text-[#64748b] mb-4">Soporta: telefono, tel, phone, celular, whatsapp, numero, móvil • Colombia agrega 57 automático • Legal Ley 1581</p>
-
-<label class="text-[11px] text-[#94a3b8]">Plantilla aprobada por Meta API (solo aprobadas):</label>
-<select id="tpl" class="pro-input w-full p-3 rounded-xl text-sm text-white mb-3 mt-1"><option>Cargando plantillas aprobadas de Meta...</option></select>
-<div id="tplInfo" class="text-[10px] text-[#475569] mb-4">Se sincronizan automáticamente cada hora desde tu WhatsApp Business API</div>
-
-<div id="drop" class="border-2 border-dashed border-[#2563eb] rounded-2xl p-10 text-center cursor-pointer hover:bg-[#0f1c36] transition" onclick="document.getElementById('file').click()">
-<div class="text-4xl">📁</div>
-<div class="text-[#60a5fa] text-sm mt-2 font-bold">Click para subir Excel / CSV</div>
-<div class="text-[11px] text-[#94a3b8] mt-1">Detecta automáticamente columna teléfono y envía en bloques de 50 cada 5h</div>
-<div class="text-[10px] text-[#475569] mt-2">Formato: Cualquier orden, busca columna con teléfonos de 10 dígitos</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 p-6">
+<div class="lg:col-span-2 pro-card rounded-2xl p-6">
+<h3 class="text-white font-bold text-[15px]">📢 Subir Excel - Auto detección</h3>
+<p class="text-[11px] text-[#60a5fa]">KLIDO detecta automáticamente teléfonos y nombres aunque estén desordenados</p>
+<label class="text-[11px] text-[#94a3b8] mt-4 block">Plantilla aprobada por Meta (solo aprobadas):</label>
+<select id="tpl" class="pro-input w-full p-3 rounded-xl text-sm text-white mt-1 mb-2"><option>Cargando aprobadas...</option></select>
+<div id="tplInfo" class="text-[10px] text-[#475569] mb-4">Se sincronizan solas cada hora desde WhatsApp Business API oficial</div>
+<div id="drop" class="border-2 border-dashed border-[#2563eb] rounded-2xl p-10 text-center cursor-pointer hover:bg-[#0f1c36]" onclick="document.getElementById('file').click()">
+<div class="text-4xl">📁</div><div class="text-[#60a5fa] text-sm font-bold mt-2">Click para subir Excel / CSV</div><div class="text-[11px] text-[#94a3b8] mt-1">Auto detecta columna teléfono • Agrega 57 automático • Antibaneo 50/5h</div>
 <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
 </div>
-
 <div id="autoStatus" class="hidden mt-4 bg-[#0a1226] rounded-2xl p-4 border border-green-500/30">
-<div class="text-green-400 text-xs font-bold">✅ Números detectados automáticamente</div>
-<div id="numsPreview" class="text-[11px] text-[#cbd5e1] mt-2"></div>
-<div id="sendProgress" class="text-[11px] text-[#eab308] mt-3 bg-[#111a2e] p-3 rounded-xl border border-[#1e2f4f]"></div>
-</div>
-
-<div class="mt-6 p-3 bg-[#0e1830] rounded-xl border border-[#1e3a5f]">
-<p class="text-[11px] text-[#3b82f6] font-bold">Cómo funciona la protección antibaneo:</p>
-<p class="text-[11px] text-[#cbd5e1] mt-1">1. Subes Excel → KLIDO lee todas las filas y detecta teléfonos<br>2. Crea campaña con plantilla aprobada (amarillo en Inbox)<br>3. <b class="text-white">Envía 50 mensajes, espera 5 horas, envía otros 50</b><br>4. Así evitas bloqueo de Meta. 100% legal y aprobado.</p>
+<div id="numsPreview" class="text-[11px] text-[#cbd5e1]"></div>
+<div id="sendProgress" class="text-[11px] mt-3 bg-[#111a2e] p-3 rounded-xl border border-[#1e2f4f]"></div>
 </div>
 </div>
-
 <div class="pro-card rounded-2xl p-5">
-<h3 class="text-white font-bold text-sm">📊 Historial de Campañas</h3>
-<p class="text-[10px] text-[#64748b] mb-1">50 cada 5h antibaneo • Punto amarillo en Inbox • Tiempo real</p>
-<p class="text-[10px] text-[#22c55e] mb-3">● Auto-actualiza cada 10s</p>
-<div id="hist" class="space-y-2 max-h-[600px] overflow-y-auto"></div>
-<div class="mt-4 p-3 bg-[#0a1226] rounded-xl text-[10px] text-[#475569]">Soporte directo: <a href="https://wa.me/573133181851" target="_blank" class="text-[#3b82f6] underline">3133181851</a><br>Plantillas aprobadas se suben solas desde Meta API</div>
+<h3 class="text-white font-bold text-sm">📊 Historial de Campañas</h3><p class="text-[10px] text-[#22c55e] mb-3">● 50 cada 5h antibaneo • Actualiza cada 10s</p>
+<div id="hist" class="space-y-3 max-h-[650px] overflow-y-auto"></div>
 </div>
 </div>
 </div>
-
 <script>
-let agency_id=localStorage.getItem('agency_id')||'';
-if(!agency_id){ alert('Entra primero al CRM'); location.href='/index.html'; }
-
-async function loadTpl(){
-  const r=await fetch('/api/templates?agency_id='+agency_id);
-  const data=await r.json();
-  const sel=document.getElementById('tpl');
-  if(!data.length){
-    sel.innerHTML='<option value="">No hay plantillas aprobadas aún - Se sincronizan solas</option><option value="promo_base">promo_base (prueba)</option>';
-    document.getElementById('tplInfo').innerHTML='<span class="text-yellow-400">⚠️ Aún no hay aprobadas. Crea una en Meta Business y dale a Sync. Se sincronizan cada hora.</span>';
-  } else {
-    sel.innerHTML=data.map(t=>`<option value="${t.name}">${t.name} - ${t.status} (${t.language||'es_CO'})</option>`).join('');
-    document.getElementById('tplInfo').innerHTML=`✅ <b class="text-white">${data.length} plantillas aprobadas</b> cargadas desde Meta API • Solo aprobadas aparecen`;
-  }
-}
+let agency_id=localStorage.getItem('agency_id')||''; if(!agency_id) location.href='/index.html';
+async function loadTpl(){let r=await fetch('/api/templates?agency_id='+agency_id);let d=await r.json();let s=document.getElementById('tpl');if(!d.length){s.innerHTML='<option value="">No hay aprobadas - dale Sync</option>';document.getElementById('tplInfo').innerHTML='<span class="text-yellow-400">⚠️ Crea plantillas en Meta Business Manager y dale a Sync</span>';}else{s.innerHTML=d.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join('');document.getElementById('tplInfo').innerHTML=`✅ ${d.length} plantillas aprobadas por API cargadas`}}
 loadTpl();
-
-async function syncTemplates(){
-  document.getElementById('tpl').innerHTML='<option>Sincronizando con Meta API...</option>';
-  const r=await fetch('/api/templates/sync-real?agency_id='+agency_id, {method:'POST'});
-  const j=await r.json();
-  alert(j.ok? `✅ ${j.count||0} plantillas aprobadas sincronizadas` : j.error||'Sincronizado');
-  loadTpl(); loadHist();
-}
-
-function detectPhoneColumn(rows){
-  const headers = rows[0].map(h=>String(h||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
-  let phoneIdx = headers.findIndex(h=>['telefono','tel','phone','celular','whatsapp','wpp','numero','movil','cel','whats'].some(k=>h.includes(k)));
-  if(phoneIdx===-1){
-    let bestIdx=0, bestCount=0;
-    for(let col=0; col<(rows[0]?.length||5); col++){
-      let count=0;
-      for(let r=1;r<Math.min(rows.length,30);r++){
-        let v=String(rows[r][col]||'').replace(/\D/g,'');
-        if(v.length>=10 && v.length<=13) count++;
-      }
-      if(count>bestCount){bestCount=count; bestIdx=col;}
-    }
-    phoneIdx=bestIdx;
-  }
-  return phoneIdx;
-}
-
-function extractPhones(rows, phoneIdx){
-  let phones=[];
-  for(let i=1;i<rows.length;i++){
-    let raw = rows[i][phoneIdx]; if(!raw) continue;
-    let num = String(raw).replace(/\D/g,'');
-    if(num.length===10) num='57'+num;
-    if(num.length>=10 && num.length<=15){
-      let nameIdx = phoneIdx===0?1:0;
-      // busca otra columna con texto que parezca nombre
-      for(let c=0;c<rows[i].length;c++){ if(c!==phoneIdx && String(rows[i][c]).length>2 && isNaN(rows[i][c])){ nameIdx=c; break; } }
-      phones.push({wa_id:num, name:String(rows[i][nameIdx]||'').trim().slice(0,30)});
-    }
-  }
-  const unique = [...new Map(phones.map(p=>[p.wa_id,p])).values()];
-  return unique;
-}
-
-document.getElementById('file').onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  document.getElementById('autoStatus').classList.remove('hidden');
-  document.getElementById('numsPreview').innerHTML='📖 Leyendo Excel y detectando columnas...';
-  const reader=new FileReader();
-  reader.onload=evt=>{
-    const data=new Uint8Array(evt.target.result);
-    const wb=XLSX.read(data,{type:'array'});
-    const sheet=wb.Sheets[wb.SheetNames[0]];
-    const rows=XLSX.utils.sheet_to_json(sheet,{header:1}).filter(r=>r.length);
-    if(rows.length<2){ document.getElementById('numsPreview').innerHTML='<span class="text-red-400">Excel vacío</span>'; return; }
-    const phoneIdx=detectPhoneColumn(rows);
-    const phones=extractPhones(rows, phoneIdx);
-    if(!phones.length){ document.getElementById('numsPreview').innerHTML='<span class="text-red-400">❌ No detecté números. Verifica columna con teléfonos de 10 dígitos</span>'; return; }
-    document.getElementById('numsPreview').innerHTML=`Detecté <b class="text-white text-[14px]">${phones.length}</b> números válidos en columna ${phoneIdx+1} (<b>${rows[0][phoneIdx]||'auto'}</b>)<br><div class="mt-2 max-h-[120px] overflow-y-auto bg-[#070b18] p-2 rounded-xl border border-[#1e2f4f]">${phones.slice(0,15).map(p=>`📱 ${p.wa_id} ${p.name?'- '+p.name:''}`).join('<br>')}${phones.length>15?'<br><span class="text-[#64748b]">...y '+(phones.length-15)+' más</span>':''}</div><div class="mt-2 text-[10px] text-[#94a3b8]">Bloques: ${Math.ceil(phones.length/50)} bloques de 50 • Tiempo total: ~${Math.ceil(phones.length/50)*5} horas (antibaneo)</div>`;
-    autoSend(f);
-  };
-  reader.readAsArrayBuffer(f);
-};
-
-async function autoSend(file){
-  const tpl=document.getElementById('tpl').value;
-  if(!tpl){ alert('Elige una plantilla aprobada'); return; }
-  document.getElementById('sendProgress').innerHTML='⏳ Creando campaña y programando envíos automáticos en bloques de 50 cada 5h...';
-  const reader2=new FileReader();
-  reader2.onload=async e2=>{
-    const base64=e2.target.result;
-    const res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id, template:tpl, fileBase64:base64})});
-    const d=await res.json();
-    if(d.ok){
-      document.getElementById('sendProgress').innerHTML=`✅ <b class="text-white">Campaña creada: ${d.total} contactos</b><br><br>🚀 <b>Antibaneo activo:</b> Se enviarán 50 cada 5 horas<br>🟡 En Inbox verás punto amarillo = vino por campaña<br>📊 Historial se actualiza solo cada 10s<br>📱 Estado: <span class="text-yellow-400">Programada - enviando bloques</span><br><br><a href="https://wa.me/573133181851?text=Campaña ${d.total} contactos creada Agencia:${agency_id} Plantilla:${tpl}" target="_blank" class="bg-green-600 text-white px-3 py-1.5 rounded-lg inline-block mt-2">Reportar a soporte 3133181851</a>`;
-      loadHist();
-    } else document.getElementById('sendProgress').innerHTML='❌ '+ (d.error||'Error');
-  };
-  reader2.readAsDataURL(file);
-}
-
-async function loadHist(){
-  const r=await fetch('/api/campaigns?agency_id='+agency_id); const h=await r.json();
-  document.getElementById('hist').innerHTML=h.map(c=>{
-    const pct = c.total? Math.round((c.sent/c.total)*100):0;
-    return `<div class="bg-[#0a1226] p-3 rounded-xl border border-[#1e2f4f]"><div class="flex justify-between"><div><b class="text-white text-[12px]">${c.template}</b><br><span class="text-[#94a3b8] text-[11px]">${c.total} contactos • ${new Date(Number(c.created_at)).toLocaleDateString()}</span></div><div class="text-right"><span class="text-white font-bold">${c.sent||0}/${c.total}</span><br><span class="bg-[#1e3a5f] text-[#60a5fa] px-2 py-0.5 rounded-full text-[10px]">${c.status}</span></div></div><div class="w-full bg-[#1e293b] h-1.5 rounded-full mt-2"><div class="bg-[#2a4bff] h-1.5 rounded-full" style="width:${pct}%"></div></div><div class="text-[10px] text-[#64748b] mt-1">${pct}% enviado • Bloques 50/5h antibaneo</div></div>`;
-  }).join('')||'<p class="text-[11px] text-[#475569]">Sin campañas aún. Sube un Excel.</p>';
-}
-loadHist();
-setInterval(loadHist, 10000);
+async function syncTemplates(){document.getElementById('tpl').innerHTML='<option>Sincronizando con Meta API...</option>';let r=await fetch('/api/templates/sync-real?agency_id='+agency_id,{method:'POST'});let j=await r.json();alert(j.ok?`✅ ${j.count} aprobadas sincronizadas`:j.error);loadTpl();}
+function detectPhoneColumn(rows){let headers=rows[0].map(h=>String(h||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""));let idx=headers.findIndex(h=>['telefono','tel','phone','celular','whatsapp','numero','movil','cel','whats'].some(k=>h.includes(k)));if(idx===-1){let best=0,cmax=0;for(let col=0;col<(rows[0]?.length||5);col++){let c=0;for(let r=1;r<Math.min(rows.length,30);r++){let v=String(rows[r][col]||'').replace(/\D/g,'');if(v.length>=10&&v.length<=13)c++;}if(c>cmax){cmax=c;best=col;}}idx=best;}return idx;}
+function extractPhones(rows,phoneIdx){let phones=[];for(let i=1;i<rows.length;i++){let raw=rows[i][phoneIdx];if(!raw)continue;let num=String(raw).replace(/\D/g,'');if(num.length===10)num='57'+num;if(num.length>=10&&num.length<=15){let nameIdx=phoneIdx===0?1:0;for(let c=0;c<rows[i].length;c++){if(c!==phoneIdx&&String(rows[i][c]).length>2&&isNaN(rows[i][c])){nameIdx=c;break;}}phones.push({wa_id:num,name:String(rows[i][nameIdx]||'').trim().slice(0,30)});}}return [...new Map(phones.map(p=>[p.wa_id,p])).values()];}
+document.getElementById('file').onchange=e=>{let f=e.target.files[0];if(!f)return;document.getElementById('autoStatus').classList.remove('hidden');document.getElementById('numsPreview').innerHTML='📖 Leyendo Excel...';let reader=new FileReader();reader.onload=evt=>{let data=new Uint8Array(evt.target.result);let wb=XLSX.read(data,{type:'array'});let sheet=wb.Sheets[wb.SheetNames[0]];let rows=XLSX.utils.sheet_to_json(sheet,{header:1}).filter(r=>r.length);let phoneIdx=detectPhoneColumn(rows);let phones=extractPhones(rows,phoneIdx);if(!phones.length){document.getElementById('numsPreview').innerHTML='<span class="text-red-400">❌ No detecté números</span>';return;}document.getElementById('numsPreview').innerHTML=`✅ Detecté <b class="text-white text-[14px]">${phones.length}</b> números en columna "${rows[0][phoneIdx]||phoneIdx+1}"<br><div class="mt-2 max-h-[120px] overflow-y-auto bg-[#070b18] p-2 rounded-xl border border-[#1e2f4f]">${phones.slice(0,12).map(p=>`📱 ${p.wa_id} ${p.name?'- '+p.name:''}`).join('<br>')}${phones.length>12?'<br>...y '+(phones.length-12)+' más':''}</div><div class="mt-2 text-[10px] text-[#94a3b8]">Bloques: ${Math.ceil(phones.length/50)} • Tiempo total ~${Math.ceil(phones.length/50)*5}h antibaneo</div>`;autoSend(f);};reader.readAsArrayBuffer(f);};
+async function autoSend(file){let tpl=document.getElementById('tpl').value;if(!tpl){alert('Elige plantilla aprobada');return;}document.getElementById('sendProgress').innerHTML='⏳ Creando campaña con bloques 50/5h...';let r2=new FileReader();r2.onload=async e2=>{let res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,fileBase64:e2.target.result})});let d=await res.json();if(d.ok){document.getElementById('sendProgress').innerHTML=`✅ Campaña ${d.total} contactos creada<br>🚀 50 cada 5h antibaneo activo<br>🟡 Inbox: punto amarillo<br>📱 Soporte: <a href="https://wa.me/573133181851" class="text-[#3b82f6] underline">3133181851</a>`;loadHist();}else document.getElementById('sendProgress').innerHTML='❌ '+d.error;};r2.readAsDataURL(file);}
+async function loadHist(){let r=await fetch('/api/campaigns?agency_id='+agency_id);let h=await r.json();document.getElementById('hist').innerHTML=h.map(c=>{let pct=c.total?Math.round((c.sent/c.total)*100):0;return `<div class="bg-[#0a1226] p-3 rounded-xl border border-[#1e2f4f]"><div class="flex justify-between"><div><b class="text-white text-[12px]">${c.template}</b><br><span class="text-[#94a3b8] text-[11px]">${c.total} contactos</span></div><div class="text-right"><span class="text-white font-bold">${c.sent||0}/${c.total}</span><br><span class="bg-[#1e3a5f] text-[#60a5fa] px-2 py-0.5 rounded-full text-[10px]">${c.status}</span></div></div><div class="w-full bg-[#1e293b] h-1.5 rounded-full mt-2"><div class="bg-[#2a4bff] h-1.5 rounded-full" style="width:${pct}%"></div></div><div class="text-[10px] text-[#64748b] mt-1">${pct}% • 50/5h antibaneo</div></div>`}).join('')||'<p class="text-[11px] text-[#475569]">Sin campañas</p>';}
+loadHist();setInterval(loadHist,10000);
 </script>
 </body></html>
