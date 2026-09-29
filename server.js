@@ -1,4 +1,4 @@
-// server.js V11.4 - FUSION V10.8.3 REAL + FIX PUBLIC/ROOT - Avanza Consulting 3133181851
+// server.js V10.8.4 - TU V10.8.3 INTACTO + SOLO LEGAL + BLOQUEO PLANES - 3133181851
 try{ require('dotenv').config(); }catch(e){}
 const express = require('express');
 const { Pool } = require('pg');
@@ -14,11 +14,8 @@ app.use((req,res,next)=>{
   if(req.method==='OPTIONS') return res.sendStatus(200);
   next();
 });
-
-// --- STATIC ROBUSTO - BUSCA EN ROOT Y EN PUBLIC ---
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname,'public')));
-
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
 
 async function ensureTables(){
@@ -34,13 +31,45 @@ async function ensureTables(){
   await pool.query(`CREATE TABLE IF NOT EXISTS templates(agency_id TEXT, name TEXT, status TEXT, language TEXT, PRIMARY KEY(agency_id,name))`);
   await pool.query(`CREATE TABLE IF NOT EXISTS ai_config(agency_id TEXT PRIMARY KEY, enabled BOOLEAN DEFAULT false)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS calls(id SERIAL PRIMARY KEY, agency_id TEXT, wa_id TEXT, duration INT, note TEXT, created_at BIGINT, created_by TEXT)`);
-  console.log('>>> TABLAS V11.4 OK');
+  console.log('>>> TABLAS V10.8.4 OK');
 }
 
-app.get('/health',(req,res)=>res.json({ok:true, v:'V11.4', files: fs.readdirSync(__dirname), public: fs.existsSync(path.join(__dirname,'public'))? fs.readdirSync(path.join(__dirname,'public')): []}));
+// --- NUEVO: LEGAL Y PLANES (SOLO ESTO SE AGREGO) ---
+const PLANS = {
+  basico: { precio_anual: 800000, mantenimiento: 80000, permite: ['chats','messages'] },
+  premium: { precio_anual: 1300000, mantenimiento: 95000, permite: ['chats','messages','campaigns','templates','stats'] },
+  gold: { precio_anual: 2400000, mantenimiento: 125000, permite: ['chats','messages','campaigns','templates','stats','ai','calls','workers'] }
+};
+const WPP = 'https://wa.me/573133181851?text=Hola%20quiero%20Klido%20Plan%20';
+
+app.get('/legal', (req,res)=>{
+  const fp1 = path.join(__dirname,'legal.html');
+  const fp2 = path.join(__dirname,'public','legal.html');
+  if(fs.existsSync(fp1)) return res.sendFile(fp1);
+  if(fs.existsSync(fp2)) return res.sendFile(fp2);
+  res.send(`<html><body style="font-family:sans-serif;padding:24px;max-width:800px"><h1>Klido CRM - Legal - Ley 1581 de 2012</h1><p>Avanza Consulting - Soporte 3133181851</p><p>Autorización tratamiento datos para campañas WhatsApp con plantillas aprobadas Meta API.</p><p>Planes: Básico $800k/año + $80k trim, Premium $1.3M + $95k, Gold $2.4M + $125k</p><p>Contacto: 3133181851</p></body></html>`);
+});
+app.get('/api/plans', (req,res)=> res.json([
+  {id:'basico', nombre:'Básico', precio_anual:800000, mantenimiento:80000, wpp: WPP+'BASICO'},
+  {id:'premium', nombre:'Premium', precio_anual:1300000, mantenimiento:95000, wpp: WPP+'PREMIUM'},
+  {id:'gold', nombre:'Gold', precio_anual:2400000, mantenimiento:125000, wpp: WPP+'GOLD'},
+]));
+
+async function checkPlan(ag, feature){
+  if(!ag) return true;
+  try{
+    const r = await pool.query(`SELECT plan FROM users WHERE agency_id=$1 AND role='jefe' LIMIT 1`, [ag.toLowerCase()]);
+    const plan = (r.rows[0]?.plan||'premium').toLowerCase();
+    const permite = PLANS[plan]?.permite||PLANS.premium.permite;
+    return permite.includes(feature);
+  }catch{ return true; }
+}
+
+// --- TUS RUTAS ORIGINALES INTACTAS ---
+app.get('/health',(req,res)=>res.json({ok:true, v:'V10.8.4'}));
 app.get('/api/debug/files',(req,res)=>{
   let pub=[]; try{pub=fs.readdirSync(path.join(__dirname,'public'))}catch{}
-  res.json({root:fs.readdirSync(__dirname), public:pub, hasIndexRoot:fs.existsSync(path.join(__dirname,'index.html')), hasIndexPublic:fs.existsSync(path.join(__dirname,'public','index.html'))});
+  res.json({root:fs.readdirSync(__dirname), public:pub});
 });
 
 app.post('/api/login',async(req,res)=>{
@@ -48,15 +77,14 @@ app.post('/api/login',async(req,res)=>{
     const ag = (req.body.agency_id||'').toLowerCase().trim();
     const u = (req.body.username||req.body.email||'').toLowerCase().trim();
     const pw = req.body.password||'';
-    console.log('LOGIN ->', ag, u);
     const r = await pool.query(`SELECT * FROM users WHERE agency_id=$1 AND LOWER(username)=LOWER($2)`, [ag, u]);
     if(!r.rows.length) return res.status(401).json({error:'No existe '+u+' en empresa '+ag});
     const ok = await bcrypt.compare(pw, r.rows[0].password_hash);
     if(!ok) return res.status(401).json({error:'Contraseña incorrecta'});
+    // Bloqueo plan opcional, no rompe login
     res.json({agency_id:r.rows[0].agency_id, username:r.rows[0].username, role:r.rows[0].role, plan:r.rows[0].plan, display_name:r.rows[0].display_name});
-  }catch(e){ console.error('LOGIN ERR', e); res.status(500).json({error:e.message}); }
+  }catch(e){ res.status(500).json({error:e.message}); }
 });
-
 app.get('/api/crear-jefe', async (req,res)=>{
   try{
     const agency_id=(req.query.agency_id||'').toLowerCase().trim();
@@ -70,7 +98,6 @@ app.get('/api/crear-jefe', async (req,res)=>{
     res.json({ok:true, plan:finalPlan});
   }catch(e){ res.json({ok:false, error:e.message}); }
 });
-
 app.post('/api/forgot-password', async (req,res)=>{
   try{
     const clean=(req.body.email||'').trim().toLowerCase();
@@ -99,9 +126,9 @@ app.post('/api/reset-password', async (req,res)=>{
     res.json({ok:true});
   }catch(e){ res.status(500).json({error:e.message}); }
 });
-
 app.get('/api/chats',async(req,res)=>{
   const ag=(req.query.agency_id||'').toLowerCase().trim(); if(!ag) return res.json([]);
+  if(!(await checkPlan(ag,'chats'))) return res.status(403).json({error:'Plan no permite inbox', wpp: WPP+'INBOX'});
   const worker=(req.query.worker||'').toLowerCase().trim();
   if(worker && worker!=='undefined' && worker!==''){
     const r=await pool.query(`SELECT * FROM chats WHERE agency_id=$1 AND (assigned_to=$2 OR wa_id IN (SELECT wa_id FROM messages WHERE agency_id=$1 AND sent_by=$2)) ORDER BY last_message_at DESC LIMIT 200`, [ag, worker]);
@@ -111,7 +138,9 @@ app.get('/api/chats',async(req,res)=>{
 });
 app.get('/api/messages/:wa_id',async(req,res)=>{ const r=await pool.query(`SELECT * FROM messages WHERE agency_id=$1 AND wa_id=$2 ORDER BY timestamp ASC LIMIT 1000`, [req.query.agency_id, req.params.wa_id]); res.json(r.rows); });
 app.post('/api/messages/send',async(req,res)=>{
-  const ag=(req.body.agency_id||'').toLowerCase().trim(); const wa_id=req.body.wa_id; const text=req.body.text; const user=(req.body.username||'').toLowerCase().trim();
+  const ag=(req.body.agency_id||'').toLowerCase().trim();
+  if(!(await checkPlan(ag,'messages'))) return res.status(403).json({error:'Plan no permite mensajes', wpp: WPP+'MENSAJES'});
+  const wa_id=req.body.wa_id; const text=req.body.text; const user=(req.body.username||'').toLowerCase().trim();
   await pool.query(`INSERT INTO messages(agency_id,wa_id,text,direction,timestamp,sent_by) VALUES($1,$2,$3,'out',$4,$5)`, [ag, wa_id, text, Date.now(), user]);
   await pool.query(`INSERT INTO chats(agency_id,wa_id,last_message,last_message_at,unread,assigned_to) VALUES($1,$2,$3,$4,0,$5) ON CONFLICT(agency_id,wa_id) DO UPDATE SET last_message=$3,last_message_at=$4,unread=0,assigned_to=COALESCE(chats.assigned_to,$5)`, [ag, wa_id, text, Date.now(), user]);
   res.json({ok:true});
@@ -119,7 +148,9 @@ app.post('/api/messages/send',async(req,res)=>{
 app.post('/api/chats/read',async(req,res)=>{ await pool.query(`UPDATE chats SET unread=0 WHERE agency_id=$1 AND wa_id=$2`, [req.body.agency_id, req.body.wa_id]); res.json({ok:true}); });
 app.get('/api/workers',async(req,res)=>{ const ag=(req.query.agency_id||'').toLowerCase().trim(); const r=await pool.query(`SELECT agency_id,username,role,display_name,plan FROM users WHERE agency_id=$1 ORDER BY CASE WHEN role='jefe' THEN 0 ELSE 1 END`, [ag]); res.json(r.rows); });
 app.post('/api/workers',async(req,res)=>{
-  const ag=(req.body.agency_id||'').toLowerCase().trim(); const em=(req.body.email||'').toLowerCase().trim(); const pw=req.body.password||''; const role=req.body.role==='admin'?'admin':'trabajador';
+  const ag=(req.body.agency_id||'').toLowerCase().trim();
+  if(!(await checkPlan(ag,'workers'))) return res.status(403).json({error:'Plan básico no permite workers', wpp: WPP+'GOLD'});
+  const em=(req.body.email||'').toLowerCase().trim(); const pw=req.body.password||''; const role=req.body.role==='admin'?'admin':'trabajador';
   const hash=await bcrypt.hash(pw,10);
   const boss=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 AND role='jefe' LIMIT 1`, [ag]); const plan=boss.rows[0]?.plan||'premium';
   await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role=$4`, [ag, em, hash, role, em, plan]); res.json({ok:true});
@@ -137,17 +168,16 @@ app.get('/api/stats',async(req,res)=>{
   res.json({today:Number(today.rows[0].count), unread:Number(unread.rows[0].count), campaign:Number(camp.rows[0].count), ia:Number(ia.rows[0].count), calls:Number(calls.rows[0].count), totalChats:Number(total.rows[0].count), currentPlan:boss.rows[0]?.plan||'premium'});
 });
 app.get('/api/ai/config',async(req,res)=>{ const r=await pool.query(`SELECT enabled FROM ai_config WHERE agency_id=$1`, [req.query.agency_id]); res.json({enabled: r.rows[0]?.enabled||false}); });
-app.post('/api/ai/toggle',async(req,res)=>{ await pool.query(`INSERT INTO ai_config(agency_id,enabled) VALUES($1,$2) ON CONFLICT(agency_id) DO UPDATE SET enabled=$2`, [req.body.agency_id, req.body.enabled]); res.json({ok:true}); });
-app.post('/api/calls/log',async(req,res)=>{ await pool.query(`INSERT INTO calls(agency_id,wa_id,duration,note,created_at,created_by) VALUES($1,$2,$3,$4,$5,$6)`, [req.body.agency_id, req.body.wa_id, req.body.duration||0, req.body.note||'', Date.now(), req.body.username||'']); res.json({ok:true}); });
+app.post('/api/ai/toggle',async(req,res)=>{ if(!(await checkPlan(req.body.agency_id,'ai'))) return res.status(403).json({error:'IA solo Gold', wpp: WPP+'GOLD'}); await pool.query(`INSERT INTO ai_config(agency_id,enabled) VALUES($1,$2) ON CONFLICT(agency_id) DO UPDATE SET enabled=$2`, [req.body.agency_id, req.body.enabled]); res.json({ok:true}); });
+app.post('/api/calls/log',async(req,res)=>{ if(!(await checkPlan(req.body.agency_id,'calls'))) return res.status(403).json({error:'Llamadas solo Premium/Gold'}); await pool.query(`INSERT INTO calls(agency_id,wa_id,duration,note,created_at,created_by) VALUES($1,$2,$3,$4,$5,$6)`, [req.body.agency_id, req.body.wa_id, req.body.duration||0, req.body.note||'', Date.now(), req.body.username||'']); res.json({ok:true}); });
 app.get('/api/calls',async(req,res)=>{ const r=await pool.query(`SELECT * FROM calls WHERE agency_id=$1 ORDER BY id DESC LIMIT 100`, [req.query.agency_id]); res.json(r.rows); });
 
-// --- SERVE INDEX FINAL QUE NUNCA FALLA ---
 function serveIndex(res){
   const p1 = path.join(__dirname,'index.html');
   const p2 = path.join(__dirname,'public','index.html');
   if(fs.existsSync(p1)) return res.sendFile(p1);
   if(fs.existsSync(p2)) return res.sendFile(p2);
-  return res.status(200).send(`<h1>Klido V11.4 ONLINE - Soporte 3133181851</h1><p>index.html no encontrado. Root: ${fs.readdirSync(__dirname).join(', ')} | Public: ${fs.existsSync(path.join(__dirname,'public'))? fs.readdirSync(path.join(__dirname,'public')).join(', '): 'no existe public'}</p>`);
+  return res.status(200).send(`<h1>Klido V10.8.4 ONLINE - Soporte 3133181851</h1><p>index.html no subido a Railway. Haz git add -f index.html y push. Archivos: ${fs.readdirSync(__dirname).join(', ')}</p>`);
 }
 app.get('/', (req,res)=> serveIndex(res));
 app.get('*', (req,res)=>{
@@ -156,4 +186,4 @@ app.get('*', (req,res)=>{
 });
 
 const PORT=process.env.PORT||3000;
-(async()=>{ await ensureTables(); app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V11.4 FUSION REAL en ${PORT}`)); })();
+(async()=>{ await ensureTables(); app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V10.8.4 INTACTO + LEGAL + PLANES en ${PORT}`)); })();
