@@ -1,167 +1,194 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Klido Avanza Consulting V10.8.8 - El mejor CRM para tu empresa</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box} body{margin:0;background:#080d1e;color:#e2e8f0;font-family:Inter,system-ui}
-.page{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.05fr .95fr;min-height:100vh}
-@media(max-width:900px){.page{grid-template-columns:1fr}}
-.left{padding:36px 34px;background:radial-gradient(800px 400px at 10% 0%,#12224a 0%,#080d1e 60%)}
-.badge{display:inline-flex;gap:8px;align-items:center;background:#0f2040;border:1px solid #1e3a5f;color:#6da8ff;font-size:10px;font-weight:800;letter-spacing:.12em;padding:6px 12px;border-radius:20px}
-.left h1{font-size:44px;line-height:1.05;margin:22px 0 14px;font-weight:900;color:#fff;letter-spacing:-.02em}
-.left h1 span{color:#3b82f6}
-.sub{color:#8aa0c0;font-size:13px;line-height:1.7;margin-bottom:18px}
-.checks div{margin:10px 0;font-size:13px;color:#cbd5e1}
-.checks b{color:#22c55e}
-.right{padding:18px}
-.tabs{display:flex;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:4px;gap:4px}
-.tab{flex:1;padding:11px;border-radius:10px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;color:#94a3b8}
-.tab.active{background:#2563eb;color:#fff}
-.card{background:#101a32;border:1px solid #1e2d50;border-radius:18px;padding:18px;margin-top:14px}
-input{width:100%;background:#0b1226;border:1px solid #25324d;color:#fff;padding:13px 14px;border-radius:12px;margin:7px 0;outline:none}
-input:focus{border-color:#3b82f6}
-.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
-.plan{border:1px solid #2a3a5a;border-radius:12px;padding:10px;background:#0d172e;cursor:pointer;text-align:center}
-.plan.sel{border-color:#3b82f6;background:#0e234a;box-shadow:0 0 0 2px rgba(59,130,246,.25) inset}
-.plan b{font-size:12px;color:#fff;display:block}
-.plan i{font-style:normal;font-size:10px;color:#38bdf8;font-weight:800}
-.btn{width:100%;background:#2563eb;color:#fff;border:0;padding:13px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:10px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#0a0a0a;color:#fff;min-height:100vh}
+.container{max-width:1200px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1.1fr 0.9fr;gap:30px;align-items:center;min-height:100vh}
+.left h1{font-size:42px;line-height:1.1;margin-bottom:15px}
+.left h1 span{color:#22c55e}
+.badge{display:inline-flex;gap:8px;background:#111;border:1px solid #222;padding:8px 14px;border-radius:20px;font-size:12px;margin-bottom:20px}
+.badge i{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block}
+.left p.desc{color:#aaa;font-size:15px;line-height:1.6;margin-bottom:18px}
+.features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
+.feat{background:#111;border:1px solid #222;padding:12px;border-radius:10px;font-size:13px}
+.feat b{display:block;color:#22c55e;margin-bottom:4px}
+.right{background:#111;border:1px solid #222;border-radius:16px;padding:22px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;padding:10px;border-radius:8px;border:1px solid #222;background:#0a0a0a;color:#aaa;cursor:pointer;font-weight:600}
+.tab.active{background:#fff;color:#000;border-color:#fff}
+label{font-size:12px;color:#aaa;display:block;margin:10px 0 4px}
+input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #222;background:#0a0a0a;color:#fff;outline:none}
+.btn{width:100%;padding:12px;border-radius:8px;border:0;font-weight:800;cursor:pointer;margin-top:12px}
 .btn-green{background:#22c55e;color:#000}
-.legal{font-size:10px;color:#94a3b8;display:flex;gap:8px;margin:10px 0}
-.mini{font-size:11px;color:#7d8aa3}
-.codeBox{display:none;background:#0a132a;border:1px dashed #2a4a7a;border-radius:12px;padding:12px;margin-top:12px}
+.btn-white{background:#fff;color:#000}
+.btn-dark{background:#222;color:#fff;border:1px solid #333}
+.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.plan{border:1px solid #222;background:#0a0a0a;padding:10px;border-radius:10px;cursor:pointer;text-align:center}
+.plan.active{border-color:#22c55e;background:#0f1a13}
+.plan b{display:block;font-size:13px}
+.plan span{font-size:11px;color:#aaa}
+.small{font-size:11px;color:#777;margin-top:10px;line-height:1.4}
+.small a{color:#22c55e}
+.code-box{display:none}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;color:#000;padding:10px 18px;border-radius:8px;font-weight:600;display:none;z-index:999}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="page">
-<div class="left">
-<div class="badge">🔷 KLIDO AVANZA CONSULTING - CRM EMPRESARIAL</div>
-<h1>El mejor CRM<br>para tu <span>empresa.</span></h1>
-<div class="sub">
-<b style="color:#fff">Gestiona tu WhatsApp Business como empresa real.</b><br><br>
-Inbox con <span style="color:#f87171">● No leídos</span> y <span style="color:#fbbf24">● Campañas</span>, antibaneo 50/5h, equipo con roles y estadísticas reales.<br><br>
-Los planes se adaptan para ti. Desde 1 sede hasta ilimitado.
-</div>
-<div class="checks">
-<div><b>✓</b> API Meta funcional - WhatsApp Business Oficial 100% operativa</div>
-<div><b>✓</b> Roles Worker / Admin profesionales - Cada ID empresa es independiente</div>
-<div><b>✓</b> Soporte directo 24/7 - 3133181851 - Bogotá</div>
-<div><b>✓</b> Antibaneo, semáforo, sonido, logo bonito como WhatsApp Web premium</div>
-</div>
-<div style="margin-top:30px;font-size:10px;color:#4a5c7a">V10.8.8 • Avanza Consulting • API Oficial Meta • Soporte 24/7 3133181851</div>
-</div>
+<div class="container">
+  <div class="left">
+    <div class="badge"><i></i> API Meta Oficial - Klido Avanza Consulting</div>
+    <h1>El mejor CRM<br><span>para tu empresa</span></h1>
+    <p class="desc">Klido Avanza Consulting - Gestiona tu WhatsApp Business como empresa real. API Meta funcional, soporte 24/7, planes que se adaptan para ti. El mejor CRM que tu empresa pueda tener.</p>
+    <div class="features">
+      <div class="feat"><b>✓ API Meta Funcional</b> Conexión oficial, sin baneos</div>
+      <div class="feat"><b>✓ Soporte 24/7</b> 3133181851 directo con Avanza</div>
+      <div class="feat"><b>✓ Planes que se adaptan</b> Básico, Premium y Gold según creces</div>
+      <div class="feat"><b>✓ Multiagente</b> Jefe, Admin y Trabajadores ilimitados (Gold)</div>
+    </div>
+    <p class="small">Al crear empresa aceptas <a href="/legal" target="_blank">Términos, Privacidad y Ley 1581</a>. Soporte 24/7 WhatsApp 3133181851</p>
+  </div>
+  <div class="right">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('login')">Ingresar</button>
+      <button class="tab" onclick="showTab('crear')">Crear Empresa</button>
+    </div>
 
-<div class="right">
-<div class="tabs"><div id="t1" class="tab active" onclick="showTab('login')">Ingresar</div><div id="t2" class="tab" onclick="showTab('crear')">Crear empresa</div></div>
+    <div id="tab-login">
+      <label>Empresa (agency_id)</label>
+      <input id="l_ag" placeholder="ej: avanza">
+      <label>Usuario / Email</label>
+      <input id="l_user" placeholder="tu email">
+      <label>Contraseña</label>
+      <input id="l_pass" type="password" placeholder="••••••">
+      <button class="btn btn-green" onclick="doLogin()">INGRESAR AHORA</button>
+      <button class="btn btn-dark" onclick="showTab('forgot')">¿Olvidaste tu clave?</button>
+    </div>
 
-<div id="viewLogin" class="card">
-<input id="l_company" placeholder="ID Empresa (ej: acol)" value="acol">
-<input id="l_email" placeholder="Correo corporativo">
-<input id="l_pass" type="password" placeholder="Contraseña">
-<label class="mini" style="display:flex;gap:6px;align-items:center;margin:6px 0"><input type="checkbox" style="width:auto"> Recordarme <a href="#" style="margin-left:auto;color:#60a5fa;text-decoration:none" onclick="showTab('forgot');return false">¿Olvidaste tu contraseña?</a></label>
-<button class="btn" onclick="login()">Ingresar al CRM →</button>
-<div id="msgLogin" class="mini" style="color:#f87171;margin-top:8px"></div>
-</div>
+    <div id="tab-crear" style="display:none">
+      <label>Nombre Empresa</label>
+      <input id="c_ag" placeholder="ej: avanza consulting">
+      <label>Tu Email (serás Jefe)</label>
+      <input id="c_email" placeholder="admin@empresa.com">
+      <label>Contraseña</label>
+      <input id="c_pass" type="password">
+      <label>Selecciona tu Plan - Los planes se adaptan para ti</label>
+      <div class="plans">
+        <div class="plan active" id="p-basico" onclick="selPlan('basico')"><b>Básico</b><span>$800k/año<br>$80k/mes mant</span></div>
+        <div class="plan" id="p-premium" onclick="selPlan('premium')"><b>Premium</b><span>$1.3M/año<br>$95k/mes mant</span></div>
+        <div class="plan" id="p-gold" onclick="selPlan('gold')"><b>Gold</b><span>$2.4M/año<br>$125k/mes mant</span></div>
+      </div>
+      <label><input type="checkbox" id="c_legal"> Acepto <a href="/legal" target="_blank">términos y Ley 1581</a></label>
+      <button class="btn btn-white" onclick="crearEmpresa()">1. CREAR EMPRESA + SELECCIONAR PLAN</button>
+      <div id="pagoBox" style="display:none">
+        <button class="btn btn-green" id="btnPagar" onclick="pagarWpp()">2. PAGAR POR WHATSAPP 3133181851</button>
+        <div class="small" style="margin-top:8px">Después de pagar, pide tu código única vez por WhatsApp</div>
+        <label>Código única vez (6 dígitos)</label>
+        <input id="c_code" placeholder="123456">
+        <button class="btn btn-green" onclick="activarPlan()">3. ACTIVAR Y QUEDAR LOGUEADO</button>
+      </div>
+    </div>
 
-<div id="viewCrear" class="card" style="display:none">
-<input id="c_company" placeholder="ID Empresa (ej: acol)">
-<input id="c_email" placeholder="Correo corporativo - Marketack">
-<input id="c_pass" type="password" placeholder="Contraseña">
-<div class="mini" style="margin:8px 0;color:#fff;font-weight:700">Elige tu plan - Planes que se adaptan para ti:</div>
-<div class="plans">
-<div class="plan sel" data-plan="basico" onclick="selPlan(this)"><b>Básico</b><i>$800k/año + $80k trim</i><div style="font-size:9px;color:#94a3b8;margin-top:2px">1 sede, 3 users</div></div>
-<div class="plan" data-plan="premium" onclick="selPlan(this)"><b>Premium</b><i>$1.3M/año + $95k trim</i><div style="font-size:9px;color:#94a3b8">3 sedes, campañas</div></div>
-<div class="plan" data-plan="gold" onclick="selPlan(this)"><b>Gold</b><i>$2.4M/año + $125k trim</i><div style="font-size:9px;color:#94a3b8">Ilimitado + IA + 📞</div></div>
-</div>
-<label class="legal"><input type="checkbox" id="c_legal" style="width:auto"><span>Acepto <a href="/legal" target="_blank" style="color:#38bdf8">Términos, Ley 1581, Contrato</a> y tengo autorización de contactos para campañas con plantillas aprobadas.</span></label>
-<button class="btn" onclick="crearEmpresa()">1. Crear empresa y seleccionar plan</button>
-<div id="msgCrear" class="mini" style="color:#f87171;margin-top:6px"></div>
+    <div id="tab-forgot" style="display:none">
+      <label>Tu Email registrado</label>
+      <input id="f_email">
+      <button class="btn btn-white" onclick="forgot()">Enviar código</button>
+      <label>Código</label><input id="f_code">
+      <label>Nueva clave</label><input id="f_pass" type="password">
+      <button class="btn btn-green" onclick="reset()">Cambiar clave</button>
+      <button class="btn btn-dark" onclick="showTab('login')">Volver</button>
+    </div>
 
-<div id="codeBox" class="codeBox">
-<div class="mini" style="color:#22c55e;font-weight:700">Empresa creada. Ahora paga tu plan:</div>
-<a id="btnPagar" class="btn btn-green" style="display:block;text-align:center;text-decoration:none" target="_blank">2. Pagar por WhatsApp 3133181851</a>
-<input id="c_code" placeholder="Código de 6 dígitos (única vez)" style="margin-top:10px;letter-spacing:6px;text-align:center;font-weight:800">
-<button class="btn" style="background:#10b981" onclick="activarYEntrar()">3. Ingresar código y quedar logueado</button>
-<div id="msgAct" class="mini" style="margin-top:6px;color:#22c55e"></div>
+  </div>
 </div>
-</div>
-
-<div id="viewForgot" class="card" style="display:none">
-<b style="font-size:14px;color:#fff">Restablecer contraseña</b><div class="mini" style="margin:6px 0">Te enviaremos un código de 6 dígitos a tu correo corporativo registrado.</div>
-<input id="f_email" placeholder="Correo registrado">
-<button class="btn" style="background:#1e293b" onclick="enviarCodigo()">Enviar código</button>
-<input id="f_code" placeholder="Código de 6 dígitos" style="text-align:center;letter-spacing:4px">
-<input id="f_new" type="password" placeholder="Nueva contraseña">
-<button class="btn btn-green" onclick="cambiarPass()">Cambiar contraseña</button>
-<div id="msgForgot" class="mini" style="margin-top:6px"></div>
-<button class="btn" style="background:transparent;border:1px solid #334155" onclick="showTab('login')">Volver a ingresar</button>
-</div>
-
-<div class="mini" style="text-align:center;margin-top:14px">Soporte 24/7 <b style="color:#fff">3133181851</b> | Bogotá | <a href="https://wa.me/573133181851" style="color:#22c55e">WhatsApp Ayuda</a></div>
-</div>
-</div>
-
+<div id="toast"></div>
 <script>
-let currentPlan='basico';
-function selPlan(el){document.querySelectorAll('.plan').forEach(p=>p.classList.remove('sel'));el.classList.add('sel');currentPlan=el.dataset.plan;}
+let planSel='basico';
+let empresaCreada='';
+let emailCreado='';
+function toast(m){let t=document.getElementById('toast');t.innerText=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000)}
 function showTab(t){
-document.getElementById('viewLogin').style.display=t==='login'?'block':'none';
-document.getElementById('viewCrear').style.display=t==='crear'?'block':'none';
-document.getElementById('viewForgot').style.display=t==='forgot'?'block':'none';
-document.getElementById('t1').classList.toggle('active',t==='login');
-document.getElementById('t2').classList.toggle('active',t==='crear');
+ document.getElementById('tab-login').style.display=t==='login'?'block':'none';
+ document.getElementById('tab-crear').style.display=t==='crear'?'block':'none';
+ document.getElementById('tab-forgot').style.display=t==='forgot'?'block':'none';
+ document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+ if(t==='login') document.querySelectorAll('.tab')[0].classList.add('active');
+ if(t==='crear') document.querySelectorAll('.tab')[1].classList.add('active');
+}
+function selPlan(p){
+ planSel=p;
+ document.querySelectorAll('.plan').forEach(e=>e.classList.remove('active'));
+ document.getElementById('p-'+p).classList.add('active');
 }
 async function crearEmpresa(){
-const cid=document.getElementById('c_company').value.trim().toLowerCase(), em=document.getElementById('c_email').value.trim().toLowerCase(), pw=document.getElementById('c_pass').value.trim();
-if(!cid||!em||!pw) return document.getElementById('msgCrear').innerText='Completa empresa, correo y clave';
-if(!document.getElementById('c_legal').checked) return document.getElementById('msgCrear').innerText='Acepta términos';
-document.getElementById('msgCrear').innerText='Creando...';
-const r1=await fetch(`/api/crear-jefe?agency_id=${encodeURIComponent(cid)}&username=${encodeURIComponent(em)}&password=${encodeURIComponent(pw)}&name=${encodeURIComponent(cid)}&plan=${currentPlan}`);
-const d1=await r1.json();
-if(!d1.ok && !d1.ok!=false){} // sigue
-const r2=await fetch('/api/plans/request-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:cid,email:em,plan:currentPlan})});
-const d2=await r2.json();
-if(!r2.ok) return document.getElementById('msgCrear').innerText=d2.error;
-document.getElementById('msgCrear').innerHTML=`<span style="color:#22c55e">Empresa ${cid} creada plan ${currentPlan.toUpperCase()}. Código demo: ${d2.code}</span>`;
-document.getElementById('codeBox').style.display='block';
-document.getElementById('btnPagar').href=`https://wa.me/573133181851?text=Quiero%20pagar%20Klido%20${currentPlan.toUpperCase()}%20Empresa%20${cid}%20Correo%20${em}%20Codigo%20${d2.code}`;
-document.getElementById('msgAct').innerText=`Demo: tu código es ${d2.code} - Ingrésalo abajo y quedas logueado automático`;
+ const ag=document.getElementById('c_ag').value.trim().toLowerCase();
+ const email=document.getElementById('c_email').value.trim().toLowerCase();
+ const pass=document.getElementById('c_pass').value;
+ if(!document.getElementById('c_legal').checked) return toast('Acepta términos y Ley 1581');
+ if(!ag||!email||!pass) return toast('Falta datos');
+ const r=await fetch('/api/crear-jefe?agency_id='+encodeURIComponent(ag)+'&username='+encodeURIComponent(email)+'&password='+encodeURIComponent(pass)+'&name='+encodeURIComponent(email)+'&plan='+planSel);
+ const j=await r.json();
+ if(!j.ok) return toast(j.error||'Error');
+ empresaCreada=ag; emailCreado=email;
+ toast('Empresa creada - Plan '+planSel.toUpperCase()+' seleccionado');
+ document.getElementById('pagoBox').style.display='block';
+ document.getElementById('btnPagar').innerText='2. PAGAR PLAN '+planSel.toUpperCase()+' - 3133181851';
 }
-async function activarYEntrar(){
-const cid=document.getElementById('c_company').value.trim().toLowerCase(), em=document.getElementById('c_email').value.trim().toLowerCase(), code=document.getElementById('c_code').value.trim();
-if(!code) return alert('Pon el código');
-const r=await fetch('/api/plans/activate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:cid,email:em,code,plan:currentPlan})});
-const d=await r.json();
-if(!r.ok) return document.getElementById('msgAct').innerText=d.error;
-document.getElementById('msgAct').innerText=`✅ ${d.msg} - Entrando...`;
-localStorage.setItem('user',JSON.stringify({agency_id:cid,username:em,plan:d.plan,role:'jefe'}));
-// AUTO LOGIN
-setTimeout(()=>{ showTab('login'); document.getElementById('l_company').value=cid; document.getElementById('l_email').value=em; document.getElementById('msgLogin').innerHTML=`<span style="color:#22c55e">Plan ${d.plan.toUpperCase()} activado. Ya puedes entrar.</span>`; },800);
+async function pagarWpp(){
+ if(!empresaCreada) return toast('Primero crea empresa');
+ const res=await fetch('/api/plans/request-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:empresaCreada,email:emailCreado,plan:planSel})});
+ const j=await res.json();
+ const link=`https://wa.me/573133181851?text=Hola%20quiero%20Klido%20${planSel.toUpperCase()}%20Empresa:%20${empresaCreada}%20Email:%20${emailCreado}%20Codigo:${j.code||'PENDIENTE'}`;
+ window.open(link,'_blank');
+ toast('Se abrió WhatsApp 3133181851 - Envía comprobante y te dan código única vez');
 }
-async function login(){
-const cid=document.getElementById('l_company').value.trim().toLowerCase(), em=document.getElementById('l_email').value.trim().toLowerCase(), pw=document.getElementById('l_pass').value.trim();
-if(!cid||!em||!pw) return document.getElementById('msgLogin').innerText='Completa todo';
-const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:cid,username:em,password:pw})});
-const d=await r.json();
-if(!r.ok) return document.getElementById('msgLogin').innerText=d.error;
-localStorage.setItem('user',JSON.stringify(d));
-document.getElementById('msgLogin').innerHTML=`<span style="color:#22c55e">Bienvenido ${d.plan.toUpperCase()} - Entrando al CRM...</span>`;
+async function activarPlan(){
+ const code=document.getElementById('c_code').value.trim();
+ if(!code) return toast('Ingresa código única vez');
+ const r=await fetch('/api/plans/activate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:empresaCreada,email:emailCreado,code,plan:planSel})});
+ const j=await r.json();
+ if(!j.ok && j.error) return toast(j.error);
+ toast('¡Plan '+planSel.toUpperCase()+' activado! Entrando...');
+ localStorage.setItem('agency_id',empresaCreada);
+ localStorage.setItem('username',emailCreado);
+ localStorage.setItem('plan',planSel);
+ setTimeout(()=>location.href='/',800);
 }
-async function enviarCodigo(){
-const em=document.getElementById('f_email').value.trim().toLowerCase();
-if(!em) return alert('Pon correo');
-const r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em})});
-const d=await r.json();
-if(!r.ok) return document.getElementById('msgForgot').innerText=d.error;
-document.getElementById('msgForgot').innerHTML=`<span style="color:#22c55e">Código enviado a ${em} (revisa spam). Demo: ${d.code} Expira 15 min</span>`;
+async function doLogin(){
+ const ag=document.getElementById('l_ag').value.trim().toLowerCase();
+ const u=document.getElementById('l_user').value.trim().toLowerCase();
+ const p=document.getElementById('l_pass').value;
+ const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ag,username:u,password:p})});
+ const j=await r.json();
+ if(j.error) return toast(j.error);
+ localStorage.setItem('agency_id',j.agency_id);
+ localStorage.setItem('username',j.username);
+ localStorage.setItem('role',j.role);
+ localStorage.setItem('plan',j.plan);
+ toast('Bienvenido a Klido Avanza Consulting');
+ setTimeout(()=>location.href='/',600);
 }
-async function cambiarPass(){
-const em=document.getElementById('f_email').value.trim().toLowerCase(), code=document.getElementById('f_code').value.trim(), np=document.getElementById('f_new').value.trim();
-const r=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,token:code,newPassword:np})});
-const d=await r.json();
-document.getElementById('msgForgot').innerText=d.ok?'Contraseña cambiada, vuelve a ingresar':d.error;
-if(d.ok) showTab('login');
+async function forgot(){
+ const email=document.getElementById('f_email').value.trim();
+ const r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+ const j=await r.json();
+ if(j.error) return toast(j.error);
+ toast('Código enviado: '+j.code+' (en prod se envía por email)');
+}
+async function reset(){
+ const email=document.getElementById('f_email').value.trim();
+ const token=document.getElementById('f_code').value.trim();
+ const np=document.getElementById('f_pass').value;
+ const r=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,token,newPassword:np})});
+ const j=await r.json();
+ if(j.error) return toast(j.error);
+ toast('Clave cambiada, ingresa ahora');
+ showTab('login');
 }
 </script>
 </body>
