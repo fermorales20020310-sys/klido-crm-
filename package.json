@@ -1,6 +1,5 @@
 {
-  "name": "klido-crm-v11",
-  "version": "11.0.0",
+  "name": "klido-crm",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": {
@@ -9,8 +8,8 @@
     "pg": "^8.11.3",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.8",
     "multer": "^1.4.5-lts.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "nodemailer": "^6.9.8"
   }
 }
