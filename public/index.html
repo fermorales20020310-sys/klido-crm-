@@ -1,202 +1,213 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO CRM Pro</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO CRM</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-*{box-sizing:border-box;margin:0;font-family:Inter,system-ui}
-body{background:#0a0f1e;color:#e8eefc;height:100vh;display:flex;overflow:hidden}
-.sidebar{width:210px;background:#0d1428;border-right:1px solid #1e2a4a;padding:14px;display:flex;flex-direction:column}
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.brand img{width:32px;height:32px;border-radius:8px}
-.brand b{font-size:15px}.pro{background:#2f7bff;font-size:10px;padding:3px 8px;border-radius:20px;margin-left:6px}
-.menu{font-size:11px;color:#7a8bb0;margin:10px 0 6px}
-.item{padding:10px 12px;border-radius:10px;color:#aebbdd;cursor:pointer;display:flex;gap:10px;align-items:center;margin:2px 0}
-.item.active,.item:hover{background:#2f7bff;color:#fff}
-.plan-box{margin-top:auto;background:#131f3d;border:1px solid #24365f;border-radius:12px;padding:12px;font-size:12px}
-.plan-box button{background:#2f7bff;border:0;color:#fff;padding:8px;border-radius:8px;width:100%;margin-top:8px;cursor:pointer}
-.inbox{width:300px;background:#0d1428;border-right:1px solid #1e2a4a;display:flex;flex-direction:column}
-.inbox-h{padding:14px;font-weight:700;font-size:18px;display:flex;justify-content:space-between;align-items:center}
-.search{margin:0 14px 10px;background:#131f3d;border-radius:10px;padding:8px 12px;display:flex;gap:8px}
-.search input{background:transparent;border:0;color:#fff;width:100%;outline:none}
-#chatList{overflow-y:auto;flex:1;padding:0 10px}
-.chat{padding:10px;border-radius:12px;display:flex;gap:10px;cursor:pointer;align-items:center}
-.chat.active{background:#1a2748}
-.av{width:38px;height:38px;border-radius:50%;background:#2f7bff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
-.chat.meta{flex:1;min-width:0}.chat.meta b{font-size:13px}.chat.meta p{font-size:12px;color:#8a9cc5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dot{width:10px;height:10px;border-radius:50%}
-.main{flex:1;display:flex;flex-direction:column;background:#0a0f1e}
-.chat-h{padding:12px 18px;border-bottom:1px solid #1e2a4a;display:flex;align-items:center;gap:12px}
-#msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
-.bub{max-width:70%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4}
-.in{background:#1a2748;align-self:flex-start;border-bottom-left-radius:4px}
-.out{background:#2f7bff;align-self:flex-end;border-bottom-right-radius:4px}
-.camp{border:1px dashed #f5c518}
-.inputbar{padding:14px 18px;display:flex;gap:10px;align-items:center}
-.inputbar input{flex:1;background:#131f3d;border:1px solid #24365f;border-radius:20px;padding:12px 16px;color:#fff;outline:none}
-.send{width:42px;height:42px;border-radius:50%;background:#2f7bff;border:0;color:#fff;font-size:18px;cursor:pointer}
-.profile{width:280px;background:#0d1428;border-left:1px solid #1e2a4a;padding:16px;overflow-y:auto}
-.tag{display:inline-block;background:#2a3a65;padding:4px 10px;border-radius:20px;font-size:11px;margin:4px 4px 0 0}
-#login{position:fixed;inset:0;background:#0a0f1e;display:flex;align-items:center;justify-content:center;z-index:99}
-.card{background:#0d1428;border:1px solid #24365f;padding:28px;border-radius:16px;width:320px}
-.card input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #24365f;background:#131f3d;color:#fff}
-.card button{width:100%;padding:11px;background:#2f7bff;border:0;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
-select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;padding:6px}
-.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px}
-.price-card{background:#131f3d;border:1px solid #24365f;border-radius:14px;padding:16px;text-align:center}
-.price-card.popular{border-color:#2f7bff;box-shadow:0 0 20px rgba(47,123,255,.25)}
-.price-card h3{margin-bottom:6px}.price{font-size:22px;font-weight:800;margin:8px 0}
-.price-card ul{font-size:12px;text-align:left;margin:10px 0;list-style:none;padding:0}
-.price-card ul li{margin:5px 0}
-.price-card button{width:100%;padding:10px;border-radius:8px;border:0;background:#2f7bff;color:#fff;font-weight:700;cursor:pointer}
-.ai-box{background:#131f3d;border:1px solid #24365f;border-radius:12px;padding:12px;margin-bottom:12px}
-.ai-box.panic{background:#2a1f1f;border-color:#5a2a2a}
-body.light{background:#ffffff;color:#111827}
-body.light.sidebar{background:#ffffff;border-color:#e5e7eb}
-body.light.inbox{background:#ffffff;border-color:#e5e7eb}
-body.light.profile{background:#ffffff;border-color:#e5e7eb}
-body.light.main{background:#f9fafb}
-body.light.brand b{color:#111827}
-body.light.item{color:#111827}
-body.light.item.active,body.light.item:hover{background:#2f7bff;color:#fff}
-body.light.menu{color:#6b7280}
-body.light.plan-box{background:#ffffff;border-color:#e5e7eb;color:#111827}
-body.light.ai-box{background:#ffffff;border-color:#e5e7eb;color:#111827}
-body.light.ai-box.panic{background:#fef2f2;border-color:#fecaca}
-body.light.search{background:#ffffff;border:1px solid #e5e7eb}
-body.light.search input{color:#111827}
-body.light.inbox-h{color:#111827}
-body.light.chat.active{background:#e0e7ff}
-body.light.chat-h{background:#ffffff;border-color:#e5e7eb;color:#111827}
-body.light #msgs{background:#ffffff}
-body.light.bub.in{background:#f3f4f6;border:1px solid #e5e7eb;color:#111827}
-body.light.bub.out{background:#2f7bff;color:#fff}
-body.light.inputbar{background:#ffffff;border-top:1px solid #e5e7eb}
-body.light.inputbar input{background:#ffffff;border-color:#e5e7eb;color:#111827}
-body.light.card{background:#ffffff;border-color:#e5e7eb;color:#111827}
-body.light.card input{background:#ffffff;color:#111827;border-color:#e5e7eb}
-body.light.price-card{background:#ffffff;border-color:#e5e7eb;color:#111827}
-body.light select,body.light textarea{background:#ffffff;color:#111827;border-color:#e5e7eb}
-body.light.chat.meta b{color:#111827}
-body.light.chat.meta p{color:#6b7280}
+.chat-active{background:#e8f0fe}
+.unread-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 </style>
 </head>
-<body>
-<div id="login"><div class="card" style="text-align:center">
-<img src="logo.png" style="width:48px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'"><h3>KLIDO CRM Pro</h3>
-<input id="ag" placeholder="agencia id"><input id="us" placeholder="usuario"><input id="pw" type="password" placeholder="clave">
-<label style="font-size:11px;display:flex;gap:6px;margin:8px 0;text-align:left"><input type="checkbox" id="acc" style="width:16px"> Acepto <a href="/terminos.html" target="_blank" style="color:#2f7bff">Términos</a> y <a href="/privacidad.html" target="_blank" style="color:#2f7bff">Privacidad</a></label>
-<button onclick="doLogin()">Entrar</button>
-<div style="margin-top:10px;display:flex;justify-content:space-between;font-size:11px"><a href="#" onclick="forgot()" style="color:#7a8bb0">¿Olvidaste clave?</a><a href="#" onclick="logout()" style="color:#ff6b6b">Salir</a></div>
-</div></div>
-<div class="sidebar">
-<div class="brand"><img src="logo.png" onerror="this.style.display='none'"><div><b>KLIDO</b><span class="pro" id="planBadge">Básico</span></div></div>
-<button onclick="document.body.classList.toggle('light')" style="margin:6px 0;padding:8px;border-radius:8px;border:1px solid #2f7bff;background:transparent;color:inherit;cursor:pointer">🌙 / ☀️ Tema</button>
-<div class="menu">MENU</div>
-<div class="item active" onclick="show('inbox',this)">📥 Inbox</div>
-<div class="item" onclick="show('campaigns',this)">📣 Campaigns</div>
-<div class="item" onclick="show('pricing',this)">💳 Planes</div>
-<div class="item" onclick="show('settings',this)">⚙️ Settings</div>
-<div class="menu">SUPPORT</div>
-<div class="item" onclick="window.open('https://wa.me/573226536669?text=Hola%20soporte%20KLIDO','_blank')">💡 Help Center</div>
-<div class="item" onclick="logout()" style="color:#ff8a8a">🚪 Salir</div>
-<div class="plan-box" id="planBox"><b id="planName">Plan Básico</b><div style="font-size:11px;color:#7a8bb0;margin-top:4px">Gestiona tu suscripción</div><button onclick="show('pricing',null)">Ver planes</button></div>
+<body class="bg-gray-100 h-screen overflow-hidden">
+<!-- LOGIN -->
+<div id="loginView" class="flex items-center justify-center min-h-screen">
+  <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+    <h1 class="text-3xl font-black mb-1">KLIDO CRM</h1>
+    <p class="text-sm text-gray-500 mb-6">Inmobiliaria - WhatsApp</p>
+    <input id="agency" placeholder="Agencia (ej: acol)" class="w-full border p-3 rounded-xl mb-3">
+    <input id="email" placeholder="Correo" class="w-full border p-3 rounded-xl mb-3">
+    <input id="password" type="password" placeholder="Clave" class="w-full border p-3 rounded-xl mb-4">
+    <button onclick="login()" class="w-full bg-black text-white py-3 rounded-xl font-bold">Entrar</button>
+    <div class="flex justify-between mt-4 text-sm">
+      <button onclick="forgot()" class="text-blue-600 underline">¿Olvidaste clave?</button>
+      <a href="/reset.html" class="text-gray-500 underline">Tengo token</a>
+    </div>
+    <p id="loginMsg" class="text-center mt-4 text-sm text-red-500"></p>
+    <p class="text-center mt-6 text-xs text-gray-400">¿No tienes cuenta? Registra tu agencia con /register</p>
+  </div>
 </div>
-<div class="inbox" id="panel-inbox"><div class="inbox-h">Inbox</div><div class="search">🔍<input id="q" placeholder="Search..." oninput="filter()"></div><div id="chatList"></div></div>
-<div class="inbox" id="panel-campaigns" style="display:none"><div class="inbox-h">Campaigns</div><div style="padding:14px"><label style="font-size:12px">Plantilla aprobada:</label><select id="tpl" style="width:100%;margin:8px 0 10px"></select><input type="file" id="file" accept=".xlsx,.csv" style="color:inherit;margin-bottom:10px;font-size:12px"><button onclick="uploadCamp()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer">Subir Excel y Enviar</button><div id="camps" style="margin-top:12px;font-size:13px"></div></div></div>
-<div class="inbox" id="panel-pricing" style="display:none; width:680px"><div class="inbox-h">Planes KLIDO - Anual</div>
-<div class="pricing">
-<div class="price-card"><h3>Básico</h3><div class="price">$800.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $80.000 mant. c/3 meses</div><ul><li>✅ 1 envío masivo a la vez</li><li>✅ 2 usuarios incluidos</li><li>✅ Inbox ilimitado</li><li>❌ Sin IA automática</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Basico%20anual%20$800k%20%2B%20$80k%20mant','_blank')">Empezar Básico</button></div>
-<div class="price-card popular"><h3>Premium ⭐</h3><div class="price">$1.300.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $95.000 mant. c/3 meses</div><ul><li>✅ 5 envíos simultáneos</li><li>✅ 5 usuarios incluidos</li><li>✅ IA incluida</li><li>✅ Soporte prioritario</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Premium%20anual%20$1.3M%20%2B%20$95k%20mant','_blank')">Empezar Premium</button></div>
-<div class="price-card"><h3>Gold</h3><div class="price">$2.400.000</div><small>anual</small><div style="font-size:11px;color:#2f7bff;font-weight:700;margin:6px 0">+ $130.000 mant. c/3 meses</div><ul><li>✅ Envíos ilimitados</li><li>✅ Usuarios ilimitados</li><li>✅ IA + Pánico humano</li><li>✅ 📞 Llamada directa incluida</li></ul><button onclick="window.open('https://wa.me/573226536669?text=Quiero%20Plan%20Gold%20anual%20$2.4M%20%2B%20$130k%20mant','_blank')">Empezar Gold</button></div>
+
+<!-- APP -->
+<div id="appView" class="hidden h-screen flex">
+  <!-- SIDEBAR CHATS -->
+  <div class="w-[380px] bg-white border-r flex flex-col">
+    <div class="p-4 border-b flex justify-between items-center">
+      <div><b id="agencyLabel"></b><br><small id="userLabel" class="text-gray-500"></small></div>
+      <button onclick="logout()" class="text-sm bg-gray-100 px-3 py-1 rounded">Salir</button>
+    </div>
+    <div class="p-3 flex gap-2">
+      <button onclick="loadChats()" class="flex-1 bg-black text-white py-2 rounded text-sm">Chats</button>
+      <button onclick="showCampaigns()" class="flex-1 bg-gray-100 py-2 rounded text-sm">Campañas</button>
+      <button onclick="showTeam()" class="flex-1 bg-gray-100 py-2 rounded text-sm">Equipo</button>
+    </div>
+    <div id="chats" class="flex-1 overflow-y-auto"></div>
+  </div>
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col bg-[#efeae2]">
+    <div id="chatHeader" class="bg-white p-4 border-b font-bold">Selecciona un chat</div>
+    <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+    <div class="bg-white p-3 flex gap-2">
+      <input id="msgInput" placeholder="Escribe mensaje..." class="flex-1 border p-3 rounded-xl" onkeydown="if(event.key==='Enter')sendMessage()">
+      <button onclick="sendMessage()" class="bg-black text-white px-6 rounded-xl"><i class="fa fa-paper-plane"></i></button>
+    </div>
+  </div>
+  <!-- PANEL DERECHO -->
+  <div class="w-[300px] bg-white border-l p-4 overflow-y-auto" id="rightPanel">
+    <h3 class="font-bold mb-3">Acciones</h3>
+    <div class="space-y-2">
+      <button onclick="showAiConfig()" class="w-full text-left p-2 bg-gray-50 rounded text-sm">🤖 Config IA</button>
+      <button onclick="showTemplates()" class="w-full text-left p-2 bg-gray-50 rounded text-sm">📋 Plantillas</button>
+      <div class="pt-4">
+        <label class="text-xs">Tag conversación</label>
+        <select id="tagSelect" onchange="changeTag()" class="w-full border p-2 rounded mt-1 text-sm">
+          <option value="nuevo">Nuevo</option>
+          <option value="interesado">Interesado</option>
+          <option value="cita">Cita</option>
+          <option value="cerrado">Cerrado</option>
+        </select>
+      </div>
+    </div>
+    <div id="panelContent" class="mt-6"></div>
+  </div>
 </div>
-<div style="padding:0 14px 14px;font-size:11px;color:#7a8bb0;line-height:1.4">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API y soporte. Factura electrónica. Puedes cambiar de plan en cualquier momento. Cumplimiento Ley 1581.</div>
-</div>
-<div class="inbox" id="panel-settings" style="display:none; width:420px"><div class="inbox-h">Settings / IA</div>
-<div style="padding:14px;overflow-y:auto">
-<div class="ai-box"><label style="display:flex;justify-content:space-between;align-items:center"><b>🤖 IA Automática</b><input type="checkbox" id="aiEnabled" onchange="saveAI()" style="width:20px;height:20px"></label><div style="font-size:11px;color:#7a8bb0;margin-top:6px">Si está activa, responde sola cuando no hay humano.</div></div>
-<div class="ai-box panic"><label style="display:flex;justify-content:space-between;align-items:center"><b style="color:#ff6b6b">🚨 Pánico - Pasar a Humano</b><input type="checkbox" id="humanTake" onchange="saveAI()" style="width:20px;height:20px"></label><div style="font-size:11px;color:#ffb0b0;margin-top:6px">Actívalo y la IA deja de responder TODO. Control total humano.</div></div>
-<label style="font-size:12px"><b>Prompt de la IA:</b></label>
-<textarea id="aiPrompt" style="width:100%;height:110px;background:#131f3d;border:1px solid #24365f;border-radius:8px;color:#fff;padding:8px;margin:8px 0;font-size:12px"></textarea>
-<button onclick="saveAI()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer;font-weight:700">Guardar IA</button>
-</div></div>
-<div class="main"><div class="chat-h"><div class="av" id="hAv">SN</div><div><b id="hName">Selecciona un chat</b><div style="font-size:12px;color:#7a8bb0">WhatsApp Business API</div></div></div><div id="msgs"></div><div class="inputbar"><input id="txt" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')send()"><button class="send" onclick="send()">➤</button></div></div>
-<div class="profile"><h4>Customer Profile</h4><div style="text-align:center;margin:16px 0"><div class="av" style="width:56px;height:56px;margin:auto" id="pAv">SN</div><b id="pName">-</b><div style="font-size:12px;color:#7a8bb0">Customer • WhatsApp</div></div><div id="pDetails" style="margin-top:14px;font-size:13px">Selecciona un chat</div><div style="margin-top:12px"><label style="font-size:12px">Tag:</label> <select id="tagSel" onchange="setTag()"><option value="nuevo">nuevo</option><option value="interesado">interesado</option><option value="cliente">cliente</option><option value="no-interesado">no interesado</option></select></div></div>
+
 <script>
-let AGENCY='',CUR='';
-async function doLogin(){
-if(!acc.checked){alert('Acepta terminos y privacidad');return;}
-AGENCY=ag.value.trim();let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value,acepto_terminos:true})});
-if(!r.ok){let j=await r.json().catch(()=>({})); alert(j.error||'Login incorrecto'); return;}login.style.display='none';
-try{let me=await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());if(me.plan_nombre){planBadge.textContent=me.plan_nombre;planName.textContent='Plan '+me.plan_nombre;}}catch(e){}
-loadChats();loadTpl();loadAI();setInterval(loadChats,5000);}
-async function loadChats(){let r=await fetch('/api/chats?agency_id='+AGENCY);let j=await r.json();window._chats=j;chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();return `<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;}).join('');}
-function filter(){let q=document.getElementById('q').value.toLowerCase();document.querySelectorAll('.chat').forEach(el=>{el.style.display=el.innerText.toLowerCase().includes(q)?'flex':'none';});}
-async function openChat(wa){
-  CUR=wa;
-  let c=window._chats.find(x=>x.wa_id===wa);
-  hName.textContent=c.name||wa;pName.textContent=c.name||wa;
-  hAv.textContent=(c.name||wa).substring(0,2).toUpperCase();pAv.textContent=hAv.textContent;
-  tagSel.value=c.tag||'nuevo';
-  let callHtml=`<div style="font-size:11px;color:#7a8bb0">Verificando plan...</div>`;
-  pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br>${callHtml}`;
+let currentWa=null;
+let agency_id=localStorage.getItem('agency_id')||'';
+let username=localStorage.getItem('username')||'';
+let role=localStorage.getItem('role')||'';
+if(agency_id)document.getElementById('agency').value=agency_id;
+if(username)document.getElementById('email').value=username;
+
+function showLogin(){document.getElementById('loginView').classList.remove('hidden');document.getElementById('appView').classList.add('hidden')}
+function showApp(){document.getElementById('loginView').classList.add('hidden');document.getElementById('appView').classList.remove('hidden');document.getElementById('agencyLabel').textContent=agency_id;document.getElementById('userLabel').textContent=username+' ('+role+')'; loadChats();}
+
+if(agency_id && username && role) showApp();
+
+async function login(){
+  const a=document.getElementById('agency').value.trim().toLowerCase();
+  const e=document.getElementById('email').value.trim();
+  const p=document.getElementById('password').value;
+  const msg=document.getElementById('loginMsg');
+  if(!a||!e||!p){msg.textContent='Completa todo';return}
   try{
-    let me=await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());
-    if(me.plan_id==='enterprise'){
-      callHtml=`<a href="tel:+${wa}" style="display:block;text-align:center;margin-top:12px;padding:10px;background:#10b981;border-radius:10px;color:#fff;font-weight:800;text-decoration:none;font-size:13px">📞 Llamar a +${wa}</a><div style="font-size:10px;color:#7a8bb0;margin-top:4px;text-align:center">Abre discador - Solo Gold</div>`;
-    }else{
-      callHtml=`<div style="margin-top:12px;padding:8px;background:#131f3d;border:1px solid #24365f;border-radius:8px;font-size:11px;color:#7a8bb0;text-align:center">🔒 Llamada directa solo Gold<br><a href="#" onclick="show('pricing',null)" style="color:#2f7bff">Ver Gold</a></div>`;
-    }
-    pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br>${callHtml}`;
-  }catch(e){pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}<br><a href="tel:+${wa}" style="display:block;text-align:center;margin-top:12px;padding:10px;background:#2f7bff;border-radius:10px;color:#fff;font-weight:800;text-decoration:none">📞 Llamar</a>`;}
-  await fetch('/api/chats/'+wa+'/read?agency_id='+AGENCY,{method:'POST'});
-  let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY);let m=await r.json();
-  msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');msgs.scrollTop=99999;loadChats();
+    let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:a, username:e, email:e, password:p, acepto_terminos:true})});
+    let j=await r.json();
+    if(!r.ok){msg.textContent=j.error||'Error';return}
+    localStorage.setItem('agency_id', j.agency_id);localStorage.setItem('username', j.username);localStorage.setItem('role', j.role);
+    agency_id=j.agency_id;username=j.username;role=j.role;showApp();
+  }catch(err){msg.textContent='Error conexion: '+err.message}
 }
-async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY,username:us.value})});openChat(CUR);}
-async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})});}
-function show(p, el){['inbox','campaigns','pricing','settings'].forEach(x=>{let pnl=document.getElementById('panel-'+x);if(pnl) pnl.style.display=x===p?'flex':'none';});document.querySelectorAll('.item').forEach(i=>i.classList.remove('active'));if(el) el.classList.add('active');}
-async function loadTpl(){let r=await fetch('/api/templates?agency_id='+AGENCY);let j=await r.json();tpl.innerHTML=j.map(t=>`<option>${t.name}</option>`).join('');let c=await (await fetch('/api/campaigns?agency_id='+AGENCY)).json();camps.innerHTML=c.map(x=>`<div>📣 ${x.template} - ${x.sent}/${x.total} (${x.status})</div>`).join('');}
-async function uploadCamp(){
-  let f=document.getElementById('file').files[0];
-  if(!f) return alert('elige excel');
-  let rd=new FileReader();
-  rd.onload=async()=>{
-    try{
-      let r=await fetch('/api/campaigns/upload',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({agency_id:AGENCY,template:tpl.value,fileBase64:rd.result})
-      });
-      let j=await r.json();
-      if(r.ok) alert('Campaña creada: '+j.total+' números');
-      else alert(j.error||'Error campaña');
-      loadTpl();
-    }catch(e){ alert('Error subiendo: '+e.message); }
-  };
-  rd.readAsDataURL(f);
-}
-async function loadAI(){try{let r=await fetch('/api/ai-config?agency_id='+AGENCY).then(x=>x.json());aiEnabled.checked=!!r.enabled;humanTake.checked=!!r.human_takeover;aiPrompt.value=r.prompt||'';}catch(e){}}
-async function saveAI(){await fetch('/api/ai-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY, enabled:aiEnabled.checked, prompt:aiPrompt.value, human_takeover:humanTake.checked})});alert('IA guardada');}
-function logout(){AGENCY='';CUR='';location.reload();}
+function logout(){localStorage.clear();showLogin()}
+
+// FIX DEFINITIVO FORGOT - MUESTRA ERROR REAL
 async function forgot(){
   let email=prompt('Escribe tu CORREO registrado:');
   if(!email) return;
+  email=email.trim();
   try{
     let r=await fetch('/api/forgot-password',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({email:email})
     });
-    let j=await r.json();
+    let txt = await r.text();
+    let j;
+    try{ j=JSON.parse(txt); }catch{ j={error:txt} }
     if(r.ok){
-      alert('Correo enviado a '+email+'. Revisa bandeja y SPAM. Agencias: '+(j.agencies||[]).join(', '));
+      alert('✅ Correo enviado a '+email+'. Revisa bandeja y SPAM. Agencias encontradas: '+(j.count||1));
     }else{
-      alert(j.error||'Error');
+      alert('❌ ERROR '+r.status+': '+(j.error||txt));
     }
   }catch(e){
-    alert('Error de conexion: '+e.message);
+    alert('❌ Error de conexion: '+e.message);
   }
+}
+
+async function loadChats(){
+  let r=await fetch('/api/chats?agency_id='+agency_id);let data=await r.json();
+  let html='';data.forEach(c=>{
+    let dotColor=c.dot||'transparent';
+    html+=`<div onclick="openChat('${c.wa_id}')" class="p-3 border-b hover:bg-gray-50 cursor-pointer flex justify-between">
+      <div><b>${c.name||c.wa_id}</b><br><small class="text-gray-500">${(c.lastMessage||'').substring(0,40)}</small><br><small class="text-xs">${c.tag||''} ${c.assigned_to||''}</small></div>
+      <div><span class="unread-dot" style="background:${dotColor}"></span></div>
+    </div>`;
+  });
+  document.getElementById('chats').innerHTML=html||'<p class="p-4 text-sm text-gray-500">Sin chats</p>';
+}
+let chatInterval=null;
+function openChat(wa){
+  currentWa=wa;
+  document.getElementById('chatHeader').textContent=wa;
+  loadMessages();
+  fetch('/api/chats/'+wa+'/read?agency_id='+agency_id,{method:'POST'});
+  if(chatInterval)clearInterval(chatInterval);
+  chatInterval=setInterval(loadMessages,3000);
+}
+async function loadMessages(){
+  if(!currentWa) return;
+  let r=await fetch('/api/messages/'+currentWa+'?agency_id='+agency_id);let data=await r.json();
+  let html='';data.forEach(m=>{
+    let cls=m.direction==='in'?'bg-white':'bg-[#d9fdd3] ml-auto';
+    html+=`<div class="max-w-[70%] ${cls} p-2 rounded-lg shadow text-sm"><div>${m.text}</div><small class="text-[10px] text-gray-500">${new Date(m.timestamp).toLocaleTimeString()} ${m.sent_by||''}</small></div>`;
+  });
+  document.getElementById('messages').innerHTML=html;
+  document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight;
+}
+async function sendMessage(){
+  let t=document.getElementById('msgInput').value; if(!t||!currentWa) return;
+  await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:currentWa,text:t,agency_id,username})});
+  document.getElementById('msgInput').value='';loadMessages();
+}
+async function changeTag(){
+  if(!currentWa) return; let tag=document.getElementById('tagSelect').value;
+  await fetch('/api/chats/'+currentWa+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag,agency_id})});
+}
+async function showCampaigns(){
+  let r=await fetch('/api/campaigns?agency_id='+agency_id);let data=await r.json();
+  let html='<h4 class="font-bold mb-2">Campañas</h4>';data.forEach(c=>{html+=`<div class="text-xs border p-2 rounded mb-1">${c.template} - ${c.sent}/${c.total} - ${c.status}</div>`});
+  html+=`<div class="mt-4"><input type="file" id="excel" class="text-xs"><input id="tpl" placeholder="plantilla" class="border p-1 w-full mt-2 text-xs"><button onclick="uploadCampaign()" class="bg-black text-white w-full py-2 rounded mt-2 text-xs">Subir campaña</button></div>`;
+  document.getElementById('panelContent').innerHTML=html;
+}
+async function uploadCampaign(){
+  let file=document.getElementById('excel').files[0]; let tpl=document.getElementById('tpl').value; if(!file||!tpl){alert('Excel y plantilla');return}
+  let reader=new FileReader(); reader.onload=async e=>{
+    let res=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,template:tpl,fileBase64:e.target.result})});
+    let j=await res.json(); alert(j.ok?'Campaña creada: '+j.total: j.error);
+  }; reader.readAsDataURL(file);
+}
+async function showTeam(){
+  let r=await fetch('/api/team?agency_id='+agency_id);let data=await r.json();
+  let html='<h4 class="font-bold mb-2">Equipo</h4>';data.forEach(u=>{html+=`<div class="text-xs flex justify-between border-b py-1">${u.username} - ${u.role} ${u.role==='trabajador'?`<button onclick="delUser('${u.username}')" class="text-red-500">x</button>`:''}</div>`});
+  if(role==='jefe')html+=`<div class="mt-4"><input id="newUser" placeholder="correo" class="border p-1 w-full text-xs"><input id="newPass" placeholder="clave" class="border p-1 w-full text-xs mt-1"><input id="newName" placeholder="nombre" class="border p-1 w-full text-xs mt-1"><button onclick="createUser()" class="bg-black text-white w-full py-2 rounded mt-2 text-xs">Crear trabajador</button></div>`;
+  document.getElementById('panelContent').innerHTML=html;
+}
+async function createUser(){
+  let username=document.getElementById('newUser').value; let password=document.getElementById('newPass').value; let display_name=document.getElementById('newName').value;
+  let r=await fetch('/api/team/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username,password,display_name,role_req:localStorage.getItem('username')})});
+  let j=await r.json(); alert(j.ok?'Creado':j.error); showTeam();
+}
+async function delUser(u){
+  if(!confirm('Borrar '+u+'?')) return;
+  let r=await fetch('/api/team/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,username:u,role_req:localStorage.getItem('username')})});
+  let j=await r.json(); alert(j.ok?'Borrado':j.error); showTeam();
+}
+async function showAiConfig(){
+  let r=await fetch('/api/ai-config?agency_id='+agency_id);let c=await r.json();
+  let html=`<h4 class="font-bold mb-2">IA</h4><label class="text-xs"><input type="checkbox" id="aiEnabled" ${c.enabled?'checked':''}> Activada</label><br><label class="text-xs"><input type="checkbox" id="aiHuman" ${c.human_takeover?'checked':''}> Human takeover</label><textarea id="aiPrompt" class="border w-full h-24 text-xs mt-2 p-2">${c.prompt||''}</textarea><button onclick="saveAi()" class="bg-black text-white w-full py-2 rounded mt-2 text-xs">Guardar IA</button>`;
+  document.getElementById('panelContent').innerHTML=html;
+}
+async function saveAi(){
+  let enabled=document.getElementById('aiEnabled').checked; let human_takeover=document.getElementById('aiHuman').checked; let prompt=document.getElementById('aiPrompt').value;
+  await fetch('/api/ai-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id,enabled,prompt,human_takeover})}); alert('Guardado');
+}
+async function showTemplates(){
+  let r=await fetch('/api/templates?agency_id='+agency_id);let data=await r.json();
+  let html='<h4 class="font-bold mb-2">Plantillas aprobadas</h4>';data.forEach(t=>{html+=`<div class="text-xs border p-1 rounded mb-1">${t.name} - ${t.status}</div>`});
+  document.getElementById('panelContent').innerHTML=html;
 }
 </script>
 </body>
