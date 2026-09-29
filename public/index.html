@@ -1,79 +1,239 @@
-// server.js V12 ENTERPRISE FINAL - Alineado 100% con tu index azul - 3133181851
-try{ require('dotenv').config(); }catch(e){}
-const express=require('express'),cors=require('cors'),path=require('path'),fs=require('fs'),{Pool}=require('pg'),bcrypt=require('bcryptjs'),jwt=require('jsonwebtoken'),multer=require('multer'),xlsx=require('xlsx');
-const app=express();const PORT=process.env.PORT||3000;
-const WPP='https://wa.me/573133181851?text=Hola%20quiero%20Klido%20Plan%20';const upload=multer({dest:'uploads/'});
-app.use(cors());app.use(express.json({limit:'20mb'}));
-app.use(express.static(__dirname));app.use(express.static(path.join(__dirname,'public')));
-const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
-(async()=>{
- await pool.query(`CREATE TABLE IF NOT EXISTS companies (id TEXT PRIMARY KEY, plan TEXT, mantenimiento INT, precio_anual INT, activation_code TEXT, is_active BOOLEAN DEFAULT false, created_at TIMESTAMP)`);
- await pool.query(`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, company_id TEXT, email TEXT, password TEXT, role TEXT, name TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(company_id,email))`);
- await pool.query(`CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, company_id TEXT, from_number TEXT, content TEXT, status TEXT, created_at TIMESTAMP DEFAULT NOW())`);
- await pool.query(`CREATE TABLE IF NOT EXISTS campaigns (id SERIAL PRIMARY KEY, company_id TEXT, name TEXT, template_name TEXT, total INT, status TEXT, created_by INT, created_at TIMESTAMP DEFAULT NOW())`);
- await pool.query(`CREATE TABLE IF NOT EXISTS templates (id SERIAL PRIMARY KEY, company_id TEXT, name TEXT, cuerpo TEXT, status TEXT DEFAULT 'APROBADA', UNIQUE(company_id,name))`);
- await pool.query(`CREATE TABLE IF NOT EXISTS password_resets (id SERIAL PRIMARY KEY, email TEXT, company_id TEXT, code TEXT, type TEXT, expires_at TIMESTAMP)`);
- console.log('DB V12 OK');
-})();
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klido CRM V12.1 - Avanza Consulting | 3133181851</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0a0f1c;color:#e2e8f0;font-family:Inter,system-ui}
+.container{max-width:1200px;margin:auto;padding:24px}
+.main-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:24px;align-items:start}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+.left-hero{background:#0f1a2e;border:1px solid #1e2d50;border-radius:20px;padding:28px;min-height:600px}
+.badge-top{background:#0ea5e933;color:#38bdf8;border:1px solid #0ea5e9;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.5px}
+.left-hero h1{color:#fff;font-size:38px;line-height:1.1;margin:18px 0 12px;font-weight:900}
+.left-hero.desc{color:#94a3b8;font-size:13px;line-height:1.6;margin-bottom:18px}
+.checks{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.checks div{background:#0d1428;border:1px solid #1e2d50;padding:10px 12px;border-radius:10px;font-size:12px;color:#cbd5e1}
+.login-card{background:#111d33;border:1px solid #1e2d50;border-radius:20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.tabs-login{display:flex;gap:8px;margin-bottom:14px}
+.tab-login{flex:1;padding:10px;border-radius:10px;border:1px solid #1e2d50;background:#0d1428;color:#7c8db0;cursor:pointer;font-size:12px;font-weight:700;text-align:center}
+.tab-login.active{background:#2563eb;color:#fff;border-color:#2563eb}
+h1.mini{color:#fff;margin:0 0 6px;display:flex;align-items:center;gap:10px;font-size:20px} h1.mini img{width:32px;height:32px;border-radius:8px}
+.sub{color:#94a3b8;font-size:11px;margin-bottom:14px}
+input,select{width:100%;background:#0f172a;border:1px solid #334155;color:#fff;padding:12px 14px;border-radius:10px;margin:6px 0;outline:none;font-size:13px}
+input:focus{border-color:#38bdf8}
+.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.plan{border:1px solid #334155;border-radius:12px;padding:10px;cursor:pointer;text-align:center;transition:.2s;background:#0f172a}
+.plan.selected{border-color:#38bdf8;background:#0b3a4a;transform:scale(1.02)}.plan b{display:block;color:#fff;font-size:12px}
+.plan span{font-size:10px;color:#94a3b8}.price{color:#38bdf8;font-weight:800;margin-top:5px;font-size:10px}
+.btn{width:100%;background:#2563eb;color:#fff;border:0;padding:12px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:10px;font-size:13px}
+.btn-outline{background:transparent;color:#38bdf8;border:1px solid #38bdf8}
+.btn-green{background:#22c55e;color:#000}
+.badge{display:inline-block;background:#10b981;color:#fff;padding:3px 10px;border-radius:20px;font-size:10px}
+.badge.gold{background:#f59e0b;color:#000}.badge.premium{background:#38bdf8;color:#000}
+.legal{font-size:11px;color:#94a3b8;margin:12px 0;display:flex;gap:8px;line-height:1.4}
+.legal a{color:#38bdf8}
+.support{margin-top:12px;background:#0b1220;border:1px dashed #334155;padding:10px;border-radius:10px;font-size:11px;text-align:center;color:#94a3b8}
+#dashboard{display:none}
+.tabs{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap;position:sticky;top:0;background:#0a0f1c;padding:10px 0;z-index:10}
+.tab{background:#1e293b;border:1px solid #334155;padding:8px 13px;border-radius:20px;cursor:pointer;font-size:12px}
+.tab.active{background:#38bdf8;color:#000;font-weight:800}
+.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:18px;margin:14px 0}
+.semaforo{display:flex;gap:12px;margin:10px 0;font-size:11px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}.plans{grid-template-columns:1fr}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:99}
+.modalBox{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:22px;max-width:420px;width:90%}
+table{width:100%;border-collapse:collapse;font-size:12px} th{color:#94a3b8;text-align:left;padding:8px;border-bottom:1px solid #334155} td{padding:8px;border-bottom:1px solid #1e293b}
+.wppBtn{background:#25D366;color:#000;padding:10px 14px;border-radius:10px;font-weight:800;text-decoration:none;display:inline-block}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="main-grid" id="loginView">
 
-const JWT=process.env.JWT_SECRET||'klido_v12_enterprise_3133181851';
-const auth=(req,res,next)=>{try{const t=req.headers.authorization?.split(' ')[1];if(!t)return res.status(401).json({error:'No token'});req.user=jwt.verify(t,JWT);next();}catch{res.status(401).json({error:'Token invalido'})}};
-const checkPlan=p=>async(req,res,next)=>{try{const c=await pool.query('SELECT plan,is_active FROM companies WHERE id=$1',[req.user.companyId]);if(!c.rows[0]?.is_active)return res.status(403).json({error:'Plan no activado con código',wpp:WPP+'ACTIVAR'});const plan=c.rows[0].plan;const perms={basico:['inbox','planes'],premium:['inbox','campanas','plantillas','planes'],gold:['inbox','campanas','plantillas','llamadas','ia','planes','metricas','workers']};if(p!=='inbox'&&!perms[plan]?.includes(p))return res.status(403).json({error:`Plan ${plan} no incluye ${p}`,wpp:WPP+p});next();}catch{next();}};
+<!-- IZQUIERDA ACTUALIZADA -->
+<div class="left-hero">
+<span class="badge-top">CRM EMPRESARIAL</span>
+<h1>El mejor CRM que tu empresa pueda tener</h1>
+<p class="desc">
+Manejo API oficial Meta, roles Worker y administración profesional, soporte directo 24/7.<br><br>
+Inbox con 🔴 No leídos y 🟡 Campañas, antibaneo 50/5h, equipo con roles y estadísticas reales.
+</p>
+<div class="checks">
+<div>✓ Manejo API oficial Meta - API oficial de WhatsApp Business</div>
+<div>✓ Roles Worker y administración profesional</div>
+<div>✓ Soporte directo 24/7 - 3133181851</div>
+</div>
+<p style="margin-top:30px;font-size:11px;color:#5a6a8a">KLIDO - Avanza Consulting - Bogotá - Multiagencia real - Cada ID Empresa independiente - Bloqueo por plan</p>
+</div>
 
-app.post('/api/auth/login',async(req,res)=>{
- const {companyId,email,password,plan}=req.body;
- try{
-  const ag=companyId.toLowerCase().trim();const em=email.toLowerCase().trim();
-  let comp=await pool.query('SELECT * FROM companies WHERE id=$1',[ag]);
-  if(!comp.rows[0]){
-   if(!plan)return res.status(404).json({error:'Empresa no existe, seleccione plan y cree empresa'});
-   const activationCode=Math.floor(100000+Math.random()*900000).toString();
-   const prices={basico:{m:80000,a:800000},premium:{m:95000,a:1300000},gold:{m:125000,a:2400000}};
-   const p=prices[plan]||prices.basico;
-   await pool.query('INSERT INTO companies (id,plan,mantenimiento,precio_anual,activation_code,is_active,created_at) VALUES ($1,$2,$3,$4,$5,false,NOW())',[ag,plan,p.m,p.a,activationCode]);
-   const hash=await bcrypt.hash(password,10);
-   await pool.query('INSERT INTO users (company_id,email,password,role,name) VALUES ($1,$2,$3,$4,$2)',[ag,em,hash,'admin']);
-   await pool.query('INSERT INTO password_resets (email,company_id,code,type,expires_at) VALUES ($1,$2,$3,$4,NOW()+INTERVAL \'24 hours\')',[em,ag,activationCode,'activation']);
-   return res.status(403).json({error:`Empresa creada. Plan ${plan.toUpperCase()} pendiente de activación. Código enviado al correo ${em}. Código demo: ${activationCode} - Use Olvidé contraseña para activar`,demoCode:activationCode});
-  }
-  if(!comp.rows[0].is_active)return res.status(403).json({error:`Plan ${comp.rows[0].plan} no activado. Ingrese código que llegó al correo. Si no lo tiene, use Olvidé contraseña`,needActivation:true,demoCode:comp.rows[0].activation_code});
-  const u=await pool.query('SELECT * FROM users WHERE company_id=$1 AND email=$2',[ag,em]);if(!u.rows[0])return res.status(404).json({error:'Usuario no existe en esa empresa'});
-  const ok=await bcrypt.compare(password,u.rows[0].password);if(!ok)return res.status(401).json({error:'Clave incorrecta'});
-  const token=jwt.sign({companyId:ag,email:em,role:u.rows[0].role,id:u.rows[0].id},JWT);
-  res.json({token,company:comp.rows[0],user:u.rows[0]});
- }catch(e){res.status(500).json({error:e.message})}
-});
+<!-- DERECHA LOGIN + CREAR EMPRESA CON CODIGO -->
+<div class="login-card">
+<div class="tabs-login">
+<div class="tab-login active" id="tabIngresar" onclick="showTabLogin('ingresar')">Ingresar</div>
+<div class="tab-login" id="tabCrear" onclick="showTabLogin('crear')">Crear empresa</div>
+</div>
 
-app.post('/api/auth/forgot',async(req,res)=>{
- const {companyId,email}=req.body;const code=Math.floor(100000+Math.random()*900000).toString();
- try{await pool.query('INSERT INTO password_resets (email,company_id,code,type,expires_at) VALUES ($1,$2,$3,$4,NOW()+INTERVAL \'15 minutes\')',[email.toLowerCase(),companyId?.toLowerCase()||'',code,'reset']);}catch{}
- res.json({ok:true,demoCode:code,msg:`Código enviado a ${email}. Demo: ${code}`});
-});
-app.post('/api/auth/reset',async(req,res)=>{
- const {companyId,email,code,newPassword}=req.body;
- const r=await pool.query('SELECT * FROM password_resets WHERE email=$1 AND code=$2 AND expires_at>NOW() ORDER BY id DESC LIMIT 1',[email.toLowerCase(),code]);
- if(!r.rows[0])return res.status(400).json({error:'Código inválido o expirado'});
- const h=await bcrypt.hash(newPassword,10);
- await pool.query('UPDATE users SET password=$1 WHERE company_id=$2 AND email=$3',[h,companyId.toLowerCase(),email.toLowerCase()]);
- if(r.rows[0].type==='activation'||r.rows[0].type==='reset'){
-  await pool.query('UPDATE companies SET is_active=true WHERE id=$1',[companyId.toLowerCase()]);
- }
- res.json({ok:true});
-});
+<div id="viewIngresar">
+<h1 class="mini"><img src="logo.png" onerror="this.style.display='none'">Klido CRM <span class="badge">V12.1 REAL</span></h1>
+<p class="sub">Avanza Consulting - API Oficial - 3133181851</p>
 
-app.post('/api/campaigns/upload',auth,checkPlan('campanas'),upload.single('file'),async(req,res)=>{try{const wb=xlsx.readFile(req.file.path);const data=xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);const nums=data.map(r=>Object.values(r)[0]).filter(n=>n).map(n=>n.toString().replace(/\D/g,'')).filter(n=>n.length>=10);fs.unlinkSync(req.file.path);res.json({ok:true,total:nums.length,preview:nums.slice(0,5),numeros:nums});}catch(e){res.status(500).json({error:e.message})}});
-app.post('/api/campaigns/start',auth,checkPlan('campanas'),async(req,res)=>{const {name,templateName,numeros}=req.body;await pool.query('INSERT INTO campaigns (company_id,name,template_name,total,status,created_by) VALUES ($1,$2,$3,$4,$5,$6)',[req.user.companyId,name,templateName,numeros.length,'completada',req.user.id]);res.json({ok:true,msg:`Campaña ${name} ${numeros.length} nums - ${templateName} - antibaneo 50/5h+3s`});});
-app.get('/api/campaigns/history',auth,async(req,res)=>{const r=await pool.query('SELECT * FROM campaigns WHERE company_id=$1 ORDER BY id DESC',[req.user.companyId]);res.json(r.rows);});
-app.get('/api/templates',auth,async(req,res)=>{const r=await pool.query('SELECT * FROM templates WHERE company_id=$1',[req.user.companyId]);res.json(r.rows);});
-app.post('/api/templates/sync',auth,checkPlan('plantillas'),async(req,res)=>{await pool.query(`INSERT INTO templates (company_id,name,cuerpo) VALUES ($1,'bienvenida','Hola {{1}} bienvenido') ON CONFLICT (company_id,name) DO NOTHING`,[req.user.companyId]);const r=await pool.query('SELECT * FROM templates WHERE company_id=$1',[req.user.companyId]);res.json(r.rows);});
-app.get('/api/messages',auth,async(req,res)=>{const r=await pool.query('SELECT * FROM messages WHERE company_id=$1 ORDER BY id DESC LIMIT 200',[req.user.companyId]);res.json(r.rows);});
-app.get('/api/workers',auth,async(req,res)=>{const r=await pool.query('SELECT id,email,role FROM users WHERE company_id=$1',[req.user.companyId]);res.json(r.rows);});
-app.post('/api/workers',auth,async(req,res)=>{const {email,password,name}=req.body;const h=await bcrypt.hash(password,10);await pool.query('INSERT INTO users (company_id,email,password,role,name) VALUES ($1,$2,$3,$4,$5)',[req.user.companyId,email.toLowerCase(),h,'worker',name||email]);res.json({ok:true});});
-app.delete('/api/workers/:id',auth,async(req,res)=>{await pool.query('DELETE FROM users WHERE id=$1 AND company_id=$2',[req.params.id,req.user.companyId]);res.json({ok:true});});
-app.get('/api/metrics',auth,async(req,res)=>{const c=await pool.query('SELECT * FROM companies WHERE id=$1',[req.user.companyId]);const m=await pool.query('SELECT COUNT(*) FROM messages WHERE company_id=$1',[req.user.companyId]);res.json({company:c.rows[0],stats:{mensajes:m.rows[0].count,workers:0,campanas:0}});});
-app.get('/api/audit',auth,async(req,res)=>{res.json([]);});
-app.get('/api/plans',async(req,res)=>{res.json([{id:'basico',nombre:'Básico',precio_anual:800000,mantenimiento:80000,features:['1 sede','3 users','Inbox'],wpp:WPP+'BASICO'},{id:'premium',nombre:'Premium',precio_anual:1300000,mantenimiento:95000,features:['3 sedes','Campañas','Plantillas'],wpp:WPP+'PREMIUM'},{id:'gold',nombre:'Gold',precio_anual:2400000,mantenimiento:125000,features:['Ilimitado','IA','Llamadas'],wpp:WPP+'GOLD'}]);});
-app.get('/legal',(req,res)=>{const p1=path.join(__dirname,'legal.html'),p2=path.join(__dirname,'public','legal.html');if(fs.existsSync(p1))return res.sendFile(p1);if(fs.existsSync(p2))return res.sendFile(p2);res.send('Legal 1581 - 3133181851');});
-function serveIndex(res){const p1=path.join(__dirname,'index.html'),p2=path.join(__dirname,'public','index.html');if(fs.existsSync(p1))return res.sendFile(p1);if(fs.existsSync(p2))return res.sendFile(p2);res.send('index no encontrado');}
-app.get('/',(req,res)=>serveIndex(res));app.get('*',(req,res)=>{if(req.path.startsWith('/api/'))return res.status(404).json({error:'API no'});serveIndex(res);});
-app.listen(PORT,'0.0.0.0',()=>console.log('V12 ENTERPRISE en '+PORT));
+<input id="companyId" placeholder="ID Empresa (ej: acol)" required>
+<input id="email" type="email" placeholder="Correo corporativo" required>
+<div style="position:relative"><input id="password" type="password" placeholder="Contraseña" required><span onclick="togglePass()" style="position:absolute;right:12px;top:14px;cursor:pointer">👁️</span></div>
+
+<div style="display:flex;justify-content:space-between;margin:8px 0">
+<label style="font-size:11px;color:#94a3b8"><input type="checkbox" id="recordarme"> Recordarme</label>
+<a style="font-size:11px;color:#38bdf8;cursor:pointer" onclick="openForgot()">¿Olvidaste tu contraseña?</a>
+</div>
+
+<label class="legal"><input type="checkbox" id="legalCheck" required><span>Acepto <a href="/legal" target="_blank">Términos, Ley 1581, Contrato</a> y autorización de contactos para campañas con plantillas aprobadas.</span></label>
+
+<button class="btn" id="loginBtn" onclick="login()">Ingresar al CRM →</button>
+<div id="msg" style="font-size:12px;color:#f87171;margin-top:8px"></div>
+
+<div style="margin-top:14px;background:#0f172a;border:1px solid #1e2d50;border-radius:12px;padding:12px">
+<h3 style="font-size:13px;color:#fff;margin:0 0 6px">Restablecer contraseña</h3>
+<p style="font-size:10px;color:#94a3b8;margin:0 0 8px">Te enviaremos un código de 6 dígitos a tu correo corporativo registrado.</p>
+<input id="rEmail" placeholder="fermorales20020310@gmail.com" style="margin:6px 0">
+<button class="btn btn-outline" style="padding:10px" onclick="sendCodeInline()">Enviar código</button>
+<input id="rCode" placeholder="Código de 6 dígitos" style="margin-top:8px;display:none">
+<input id="rNewPass" type="password" placeholder="Nueva contraseña" style="margin-top:6px;display:none">
+<button id="btnCambiar" class="btn btn-green" style="display:none" onclick="resetPassInline()">Cambiar contraseña</button>
+<div id="rMsg" style="font-size:10px;color:#22c55e;margin-top:6px"></div>
+</div>
+</div>
+
+<div id="viewCrear" style="display:none">
+<h1 class="mini">Crear empresa - Activa solo con código post-compra</h1>
+<p class="sub">Inscríbete, elige plan, paga y desbloquea SOLO el plan que pagaste con el código que llega al correo.</p>
+
+<input id="cCompanyId" placeholder="Nuevo ID Empresa (ej: inmobiliaria1)">
+<input id="cEmail" placeholder="Correo administrador - allí llega el código">
+<input id="cPass" type="password" placeholder="Crear contraseña">
+<input id="cName" placeholder="Nombre empresa">
+
+<p style="font-size:12px;color:#fff;margin:10px 0 6px">Elige tu plan - Se desbloquea SOLO con código:</p>
+<div class="plans">
+<div class="plan selected" data-plan="basico" data-anual="800000" data-mant="80000" onclick="selectPlanCreate(this)"><b>Básico</b><span>1 sede, 3 users</span><div class="price">$800k/año + $80k trim</div></div>
+<div class="plan" data-plan="premium" data-anual="1300000" data-mant="95000" onclick="selectPlanCreate(this)"><b>Premium</b><span>3 sedes, campañas</span><div class="price">$1.3M/año + $95k trim</div></div>
+<div class="plan" data-plan="gold" data-anual="2400000" data-mant="125000" onclick="selectPlanCreate(this)"><b>Gold</b><span>Ilimitado + IA + 📞</span><div class="price">$2.4M/año + $125k trim</div></div>
+</div>
+
+<label class="legal"><input type="checkbox" id="legalCheck2" required><span>Acepto <a href="/legal" target="_blank">Términos, Ley 1581, Contrato</a></span></label>
+
+<button class="btn" onclick="crearEmpresaPaso1()">1. Inscribir y generar código</button>
+<a id="btnPagarWPP" class="btn" style="display:none;background:#25D366;color:#000;text-align:center;text-decoration:none" target="_blank">2. Pagar plan por WhatsApp 3133181851</a>
+
+<div id="activacionBox" style="display:none;margin-top:12px;background:#0b1220;border:1px solid #1e2d50;border-radius:10px;padding:10px">
+<p style="font-size:11px;color:#fff;margin:0 0 6px">Paso 3: Código que llega al correo después de la compra</p>
+<input id="actCode" placeholder="Código de 6 dígitos del correo">
+<button class="btn btn-green" onclick="activarPlanConCodigo()">3. Activar y desbloquear SOLO mi plan pagado</button>
+<div id="actMsg" style="font-size:10px;color:#22c55e;margin-top:6px"></div>
+</div>
+<div id="msgCreate" style="font-size:11px;color:#f87171;margin-top:8px"></div>
+</div>
+
+<div class="support">Soporte 24/7 <b>3133181851</b> | <a href="https://wa.me/573133181851" target="_blank" style="color:#25D366">WhatsApp Ayuda</a> | <a href="/legal" style="color:#38bdf8">/legal</a></div>
+</div>
+
+</div>
+
+<div id="dashboard">
+<h1><img src="logo.png" onerror="this.style.display='none'">Klido <span id="compName"></span> <span id="planBadge" class="badge"></span> <span id="roleBadge" class="badge gold"></span></h1>
+<div class="tabs">
+<div class="tab active" data-t="inbox" onclick="switchTab('inbox')">Inbox 🔴🟡</div>
+<div class="tab" data-t="campanas" onclick="switchTab('campanas')">Campañas + Historial</div>
+<div class="tab" data-t="plantillas" onclick="switchTab('plantillas')">Plantillas Aprobadas</div>
+<div class="tab" data-t="equipo" id="tabEquipo" onclick="switchTab('equipo')">Equipo / Workers</div>
+<div class="tab" data-t="metricas" id="tabMetricas" onclick="switchTab('metricas')">Métricas</div>
+<div class="tab" data-t="planes" onclick="switchTab('planes')">Planes y Pagos</div>
+<div class="tab" data-t="config" onclick="switchTab('config')">Configuración</div>
+<div class="tab" onclick="window.open('https://wa.me/573133181851?text=Ayuda%20Klido%20'+(localStorage.getItem('company')||''), '_blank')">Ayuda WPP</div>
+<div class="tab" onclick="logout()">Salir</div>
+</div>
+<div id="view-inbox" class="card"><h3>Inbox Profesional - Semáforo</h3><div class="semaforo"><span><span class="dot" style="background:#ef4444"></span> No leídos</span><span><span class="dot" style="background:#eab308"></span> Campaña</span><span><span class="dot" style="background:#10b981"></span> IA</span><span><span class="dot" style="background:#38bdf8"></span> Worker</span></div><div id="inboxList">Cargando...</div></div>
+<div id="view-campanas" class="card" style="display:none"><h3>📢 Campañas con Excel - Solo Plantillas Aprobadas</h3><div class="grid2"><div><input id="campName" placeholder="Nombre campaña"><select id="templateSelect"></select><input type="file" id="excelFile" accept=".xlsx,.xls"><button class="btn" onclick="uploadExcel()">1. Subir Excel</button><div id="excelPreview" style="font-size:11px;color:#94a3b8;margin-top:8px"></div><button class="btn" id="btnStartCamp" style="display:none;background:#10b981" onclick="startCampaign()">2. Enviar campaña</button></div><div><h4>Historial</h4><div id="campHistory"></div></div></div></div>
+<div id="view-plantillas" class="card" style="display:none"><h3>Plantillas Aprobadas Meta</h3><button class="btn" onclick="syncTemplates()">Sincronizar con Meta</button><div id="templatesList" style="margin-top:12px"></div></div>
+<div id="view-equipo" class="card" style="display:none"><h3>Equipo</h3><div class="grid2"><div><input id="wName" placeholder="Nombre worker"><input id="wEmail" placeholder="Email worker"><input id="wPass" placeholder="Clave"><button class="btn" onclick="createWorker()">Crear Worker</button></div><div><div id="workersList"></div></div></div></div>
+<div id="view-metricas" class="card" style="display:none"><h3>Métricas - Solo Jefe</h3><div id="metricsBox"></div></div>
+<div id="view-planes" class="card" style="display:none"><h3>Planes - Solo se desbloquea con código post-compra</h3><div class="grid2" id="plansBox"></div></div>
+<div id="view-config" class="card" style="display:none"><h3>Configuración</h3><p style="font-size:12px;color:#94a3b8">Multiagencia real. Cada empresa independiente. API Oficial Meta. Roles Worker/Admin. Soporte 24/7 3133181851. Desbloqueo por código post-pago solo plan pagado. Ley 1581 en /legal.</p></div>
+</div>
+
+</div>
+<div class="modal" id="forgotModal"><div class="modalBox"><h3>Olvide contraseña</h3><input id="fCompany" placeholder="ID Empresa"><input id="fEmail" placeholder="Email"><button class="btn" onclick="sendCode()">Enviar código</button><div id="resetArea" style="display:none;margin-top:12px"><input id="fCode" placeholder="Código 6 dígitos"><input id="fNewPass" type="password" placeholder="Nueva clave"><button class="btn" onclick="resetPass()">Cambiar clave</button></div><div id="fMsg" style="font-size:11px;color:#94a3b8;margin-top:8px"></div><button class="btn btn-outline" onclick="closeForgot()">Cerrar</button></div></div>
+
+<script>
+let selectedPlan='basico', selectedAnual=800000, selectedMant=80000, tempNumeros=[], planCreate='basico';
+function showTabLogin(t){document.getElementById('viewIngresar').style.display=t==='ingresar'?'block':'none';document.getElementById('viewCrear').style.display=t==='crear'?'block':'none';document.getElementById('tabIngresar').classList.toggle('active',t==='ingresar');document.getElementById('tabCrear').classList.toggle('active',t==='crear');}
+function selectPlanCreate(el){document.querySelectorAll('#viewCrear.plan').forEach(p=>p.classList.remove('selected'));el.classList.add('selected');planCreate=el.dataset.plan;selectedPlan=el.dataset.plan;}
+function togglePass(){const p=document.getElementById('password');p.type=p.type==='password'?'text':'password';}
+async function login(){
+const companyId=document.getElementById('companyId').value.trim().toLowerCase();
+const email=document.getElementById('email').value.trim();
+const password=document.getElementById('password').value.trim();
+if(!companyId||!email||!password) return document.getElementById('msg').innerText='Completa campos';
+if(!document.getElementById('legalCheck').checked) return document.getElementById('msg').innerText='Acepta términos en /legal';
+document.getElementById('msg').innerText='Entrando...';
+try{
+const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,password,plan:selectedPlan})});
+const d=await r.json(); if(!r.ok) throw new Error(d.error + (d.demoCode?` (Demo code: ${d.demoCode})`:'' ));
+localStorage.setItem('token',d.token); localStorage.setItem('company',JSON.stringify(d.company)); localStorage.setItem('user',JSON.stringify(d.user));
+showDashboard(d.company,d.user);
+}catch(e){document.getElementById('msg').innerText=e.message}
+}
+async function crearEmpresaPaso1(){
+const cid=document.getElementById('cCompanyId').value.trim().toLowerCase();const em=document.getElementById('cEmail').value.trim();const pw=document.getElementById('cPass').value;
+if(!cid||!em||!pw) return document.getElementById('msgCreate').innerText='Completa ID, correo y clave';
+if(!document.getElementById('legalCheck2').checked) return document.getElementById('msgCreate').innerText='Acepta términos';
+document.getElementById('msgCreate').innerText='Generando código...';
+try{
+const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,password:pw,plan:planCreate})});
+const d=await r.json();
+if(r.status===403 && d.demoCode){
+document.getElementById('btnPagarWPP').style.display='block';
+document.getElementById('btnPagarWPP').href=`https://wa.me/573133181851?text=Quiero%20pagar%20Klido%20Plan%20${planCreate.toUpperCase()}%20Empresa%20${cid}%20Codigo%20${d.demoCode}`;
+document.getElementById('activacionBox').style.display='block';
+document.getElementById('actMsg').innerText=`Empresa pre-creada. Código: ${d.demoCode}. Paga por WhatsApp 3133181851 y luego activa. Este código desbloquea SOLO plan ${planCreate.toUpperCase()}. En producción llega al correo ${em}.`;
+document.getElementById('msgCreate').innerText=`Código generado: ${d.demoCode}. Revisa correo (demo) y paga.`;
+return;
+}
+document.getElementById('msgCreate').innerText=d.error||'Empresa ya existe, usa Ingresar';
+}catch(e){document.getElementById('msgCreate').innerText=e.message}
+}
+async function activarPlanConCodigo(){
+const cid=document.getElementById('cCompanyId').value.trim().toLowerCase();const em=document.getElementById('cEmail').value.trim();const code=document.getElementById('actCode').value.trim();
+if(!code) return alert('Ingresa código de 6 dígitos que llegó al correo después de la compra');
+const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,code:code,newPassword:document.getElementById('cPass').value})});
+const d=await r.json(); if(!r.ok) return alert(d.error);
+document.getElementById('actMsg').innerText=`✅ Plan ${planCreate.toUpperCase()} activado. Solo ese plan quedó desbloqueado. Ya puedes entrar en pestaña Ingresar.`;
+}
+function showDashboard(company,user){document.getElementById('loginView').style.display='none'; document.getElementById('dashboard').style.display='block';document.getElementById('compName').innerText=company.id; document.getElementById('planBadge').innerText=company.plan+' - '+company.plan.toUpperCase();document.getElementById('planBadge').className='badge '+(company.plan==='gold'?'gold':company.plan==='premium'?'premium':'');document.getElementById('roleBadge').innerText=user.role==='admin'?'JEFE':'WORKER';loadAll();}
+function switchTab(t){document.querySelectorAll('[id^=view-]').forEach(v=>{if(v.id.startsWith('view-')&&!v.id.includes('Ingresar')&&!v.id.includes('Crear'))v.style.display='none';});const el=document.getElementById('view-'+t);if(el)el.style.display='block';document.querySelectorAll('.tabs.tab').forEach(x=>x.classList.remove('active'));document.querySelector(`[data-t=${t}]`)?.classList.add('active');if(t==='campanas')loadTemplatesSelect();}
+async function api(path,opts={}){const token=localStorage.getItem('token');opts.headers={...(opts.headers||{}),'Authorization':'Bearer '+token,'Content-Type':'application/json'};const r=await fetch(path,opts);const d=await r.json();if(!r.ok)throw new Error(d.error||'Error');return d;}
+async function loadAll(){try{loadInbox();loadCampHistory();loadTemplates();loadWorkers();loadMetrics();loadPlans();}catch{}}
+async function loadInbox(){try{const d=await api('/api/messages');document.getElementById('inboxList').innerHTML=d.length?`<table><tr><th>Numero</th><th>Mensaje</th><th>Estado</th></tr>${d.map(m=>`<tr><td>${m.from_number||'-'}</td><td>${(m.content||'').slice(0,60)}</td><td>${m.status||'nuevo'}</td></tr>`).join('')}</table>`:'Sin mensajes';}catch(e){document.getElementById('inboxList').innerText=e.message}}
+async function uploadExcel(){const f=document.getElementById('excelFile').files[0];if(!f)return alert('Selecciona Excel');const fd=new FormData();fd.append('file',f);const token=localStorage.getItem('token');const r=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});const d=await r.json();if(!r.ok)return alert(d.error);tempNumeros=d.numeros;document.getElementById('excelPreview').innerHTML=`Detectados <b>${d.total}</b> números`;document.getElementById('btnStartCamp').style.display='block';}
+async function startCampaign(){const name=document.getElementById('campName').value||'Campaña '+Date.now();const tpl=document.getElementById('templateSelect').value;if(!tpl)return alert('Elige plantilla');try{const d=await api('/api/campaigns/start',{method:'POST',body:JSON.stringify({name,templateName:tpl,numeros:tempNumeros})});alert(d.msg);loadCampHistory();}catch(e){alert(e.message)}}
+async function loadCampHistory(){try{const d=await api('/api/campaigns/history');document.getElementById('campHistory').innerHTML=d.map(c=>`<div style="border:1px solid #334155;padding:8px;border-radius:8px;margin:6px 0"><b>${c.name}</b> - ${c.template_name} - ${c.total} nums - ${c.status}</div>`).join('')||'Sin campañas';}catch{}}
+async function loadTemplatesSelect(){try{const d=await api('/api/templates');document.getElementById('templateSelect').innerHTML=d.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join('');}catch{}}
+async function loadTemplates(){try{const d=await api('/api/templates');document.getElementById('templatesList').innerHTML=d.map(t=>`<div style="padding:8px;border:1px solid #334155;border-radius:8px;margin:4px 0">${t.name} - <span class="badge">${t.status}</span> - ${t.cuerpo}</div>`).join('');}catch{}}
+async function syncTemplates(){try{await api('/api/templates/sync',{method:'POST'});alert('Sincronizadas');loadTemplates();loadTemplatesSelect();}catch(e){alert(e.message)}}
+async function loadWorkers(){try{const d=await api('/api/workers');document.getElementById('workersList').innerHTML=`<table><tr><th>Email</th><th>Rol</th><th>Acción</th></tr>${d.map(w=>`<tr><td>${w.email}</td><td>${w.role}</td><td><button onclick="delWorker(${w.id})" style="background:#ef4444;color:#fff;border:0;padding:4px 8px;border-radius:6px">Eliminar</button></td></tr>`).join('')}</table>`;}catch{}}
+async function createWorker(){const email=document.getElementById('wEmail').value,password=document.getElementById('wPass').value,name=document.getElementById('wName').value;try{await api('/api/workers',{method:'POST',body:JSON.stringify({email,password,name})});alert('Worker creado');loadWorkers();}catch(e){alert(e.message)}}
+async function delWorker(id){if(!confirm('Eliminar worker?'))return;await api('/api/workers/'+id,{method:'DELETE'});loadWorkers();}
+async function loadMetrics(){try{const d=await api('/api/metrics');document.getElementById('metricsBox').innerHTML=`Empresa <b>${d.company.id}</b> - Plan ${d.company.plan} - Activa: ${d.company.is_active?'SI':'NO - requiere código'}`;}catch{}}
+async function loadPlans(){try{const d=await fetch('/api/plans').then(r=>r.json());document.getElementById('plansBox').innerHTML=d.map(p=>`<div class="card"><h3>${p.nombre}</h3><p style="color:#38bdf8;font-weight:800">$${p.precio_anual.toLocaleString()}/año + $${p.mantenimiento.toLocaleString()} trim</p><a class="wppBtn" href="${p.wpp}" target="_blank">Adquirir 3133181851</a></div>`).join('');}catch{}}
+function openForgot(){document.getElementById('forgotModal').style.display='flex'}function closeForgot(){document.getElementById('forgotModal').style.display='none'}
+async function sendCode(){const companyId=document.getElementById('fCompany').value,email=document.getElementById('fEmail').value;const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email})});const d=await r.json();document.getElementById('fMsg').innerText=d.demoCode?`Código demo: ${d.demoCode}`:'Código enviado';document.getElementById('resetArea').style.display='block';}
+async function resetPass(){const companyId=document.getElementById('fCompany').value,email=document.getElementById('fEmail').value,code=document.getElementById('fCode').value,newPassword=document.getElementById('fNewPass').value;const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,email,code,newPassword})});const d=await r.json();if(!r.ok)return document.getElementById('fMsg').innerText=d.error;document.getElementById('fMsg').innerText='Clave cambiada';setTimeout(closeForgot,1500);}
+async function sendCodeInline(){const em=document.getElementById('rEmail').value||document.getElementById('email').value;const cid=document.getElementById('companyId').value;if(!em)return alert('Pon correo');const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em})});const d=await r.json();document.getElementById('rMsg').innerText=`Código enviado a ${em} (demo: ${d.demoCode}) - revisa spam, expira 15 min`;document.getElementById('rCode').style.display='block';document.getElementById('rNewPass').style.display='block';document.getElementById('btnCambiar').style.display='block';document.getElementById('rCode').value=d.demoCode;}
+async function resetPassInline(){const em=document.getElementById('rEmail').value||document.getElementById('email').value;const cid=document.getElementById('companyId').value;const code=document.getElementById('rCode').value;const np=document.getElementById('rNewPass').value;const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:cid,email:em,code,newPassword:np})});const d=await r.json();if(!r.ok)return document.getElementById('rMsg').innerText=d.error;document.getElementById('rMsg').innerText='✅ Contraseña cambiada y plan activado. Ya puedes entrar.';}
+function logout(){localStorage.clear();location.reload();}
+(function(){const c=localStorage.getItem('company'),u=localStorage.getItem('user');if(c&&u){try{showDashboard(JSON.parse(c),JSON.parse(u))}catch{}}})();
+</script>
+</body>
+</html>
