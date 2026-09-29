@@ -49,6 +49,8 @@ select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;
 .price-card ul{font-size:12px;text-align:left;margin:10px 0;list-style:none;padding:0}
 .price-card ul li{margin:5px 0}
 .price-card button{width:100%;padding:10px;border-radius:8px;border:0;background:#2f7bff;color:#fff;font-weight:700;cursor:pointer}
+.ai-box{background:#131f3d;border:1px solid #24365f;border-radius:12px;padding:12px;margin-bottom:12px}
+.ai-box.panic{background:#2a1f1f;border-color:#5a2a2a}
 body.light{background:#f2f4f9;color:#1a2338}
 body.light.sidebar, body.light.inbox, body.light.profile{background:#fff;border-color:#e2e8f5}
 body.light.main{background:#f7f9fd}
@@ -58,7 +60,7 @@ body.light.search, body.light.inputbar input{background:#eef2fb}
 body.light.search input{color:#111}
 body.light.chat.active{background:#e3eafc}
 body.light.in{background:#e9eefc;color:#111}
-body.light.plan-box{background:#eef2fb;border-color:#dbe4f5;color:#1a2338}
+body.light.plan-box,.light.ai-box{background:#eef2fb;border-color:#dbe4f5;color:#1a2338}
 body.light.card{background:#fff;border-color:#e2e8f5;color:#1a2338}
 body.light.card input{background:#f2f4f9;color:#111;border-color:#dbe4f5}
 body.light.price-card{background:#fff;border-color:#e2e8f5}
@@ -92,7 +94,16 @@ body.light.price-card{background:#fff;border-color:#e2e8f5}
 </div>
 <div style="padding:0 14px 14px;font-size:11px;color:#7a8bb0;line-height:1.4">Todos los planes incluyen cumplimiento Ley 1581, backups automáticos y facturación. Puedes cambiar de plan en cualquier momento.</div>
 </div>
-<div class="inbox" id="panel-settings" style="display:none"><div class="inbox-h">Settings</div><div style="padding:16px;font-size:13px;line-height:1.6"><b>Excel:</b> Campaigns → plantilla → archivo.xlsx primera columna 573...<br><br><b>Plantillas:</b> solo APPROVED en Meta Business.<br><br><b>Legal:</b> <a href="/terminos.html" target="_blank">Términos</a> • <a href="/privacidad.html" target="_blank">Privacidad</a></div></div>
+<div class="inbox" id="panel-settings" style="display:none; width:420px"><div class="inbox-h">Settings / IA</div>
+<div style="padding:14px;overflow-y:auto">
+<div class="ai-box"><label style="display:flex;justify-content:space-between;align-items:center"><b>🤖 IA Automática</b><input type="checkbox" id="aiEnabled" onchange="saveAI()" style="width:20px;height:20px"></label><div style="font-size:11px;color:#7a8bb0;margin-top:6px">Si está activa, responde sola cuando no hay humano.</div></div>
+<div class="ai-box panic"><label style="display:flex;justify-content:space-between;align-items:center"><b style="color:#ff6b6b">🚨 Pánico - Pasar a Humano</b><input type="checkbox" id="humanTake" onchange="saveAI()" style="width:20px;height:20px"></label><div style="font-size:11px;color:#ffb0b0;margin-top:6px">Actívalo y la IA deja de responder TODO. Control total humano. Obligatorio por SIC.</div></div>
+<label style="font-size:12px"><b>Prompt de la IA:</b></label>
+<textarea id="aiPrompt" style="width:100%;height:110px;background:#131f3d;border:1px solid #24365f;border-radius:8px;color:#fff;padding:8px;margin:8px 0;font-size:12px" placeholder="Eres un asistente útil..."></textarea>
+<button onclick="saveAI()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer;font-weight:700">Guardar configuración IA</button>
+<hr style="margin:16px 0;border-color:#24365f">
+<div style="font-size:13px;line-height:1.6"><b>Excel:</b> Campaigns → plantilla → archivo.xlsx primera columna 573...<br><br><b>Plantillas:</b> solo APPROVED en Meta Business.<br><br><b>Legal:</b> <a href="/terminos.html" target="_blank">Términos</a> • <a href="/privacidad.html" target="_blank">Privacidad</a></div>
+</div></div>
 <div class="main"><div class="chat-h"><div class="av" id="hAv">SN</div><div><b id="hName">Selecciona un chat</b><div style="font-size:12px;color:#7a8bb0">WhatsApp Business API</div></div></div><div id="msgs"></div><div class="inputbar"><input id="txt" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')send()"><button class="send" onclick="send()">➤</button></div></div>
 <div class="profile"><h4>Customer Profile</h4><div style="text-align:center;margin:16px 0"><div class="av" style="width:56px;height:56px;margin:auto" id="pAv">SN</div><b id="pName">-</b><div style="font-size:12px;color:#7a8bb0">Customer • WhatsApp</div></div><div id="pDetails" style="margin-top:14px;font-size:13px">Selecciona un chat</div><div style="margin-top:12px"><label style="font-size:12px">Tag:</label> <select id="tagSel" onchange="setTag()"><option value="nuevo">nuevo</option><option value="interesado">interesado</option><option value="cliente">cliente</option><option value="no-interesado">no interesado</option></select></div></div>
 <script>
@@ -102,7 +113,7 @@ if(!acc.checked){alert('Acepta términos y privacidad');return;}
 AGENCY=ag.value.trim();let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value,acepto_terminos:true})});
 if(!r.ok){alert('Login incorrecto');return;}let j=await r.json();login.style.display='none';
 try{let me=await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());if(me.plan_nombre){planBadge.textContent=me.plan_nombre;planName.textContent='Plan '+me.plan_nombre;}}catch(e){}
-loadChats();loadTpl();setInterval(loadChats,5000);}
+loadChats();loadTpl();loadAI();setInterval(loadChats,5000);}
 async function loadChats(){let r=await fetch('/api/chats?agency_id='+AGENCY);let j=await r.json();window._chats=j;chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();return `<div class="chat ${c.wa_id===CUR?'active':''}" onclick="openChat('${c.wa_id}')"><div class="av">${ini}</div><div class="meta"><b>${c.name||c.wa_id}</b><p>${c.lastMessage||''}</p></div><div class="dot" style="background:${c.dot||'transparent'}"></div></div>`;}).join('');}
 function filter(){let q=document.getElementById('q').value.toLowerCase();document.querySelectorAll('.chat').forEach(el=>{el.style.display=el.innerText.toLowerCase().includes(q)?'flex':'none';});}
 async function openChat(wa){CUR=wa;let c=window._chats.find(x=>x.wa_id===wa);hName.textContent=c.name||wa;pName.textContent=c.name||wa;hAv.textContent=(c.name||wa).substring(0,2).toUpperCase();pAv.textContent=hAv.textContent;pDetails.innerHTML=`📞 +${wa}<br><br>Tag: ${c.tag||'nuevo'}`;tagSel.value=c.tag||'nuevo';await fetch('/api/chats/'+wa+'/read?agency_id='+AGENCY,{method:'POST'});let r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCY);let m=await r.json();msgs.innerHTML=m.map(x=>`<div class="bub ${x.direction==='in'?'in':'out'} ${x.is_campaign?'camp':''}">${x.media_type&&x.media_type!=='text'?`<a href="/api/media?mid=${x.media_url}" target="_blank" style="color:inherit">[${x.media_type}]</a><br>`:''}${x.text||''}</div>`).join('');msgs.scrollTop=99999;loadChats();}
@@ -111,5 +122,16 @@ async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',head
 function show(p, el){['inbox','campaigns','pricing','settings'].forEach(x=>{let pnl=document.getElementById('panel-'+x);if(pnl) pnl.style.display = x===p? 'flex' : 'none';});document.querySelectorAll('.item').forEach(i=>i.classList.remove('active'));if(el) el.classList.add('active');}
 async function loadTpl(){let r=await fetch('/api/templates?agency_id='+AGENCY);let j=await r.json();tpl.innerHTML=j.map(t=>`<option>${t.name}</option>`).join('');let c=await (await fetch('/api/campaigns?agency_id='+AGENCY)).json();camps.innerHTML=c.map(x=>`<div>📣 ${x.template} - ${x.sent}/${x.total} (${x.status})</div>`).join('');}
 async function uploadCamp(){let f=file.files[0];if(!f)return alert('elige excel');let rd=new FileReader();rd.onload=async()=>{let r=await fetch('/api/campaigns/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,template:tpl.value,fileBase64:rd.result})});alert(await r.text());loadTpl();};rd.readAsDataURL(f);}
+async function loadAI(){
+ try{let r=await fetch('/api/ai-config?agency_id='+AGENCY).then(x=>x.json());
+ aiEnabled.checked=!!r.enabled;
+ humanTake.checked=!!r.human_takeover;
+ aiPrompt.value=r.prompt||'';
+ }catch(e){}
+}
+async function saveAI(){
+ await fetch('/api/ai-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY, enabled:aiEnabled.checked, prompt:aiPrompt.value, human_takeover:humanTake.checked})});
+ alert('IA guardada correctamente');
+}
 </script>
 </body></html>
