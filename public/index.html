@@ -42,6 +42,14 @@ body{background:#0a0f1e;color:#e8eefc;height:100vh;display:flex;overflow:hidden}
 .card input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #24365f;background:#131f3d;color:#fff}
 .card button{width:100%;padding:11px;background:#2f7bff;border:0;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
 select{background:#131f3d;color:#fff;border:1px solid #24365f;border-radius:8px;padding:6px}
+/* NUEVO PRECIOS */
+.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px}
+.price-card{background:#131f3d;border:1px solid #24365f;border-radius:14px;padding:16px;text-align:center}
+.price-card.popular{border-color:#2f7bff;transform:scale(1.05)}
+.price-card h3{margin-bottom:6px}.price-card.price{font-size:22px;font-weight:800;margin:8px 0}
+.price-card ul{font-size:12px;text-align:left;margin:10px 0;list-style:none;padding:0}
+.price-card ul li{margin:4px 0}
+.price-card button{width:100%;padding:10px;border-radius:8px;border:0;background:#2f7bff;color:#fff;font-weight:700;cursor:pointer}
 body.light{background:#f2f4f9;color:#1a2338}
 body.light.sidebar, body.light.inbox, body.light.profile{background:#ffffff;border-color:#e2e8f5}
 body.light.main{background:#f7f9fd}
@@ -55,29 +63,30 @@ body.light.in{background:#e9eefc;color:#111}
 body.light.trial{background:#eef2fb;border-color:#dbe4f5;color:#1a2338}
 body.light.card{background:#fff;border-color:#e2e8f5;color:#1a2338}
 body.light.card input{background:#f2f4f9;color:#111;border-color:#dbe4f5}
+body.light.price-card{background:#fff;border-color:#e2e8f5}
 </style>
 </head>
 <body>
 <div id="login"><div class="card" style="text-align:center">
 <img src="logo.png" style="width:48px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'"><h3>KLIDO CRM Pro</h3>
 <input id="ag" placeholder="agencia id (ej: acol)"><input id="us" placeholder="usuario"><input id="pw" type="password" placeholder="clave">
+<label style="font-size:11px;display:flex;gap:6px;margin:8px 0;text-align:left"><input type="checkbox" id="acc" style="width:16px"> Acepto <a href="/terminos.html" target="_blank" style="color:#2f7bff">Términos</a> y <a href="/privacidad.html" target="_blank" style="color:#2f7bff">Privacidad</a></label>
 <button onclick="doLogin()">Entrar</button></div></div>
 <div class="sidebar">
-<div class="brand"><img src="logo.png" onerror="this.style.display='none'"><div><b>KLIDO CRM Pro</b><span class="pro">Pro Plan</span></div></div>
+<div class="brand"><img src="logo.png" onerror="this.style.display='none'"><div><b>KLIDO CRM Pro</b><span class="pro" id="planBadge">Básico</span></div></div>
 <button onclick="document.body.classList.toggle('light')" style="margin:6px 0;padding:8px;border-radius:8px;border:1px solid #2f7bff;background:transparent;color:inherit;cursor:pointer">🌙 / ☀️ Tema</button>
 <div class="menu">MENU</div>
 <div class="item active" onclick="show('inbox',this)">📥 Inbox</div>
-<div class="item" onclick="show('inbox',this)">👥 Contacts</div>
 <div class="item" onclick="show('campaigns',this)">📣 Campaigns</div>
-<div class="item" onclick="show('inbox',this)">📄 Templates</div>
-<div class="menu">SUPPORT</div>
-<div class="item" onclick="window.open('https://wa.me/573226536669?text=Hola%20necesito%20soporte%20de%20KLIDO%20CRM','_blank')">💡 Help Center</div>
+<div class="item" onclick="show('pricing',this)">💳 Planes</div>
 <div class="item" onclick="show('settings',this)">⚙️ Settings</div>
-<div class="trial">Trial - 12 days left<br><button>Upgrade now</button></div>
+<div class="menu">SUPPORT</div>
+<div class="item" onclick="window.open('https://wa.me/573226536669?text=Hola%20soporte%20KLIDO','_blank')">💡 Help Center</div>
+<div class="trial" id="trialBox">Trial - 12 días<br><button onclick="show('pricing',null)">Ver planes: $80k - $230k</button></div>
 </div>
 <div class="inbox" id="panel-inbox">
 <div class="inbox-h">Inbox <span>⋮ ＋</span></div>
-<div class="search">🔍<input id="q" placeholder="Search conversations..." oninput="filter()"></div>
+<div class="search">🔍<input id="q" placeholder="Search..." oninput="filter()"></div>
 <div id="chatList"></div>
 </div>
 <div class="inbox" id="panel-campaigns" style="display:none">
@@ -88,13 +97,22 @@ body.light.card input{background:#f2f4f9;color:#111;border-color:#dbe4f5}
 <button onclick="uploadCamp()" style="width:100%;padding:10px;background:#2f7bff;border:0;border-radius:8px;color:#fff;cursor:pointer">Subir Excel y Enviar</button>
 <div id="camps" style="margin-top:12px;font-size:13px"></div>
 </div></div>
+<div class="inbox" id="panel-pricing" style="display:none; width:600px">
+<div class="inbox-h">Planes Klido - Elige tu plan</div>
+<div class="pricing">
+<div class="price-card"><h3>Básico</h3><div class="price">$80.000</div><small>/mes + IVA</small><ul><li>✅ 1 campaña activa</li><li>✅ 2 usuarios</li><li>✅ Inbox ilimitado</li><li>❌ Sin IA</li></ul><button onclick="alert('Contacta: hola@klido.app para activar Básico')">Empezar Básico</button></div>
+<div class="price-card popular"><h3>Pro ⭐</h3><div class="price">$130.000</div><small>/mes + IVA</small><ul><li>✅ 5 campañas</li><li>✅ 5 usuarios</li><li>✅ IA incluida</li><li>✅ Soporte prioridad</li></ul><button onclick="alert('Contacta: hola@klido.app para activar Pro')">Empezar Pro</button></div>
+<div class="price-card"><h3>Gold</h3><div class="price">$230.000</div><small>/mes + IVA</small><ul><li>✅ Campañas ilimitadas</li><li>✅ Usuarios ilimitados</li><li>✅ IA + Bot pánico humano</li><li>✅ API + Wompi</li></ul><button onclick="alert('Contacta: hola@klido.app para activar Gold')">Empezar Gold</button></div>
+</div>
+<div style="padding:14px;font-size:12px;color:#7a8bb0">Todos incluyen Ley 1581, backups y factura electrónica. Pagos por Wompi desde el 30.</div>
+</div>
 <div class="inbox" id="panel-settings" style="display:none">
 <div class="inbox-h">Settings / Ayuda</div>
 <div style="padding:16px;font-size:13px;line-height:1.6;overflow-y:auto">
-<b>¿Cómo subir un Excel?</b><br>Ve a Campaigns → elige plantilla → Seleccionar archivo (.xlsx) → Subir Excel y Enviar. Primera columna: números con código país (573...).<br><br>
-<b>¿Cómo saber si la plantilla cargó?</b><br>En Campaigns el desplegable solo muestra plantillas APROBADAS. Si no aparece, verifica en Meta Business → Plantillas que esté Approved y en idioma es.<br><br>
-<b>¿Dónde ver historial de campañas?</b><br>En Campaigns abajo: 📣 nombre - enviados/total. Se envían 50 cada 6 horas automáticamente.<br><br>
-<b>Puntos de colores</b><br>🔴 Nuevo sin responder • 🟡 Respondió a campaña • Sin color = leído.
+<b>Excel:</b> Campaigns → plantilla → archivo.xlsx primera columna 573...<br><br>
+<b>Plantillas:</b> solo APPROVED en Meta.<br><br>
+<b>Puntos:</b> 🔴 nuevo • 🟡 campaña • transparente leído<br><br>
+<b>Legal:</b> <a href="/terminos.html" target="_blank">Términos</a> • <a href="/privacidad.html" target="_blank">Privacidad</a>
 </div></div>
 <div class="main">
 <div class="chat-h"><div class="av" id="hAv">SN</div><div><b id="hName">Selecciona un chat</b><div style="font-size:12px;color:#7a8bb0">Online • WhatsApp</div></div></div>
@@ -112,8 +130,11 @@ body.light.card input{background:#f2f4f9;color:#111;border-color:#dbe4f5}
 <script>
 let AGENCY='',CUR='';
 async function doLogin(){
-AGENCY=ag.value.trim();let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value})});
-if(!r.ok){alert('Login malo');return;}login.style.display='none';loadChats();loadTpl();setInterval(loadChats,5000);}
+if(!document.getElementById('acc').checked){alert('Acepta términos');return;}
+AGENCY=ag.value.trim();let r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCY,username:us.value,password:pw.value,acepto_terminos:true})});
+if(!r.ok){alert('Login malo');return;}let j=await r.json();login.style.display='none';
+try{let me=await fetch('/api/me?agency_id='+AGENCY).then(x=>x.json());if(me.plan_nombre)planBadge.textContent=me.plan_nombre;}catch(e){}
+loadChats();loadTpl();setInterval(loadChats,5000);}
 async function loadChats(){
 let r=await fetch('/api/chats?agency_id='+AGENCY);let j=await r.json();window._chats=j;
 chatList.innerHTML=j.map(c=>{let ini=(c.name||c.wa_id).substring(0,2).toUpperCase();
@@ -132,7 +153,7 @@ async function send(){let t=txt.value.trim();if(!t||!CUR)return;txt.value='';
 await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wa_id:CUR,text:t,agency_id:AGENCY})});openChat(CUR);}
 async function setTag(){await fetch('/api/chats/'+CUR+'/tag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tagSel.value,agency_id:AGENCY})});}
 function show(p, el){
-  ['inbox','campaigns','settings'].forEach(x=>{
+  ['inbox','campaigns','pricing','settings'].forEach(x=>{
     let pnl=document.getElementById('panel-'+x);
     if(pnl) pnl.style.display = x===p? 'flex' : 'none';
   });
