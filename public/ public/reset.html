@@ -1,51 +1,10 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Restablecer Clave - KLIDO</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-  <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-    <h1 class="text-2xl font-bold mb-2">Nueva clave</h1>
-    <p class="text-sm text-gray-500 mb-6">Ingresa tu nueva contraseña</p>
-    
-    <input id="pass1" type="password" placeholder="Nueva clave" class="w-full border p-3 rounded-xl mb-3">
-    <input id="pass2" type="password" placeholder="Repetir clave" class="w-full border p-3 rounded-xl mb-4">
-    
-    <button onclick="cambiar()" class="w-full bg-black text-white py-3 rounded-xl font-bold">Cambiar clave</button>
-    <p id="msg" class="text-center mt-4 text-sm"></p>
-  </div>
-
-<script>
-const token = new URLSearchParams(window.location.search).get('token');
-
-async function cambiar(){
-  const p1 = document.getElementById('pass1').value;
-  const p2 = document.getElementById('pass2').value;
-  const msg = document.getElementById('msg');
-  
-  if(!p1 || p1 !== p2){ msg.textContent='Las claves no coinciden'; msg.className='text-center mt-4 text-sm text-red-500'; return; }
-  if(p1.length < 6){ msg.textContent='Mínimo 6 caracteres'; msg.className='text-center mt-4 text-sm text-red-500'; return; }
-  if(!token){ msg.textContent='Token no válido'; msg.className='text-center mt-4 text-sm text-red-500'; return; }
-
-  // CORREGIDO: tu server usa /api/reset-password-secure y new_password
-  const res = await fetch('/api/reset-password-secure', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ token, new_password: p1 })
-  });
-  const data = await res.json();
-  if(res.ok){
-    msg.textContent='¡Clave cambiada! Agencia: '+(data.agency_id||'')+' Redirigiendo...';
-    msg.className='text-center mt-4 text-sm text-green-600';
-    setTimeout(()=> window.location.href='/', 2000);
-  } else {
-    msg.textContent = data.error || 'Error al cambiar';
-    msg.className='text-center mt-4 text-sm text-red-500';
-  }
+async function forgot(){
+  let email=prompt('Escribe tu CORREO registrado (ej: tu@gmail.com):');
+  if(!email) return;
+  try{
+    let r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    let j=await r.json();
+    if(r.ok) alert('Te enviamos correo a '+email+'\nRevisa bandeja y SPAM.\nAgencias: '+(j.agencies||[]).join(', ')+'\nLink dura 15 min');
+    else alert(j.error||'Error');
+  }catch(e){ alert('Error de conexión'); }
 }
-</script>
-</body>
-</html>
