@@ -1,40 +1,55 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>Klido CRM</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Klido CRM</title>
 <style>
-body{margin:0;background:#0A1220;color:white;font-family:Inter,sans-serif;display:flex;height:100vh}
-.left{width:42%;padding:40px;background:#0D1A33}
-.card{background:#12213F;border-radius:16px;padding:16px;margin-top:20px}
-.btn{width:100%;background:#2A5BFF;border:none;padding:14px;border-radius:12px;color:white;font-weight:700;cursor:pointer}
-input{width:100%;padding:14px;border-radius:12px;border:none;margin:10px 0;background:#EAF0FF;color:#000}
-.sidebar{width:240px;background:#0F1E3A;padding:20px}
-.main{flex:1;background:#0A1220;padding:20px;overflow:auto}
-.tag{padding:4px 10px;border-radius:20px;font-size:12px}.red{background:#FF3B3B}.yellow{background:#FFB800;color:#000}
+:root{--dark:#0A1931;--dark2:#102542;--blue:#3B82F6;--blue2:#60A5FA;--bg:#070F22}
+*{box-sizing:border-box;font-family:Inter,system-ui}body{margin:0;background:var(--bg);color:#fff;height:100vh}
+.login{display:flex;height:100vh}.left{width:45%;background:linear-gradient(180deg,var(--dark),#061023);padding:48px;display:flex;flex-direction:column;justify-content:center}.right{width:55%;background:#0C1A33;padding:40px;overflow:auto}
+.card{background:var(--dark2);border-radius:18px;padding:18px;margin:14px 0;border:1px solid #1A335F}.btn{background:var(--blue);border:none;padding:14px;border-radius:12px;color:#fff;font-weight:800;cursor:pointer;width:100%}.input{width:100%;padding:14px;border-radius:12px;border:none;margin:8px 0;background:#E8F0FF;color:#000}
+.sidebar{width:260px;background:var(--dark);padding:16px;display:flex;flex-direction:column;justify-content:space-between}.main{flex:1;display:flex}.chats{width:350px;background:#0E2245;border-right:1px solid #1A335F;overflow:auto}.chatview{flex:1;display:flex;flex-direction:column}.badge{padding:4px 10px;border-radius:20px;font-size:11px}.red{background:#FF3B3B}.yellow{background:#FFC93C;color:#000}.green{background:#22C55E}
 </style></head><body>
-<div class="left">
-<h1>Gestiona tu<br>WhatsApp Business<br>como empresa real.</h1>
-<p>Inbox con <span class="tag red">🔴 No leídos</span> y <span class="tag yellow">🟡 Campañas</span>, antibaneo 50/5h, equipo con roles y estadísticas reales.</p>
-<p>✅ API oficial de WhatsApp Business<br>✅ Roles Worker/Admin<br>✅ Soporte directo 3133181851</p>
-</div>
-<div class="main" id="app">
-<div class="card"><h3>Ingresar al CRM</h3>
-<input id="slug" placeholder="agencia ej: acol" value="acol">
-<input id="email" placeholder="email" value="fermorales20020310@gmail.com">
-<input id="pass" type="password" placeholder="password">
-<button class="btn" onclick="login()">Ingresar al CRM →</button></div>
-<div id="panel" style="display:none">
-<div style="display:flex;gap:10px"><button class="btn" onclick="syncTemplates()">🔄 Sync Plantillas Aprobadas Meta</button>
-<a class="btn" style="background:#25D366;text-align:center;text-decoration:none" href="https://wa.me/573133181851?text=Ayuda%20Klido" target="_blank">Ayuda → WhatsApp</a></div>
-<div class="card"><h4>Subir Excel para campaña</h4><input type="file" id="excel"><button class="btn" onclick="uploadExcel()">Subir y auto-detectar números</button><div id="excelResult"></div></div>
-<div class="card"><h4>Métricas Admin - Seguimiento trabajadores</h4><div id="metrics"></div></div>
-<div class="card"><h4>Configuración</h4><div id="config"></div></div>
-</div>
-</div>
+<div id="login" class="login">
+<div class="left"><img src="public/logo.png" style="height:42px;object-fit:contain" alt="Klido Logo"/><h1 style="font-size:44px;line-height:1.1;margin-top:28px">Gestiona tu<br>WhatsApp Business<br>como empresa real.</h1><p>Inbox con <span class="badge red">🔴 No leídos</span> <span class="badge yellow">🟡 Campañas</span> <span class="badge green">🟢 Online</span><br>Antibaneo 50/5h, métricas por trabajador, historial completo.</p><p>✅ API oficial Meta verificada<br>✅ Roles Admin / Worker<br>✅ Soporte directo 3133181851</p></div>
+<div class="right">
+<div class="card"><h3>Ingresar a Klido</h3><input id="email" class="input" placeholder="Correo empresarial"/><input id="pass" class="input" type="password" placeholder="Contraseña"/><button class="btn" onclick="doLogin()">Ingresar al CRM →</button><p><a href="#" onclick="document.getElementById('forgot').style.display='block'">Olvidé contraseña</a> | <a href="#" onclick="document.getElementById('reg').style.display='block'">Crear empresa</a></p></div>
+<div id="forgot" class="card" style="display:none"><h4>Recuperar por correo</h4><input id="f_email" class="input" placeholder="tu correo"/><button class="btn" onclick="forgot()">Enviar código</button><input id="f_code" class="input" placeholder="Código 6 dígitos"/><input id="f_new" class="input" type="password" placeholder="Nueva contraseña"/><button class="btn" style="background:#22C55E" onclick="resetPass()">Cambiar</button></div>
+<div id="reg" class="card" style="display:none"><h4>Registrar empresa</h4><input id="r_empresa" class="input" placeholder="Nombre empresa"/><input id="r_email" class="input" placeholder="Correo"/><input id="r_pass" class="input" type="password" placeholder="Contraseña"/><select id="r_plan" class="input"><option value="basico">BÁSICO $800k/año + $80k trim</option><option value="premium">PREMIUM $1.3M/año + $95k trim (IA)</option><option value="gold">GOLD $2.4M/año + $120k trim (IA + Llamadas)</option></select><label><input type="checkbox" id="terms"/> Acepto términos y condiciones</label><button class="btn" onclick="register()">Crear empresa y generar pago</button><input id="otp" class="input" placeholder="Código OTP de tu correo"/><button class="btn" style="background:#22C55E" onclick="verify()">Verificar y entrar</button></div>
+</div></div>
+
+<div id="app" style="display:none;width:100vw;height:100vh"><div class="sidebar"><div><img src="public/logo.png" style="height:34px" alt="Klido"/><p style="font-size:11px;letter-spacing:2px">CRM EMPRESARIAL</p>
+<button class="btn" style="background:transparent;text-align:left" onclick="setFilter('todos')">💬 Todos</button>
+<button class="btn" style="background:transparent;text-align:left" onclick="setFilter('no_leidos')">🔴 No leídos</button>
+<button class="btn" style="background:transparent;text-align:left" onclick="setFilter('campana')">🟡 Campañas</button>
+<button class="btn" style="background:transparent;text-align:left" onclick="setFilter('online')">🟢 Online</button>
+<button class="btn" style="background:transparent;text-align:left" onclick="openCamp()">📢 Campañas + Excel</button>
+<button class="btn" style="background:transparent;text-align:left" onclick="openMetrics()">📊 Métricas</button>
+<button class="btn" style="background:transparent;text-align:left" onclick="openPlanes()">💳 Planes</button>
+<button class="btn" style="background:transparent;text-align:left" onclick="openConfig()">⚙️ Configuración</button>
+<a class="btn" style="background:#25D366;display:block;text-align:center;text-decoration:none" href="https://wa.me/573133181851" target="_blank">🆘 Ayuda</a>
+</div><button class="btn" style="background:#FF3B3B" onclick="logout()">Salir</button></div>
+<div class="main"><div class="chats" id="chats"></div><div class="chatview"><div id="msgs" style="flex:1;overflow:auto;padding:16px"></div><div style="padding:12px;display:flex;gap:8px"><input id="msgInput" class="input" style="flex:1" placeholder="Mensaje + foto/audio"/><input type="file" id="fileInput" style="display:none"/><button class="btn" style="width:70px" onclick="document.getElementById('fileInput').click()">📎</button><button class="btn" style="width:80px" onclick="sendMsg()">Enviar</button></div></div><div id="sidePanel" style="width:340px;background:#0E2245;padding:16px;overflow:auto"></div></div></div>
+
+<script src="/socket.io/socket.io.js"></script>
 <script>
-async function login(){
- const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:slug.value,email:email.value,password:pass.value})});
- const j=await r.json(); if(j.token){localStorage.token=j.token; panel.style.display='block'; loadMetrics(); loadConfig();} else alert(JSON.stringify(j));
-}
-async function syncTemplates(){ const r=await fetch('/api/templates/sync',{method:'POST',headers:{Authorization:'Bearer '+localStorage.token}}); alert(JSON.stringify(await r.json())); }
-async function uploadExcel(){ const fd=new FormData(); fd.append('file',excel.files[0]); const r=await fetch('/api/campaigns/upload',{method:'POST',headers:{Authorization:'Bearer '+localStorage.token},body:fd}); const j=await r.json(); excelResult.innerHTML=`Detectados: ${j.total} números`; }
-async function loadMetrics(){ const r=await fetch('/api/metrics/admin',{headers:{Authorization:'Bearer '+localStorage.token}}); metrics.innerHTML=JSON.stringify(await r.json(),null,2); }
-async function loadConfig(){ const r=await fetch('/api/config'); config.innerHTML=JSON.stringify(await r.json(),null,2); }
+let token=null, agencia_id=null, filtro='todos', contactoActivo=null, contactos_cache_ids=[];
+const socket=io();
+async function doLogin(){const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.value,password:pass.value})});const j=await r.json();if(j.token){token=j.token;agencia_id=j.user.agencia_id;loginOk();}else alert(j.error)}
+function loginOk(){document.getElementById('login').style.display='none';document.getElementById('app').style.display='flex';socket.emit('join_agencia',agencia_id);loadChats();loadTemplates();}
+function logout(){localStorage.clear();location.reload()}
+async function forgot(){await fetch('/api/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:f_email.value})});alert('Código enviado, revisa spam')}
+async function resetPass(){const r=await fetch('/api/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:f_email.value,codigo:f_code.value,nueva:f_new.value})});const j=await r.json();alert(j.ok?'Contraseña cambiada':'Código malo')}
+async function register(){if(!terms.checked) return alert('Acepta términos');const r=await fetch('/api/register-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa:r_empresa.value,email:r_email.value,password:r_pass.value,plan:r_plan.value})});const j=await r.json();alert('Empresa creada, te llevamos a WhatsApp para activar');window.open(j.whatsapp_pago,'_blank')}
+async function verify(){const r=await fetch('/api/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:r_email.value,codigo:otp.value})});const j=await r.json();if(j.token){token=j.token;agencia_id=j.user.agencia_id;loginOk();}else alert(j.error)}
+async function loadChats(){const r=await fetch(`/api/contactos?filtro=${filtro}`,{headers:{Authorization:'Bearer '+token}});const data=await r.json();document.getElementById('chats').innerHTML=data.map(c=>`<div class="card" onclick="openChat(${c.id})"><b>${c.nombre||c.telefono}</b> ${c.no_leido>0?'<span class="badge red">'+c.no_leido+'</span>':''} ${c.origen=='campana'?'<span class="badge yellow">Campaña</span>':''}<br><small>${c.telefono}</small></div>`).join('')}
+function setFilter(f){filtro=f;loadChats()}
+async function openChat(id){contactoActivo=id;const r=await fetch(`/api/mensajes/${id}`,{headers:{Authorization:'Bearer '+token}});const msgsData=await r.json();document.getElementById('msgs').innerHTML=msgsData.map(m=>`<div class="card" style="${m.direccion=='saliente'?'margin-left:28%;background:#1E3A8A':''}">${m.contenido}${m.media_url?`<br><a href="${m.media_url}" target="_blank">📎 Ver archivo</a>`:''}<br><small>${new Date(m.timestamp).toLocaleString()} ${m.tipo}</small></div>`).join('')}
+async function sendMsg(){const fd=new FormData();fd.append('contacto_id',contactoActivo);fd.append('contenido',msgInput.value);fd.append('tipo','text');if(fileInput.files[0]) fd.append('file',fileInput.files[0]);await fetch('/api/mensajes/enviar',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});msgInput.value='';openChat(contactoActivo)}
+async function loadTemplates(){const r=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}});const t=await r.json();document.getElementById('sidePanel').innerHTML='<h4>Plantillas APROBADAS auto-sync cada 30min</h4>'+t.map(x=>`<div class="card">${x.nombre} ✅ ${x.categoria}</div>`).join('')+'<button class="btn" onclick="syncTpl()">🔄 Sincronizar ahora con Meta</button>'}
+async function syncTpl(){const r=await fetch('/api/templates/sync',{method:'POST',headers:{Authorization:'Bearer '+token}});const j=await r.json();alert(`Sincronizadas ${j.count} aprobadas`);loadTemplates()}
+async function openCamp(){document.getElementById('sidePanel').innerHTML=`<h3>📢 Campañas</h3><input type="file" id="excelFile" class="input"/><button class="btn" onclick="uploadExcel()">Subir Excel - auto detecta teléfonos</button><div id="eRes"></div><select id="tplSel" class="input"></select><button class="btn" onclick="sendCamp()">Enviar en bloques 50/5min antibaneo</button><div id="hist"></div>`;const r=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}});const tpl=await r.json();document.getElementById('tplSel').innerHTML=tpl.map(t=>`<option value="${t.nombre}">${t.nombre}</option>`).join('')}
+async function uploadExcel(){const fd=new FormData();fd.append('file',document.getElementById('excelFile').files[0]);const r=await fetch('/api/campanas/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});const j=await r.json();contactos_cache_ids=j.contactos_ids;document.getElementById('eRes').innerText=`Detectados ${j.detectados} números listos`;}
+async function sendCamp(){const r=await fetch('/api/campanas/enviar',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({plantilla:document.getElementById('tplSel').value,contactos_ids:contactos_cache_ids})});const j=await r.json();alert(j.ok?'Campaña iniciada en bloques antibaneo':'Error '+j.error)}
+async function openMetrics(){const r=await fetch('/api/metrics',{headers:{Authorization:'Bearer '+token}});const j=await r.json();document.getElementById('sidePanel').innerHTML='<h3>Métricas por trabajador (Admin)</h3><pre style="white-space:pre-wrap">'+JSON.stringify(j,null,2)+'</pre>'}
+async function openPlanes(){const r=await fetch('/api/planes');const p=await r.json();document.getElementById('sidePanel').innerHTML=p.map(pl=>`<div class="card"><b>${pl.nombre}</b><br>${pl.precio}<br>${pl.mant}<br>${pl.f.join('<br>')}<br><a class="btn" style="display:block;text-align:center;background:#25D366;text-decoration:none;margin-top:8px" href="${pl.wa}" target="_blank">Pagar → WhatsApp 3133181851</a></div>`).join('')}
+async function openConfig(){const r=await fetch('/api/config-info');const j=await r.json();document.getElementById('sidePanel').innerHTML=`<h3>⚙️ Configuración API</h3><p><b>${j.api}</b></p><ul>${j.beneficios.map(b=>`<li>${b}</li>`).join('')}</ul><p>Webhook: <code>${j.webhook}</code></p><p>IA: Premium y Gold. Llamadas instantáneas: Gold.</p>`}
+socket.on('new_message', m=>{loadChats(); if(contactoActivo) openChat(contactoActivo)})
+socket.on('campana_progress', d=>{console.log('progreso',d)})
 </script></body></html>
