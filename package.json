@@ -1,7 +1,7 @@
 {
   "name": "klido-crm",
   "version": "12.2",
-  "engines": { "node": ">=18" },
+  "engines": { "node": "18.x" },
   "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "4.19.2",
@@ -10,7 +10,7 @@
     "dotenv": "16.4.5",
     "axios": "1.7.2",
     "bcryptjs": "2.4.3",
-    "jsonwebtoken": "9.0.5",
+    "jsonwebtoken": "9.0.2",
     "uuid": "9.0.1",
     "multer": "1.4.5-lts.1",
     "xlsx": "0.18.5"
