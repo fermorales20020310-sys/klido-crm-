@@ -1,73 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Klido V12</title>
 <script src="/socket.io/socket.io.js"></script>
 <style>
-body{font-family:Arial;background:#0f0f0f;color:#fff;margin:0}
-.card{max-width:400px;margin:80px auto;background:#1e1e1e;padding:25px;border-radius:12px}
-input,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none}
-button{background:#25D366;color:#000;font-weight:bold;cursor:pointer}
-#app{display:none}
+body{font-family:Inter,Arial;background:#0f0f0f;color:#fff;margin:0}
+.card{max-width:380px;margin:80px auto;background:#1e1e1e;padding:24px;border-radius:12px}
+input,button{width:100%;padding:12px;margin:7px 0;border-radius:8px;border:none;box-sizing:border-box}
+button{background:#25D366;color:#000;font-weight:700;cursor:pointer}
+#app{display:none;height:100vh}
 .inbox{display:flex;height:100vh}
-.lista{width:320px;background:#111;overflow:auto}
+.lista{width:320px;background:#111;overflow:auto;border-right:1px solid #222}
 .chat{flex:1;display:flex;flex-direction:column;background:#0b141a}
-.msg{padding:8px 12px;margin:4px;border-radius:8px;max-width:70%}
+.msg{padding:8px 12px;margin:4px;border-radius:8px;max-width:68%;font-size:14px}
 .yo{background:#005c4b;align-self:flex-end}
-.cliente{background:#202c33}
+.cliente{background:#202c33;align-self:flex-start}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
-.rojo{background:red}.amarillo{background:gold}
 </style>
 </head>
 <body>
 <div id="login" class="card">
-<h2>Klido V12 - Login</h2>
-<input id="correo" placeholder="Correo">
+<h2>Klido V12</h2>
+<input id="correo" placeholder="Correo empresa">
 <input id="password" type="password" placeholder="Contraseña">
-<input id="codigoPlan" placeholder="Código de Plan (opcional)">
+<input id="codigoPlan" placeholder="Código plan (si tienes)">
 <button onclick="login()">Entrar</button>
-<p><a href="#" onclick="mostrarRecuperar()" style="color:#25D366">Olvidé mi contraseña</a> | <a href="/campanas.html" style="color:#aaa">Ir a Campañas</a></p>
-<div id="recuperar" style="display:none">
-<input id="recCorreo" placeholder="Tu correo"><button onclick="enviarCodigo()">Enviar código</button>
-<input id="recCode" placeholder="Código"><input id="recNewPass" type="password" placeholder="Nueva pass"><button onclick="cambiarPass()">Cambiar</button>
+<p style="font-size:13px"><a href="#" onclick="toggleRec()" style="color:#25D366">Olvidé mi contraseña</a> - <a href="/campanas.html" style="color:#aaa">Campañas</a></p>
+<div id="rec" style="display:none;border-top:1px solid #333;margin-top:15px;padding-top:10px">
+<input id="recCorreo" placeholder="Tu correo"><button onclick="enviarCodigo()">Enviar código al correo</button>
+<input id="recCode" placeholder="Código 6 dígitos"><input id="recNewPass" type="password" placeholder="Nueva contraseña"><button onclick="cambiarPass()">Cambiar contraseña</button>
 </div>
 </div>
 <div id="app">
 <div class="inbox">
 <div class="lista" id="lista"></div>
 <div class="chat"><div id="mensajes" style="flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column"></div>
-<div style="display:flex;padding:10px"><input id="txt" style="flex:1" placeholder="Mensaje..."><button onclick="enviar()" style="width:80px;margin-left:8px">Enviar</button></div></div>
-</div>
-</div>
+<div style="display:flex;padding:10px;border-top:1px solid #222"><input id="txt" style="flex:1" placeholder="Escribe mensaje..." onkeydown="if(event.key==='Enter')enviar()"><button onclick="enviar()" style="width:80px;margin-left:8px">Enviar</button></div>
+</div></div></div>
 <script>
-let token, empresaId, telActual, socket;
+let token,empresaId,telActual,socket;
 async function login(){
-  const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:correo.value,password:password.value,codigoPlan:codigoPlan.value})});
-  const data=await res.json(); if(!data.ok){alert(data.error);return;}
-  token=data.token; empresaId=data.empresa.id; localStorage.setItem('klido_token',token); localStorage.setItem('klido_emp',empresaId);
-  iniciar();
+ const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:correo.value,password:password.value,codigoPlan:codigoPlan.value})});
+ const d=await r.json(); if(!d.ok){alert(d.error);return;}
+ token=d.token; empresaId=d.empresa.id; localStorage.setItem('klido_token',token); localStorage.setItem('klido_emp',empresaId); iniciar();
 }
 function iniciar(){
-  document.getElementById('login').style.display='none'; document.getElementById('app').style.display='block';
-  socket=io(); socket.emit('join_empresa',empresaId);
-  socket.on('nuevo_mensaje_cliente',d=>{cargarInbox(); if(d.telefono===telActual) cargarMensajes(telActual);});
-  cargarInbox();
+ document.getElementById('login').style.display='none'; document.getElementById('app').style.display='block';
+ socket=io(); socket.emit('join_empresa',empresaId);
+ socket.on('nuevo_mensaje_cliente',()=>{cargarInbox(); if(telActual) cargarMensajes(telActual);});
+ socket.on('campana_update',()=>cargarInbox());
+ cargarInbox();
 }
 async function cargarInbox(){
-  const r=await fetch('/api/inbox',{headers:{Authorization:'Bearer '+token}}); const list=await r.json();
-  document.getElementById('lista').innerHTML=list.map(c=>`<div onclick="cargarMensajes('${c.telefono}')" style="padding:12px;border-bottom:1px solid #222;cursor:pointer"><span class="dot ${c.esCampana?'amarillo':c.noLeido?'rojo':''}" style="background:${c.esCampana?'gold':c.noLeido?'red':'transparent'}"></span>${c.nombre} - ${c.telefono} ${c.esCampana?'🟡':''}</div>`).join('');
+ const r=await fetch('/api/inbox',{headers:{Authorization:'Bearer '+token}}); const list=await r.json();
+ document.getElementById('lista').innerHTML=list.map(c=>`<div onclick="cargarMensajes('${c.telefono}')" style="padding:12px;border-bottom:1px solid #222;cursor:pointer"><span class="dot" style="background:${c.esCampana?'gold':c.noLeido?'red':'transparent'}"></span>${c.nombre} <small style="color:#888">${c.telefono}</small> ${c.esCampana?'🟡':''}</div>`).join('');
 }
-async function cargarMensajes(tel){ telActual=tel; const r=await fetch('/api/mensajes/'+tel,{headers:{Authorization:'Bearer '+token}}); const msgs=await r.json();
-  document.getElementById('mensajes').innerHTML=msgs.map(m=>`<div class="msg ${m.de==='yo'?'yo':'cliente'}">${m.contenido}</div>`).join('');
-}
-async function enviar(){ const contenido=document.getElementById('txt').value; if(!contenido||!telActual)return;
-  await fetch('/api/mensajes/enviar',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({telefono:telActual,tipo:'text',contenido})});
-  document.getElementById('txt').value=''; cargarMensajes(telActual);
-}
-function mostrarRecuperar(){document.getElementById('recuperar').style.display='block'}
-async function enviarCodigo(){ const r=await fetch('/api/recuperar/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:recCorreo.value})}); const d=await r.json(); alert(d.mensaje+(d.previewCode?' Código: '+d.previewCode:''));}
-async function cambiarPass(){ const r=await fetch('/api/recuperar/cambiar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:recCorreo.value,code:recCode.value,nuevaPassword:recNewPass.value})}); const d=await r.json(); if(d.ok)alert('Cambiada'); else alert(d.error);}
+async function cargarMensajes(tel){telActual=tel; const r=await fetch('/api/mensajes/'+tel,{headers:{Authorization:'Bearer '+token}}); const msgs=await r.json(); document.getElementById('mensajes').innerHTML=msgs.map(m=>`<div class="msg ${m.de==='yo'?'yo':'cliente'}">${m.contenido}</div>`).join(''); document.getElementById('mensajes').scrollTop=99999;}
+async function enviar(){const c=txt.value; if(!c||!telActual)return; txt.value=''; await fetch('/api/mensajes/enviar',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({telefono:telActual,tipo:'text',contenido:c})}); cargarMensajes(telActual);}
+function toggleRec(){document.getElementById('rec').style.display=document.getElementById('rec').style.display==='none'?'block':'none'}
+async function enviarCodigo(){const r=await fetch('/api/recuperar/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:recCorreo.value})}); const d=await r.json(); alert(d.ok?'Código enviado '+(d.previewCode?' -> '+d.previewCode:' revisa correo') : d.error);}
+async function cambiarPass(){const r=await fetch('/api/recuperar/cambiar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:recCorreo.value,code:recCode.value,nuevaPassword:recNewPass.value})}); const d=await r.json(); alert(d.ok?'Cambiada, ya puedes entrar':'Error: '+d.error);}
 token=localStorage.getItem('klido_token'); empresaId=localStorage.getItem('klido_emp'); if(token&&empresaId) iniciar();
 </script>
 </body>
