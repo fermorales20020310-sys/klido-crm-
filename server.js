@@ -38,20 +38,18 @@ const contactosDB = db('contactos');
 const chatsDB = db('chats');
 const codigosDB = db('codigos');
 
-// --- CREDENCIAL SUPERADMIN 100% FUNCIONAL ---
 const FER_EMAIL = "fermorales20020310@gmail.com";
 const FER_PASS = "Mafe2002@";
 let users = usuariosDB.get();
 let fer = users.find(u=>u.email.toLowerCase()===FER_EMAIL.toLowerCase());
 if(!fer){
   users.push({ id: uuidv4(), nombre:'Fer Morales SuperAdmin', email:FER_EMAIL, password:bcrypt.hashSync(FER_PASS,10), rol:'superadmin', empresaId:null, createdAt:new Date() });
-  console.log('CREADO SUPERADMIN '+FER_EMAIL);
 } else {
   fer.password = bcrypt.hashSync(FER_PASS,10);
   fer.rol='superadmin'; fer.empresaId=null;
-  console.log('ACTUALIZADO SUPERADMIN '+FER_EMAIL+' FUNCIONAL');
 }
 usuariosDB.set(users);
+console.log('✅ SuperAdmin funcional: '+FER_EMAIL);
 
 function auth(req,res,next){
   const token = req.headers.authorization?.split(' ')[1];
@@ -76,23 +74,27 @@ app.post('/api/login', async (req,res)=>{
     const ok = await bcrypt.compare(String(password), user.password);
     if(!ok) return res.status(401).json({error:'Clave incorrecta'});
     const token = jwt.sign({id:user.id, rol:user.rol, empresaId:user.empresaId}, JWT_SECRET, {expiresIn:'7d'});
-    console.log(`LOGIN OK: ${emailClean} -> ${user.rol}`);
     res.json({token, user:{id:user.id, nombre:user.nombre, email:user.email, rol:user.rol, empresaId:user.empresaId}});
-  }catch(e){ console.log(e); res.status(500).json({error:e.message}); }
+  }catch(e){ res.status(500).json({error:e.message}); }
 });
 
 app.post('/api/public/crear-empresa', async (req,res)=>{
-  const {nombre,email,password,plan,anual,mantenimiento,aceptaTerminos} = req.body;
-  if(!nombre||!email||!password) return res.status(400).json({error:'Faltan datos'});
+  const {nombre,email,password,plan,aceptaTerminos} = req.body;
+  if(!nombre||!email||!password||!plan) return res.status(400).json({error:'Faltan datos'});
   if(!aceptaTerminos) return res.status(400).json({error:'Acepta términos'});
   let allUsers = usuariosDB.get();
   if(allUsers.find(u=>u.email.toLowerCase()===email.toLowerCase())) return res.status(400).json({error:'Correo ya existe'});
+
+  const precios = { basico:800000, premium:1400000, gold:2400000 };
+  const monto = precios[plan]||800000;
+
   const codigoAcceso = Math.random().toString(36).substring(2,8).toUpperCase();
   const empresaId = uuidv4();
-  const nueva = { id:empresaId, nombre, codigoAcceso, plan:plan||'basico', anual:anual||800000, mantenimiento:mantenimiento||80000, multiagencia:true, metaApi:true, estado:'activo', createdAt:new Date() };
+  const nueva = { id:empresaId, nombre, codigoAcceso, plan, montoAnual:monto, estado:'activo', multiagencia:true, metaApi:true, createdAt:new Date() };
   const empresas = empresasDB.get(); empresas.push(nueva); empresasDB.set(empresas);
   allUsers.push({ id: uuidv4(), nombre:'Admin '+nombre, email, password:bcrypt.hashSync(password,10), rol:'admin', empresaId, createdAt:new Date() });
   usuariosDB.set(allUsers);
+  console.log(`Agencia creada ${nombre} ${plan} $${monto} cod:${codigoAcceso}`);
   res.json({ok:true, empresa:nueva, codigoAcceso});
 });
 
@@ -121,14 +123,6 @@ app.get('/api/empresas', auth, (req,res)=> res.json(empresasDB.get()));
 app.get('/api/usuarios', auth, (req,res)=>{
   let us = usuariosDB.get(); if(req.user.rol!=='superadmin') us=us.filter(u=>u.empresaId===req.user.empresaId);
   res.json(us.map(({password,...u})=>u));
-});
-app.post('/api/usuarios', auth, async (req,res)=>{
-  const {nombre,email,password,rol,empresaId} = req.body;
-  const target = req.user.rol==='superadmin'? empresaId : req.user.empresaId;
-  const usuarios = usuariosDB.get();
-  if(usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase())) return res.status(400).json({error:'ya existe'});
-  usuarios.push({ id: uuidv4(), nombre, email, password:bcrypt.hashSync(password,10), rol:rol||'asesor', empresaId:target, createdAt:new Date() });
-  usuariosDB.set(usuarios); res.json({ok:true});
 });
 app.get('/api/campanas', auth, (req,res)=>{
   let c=campanasDB.get(); if(req.user.rol!=='superadmin') c=c.filter(x=>x.empresaId===req.user.empresaId); res.json(c);
