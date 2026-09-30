@@ -1,6 +1,7 @@
 {
   "name": "klido-crm",
-  "version": "12.4",
+  "version": "12.2",
+  "engines": { "node": ">=18" },
   "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "4.19.2",
