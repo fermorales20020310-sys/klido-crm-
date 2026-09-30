@@ -1,59 +1,22 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - Klido V12</title>
-<style>body{background:#070F22;color:#fff;font-family:Inter,Arial;padding:20px}.card{background:#102542;border:1px solid #1A335F;border-radius:16px;padding:20px;margin-bottom:16px}.btn{background:#3B82F6;color:#fff;padding:12px 20px;border-radius:10px;font-weight:800;border:0;cursor:pointer;width:100%}.badge{padding:4px 10px;border-radius:20px;font-size:11px}.ok{background:#10b981;color:#000}.warn{background:#f59e0b;color:#000} input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #1A335F;background:#E8F0FF;color:#000;margin:6px 0}.log{font-size:12px;color:#94a3b8;max-height:220px;overflow:auto;background:#00000055;padding:10px;border-radius:8px}</style>
-</head><body>
-<a href="/" style="color:#60A5FA;text-decoration:none">← Volver al Inbox</a> <img src="logo.png" style="height:28px;float:right" />
-<h1>📢 Campañas Excel <span class="badge ok">V12 Antibaneo 50/5min</span> <span id="plan" class="badge warn">...</span></h1>
-<div class="card">
-<p style="color:#94a3b8;font-size:13px">Sube Excel. Auto-detecta columnas: <b>telefono, celular, wa_id, phone</b>. Solo Premium y Gold. Antibaneo real en backend 50 cada 5 min.</p>
-<input type="file" id="excel" accept=".xlsx,.xls,.csv">
-<select id="tplSel" style="background:#102542;color:#fff;border:1px solid #1A335F"><option>Cargando plantillas APPROVED...</option></select>
-<button class="btn" id="btnUpload" onclick="uploadExcel()">1️⃣ Subir Excel y detectar</button>
-<div style="margin-top:10px;display:flex;gap:12px"><div>Detectados: <b id="det">0</b></div><div>Progreso: <b id="prog">0/0</b></div><div>Lote: <b id="lote">0</b></div></div>
-<button class="btn" style="background:#22C55E;margin-top:12px" id="btnSend" onclick="sendCamp()" disabled>2️⃣ Enviar en bloques antibaneo</button>
-<div id="log" class="log"></div>
-<p style="color:#94a3b8;font-size:11px"><a href="legal.html" style="color:#94a3b8">Legal</a> - Soporte 3133181851 - WABA 2317286332424288 - Solo Premium $1.3M y Gold $2.4M</p>
+<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Campañas - Klido CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>:root{--dark:#0A1931;--dark2:#102542;--blue:#3B82F6;--blueLight:#60A5FA;--bg:#070F22;--green:#22C55E}*{box-sizing:border-box;font-family:'Inter',system-ui}body{margin:0;background:var(--bg);color:#fff}.sidebar{width:280px;background:var(--dark);padding:18px;position:fixed;top:0;bottom:0;border-right:1px solid #1A335F;display:flex;flex-direction:column;justify-content:space-between}.main{margin-left:280px;padding:28px}.card{background:var(--dark2);border-radius:18px;padding:20px;margin:12px 0;border:1px solid #1A335F}.btn{background:linear-gradient(90deg,var(--blue),var(--blueLight));border:none;padding:12px 18px;border-radius:12px;color:#fff;font-weight:800;cursor:pointer}.input{width:100%;padding:12px;border-radius:12px;border:1px solid #1A335F;margin:8px 0;background:#E8F0FF;color:#0A1931}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #1A335F;font-size:13px}</style></head><body>
+<div class="sidebar"><div><div style="display:flex;gap:10px;margin-bottom:20px"><img src="logo.png" style="height:32px" onerror="this.style.display='none'"/><b>KLIDO CRM</b></div><button class="btn" style="background:transparent;width:100%;text-align:left" onclick="window.location.href='/'">💬 Volver al Inbox</button><button class="btn" style="width:100%;margin-top:8px" onclick="loadTemplates()">🔄 Sync Plantillas</button><a class="btn" style="background:#25D366;display:block;text-align:center;text-decoration:none;margin-top:12px" href="https://wa.me/573133181851" target="_blank">🆘 Ayuda</a></div><button class="btn" style="background:#1F2937;width:100%" onclick="logout()">↪ Salir</button></div>
+<div class="main">
+<h1>📢 Campañas Masivas API Oficial</h1><p style="color:#9FB3D1">Sube Excel, Klido detecta teléfonos automáticamente y envía plantilla aprobada con antibaneo 50/5min</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div class="card"><h3>1. Subir Excel</h3><input type="file" id="excelFile" class="input" accept=".xlsx,.xls,.csv"/><button class="btn" onclick="uploadExcel()" style="width:100%">📤 Detectar Números</button><div id="excelRes" style="margin-top:12px;font-size:13px"></div></div>
+<div class="card"><h3>2. Plantilla Aprobada</h3><select id="tplSel" class="input"></select><button class="btn" style="width:100%;background:var(--green);margin-top:12px" onclick="sendCamp()">🚀 Enviar Antibaneo 50/5min</button><div id="sendRes" style="margin-top:12px"></div></div>
+</div>
+<div class="card"><h3>📊 Historial Campañas</h3><button class="btn" style="padding:8px" onclick="loadCampanas()">↻ Actualizar</button><div style="overflow:auto;margin-top:12px"><table><thead><tr><th>ID</th><th>Nombre</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Estado</th><th>Fecha</th><th>Logs</th></tr></thead><tbody id="campTable"></tbody></table></div></div>
 </div>
 <script>
-let token=localStorage.getItem('klido_token');
-if(!token){ alert('Debes iniciar sesión primero'); location.href='/'; }
-let contactos_ids=[];
-
-async function init(){
-  const r=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}});
-  const tpl=await r.json();
-  document.getElementById('tplSel').innerHTML=tpl.map(t=>`<option value="${t.nombre}">${t.nombre} ✅ ${t.categoria||''}</option>`).join('') || '<option>No hay plantillas APPROVED, haz sync en el inbox</option>';
-  document.getElementById('plan').innerText= tpl.length+' plantillas';
-}
-init();
-
-function log(t){ const l=document.getElementById('log'); l.innerHTML+=`[${new Date().toLocaleTimeString()}] ${t}<br>`; l.scrollTop=l.scrollHeight; }
-
-async function uploadExcel(){
-  const file=document.getElementById('excel').files[0];
-  if(!file) return alert('Selecciona Excel');
-  const fd=new FormData(); fd.append('file',file);
-  log('Subiendo Excel...');
-  const r=await fetch('/api/campanas/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
-  const j=await r.json();
-  if(!j.ok){ log('❌ '+JSON.stringify(j)); return; }
-  contactos_ids=j.contactos_ids;
-  document.getElementById('det').innerText=j.detectados;
-  document.getElementById('prog').innerText=`0/${j.detectados}`;
-  document.getElementById('btnSend').disabled=false;
-  log(`✅ Detectados ${j.detectados} números listos para campaña`);
-}
-
-async function sendCamp(){
-  const plantilla=document.getElementById('tplSel').value;
-  if(!plantilla) return alert('Elige plantilla APPROVED');
-  if(!contactos_ids.length) return alert('Sube Excel primero');
-  document.getElementById('btnSend').disabled=true;
-  log(`🚀 Iniciando campaña con plantilla ${plantilla} en bloques 50/5min...`);
-  const r=await fetch('/api/campanas/enviar',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({plantilla, contactos_ids})});
-  const j=await r.json();
-  if(!j.ok){ log('❌ '+ (j.error||JSON.stringify(j))); document.getElementById('btnSend').disabled=false; return; }
-  log(`✅ Campaña ${j.campana.id} iniciada. Total ${j.campana.total}. El backend enviará 50 cada 5 min antibaneo.`);
-  document.getElementById('prog').innerText=`${j.campana.total}/${j.campana.total} en cola`;
-}
-</script>
-</body></html>
+let token=localStorage.getItem('klido_token'); if(!token) location.href='/'; let contactos_cache_ids=[];
+async function loadTemplates(){ const r=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}}); const tpl=await r.json(); document.getElementById('tplSel').innerHTML=Array.isArray(tpl)?tpl.map(t=>`<option value="${t.nombre}">${t.nombre}</option>`).join(''):'<option>No hay plantillas</option>'; }
+async function uploadExcel(){ const f=document.getElementById('excelFile').files[0]; if(!f) return alert('Selecciona archivo'); const fd=new FormData(); fd.append('file',f); document.getElementById('excelRes').innerText='Procesando...'; const r=await fetch('/api/campanas/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}); const j=await r.json(); if(j.ok){ contactos_cache_ids=j.contactos_ids; document.getElementById('excelRes').innerHTML=`✅ Detectados <b>${j.detectados}</b>`; } else document.getElementById('excelRes').innerText=j.error; }
+async function sendCamp(){ if(!contactos_cache_ids.length) return alert('Sube Excel primero'); const plantilla=document.getElementById('tplSel').value; const r=await fetch('/api/campanas/enviar',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({plantilla, contactos_ids:contactos_cache_ids})}); const j=await r.json(); document.getElementById('sendRes').innerText=j.ok?`Campaña ${j.campana.id} iniciada`:j.error; loadCampanas(); }
+async function loadCampanas(){ const r=await fetch('/api/campanas',{headers:{Authorization:'Bearer '+token}}); const data=await r.json(); document.getElementById('campTable').innerHTML=data.map(c=>`<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.plantilla}</td><td>${c.total}</td><td>${c.enviados}</td><td>${c.estado}</td><td>${new Date(c.created_at).toLocaleString()}</td><td><button class="btn" style="padding:6px" onclick="viewLogs(${c.id})">Ver</button></td></tr>`).join(''); }
+async function viewLogs(id){ const r=await fetch(`/api/campanas/${id}/logs`,{headers:{Authorization:'Bearer '+token}}); const logs=await r.json(); alert(logs.slice(0,20).map(l=>`${l.telefono} ${l.estado}`).join('\n')); }
+function logout(){localStorage.clear();location.href='/';}
+loadTemplates(); loadCampanas();
+</script></body></html>
