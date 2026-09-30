@@ -1,51 +1,59 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - Klido V10.8.3</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>body{background:#0f172a;color:#fff;font-family:Inter,Arial;padding:20px}.card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:20px;margin-bottom:16px}.btn{background:#38bdf8;color:#000;padding:12px 20px;border-radius:10px;font-weight:700;border:0;cursor:pointer;width:100%}.btn:disabled{opacity:.5}.badge{padding:4px 10px;border-radius:20px;font-size:11px}.ok{background:#10b981;color:#000}.warn{background:#f59e0b;color:#000} input,textarea,select{width:100%;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;margin:6px 0}.log{font-size:12px;color:#94a3b8;max-height:200px;overflow:auto;background:#00000055;padding:10px;border-radius:8px}</style>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campañas - Klido V12</title>
+<style>body{background:#070F22;color:#fff;font-family:Inter,Arial;padding:20px}.card{background:#102542;border:1px solid #1A335F;border-radius:16px;padding:20px;margin-bottom:16px}.btn{background:#3B82F6;color:#fff;padding:12px 20px;border-radius:10px;font-weight:800;border:0;cursor:pointer;width:100%}.badge{padding:4px 10px;border-radius:20px;font-size:11px}.ok{background:#10b981;color:#000}.warn{background:#f59e0b;color:#000} input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #1A335F;background:#E8F0FF;color:#000;margin:6px 0}.log{font-size:12px;color:#94a3b8;max-height:220px;overflow:auto;background:#00000055;padding:10px;border-radius:8px}</style>
 </head><body>
-<h1>📢 Campañas Excel <span class="badge ok">V10.8.3 Antibaneo 50/5h + 3s</span> <span id="plan" class="badge warn">...</span></h1>
+<a href="/" style="color:#60A5FA;text-decoration:none">← Volver al Inbox</a> <img src="logo.png" style="height:28px;float:right" />
+<h1>📢 Campañas Excel <span class="badge ok">V12 Antibaneo 50/5min</span> <span id="plan" class="badge warn">...</span></h1>
 <div class="card">
-<p style="color:#94a3b8;font-size:13px">Sube Excel con columnas: <b>wa_id, name</b> (ej: 57313xxxxxxx, Juan). Solo contactos con autorización Ley 1581. Usa <b>Premium</b> obligatorio.</p>
+<p style="color:#94a3b8;font-size:13px">Sube Excel. Auto-detecta columnas: <b>telefono, celular, wa_id, phone</b>. Solo Premium y Gold. Antibaneo real en backend 50 cada 5 min.</p>
 <input type="file" id="excel" accept=".xlsx,.xls,.csv">
-<textarea id="msg" rows="3" placeholder="Mensaje con {{name}}">Hola {{name}}, te escribe Avanza Consulting 🚀</textarea>
-<button class="btn" id="btnStart" onclick="iniciar()">Iniciar Campaña Antibaneo</button>
-<div style="margin-top:10px;display:flex;gap:10px"><div>Progreso: <b id="prog">0/0</b></div><div>Lote: <b id="lote">0</b> / 50 por 5h</div></div>
+<select id="tplSel" style="background:#102542;color:#fff;border:1px solid #1A335F"><option>Cargando plantillas APPROVED...</option></select>
+<button class="btn" id="btnUpload" onclick="uploadExcel()">1️⃣ Subir Excel y detectar</button>
+<div style="margin-top:10px;display:flex;gap:12px"><div>Detectados: <b id="det">0</b></div><div>Progreso: <b id="prog">0/0</b></div><div>Lote: <b id="lote">0</b></div></div>
+<button class="btn" style="background:#22C55E;margin-top:12px" id="btnSend" onclick="sendCamp()" disabled>2️⃣ Enviar en bloques antibaneo</button>
 <div id="log" class="log"></div>
-<p style="color:#94a3b8;font-size:11px">Requisito legal: /legal - Soporte 3133181851 - Solo Premium $1.3M y Gold $2.4M</p>
+<p style="color:#94a3b8;font-size:11px"><a href="legal.html" style="color:#94a3b8">Legal</a> - Soporte 3133181851 - WABA 2317286332424288 - Solo Premium $1.3M y Gold $2.4M</p>
 </div>
 <script>
-let ME=JSON.parse(localStorage.getItem('klido_me')||'{}');
-document.getElementById('plan').innerText=ME.plan||'sin plan';
-let contactos=[]; let idx=0;
-document.getElementById('excel').addEventListener('change',e=>{
- const f=e.target.files[0]; const r=new FileReader();
- r.onload=x=>{
-  const wb=XLSX.read(x.target.result,{type:'binary'}); const ws=wb.Sheets[wb.SheetNames[0]];
-  const data=XLSX.utils.sheet_to_json(ws); contactos=data.map(d=>({wa_id:String(d.wa_id||d.telefono||d.phone||'').replace(/\D/g,''), name:d.name||d.nombre||''})).filter(c=>c.wa_id.length>=10);
-  log(`Excel cargado: ${contactos.length} contactos`); document.getElementById('prog').innerText=`0/${contactos.length}`;
- };
- r.readAsBinaryString(f);
-});
-function log(t){ const l=document.getElementById('log'); l.innerHTML+=`[${new Date().toLocaleTimeString()}] ${t}<br>`; l.scrollTop=l.scrollHeight; }
-async function iniciar(){
- if((ME.plan||'').toLowerCase()!=='premium' && ME.plan!=='gold'){ return alert('Solo Premium/Gold pueden usar campañas. Tu plan: '+(ME.plan||'ninguno')); }
- if(!contactos.length) return alert('Sube Excel primero');
- const plantilla=document.getElementById('msg').value; document.getElementById('btnStart').disabled=true;
- let enviadosEnLote=0;
- for(idx=0; idx<contactos.length; idx++){
-  const c=contactos[idx];
-  if(enviadosEnLote>=50){ log('⏸️ Pausa antibaneo 5 horas (simulada 5 min en demo). En prod son 5h'); await sleep(300000); enviadosEnLote=0; document.getElementById('lote').innerText='0'; }
-  const txt=plantilla.replace('{{name}}',c.name||'');
-  try{
-   await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ME.agency_id,wa_id:c.wa_id,text:txt,username:ME.username})});
-   // guardar en campañas para stats
-   await fetch('/api/campaigns/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ME.agency_id,wa_id:c.wa_id})}).catch(()=>{});
-   enviadosEnLote++; document.getElementById('prog').innerText=`${idx+1}/${contactos.length}`; document.getElementById('lote').innerText=enviadosEnLote;
-   log(`✅ Enviado a ${c.wa_id} (${c.name}) - espera 3s antibaneo`);
-  }catch(e){ log(`❌ Error ${c.wa_id}: ${e.message}`); }
-  await sleep(3000);
- }
- log('🏁 Campaña terminada'); document.getElementById('btnStart').disabled=false;
+let token=localStorage.getItem('klido_token');
+if(!token){ alert('Debes iniciar sesión primero'); location.href='/'; }
+let contactos_ids=[];
+
+async function init(){
+  const r=await fetch('/api/templates',{headers:{Authorization:'Bearer '+token}});
+  const tpl=await r.json();
+  document.getElementById('tplSel').innerHTML=tpl.map(t=>`<option value="${t.nombre}">${t.nombre} ✅ ${t.categoria||''}</option>`).join('') || '<option>No hay plantillas APPROVED, haz sync en el inbox</option>';
+  document.getElementById('plan').innerText= tpl.length+' plantillas';
 }
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+init();
+
+function log(t){ const l=document.getElementById('log'); l.innerHTML+=`[${new Date().toLocaleTimeString()}] ${t}<br>`; l.scrollTop=l.scrollHeight; }
+
+async function uploadExcel(){
+  const file=document.getElementById('excel').files[0];
+  if(!file) return alert('Selecciona Excel');
+  const fd=new FormData(); fd.append('file',file);
+  log('Subiendo Excel...');
+  const r=await fetch('/api/campanas/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
+  const j=await r.json();
+  if(!j.ok){ log('❌ '+JSON.stringify(j)); return; }
+  contactos_ids=j.contactos_ids;
+  document.getElementById('det').innerText=j.detectados;
+  document.getElementById('prog').innerText=`0/${j.detectados}`;
+  document.getElementById('btnSend').disabled=false;
+  log(`✅ Detectados ${j.detectados} números listos para campaña`);
+}
+
+async function sendCamp(){
+  const plantilla=document.getElementById('tplSel').value;
+  if(!plantilla) return alert('Elige plantilla APPROVED');
+  if(!contactos_ids.length) return alert('Sube Excel primero');
+  document.getElementById('btnSend').disabled=true;
+  log(`🚀 Iniciando campaña con plantilla ${plantilla} en bloques 50/5min...`);
+  const r=await fetch('/api/campanas/enviar',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({plantilla, contactos_ids})});
+  const j=await r.json();
+  if(!j.ok){ log('❌ '+ (j.error||JSON.stringify(j))); document.getElementById('btnSend').disabled=false; return; }
+  log(`✅ Campaña ${j.campana.id} iniciada. Total ${j.campana.total}. El backend enviará 50 cada 5 min antibaneo.`);
+  document.getElementById('prog').innerText=`${j.campana.total}/${j.campana.total} en cola`;
+}
 </script>
 </body></html>
