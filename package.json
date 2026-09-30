@@ -1,7 +1,6 @@
 {
-  "name": "klido-v12",
+  "name": "klido-crm",
   "version": "12.0.0",
-  "description": "Klido CRM V12",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
