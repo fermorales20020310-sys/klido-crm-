@@ -1,40 +1,101 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Klido CRM - Oficial V11</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klido - CRM Empresarial</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--dark:#0A1931;--blue:#3B82F6;--bg:#070F22;--green:#22C55E;--yellow:#FFC93C;--red:#EF4444}
-*{box-sizing:border-box;font-family:Inter}body{margin:0;background:var(--bg);color:#fff;min-height:100vh}
-.login{display:flex;min-height:100vh}.left{width:48%;background:linear-gradient(160deg,#0A1931,#102542);padding:56px;display:flex;flex-direction:column;justify-content:center}
-.right{width:52%;background:#0C1A33;padding:40px;display:flex;flex-direction:column;justify-content:center}
-.card{background:#102542;border-radius:20px;padding:22px;margin:12px 0;border:1px solid #1A335F}
-.btn{background:linear-gradient(90deg,#3B82F6,#60A5FA);border:none;padding:14px;border-radius:12px;color:#fff;font-weight:800;cursor:pointer;width:100%}
-.input{width:100%;padding:14px;border-radius:12px;border:1px solid #1A335F;margin:8px 0;background:#E8F0FF;color:#0A1931;font-weight:600}
-</style></head><body>
-<div id="login" class="login">
-<div class="left"><h1 style="font-size:44px;font-weight:800">Gestiona tu<br><span style="color:#60A5FA">WhatsApp Business</span><br>como empresa real.</h1><p style="color:#9FB3D1">✅ API Oficial Meta · Inbox real · Campañas · Workers · Llamadas</p></div>
-<div class="right"><div class="card">
-<h3>Ingresar a Klido CRM Oficial</h3>
-<input id="ag" class="input" placeholder="Empresa ID (ej: avanza)"/>
-<input id="em" class="input" placeholder="Correo"/>
-<input id="pa" class="input" type="password" placeholder="Contraseña"/>
-<button class="btn" onclick="login()">Ingresar →</button>
-<div id="msg" style="color:var(--yellow);font-size:13px;margin-top:8px"></div>
-<p style="font-size:13px"><a href="#" onclick="alert('Usa /api/crear-jefe?agency_id=TUEMPRESA&username=tu@mail.com&password=123&plan=gold')" style="color:#60A5FA">¿Crear empresa?</a> Soporte 3133181851</p>
-</div></div></div>
-
-<div id="app" style="display:none;padding:20px"><h2 id="welcome"></h2><div id="stats" class="card"></div><div style="display:flex;gap:12px"><div style="width:350px"><h3>Chats</h3><div id="chats"></div></div><div style="flex:1"><h3 id="chatName">Selecciona chat</h3><div id="msgs" style="height:400px;overflow:auto;background:#0A1931;padding:12px;border-radius:12px"></div><div style="display:flex;gap:8px;margin-top:8px"><input id="msgInput" class="input" style="flex:1" placeholder="Escribe..."/><button class="btn" style="width:100px" onclick="send()">Enviar</button></div></div></div><button class="btn" style="background:#1F2937;margin-top:20px" onclick="localStorage.clear();location.reload()">Salir</button></div>
-
+:root{--bg:#0b1220;--card:#121c31;--blue:#2f66ff;--green:#1de68a;--red:#ff3b3b;--yellow:#ffb800;--text:#e6ebff;--muted:#8a96b8}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+body{background:var(--bg);color:var(--text);min-height:100vh}
+.login-wrap{display:grid;grid-template-columns:1.1fr 0.9fr;min-height:100vh}
+.left{padding:48px;background:linear-gradient(180deg,#0e1930 0%,#0b1220 100%);display:flex;flex-direction:column;justify-content:center}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.logo img{width:40px;height:40px;border-radius:10px;background:#fff}
+.logo span{font-size:11px;letter-spacing:2px;color:var(--muted)}
+.left h1{font-size:42px;line-height:1.05;font-weight:800;margin-bottom:16px}
+.left p.desc{color:var(--muted);margin-bottom:24px;line-height:1.6}
+.bullets{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.bullets div{color:var(--muted);font-size:14px}.bullets b{color:var(--text)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%}
+.right{padding:32px;display:flex;flex-direction:column;gap:18px;justify-content:center;background:#0b1220}
+.tabs{display:flex;gap:8px;margin-bottom:8px}.tabs button{flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+.tab-active{background:var(--blue);color:#fff}.tab-inactive{background:#17233f;color:var(--muted)}
+.input{width:100%;padding:16px 18px;border-radius:14px;border:1px solid #1e2c4f;background:#111d35;color:#fff;outline:none;font-size:15px}
+.btn-primary{width:100%;padding:16px;border-radius:14px;border:none;background:var(--blue);color:#fff;font-weight:800;cursor:pointer;font-size:15px}
+.btn-secondary{background:#1a2a4f;color:#cbd6f5}.link{color:#7ea0ff;font-size:13px;cursor:pointer;text-align:right}
+.card{background:var(--card);border:1px solid #1d2c4f;border-radius:18px;padding:18px}
+.small{font-size:12px;color:var(--muted)}.green{background:var(--green);color:#002b16;font-weight:800}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.plan{border:1px solid #22365f;border-radius:16px;padding:18px;background:#111d35}
+.topbar{height:60px;background:#0e1930;border-bottom:1px solid #1d2c4f;display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+.inbox{display:grid;grid-template-columns:320px 1fr; height:calc(100vh - 60px)}
+.contacts{border-right:1px solid #1d2c4f;overflow:auto}.contact{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #142040;cursor:pointer}.contact:hover{background:#131f3a}
+.chat{display:flex;flex-direction:column}.msgs{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:70%;padding:10px 14px;border-radius:14px;font-size:14px}.me{background:var(--blue);align-self:flex-end}.them{background:#1a2a4f;align-self:flex-start}
+.composer{display:flex;gap:8px;padding:12px;border-top:1px solid #1d2c4f}
+@media(max-width:900px){.login-wrap{grid-template-columns:1fr}.left h1{font-size:32px}.inbox{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="/socket.io/socket.io.js"></script>
 <script>
-let AGENCIA='', USER='', WA_ACTIVO='';
-async function login(){
-  const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ag.value,username:em.value,password:pa.value})});
-  const j=await res.json(); if(j.error) return msg.innerText=j.error;
-  localStorage.setItem('ag',j.agency_id); localStorage.setItem('user',j.username);
-  goApp(j);
-}
-function goApp(j){ document.getElementById('login').style.display='none'; document.getElementById('app').style.display='block'; AGENCIA=j.agency_id; USER=j.username; welcome.innerText=j.agency_id+' - '+j.username+' ('+j.plan+')'; loadStats(); loadChats(); setInterval(()=>{loadChats(); loadStats()},5000); }
-async function loadStats(){ const r=await fetch('/api/stats?agency_id='+AGENCIA); const s=await r.json(); stats.innerHTML=`Plan: <b>${s.currentPlan}</b> | Total chats: ${s.totalChats} | No leídos: ${s.unread} | Hoy: ${s.today}`; }
-async function loadChats(){ const r=await fetch('/api/chats?agency_id='+AGENCIA); const data=await r.json(); chats.innerHTML=data.map(c=>`<div class="card" style="cursor:pointer;margin:6px 0" onclick="openChat('${c.wa_id}','${c.name||c.wa_id}')"><b>${c.name||c.wa_id}</b><br><small>${c.last_message||''}</small> ${c.unread?'<span style="background:#EF4444;padding:2px 8px;border-radius:10px;font-size:11px">'+c.unread+'</span>':''}</div>`).join(''); }
-async function openChat(wa,name){ WA_ACTIVO=wa; chatName.innerText=name+' - '+wa; const r=await fetch('/api/messages/'+wa+'?agency_id='+AGENCIA); const msgs=await r.json(); msgs_div=document.getElementById('msgs'); msgs_div.innerHTML=msgs.map(m=>`<div style="margin:6px 0;padding:8px 12px;border-radius:12px;max-width:70%;${m.direction=='out'?'margin-left:auto;background:#1E3A8A':'background:#102542'}">${m.text}<br><small style="opacity:.6">${new Date(Number(m.timestamp)).toLocaleTimeString()} ${m.sent_by||''}</small></div>`).join(''); msgs_div.scrollTop=9999; await fetch('/api/chats/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCIA,wa_id:wa})}); }
-async function send(){ const txt=msgInput.value; if(!txt||!WA_ACTIVO) return; msgInput.value=''; await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:AGENCIA,wa_id:WA_ACTIVO,text:txt,username:USER})}); openChat(WA_ACTIVO,WA_ACTIVO); }
-const savedAg=localStorage.getItem('ag'); if(savedAg){ fetch('/api/workers?agency_id='+savedAg).then(()=>{ AGENCIA=savedAg; USER=localStorage.getItem('user'); goApp({agency_id:AGENCIA,username:USER,plan:'cargando'}) }); }
-</script></body></html>
+let token=null,empresa=null,socket=null,currentChat=null;
+const api=(url,opts={})=>{opts.headers=opts.headers||{};if(token)opts.headers['Authorization']='Bearer '+token;if(opts.body&&!(opts.body instanceof FormData)){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(opts.body);}return fetch(url,opts).then(r=>r.json());}
+function renderLogin(){
+document.getElementById('app').innerHTML=`
+<div class="login-wrap">
+  <div class="left">
+    <div class="logo"><img src="/logo.png" onerror="this.style.display='none'"><span>CRM EMPRESARIAL</span></div>
+    <h1>Gestiona tu<br>WhatsApp Business<br>como empresa real.</h1>
+    <p class="desc">Inbox con <span class="dot" style="background:var(--red)"></span> No leídos y <span class="dot" style="background:var(--yellow)"></span> Campañas, antibaneo 50/5h, equipo con roles y estadísticas reales.</p>
+    <div class="bullets"><div>✓ <b>API oficial de WhatsApp Business</b></div><div>✓ <b>Roles Worker / Admin profesionales</b></div><div>✓ <b>Soporte directo 3133181851</b></div></div>
+    <div style="margin-top:28px" class="card"><b>¿Cómo funciona Klido?</b><p class="small" style="margin-top:8px">Klido es multiagencia real. Cada empresa tiene su propio inbox en tiempo real, historial, audios, videos y archivos. Las campañas solo usan plantillas aprobadas por Meta que se sincronizan automáticamente. Subes Excel y Klido envía en bloques antibaneo.</p></div>
+  </div>
+  <div class="right">
+    <div class="tabs"><button class="tab-active">Ingresar</button><button class="tab-inactive" onclick="renderCrear()">Crear empresa</button></div>
+    <input id="l_correo" class="input" placeholder="Correo empresa" value="fermorales20020310@gmail.com">
+    <div style="position:relative"><input id="l_pass" type="password" class="input" placeholder="Contraseña"><span style="position:absolute;right:14px;top:16px;cursor:pointer" onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password'">👁</span></div>
+    <div style="display:flex;justify-content:space-between"><label class="small"><input type="checkbox"> Recordarme</label><span class="link" onclick="document.getElementById('recCard').scrollIntoView({behavior:'smooth'})">¿Olvidaste tu contraseña?</span></div>
+    <input id="l_codigo" class="input" placeholder="Código de plan KLIDO-... (opcional 1ra vez)">
+    <button class="btn-primary" onclick="login()">Ingresar al CRM →</button>
+    <div class="card" id="recCard"><b>Restablecer contraseña</b><p class="small">Te enviaremos un código de 6 dígitos a tu correo registrado.</p>
+      <input id="r_correo" class="input" style="margin-top:12px" placeholder="Tu correo"><button class="btn-primary btn-secondary" style="margin-top:10px" onclick="enviarCodigo()">Enviar código</button>
+      <input id="r_code" class="input" style="margin-top:10px" placeholder="Código de 6 dígitos"><input id="r_new" type="password" class="input" style="margin-top:10px" placeholder="Nueva contraseña">
+      <button class="btn-primary green" style="margin-top:10px" onclick="cambiarPass()">Cambiar contraseña</button><p id="r_msg" class="small" style="margin-top:8px;color:var(--green)"></p>
+    </div>
+  </div>
+</div>`;}
+function renderCrear(){
+document.getElementById('app').innerHTML=`
+<div class="login-wrap">
+  <div class="left"><div class="logo"><img src="/logo.png"><span>CRM EMPRESARIAL</span></div><h1>Crea tu empresa<br>en Klido.</h1><p class="desc">Multiagencia real. Al pagar tu plan se genera un código único que da acceso solo al plan pagado.</p>
+  <div class="plan"><h3>Planes Klido</h3><p class="small">Básico $800.000 anual + $80.000 trim | Premium IA $1.200.000 + $95.000 | Gold $2.400.000 + $120.000</p><button class="btn-primary" style="margin-top:12px" onclick="window.open('https://wa.me/573133181851?text=Hola%20quiero%20adquirir%20un%20plan%20Klido','_blank')">Pásate a Premium → 3133181851</button></div></div>
+  <div class="right"><h2>Crear empresa (Jefe)</h2>
+    <input id="c_nombre" class="input" placeholder="Nombre de empresa"><input id="c_correo" class="input" placeholder="Correo corporativo"><input id="c_pass" class="input" placeholder="Contraseña">
+    <select id="c_plan" class="input"><option value="basico">Básico - $800k</option><option value="premium">Premium IA - $1.2M</option><option value="gold">Gold Llamadas + IA - $2.4M</option></select>
+    <button class="btn-primary" onclick="crearEmpresa()">Crear empresa y generar código</button><button class="btn-primary btn-secondary" onclick="renderLogin()">Ya tengo empresa</button><div id="c_res" class="card" style="display:none"></div>
+  </div>
+</div>`;}
+async function crearEmpresa(){const res=await api('/api/empresas/crear',{method:'POST',body:{nombre:c_nombre.value,correo:c_correo.value,password:c_pass.value,plan:c_plan.value}});if(res.error)return alert(res.error);document.getElementById('c_res').style.display='block';document.getElementById('c_res').innerHTML=`<b>Empresa creada</b><p class="small">Código de activación:</p><h2>${res.empresa.codigoPlan}</h2><p class="small">Plan: ${res.empresa.plan}. Guarda este código.</p><button class="btn-primary" style="margin-top:10px" onclick="window.open('https://wa.me/573133181851?text=Acabo%20de%20crear%20mi%20empresa%20${res.empresa.nombre}%20codigo%20${res.empresa.codigoPlan}','_blank')">Adquirir plan - WhatsApp</button>`;}
+async function login(){const res=await api('/api/login',{method:'POST',body:{correo:l_correo.value,password:l_pass.value,codigoPlan:l_codigo.value}});if(res.error)return alert(res.error);token=res.token;empresa=res.empresa;renderCRM();}
+async function enviarCodigo(){const res=await api('/api/recuperar/enviar',{method:'POST',body:{correo:r_correo.value}});document.getElementById('r_msg').innerText=res.mensaje+(res.previewCode?` Código: ${res.previewCode}`:'');}
+async function cambiarPass(){const res=await api('/api/recuperar/cambiar',{method:'POST',body:{correo:r_correo.value,code:r_code.value,nuevaPassword:r_new.value}});if(res.error)return alert(res.error);document.getElementById('r_msg').innerText='Contraseña cambiada, ya puedes ingresar';}
+function renderCRM(){
+document.getElementById('app').innerHTML=`<div class="topbar"><div style="display:flex;gap:12px;align-items:center"><img src="/logo.png" style="width:28px;height:28px;border-radius:8px"><b>Klido</b><span style="background:#1d2c4f;padding:4px 8px;border-radius:20px;font-size:11px">${empresa.nombre} - ${empresa.plan.toUpperCase()}</span></div><div style="display:flex;gap:8px"><button class="input" style="padding:8px 12px;width:auto" onclick="showTab('inbox')">Inbox</button><button class="input" style="padding:8px 12px;width:auto" onclick="showTab('campanas')">Campañas</button><button class="input" style="padding:8px 12px;width:auto" onclick="showTab('planes')">Planes</button><button class="input" style="padding:8px 12px;width:auto" onclick="showTab('config')">Configuración</button><button class="input" style="padding:8px 12px;width:auto;background:#0f3d2e;color:#1de68a" onclick="window.open('https://wa.me/573133181851?text=Soporte%20Klido%2024/7%20empresa%20${empresa.nombre}','_blank')">Ayuda 24/7</button><button class="input" style="padding:8px 12px;width:auto" onclick="location.reload()">Salir</button></div></div><div id="content"></div>`;socket=io();socket.emit('join_empresa',empresa.id);socket.on('nuevo_mensaje_cliente',()=>cargarInbox());showTab('inbox');}
+function showTab(t){const c=document.getElementById('content');
+if(t==='inbox'){c.innerHTML=`<div class="inbox"><div class="contacts" id="contacts"></div><div class="chat"><div class="msgs" id="msgs"><div class="small">Selecciona un chat. Tiempo real: audios, videos, archivos.</div></div><div class="composer"><input id="msgInput" class="input" placeholder="Escribe..."><button class="btn-primary" style="width:120px" onclick="enviarMsg()">Enviar</button></div></div></div>`;cargarInbox();}
+if(t==='campanas'){c.innerHTML=`<div style="padding:20px;max-width:900px"><h2>Campañas - Antibaneo 50/5h</h2><p class="small">Sube Excel, detecta teléfonos auto, envía solo con plantillas aprobadas sincronizadas.</p><div class="card" style="margin-top:16px"><input id="campNombre" class="input" placeholder="Nombre campaña"><select id="plantillaSel" class="input" style="margin-top:10px"></select><input type="file" id="excelFile" class="input" style="margin-top:10px"><button class="btn-primary" style="margin-top:10px" onclick="crearCamp()">Crear y enviar en bloques</button></div><div id="listaCamp" style="margin-top:16px"></div></div>`;cargarPlantillas();cargarCampanas();}
+if(t==='planes'){c.innerHTML=`<div style="padding:20px"><h2>Planes Klido</h2><div class="grid2" style="margin-top:16px"><div class="plan"><h3>Básico</h3><p style="font-size:28px;font-weight:800">$800.000</p><p class="small">anual + $80.000 trim</p><button class="btn-primary" style="margin-top:12px" onclick="window.open('https://wa.me/573133181851?text=Quiero%20Plan%20Basico%20Klido','_blank')">Adquirir - 3133181851</button></div><div class="plan" style="border-color:#2f66ff"><h3>Premium con IA</h3><p style="font-size:28px;font-weight:800">$1.200.000</p><p class="small">anual + $95.000</p><button class="btn-primary" style="margin-top:12px" onclick="window.open('https://wa.me/573133181851?text=Quiero%20Plan%20Premium%20IA','_blank')">Pasate a Premium</button></div><div class="plan" style="border-color:#1de68a"><h3>Gold Llamadas + IA</h3><p style="font-size:28px;font-weight:800">$2.400.000</p><p class="small">anual + $120.000</p><button class="btn-primary green" style="margin-top:12px" onclick="window.open('https://wa.me/573133181851?text=Quiero%20Plan%20Gold%20Klido','_blank')">Obtener Gold</button></div></div></div>`;}
+if(t==='config'){c.innerHTML=`<div style="padding:20px;max-width:800px"><h2>Cómo funciona Klido</h2><div class="card" style="margin-top:16px"><h3>1. Multiagencia Real</h3><p class="small">Cada empresa creada tiene su propio inbox, contactos y campañas. No es demo, es real con aislamiento por empresaId. Al pagar plan se genera código KLIDO-PLAN-XXXX que da ingreso solo al plan pagado.</p></div><div class="card" style="margin-top:12px"><h3>2. Tiempo Real</h3><p class="small">Socket.io para mensajes, punto rojo 🔴 No leídos, punto amarillo 🟡 Campañas, audios, videos, archivos instantáneos.</p></div><div class="card" style="margin-top:12px"><h3>3. Campañas Antibaneo</h3><p class="small">Excel → detección teléfonos → bloques 50 cada 5h → solo plantillas APROBADAS sincronizadas de Meta API.</p></div><div class="card" style="margin-top:12px"><h3>4. Seguridad y Recuperación</h3><p class="small">Login con JWT_SECRET=${'Mafe20022017@'} - Contraseñas bcrypt - Olvidé contraseña con código 6 dígitos al correo (SMTP).</p></div></div>`;}}
+async function cargarInbox(){const data=await api('/api/inbox');document.getElementById('contacts').innerHTML=data.length?data.map(c=>`<div class="contact" onclick="abrirChat('${c.telefono}')"><div><b>${c.nombre}</b><div class="small">${c.telefono}</div></div><div>${c.noLeido?'<span class="dot" style="background:var(--red)"></span>':''} ${c.esCampana?'<span class="dot" style="background:var(--yellow)"></span>':''}</div></div>`).join(''):'<div class="small" style="padding:16px">Sin chats aún. Tiempo real activo.</div>';}
+async function abrirChat(tel){currentChat=tel;const msgs=await api('/api/mensajes/'+tel);document.getElementById('msgs').innerHTML=msgs.map(m=>`<div class="bubble ${m.de==='yo'?'me':'them'}">${m.contenido}<span class="small" style="display:block;margin-top:4px">${new Date(m.fecha).toLocaleTimeString()}</span></div>`).join('')+'<div id="end"></div>';document.getElementById('end')?.scrollIntoView();}
+async function enviarMsg(){if(!currentChat)return alert('Selecciona chat');const txt=msgInput.value;if(!txt)return;await api('/api/mensajes/enviar',{method:'POST',body:{telefono:currentChat,tipo:'text',contenido:txt}});msgInput.value='';abrirChat(currentChat);}
+async function cargarPlantillas(){const pls=await api('/api/plantillas');document.getElementById('plantillaSel').innerHTML=pls.length?pls.map(p=>`<option value="${p.id}">${p.name} - ${p.status}</option>`).join(''):'<option>Sin plantillas aprobadas - verifica WABA_ID</option>';}
+async function cargarCampanas(){const cs=await api('/api/campanas');document.getElementById('listaCamp').innerHTML=cs.map(c=>`<div class="card" style="margin-top:8px"><b>${c.nombre}</b> - ${c.plantilla} - ${c.enviados}/${c.total} - ${c.estado}</div>`).join('');}
+async function crearCamp(){const fd=new FormData();fd.append('excel',excelFile.files[0]);fd.append('nombre',campNombre.value);fd.append('plantillaId',plantillaSel.value);const res=await fetch('/api/campanas/crear',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}).then(r=>r.json());if(res.error)alert(res.error);else{alert(res.mensaje);cargarCampanas();}}
+renderLogin();
+</script>
+</body>
+</html>
