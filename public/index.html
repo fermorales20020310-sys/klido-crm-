@@ -1,195 +1,229 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Klido Avanza Consulting V10.8.8 - El mejor CRM para tu empresa</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Klido V10.8.3 - Avanza Consulting</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-body{background:#0a0a0a;color:#fff;min-height:100vh}
-.container{max-width:1200px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1.1fr 0.9fr;gap:30px;align-items:center;min-height:100vh}
-.left h1{font-size:42px;line-height:1.1;margin-bottom:15px}
-.left h1 span{color:#22c55e}
-.badge{display:inline-flex;gap:8px;background:#111;border:1px solid #222;padding:8px 14px;border-radius:20px;font-size:12px;margin-bottom:20px}
-.badge i{width:8px;height:8px;background:#22c55e;border-radius:50%;display:inline-block}
-.left p.desc{color:#aaa;font-size:15px;line-height:1.6;margin-bottom:18px}
-.features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
-.feat{background:#111;border:1px solid #222;padding:12px;border-radius:10px;font-size:13px}
-.feat b{display:block;color:#22c55e;margin-bottom:4px}
-.right{background:#111;border:1px solid #222;border-radius:16px;padding:22px}
-.tabs{display:flex;gap:8px;margin-bottom:16px}
-.tab{flex:1;padding:10px;border-radius:8px;border:1px solid #222;background:#0a0a0a;color:#aaa;cursor:pointer;font-weight:600}
-.tab.active{background:#fff;color:#000;border-color:#fff}
-label{font-size:12px;color:#aaa;display:block;margin:10px 0 4px}
-input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #222;background:#0a0a0a;color:#fff;outline:none}
-.btn{width:100%;padding:12px;border-radius:8px;border:0;font-weight:800;cursor:pointer;margin-top:12px}
-.btn-green{background:#22c55e;color:#000}
-.btn-white{background:#fff;color:#000}
-.btn-dark{background:#222;color:#fff;border:1px solid #333}
-.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
-.plan{border:1px solid #222;background:#0a0a0a;padding:10px;border-radius:10px;cursor:pointer;text-align:center}
-.plan.active{border-color:#22c55e;background:#0f1a13}
-.plan b{display:block;font-size:13px}
-.plan span{font-size:11px;color:#aaa}
-.small{font-size:11px;color:#777;margin-top:10px;line-height:1.4}
-.small a{color:#22c55e}
-.code-box{display:none}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;color:#000;padding:10px 18px;border-radius:8px;font-weight:600;display:none;z-index:999}
-@media(max-width:900px){.container{grid-template-columns:1fr}}
+:root{--v:#6c5ce7;--bg:#f5f6fb}*{box-sizing:border-box;font-family:Inter,Arial}body{margin:0;background:var(--bg)}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:28px;width:100%;max-width:420px}
+h1{margin:0 0 4px;color:#111} .sub{color:#666;font-size:13px;margin-bottom:18px}
+input,button,select,textarea{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #ddd;margin:6px 0;font-size:14px}
+button{background:var(--v);color:#fff;border:none;font-weight:700;cursor:pointer} button:disabled{opacity:.6}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid #eee}
+.layout{display:flex;height:calc(100vh - 57px)} .left{width:320px;background:#fff;border-right:1px solid #eee;display:flex;flex-direction:column}
+.right{flex:1;display:flex;flex-direction:column;background:#fafafd}
+.chats{overflow:auto;flex:1} .chat-item{padding:12px 14px;border-bottom:1px solid #f0f0f0;cursor:pointer} .chat-item.active{background:#f0edff}
+.chat-item b{display:block;font-size:14px} .chat-item span{font-size:12px;color:#666}
+.msgs{flex:1;overflow:auto;padding:16px} .msg{max-width:70%;padding:10px 12px;border-radius:14px;margin:6px 0;font-size:14px}
+.out{background:var(--v);color:#fff;margin-left:auto} .in{background:#fff;border:1px solid #eee}
+.bar{display:flex;gap:8px;padding:12px;background:#fff;border-top:1px solid #eee}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px} .stat{background:#fff;padding:12px;border-radius:12px;border:1px solid #eee} .stat h3{margin:0;font-size:20px} .stat p{margin:2px 0 0;color:#666;font-size:12px}
+.badge{font-size:11px;background:#eee;padding:3px 8px;border-radius:20px}
+.hidden{display:none} a.link{color:var(--v);font-size:13px;cursor:pointer;text-decoration:underline}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="left">
-    <div class="badge"><i></i> API Meta Oficial - Klido Avanza Consulting</div>
-    <h1>El mejor CRM<br><span>para tu empresa</span></h1>
-    <p class="desc">Klido Avanza Consulting - Gestiona tu WhatsApp Business como empresa real. API Meta funcional, soporte 24/7, planes que se adaptan para ti. El mejor CRM que tu empresa pueda tener.</p>
-    <div class="features">
-      <div class="feat"><b>✓ API Meta Funcional</b> Conexión oficial, sin baneos</div>
-      <div class="feat"><b>✓ Soporte 24/7</b> 3133181851 directo con Avanza</div>
-      <div class="feat"><b>✓ Planes que se adaptan</b> Básico, Premium y Gold según creces</div>
-      <div class="feat"><b>✓ Multiagente</b> Jefe, Admin y Trabajadores ilimitados (Gold)</div>
-    </div>
-    <p class="small">Al crear empresa aceptas <a href="/legal" target="_blank">Términos, Privacidad y Ley 1581</a>. Soporte 24/7 WhatsApp 3133181851</p>
-  </div>
-  <div class="right">
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('login')">Ingresar</button>
-      <button class="tab" onclick="showTab('crear')">Crear Empresa</button>
-    </div>
 
-    <div id="tab-login">
-      <label>Empresa (agency_id)</label>
-      <input id="l_ag" placeholder="ej: avanza">
-      <label>Usuario / Email</label>
-      <input id="l_user" placeholder="tu email">
-      <label>Contraseña</label>
-      <input id="l_pass" type="password" placeholder="••••••">
-      <button class="btn btn-green" onclick="doLogin()">INGRESAR AHORA</button>
-      <button class="btn btn-dark" onclick="showTab('forgot')">¿Olvidaste tu clave?</button>
-    </div>
-
-    <div id="tab-crear" style="display:none">
-      <label>Nombre Empresa</label>
-      <input id="c_ag" placeholder="ej: avanza consulting">
-      <label>Tu Email (serás Jefe)</label>
-      <input id="c_email" placeholder="admin@empresa.com">
-      <label>Contraseña</label>
-      <input id="c_pass" type="password">
-      <label>Selecciona tu Plan - Los planes se adaptan para ti</label>
-      <div class="plans">
-        <div class="plan active" id="p-basico" onclick="selPlan('basico')"><b>Básico</b><span>$800k/año<br>$80k/mes mant</span></div>
-        <div class="plan" id="p-premium" onclick="selPlan('premium')"><b>Premium</b><span>$1.3M/año<br>$95k/mes mant</span></div>
-        <div class="plan" id="p-gold" onclick="selPlan('gold')"><b>Gold</b><span>$2.4M/año<br>$125k/mes mant</span></div>
-      </div>
-      <label><input type="checkbox" id="c_legal"> Acepto <a href="/legal" target="_blank">términos y Ley 1581</a></label>
-      <button class="btn btn-white" onclick="crearEmpresa()">1. CREAR EMPRESA + SELECCIONAR PLAN</button>
-      <div id="pagoBox" style="display:none">
-        <button class="btn btn-green" id="btnPagar" onclick="pagarWpp()">2. PAGAR POR WHATSAPP 3133181851</button>
-        <div class="small" style="margin-top:8px">Después de pagar, pide tu código única vez por WhatsApp</div>
-        <label>Código única vez (6 dígitos)</label>
-        <input id="c_code" placeholder="123456">
-        <button class="btn btn-green" onclick="activarPlan()">3. ACTIVAR Y QUEDAR LOGUEADO</button>
-      </div>
-    </div>
-
-    <div id="tab-forgot" style="display:none">
-      <label>Tu Email registrado</label>
-      <input id="f_email">
-      <button class="btn btn-white" onclick="forgot()">Enviar código</button>
-      <label>Código</label><input id="f_code">
-      <label>Nueva clave</label><input id="f_pass" type="password">
-      <button class="btn btn-green" onclick="reset()">Cambiar clave</button>
-      <button class="btn btn-dark" onclick="showTab('login')">Volver</button>
-    </div>
-
-  </div>
+<div id="loginView" class="login-wrap">
+<div class="card">
+<h1>KLIDO V10.8.3</h1>
+<div class="sub">Avanza Consulting - El mejor CRM para tu empresa - FIX REAL</div>
+<input id="agency_id" placeholder="ID Empresa (ej: avanza)">
+<input id="username" placeholder="Correo">
+<input id="password" type="password" placeholder="Contraseña">
+<button id="btnLogin" onclick="login()">Entrar</button>
+<div style="display:flex;justify-content:space-between;margin-top:10px">
+<a class="link" onclick="showForgot()">¿Olvidaste contraseña?</a>
+<a class="link" onclick="showRegister()">Crear empresa</a>
 </div>
-<div id="toast"></div>
+<div id="loginMsg" style="font-size:13px;color:#c00;margin-top:10px"></div>
+<div style="margin-top:12px;font-size:11px;color:#888">Health: <span id="health">...</span></div>
+</div>
+</div>
+
+<div id="appView" class="hidden">
+<div class="top">
+<div><b id="agencyLabel"></b> - <span id="userLabel"></span> <span id="planLabel" class="badge"></span> <span class="badge">V10.8.3 FIX REAL</span></div>
+<div><button onclick="logout()" style="width:auto;padding:6px 12px">Salir</button></div>
+</div>
+<div class="stats" id="stats"></div>
+<div class="layout">
+<div class="left">
+<div style="padding:10px;display:flex;gap:6px">
+<input id="searchChat" placeholder="Buscar chat" oninput="renderChats()">
+<button onclick="loadChats()" style="width:auto">↻</button>
+</div>
+<div id="chats" class="chats"></div>
+<div style="padding:10px;border-top:1px solid #eee">
+<b>Equipo</b>
+<div id="workers" style="margin-top:6px;font-size:13px"></div>
+<input id="newWorkerEmail" placeholder="Nuevo trabajador email">
+<input id="newWorkerPass" placeholder="Password" type="password">
+<select id="newWorkerRole"><option value="trabajador">Trabajador</option><option value="admin">Admin</option></select>
+<button onclick="addWorker()">Agregar</button>
+<div style="margin-top:10px">
+<label style="font-size:13px"><input type="checkbox" id="aiToggle" onchange="toggleAI()"> IA Activada</label>
+</div>
+</div>
+</div>
+<div class="right">
+<div id="msgs" class="msgs"></div>
+<div class="bar">
+<input id="msgText" placeholder="Mensaje..." onkeydown="if(event.key==='Enter')sendMsg()">
+<button onclick="sendMsg()" style="width:100px">Enviar</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Modals simple -->
+<div id="registerModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center">
+<div class="card">
+<h3>Crear empresa (Jefe)</h3>
+<input id="r_agency" placeholder="ID empresa">
+<input id="r_user" placeholder="Correo jefe">
+<input id="r_pass" placeholder="Contraseña" type="password">
+<input id="r_name" placeholder="Nombre">
+<select id="r_plan"><option value="premium">Premium</option><option value="pro">Pro</option><option value="starter">Starter</option></select>
+<button onclick="crearJefe()">Crear</button>
+<button onclick="hideRegister()" style="background:#eee;color:#111;margin-top:6px">Cerrar</button>
+<div id="r_msg" style="font-size:13px;margin-top:8px"></div>
+</div>
+</div>
+
+<div id="forgotModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center">
+<div class="card">
+<h3>Recuperar contraseña</h3>
+<input id="f_email" placeholder="Tu correo">
+<button onclick="forgot()">Enviar código</button>
+<div id="f_codeWrap" class="hidden">
+<input id="f_code" placeholder="Código recibido">
+<input id="f_new" type="password" placeholder="Nueva contraseña">
+<button onclick="reset()">Cambiar</button>
+</div>
+<button onclick="hideForgot()" style="background:#eee;color:#111;margin-top:6px">Cerrar</button>
+<div id="f_msg" style="font-size:13px;margin-top:8px"></div>
+</div>
+</div>
+
 <script>
-let planSel='basico';
-let empresaCreada='';
-let emailCreado='';
-function toast(m){let t=document.getElementById('toast');t.innerText=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000)}
-function showTab(t){
- document.getElementById('tab-login').style.display=t==='login'?'block':'none';
- document.getElementById('tab-crear').style.display=t==='crear'?'block':'none';
- document.getElementById('tab-forgot').style.display=t==='forgot'?'block':'none';
- document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
- if(t==='login') document.querySelectorAll('.tab')[0].classList.add('active');
- if(t==='crear') document.querySelectorAll('.tab')[1].classList.add('active');
+let ME={}; let chats=[]; let activeWa=null;
+async function api(p,o){ const r=await fetch(p,o); return r.json(); }
+fetch('/health').then(r=>r.json()).then(j=>document.getElementById('health').innerText=j.v).catch(()=>document.getElementById('health').innerText='offline');
+
+function showRegister(){document.getElementById('registerModal').classList.remove('hidden'); document.getElementById('registerModal').style.display='flex'}
+function hideRegister(){document.getElementById('registerModal').classList.add('hidden'); document.getElementById('registerModal').style.display='none'}
+function showForgot(){document.getElementById('forgotModal').classList.remove('hidden'); document.getElementById('forgotModal').style.display='flex'}
+function hideForgot(){document.getElementById('forgotModal').classList.add('hidden'); document.getElementById('forgotModal').style.display='none'}
+
+async function crearJefe(){
+ const ag=document.getElementById('r_agency').value.trim().toLowerCase();
+ const us=document.getElementById('r_user').value.trim().toLowerCase();
+ const pw=document.getElementById('r_pass').value;
+ const nm=document.getElementById('r_name').value||us;
+ const pl=document.getElementById('r_plan').value;
+ const j=await api(`/api/crear-jefe?agency_id=${encodeURIComponent(ag)}&username=${encodeURIComponent(us)}&password=${encodeURIComponent(pw)}&name=${encodeURIComponent(nm)}&plan=${pl}`);
+ document.getElementById('r_msg').innerText=j.ok?`Creado plan ${j.plan} - ya puedes logearte`:'Error: '+(j.error||'');
 }
-function selPlan(p){
- planSel=p;
- document.querySelectorAll('.plan').forEach(e=>e.classList.remove('active'));
- document.getElementById('p-'+p).classList.add('active');
+
+async function login(){
+ const ag=document.getElementById('agency_id').value.trim().toLowerCase();
+ const u=document.getElementById('username').value.trim().toLowerCase();
+ const pw=document.getElementById('password').value;
+ document.getElementById('btnLogin').disabled=true; document.getElementById('loginMsg').innerText='Ingresando...';
+ try{
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ag,username:u,email:u,password:pw})});
+  const j=await r.json();
+  if(!r.ok) throw new Error(j.error||'Error login');
+  ME=j; localStorage.setItem('klido_me',JSON.stringify(j));
+  startApp();
+ }catch(e){ document.getElementById('loginMsg').innerText=e.message; }
+ document.getElementById('btnLogin').disabled=false;
 }
-async function crearEmpresa(){
- const ag=document.getElementById('c_ag').value.trim().toLowerCase();
- const email=document.getElementById('c_email').value.trim().toLowerCase();
- const pass=document.getElementById('c_pass').value;
- if(!document.getElementById('c_legal').checked) return toast('Acepta términos y Ley 1581');
- if(!ag||!email||!pass) return toast('Falta datos');
- const r=await fetch('/api/crear-jefe?agency_id='+encodeURIComponent(ag)+'&username='+encodeURIComponent(email)+'&password='+encodeURIComponent(pass)+'&name='+encodeURIComponent(email)+'&plan='+planSel);
- const j=await r.json();
- if(!j.ok) return toast(j.error||'Error');
- empresaCreada=ag; emailCreado=email;
- toast('Empresa creada - Plan '+planSel.toUpperCase()+' seleccionado');
- document.getElementById('pagoBox').style.display='block';
- document.getElementById('btnPagar').innerText='2. PAGAR PLAN '+planSel.toUpperCase()+' - 3133181851';
+function startApp(){
+ if(!ME.agency_id){ try{ME=JSON.parse(localStorage.getItem('klido_me')||'{}')}catch(e){} }
+ if(!ME.agency_id) return;
+ document.getElementById('loginView').classList.add('hidden');
+ document.getElementById('appView').classList.remove('hidden');
+ document.getElementById('agencyLabel').innerText=ME.agency_id;
+ document.getElementById('userLabel').innerText=ME.username+' ('+ME.role+')';
+ document.getElementById('planLabel').innerText=ME.plan||'premium';
+ loadStats(); loadChats(); loadWorkers(); loadAI();
 }
-async function pagarWpp(){
- if(!empresaCreada) return toast('Primero crea empresa');
- const res=await fetch('/api/plans/request-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:empresaCreada,email:emailCreado,plan:planSel})});
- const j=await res.json();
- const link=`https://wa.me/573133181851?text=Hola%20quiero%20Klido%20${planSel.toUpperCase()}%20Empresa:%20${empresaCreada}%20Email:%20${emailCreado}%20Codigo:${j.code||'PENDIENTE'}`;
- window.open(link,'_blank');
- toast('Se abrió WhatsApp 3133181851 - Envía comprobante y te dan código única vez');
+function logout(){ localStorage.clear(); location.reload(); }
+async function loadStats(){
+ const j=await api(`/api/stats?agency_id=${ME.agency_id}`);
+ document.getElementById('stats').innerHTML=`<div class=stat><h3>${j.today}</h3><p>Hoy</p></div><div class=stat><h3>${j.unread}</h3><p>No leídos</p></div><div class=stat><h3>${j.totalChats}</h3><p>Total chats</p></div><div class=stat><h3>${j.campaign}</h3><p>Campañas</p></div><div class=stat><h3>${j.ia}</h3><p>Mensajes IA</p></div><div class=stat><h3>${j.calls}</h3><p>Llamadas</p></div>`;
 }
-async function activarPlan(){
- const code=document.getElementById('c_code').value.trim();
- if(!code) return toast('Ingresa código única vez');
- const r=await fetch('/api/plans/activate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:empresaCreada,email:emailCreado,code,plan:planSel})});
- const j=await r.json();
- if(!j.ok && j.error) return toast(j.error);
- toast('¡Plan '+planSel.toUpperCase()+' activado! Entrando...');
- localStorage.setItem('agency_id',empresaCreada);
- localStorage.setItem('username',emailCreado);
- localStorage.setItem('plan',planSel);
- setTimeout(()=>location.href='/',800);
+async function loadChats(){
+ let url=`/api/chats?agency_id=${ME.agency_id}`;
+ if(ME.role!=='jefe') url+=`&worker=${ME.username}`;
+ chats=await api(url); renderChats();
 }
-async function doLogin(){
- const ag=document.getElementById('l_ag').value.trim().toLowerCase();
- const u=document.getElementById('l_user').value.trim().toLowerCase();
- const p=document.getElementById('l_pass').value;
- const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ag,username:u,password:p})});
- const j=await r.json();
- if(j.error) return toast(j.error);
- localStorage.setItem('agency_id',j.agency_id);
- localStorage.setItem('username',j.username);
- localStorage.setItem('role',j.role);
- localStorage.setItem('plan',j.plan);
- toast('Bienvenido a Klido Avanza Consulting');
- setTimeout(()=>location.href='/',600);
+function renderChats(){
+ const q=(document.getElementById('searchChat').value||'').toLowerCase();
+ const c=document.getElementById('chats'); c.innerHTML='';
+ chats.filter(x=>!q|| (x.name||'').toLowerCase().includes(q) || x.wa_id.includes(q)).forEach(ch=>{
+  const d=document.createElement('div'); d.className='chat-item'+(activeWa===ch.wa_id?' active':'');
+  d.innerHTML=`<b>${ch.name||ch.wa_id}</b><span>${(ch.last_message||'').slice(0,40)}</span>`;
+  d.onclick=()=>openChat(ch.wa_id); c.appendChild(d);
+ });
+}
+async function openChat(wa){
+ activeWa=wa; renderChats();
+ const msgs=await api(`/api/messages/${wa}?agency_id=${ME.agency_id}`);
+ const box=document.getElementById('msgs'); box.innerHTML='';
+ msgs.forEach(m=>{
+  const div=document.createElement('div'); div.className='msg '+(m.direction==='out'?'out':'in');
+  div.innerText=m.text+(m.sent_by?` [${m.sent_by}]`:''); box.appendChild(div);
+ });
+ box.scrollTop=box.scrollHeight;
+ fetch('/api/chats/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ME.agency_id,wa_id:wa})});
+}
+async function sendMsg(){
+ const t=document.getElementById('msgText').value.trim(); if(!t||!activeWa) return;
+ document.getElementById('msgText').value='';
+ await fetch('/api/messages/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ME.agency_id,wa_id:activeWa,text:t,username:ME.username})});
+ openChat(activeWa); loadChats();
+}
+async function loadWorkers(){
+ const w=await api(`/api/workers?agency_id=${ME.agency_id}`);
+ document.getElementById('workers').innerHTML=w.map(x=>`${x.username} (${x.role}) <a class=link onclick="delWorker('${x.username}')">[x]</a>`).join('<br>');
+}
+async function addWorker(){
+ const email=document.getElementById('newWorkerEmail').value.trim().toLowerCase();
+ const pw=document.getElementById('newWorkerPass').value;
+ const role=document.getElementById('newWorkerRole').value;
+ if(!email||!pw) return alert('Falta datos');
+ await fetch('/api/workers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ME.agency_id,email,password:pw,role})});
+ loadWorkers();
+}
+async function delWorker(id){
+ if(!confirm('Borrar '+id+'?')) return;
+ await fetch(`/api/workers/${encodeURIComponent(id)}?agency_id=${ME.agency_id}`,{method:'DELETE'}); loadWorkers();
+}
+async function loadAI(){
+ const j=await api(`/api/ai/config?agency_id=${ME.agency_id}`); document.getElementById('aiToggle').checked=!!j.enabled;
+}
+async function toggleAI(){
+ const en=document.getElementById('aiToggle').checked;
+ await fetch('/api/ai/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agency_id:ME.agency_id,enabled:en})});
 }
 async function forgot(){
- const email=document.getElementById('f_email').value.trim();
- const r=await fetch('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
- const j=await r.json();
- if(j.error) return toast(j.error);
- toast('Código enviado: '+j.code+' (en prod se envía por email)');
+ const email=document.getElementById('f_email').value.trim().toLowerCase();
+ const j=await api('/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+ if(j.ok){ document.getElementById('f_msg').innerText='Código: '+j.code+' (demo). Ingresalo abajo'; document.getElementById('f_codeWrap').classList.remove('hidden'); }
+ else document.getElementById('f_msg').innerText=j.error||'Error';
 }
 async function reset(){
- const email=document.getElementById('f_email').value.trim();
+ const email=document.getElementById('f_email').value.trim().toLowerCase();
  const token=document.getElementById('f_code').value.trim();
- const np=document.getElementById('f_pass').value;
- const r=await fetch('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,token,newPassword:np})});
- const j=await r.json();
- if(j.error) return toast(j.error);
- toast('Clave cambiada, ingresa ahora');
- showTab('login');
+ const np=document.getElementById('f_new').value;
+ const j=await api('/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,token,newPassword:np})});
+ document.getElementById('f_msg').innerText=j.ok?'Contraseña cambiada, ya puedes entrar':'Error: '+(j.error||'');
 }
+(function(){ try{const m=JSON.parse(localStorage.getItem('klido_me')||'null'); if(m&&m.agency_id){ME=m; startApp();}}catch(e){} })();
 </script>
 </body>
 </html>
