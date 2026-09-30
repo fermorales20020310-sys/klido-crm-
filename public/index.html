@@ -11,13 +11,13 @@ body{background:#eef2f9;min-height:100vh;display:flex;align-items:center;justify
 .logo-wrap img{width:84px;height:84px;object-fit:contain;background:white;border-radius:20px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .brand{display:flex;flex-direction:column;line-height:1}
 .brand b{font-size:42px;font-weight:900;letter-spacing:-1px}
-.brand span{font-size:14px;letter-spacing:4px;opacity:.9;font-weight:600;margin-top:2px;text-transform:uppercase}
+.brand span{font-size:13px;letter-spacing:4px;opacity:.9;font-weight:600;margin-top:2px;text-transform:uppercase}
 .left h1{font-size:50px;line-height:.95;font-weight:900;margin:42px 0 18px;letter-spacing:-1.5px}
 .left h1 i{color:#8fb1ff;font-style:normal}
 .slogan{color:#b9c9ec;font-size:15px;line-height:1.6;max-width:460px;margin-top:8px}
 .features{margin-top:auto;display:flex;gap:10px;flex-wrap:wrap}
 .feat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:10px 14px;border-radius:14px;font-size:12px;backdrop-filter:blur(10px)}
-.right{padding:26px 30px;background:#fbfcff;display:flex;flex-direction:column}
+.right{padding:26px 30px;background:#fbfcff;display:flex;flex-direction:column;overflow-y:auto}
 .tabs{display:flex;background:#eef2f9;padding:5px;border-radius:14px;margin-bottom:22px}
 .tab{flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer;color:#6b7da1;background:transparent}
 .tab.active{background:var(--blue);color:white;box-shadow:0 8px 18px rgba(23,58,128,.3)}
@@ -26,23 +26,25 @@ body{background:#eef2f9;min-height:100vh;display:flex;align-items:center;justify
 input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid #d8e0ef;background:#f8faff;margin-bottom:11px;font-size:14px;outline:none}
 input:focus{border-color:var(--blue);background:white}
 .btn{width:100%;padding:13px;border-radius:12px;border:none;background:var(--blue);color:white;font-weight:800;cursor:pointer}
+.btn:hover{opacity:.9}
 .link{color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none}
 .row{display:flex;justify-content:space-between;align-items:center;margin:10px 0 16px;font-size:12px}
 .plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0 14px}
-.plan{border:2px solid #e6ecf7;border-radius:14px;padding:12px;cursor:pointer;text-align:center;background:#f8faff}
-.plan.selected{border-color:var(--blue);background:#eef3ff}
-.plan b{display:block;font-size:13px}
+.plan{border:2px solid #e6ecf7;border-radius:14px;padding:12px;cursor:pointer;text-align:center;background:#f8faff;transition:.2s}
+.plan.selected{border-color:var(--blue);background:#eef3ff;transform:scale(1.02)}
+.plan b{display:block;font-size:12px}
 .plan span{font-size:11px;color:#6b7da1}
 .terms{font-size:11px;color:#6b7da1;display:flex;gap:8px;align-items:flex-start;margin:12px 0}
 .modal{position:fixed;inset:0;background:rgba(5,12,28,.6);display:none;place-items:center;padding:20px;z-index:50}
 .modal.open{display:grid}
 .modal-box{background:white;border-radius:20px;padding:24px;max-width:400px;width:100%}
-.hidden{display:none}
+.hidden{display:none!important}
+@media(max-width:900px){.app{grid-template-columns:1fr}.left{padding:28px}.left h1{font-size:36px}}
 </style></head><body>
 <div class="app">
   <div class="left">
     <div class="logo-wrap">
-      <img src="/logo.png" onerror="this.src='/logo.png'"/>
+      <img src="/logo.png" alt="Klido"/>
       <div class="brand"><b>KLIDO</b><span>avanza consulting</span></div>
     </div>
     <h1>El mejor CRM<br>que tu empresa<br><i>puede tener.</i></h1>
@@ -54,12 +56,11 @@ input:focus{border-color:var(--blue);background:white}
 
     <div id="viewLogin" class="card">
       <h3>Ingresar a tu agencia</h3>
-      <input id="loginEmpresa" placeholder="Código de empresa (ej: ACOL)"/>
+      <input id="loginEmpresa" placeholder="Código de empresa (ej: ACOL) - vacío si eres SuperAdmin"/>
       <input id="loginEmail" placeholder="Correo" value="fermorales20020310@gmail.com"/>
       <input id="loginPass" type="password" placeholder="Contraseña"/>
       <div class="row"><label style="display:flex;gap:6px;align-items:center;color:#6b7da1"><input type="checkbox" style="width:auto;margin:0"/> Recordarme</label><button class="link" onclick="openForgot()">¿Olvidaste tu contraseña?</button></div>
       <button class="btn" onclick="doLogin()">Ingresar al CRM →</button>
-      <p style="font-size:11px;color:#6b7da1;margin-top:12px;text-align:center">SuperAdmin: fermorales20020310@gmail.com</p>
     </div>
 
     <div id="viewReg" class="card hidden">
@@ -67,44 +68,64 @@ input:focus{border-color:var(--blue);background:white}
       <input id="regNombre" placeholder="Nombre de la agencia / empresa"/>
       <input id="regEmail" placeholder="Correo del administrador"/>
       <input id="regPass" type="password" placeholder="Crear contraseña admin"/>
-      <label style="font-size:12px;font-weight:700;margin:8px 0;display:block">Selecciona tu plan (Railway ya está pago)</label>
+      <label style="font-size:12px;font-weight:700;margin:8px 0;display:flex;justify-content:space-between;align-items:center">Selecciona tu plan
+        <span style="display:flex;background:#e6ecf7;border-radius:20px;padding:3px">
+          <button id="btnAnual" onclick="setPeriodo('anual')" style="padding:6px 12px;border-radius:16px;border:none;background:#173a80;color:white;font-size:11px;font-weight:700;cursor:pointer">Anual</button>
+          <button id="btnTrim" onclick="setPeriodo('trimestral')" style="padding:6px 12px;border-radius:16px;border:none;background:transparent;color:#6b7da1;font-size:11px;font-weight:700;cursor:pointer">Trimestral</button>
+        </span>
+      </label>
       <div class="plans">
-        <div class="plan" onclick="selectPlan(this,'starter',29)"><b>Starter</b><span>$29/mes<br>3 asesores</span></div>
-        <div class="plan selected" onclick="selectPlan(this,'pro',59)"><b>Pro</b><span>$59/mes<br>10 asesores</span></div>
-        <div class="plan" onclick="selectPlan(this,'enterprise',129)"><b>Enterprise</b><span>$129/mes<br>Ilimitado</span></div>
+        <div class="plan" onclick="selectPlan(this,'basico')">
+          <b>Básico</b>
+          <span class="priceAnual" style="display:block;margin-top:4px;font-weight:800;color:#0a1931">$800.000/año</span>
+          <span class="priceTrim hidden" style="display:block;margin-top:4px;font-weight:800;color:#0a1931">$80.000/trim</span>
+          <span>3 asesores</span>
+        </div>
+        <div class="plan selected" onclick="selectPlan(this,'premium')">
+          <b>Premium + IA</b>
+          <span class="priceAnual" style="display:block;margin-top:4px;font-weight:800;color:#173a80">$1.400.000/año</span>
+          <span class="priceTrim hidden" style="display:block;margin-top:4px;font-weight:800;color:#173a80">$95.000/trim</span>
+          <span>10 asesores<br>IA</span>
+        </div>
+        <div class="plan" onclick="selectPlan(this,'gold')">
+          <b>Gold + IA + Llamadas</b>
+          <span class="priceAnual" style="display:block;margin-top:4px;font-weight:800;color:#0a1931">$2.400.000/año</span>
+          <span class="priceTrim hidden" style="display:block;margin-top:4px;font-weight:800;color:#0a1931">$120.000/trim</span>
+          <span>Ilimitado<br>IA + Llamadas</span>
+        </div>
       </div>
-      <div class="terms"><input type="checkbox" id="terms" checked style="width:auto;margin-top:2px"/><label for="terms">Acepto los <b>Términos y Condiciones</b> y Política de Privacidad de Klido Avanza Consulting. Plan se activa inmediato con código.</label></div>
+      <div class="terms"><input type="checkbox" id="terms" checked style="width:auto;margin-top:2px"/><label for="terms">Acepto los <b>Términos y Condiciones</b> y Política de Privacidad de Klido Avanza Consulting. El plan se activa inmediato con código.</label></div>
       <button class="btn" onclick="doRegister()">Crear empresa y generar código →</button>
-      <p id="regMsg" style="font-size:12px;margin-top:10px;color:#173a80"></p>
+      <p id="regMsg" style="font-size:12px;margin-top:12px;color:#173a80"></p>
     </div>
+    <p style="text-align:center;font-size:10px;color:#8aa0c7;margin-top:14px">Al continuar aceptas Términos y Política de Privacidad</p>
   </div>
 </div>
 
-<div class="modal" id="modalForgot"><div class="modal-box"><h3>Restablecer contraseña</h3><p style="font-size:12px;color:#6b7da1;margin:8px 0 14px">Te enviaremos un código de 6 dígitos a tu correo registrado.</p><input id="forgotEmail" placeholder="Correo registrado"/><button class="btn" onclick="sendCode()">Enviar código</button><div id="codeArea" class="hidden" style="margin-top:14px"><input id="forgotCode" placeholder="Código 6 dígitos" style="letter-spacing:4px;text-align:center"/><input id="forgotNewPass" type="password" placeholder="Nueva contraseña"/><button class="btn" style="background:#00b368" onclick="changePass()">Cambiar contraseña</button></div><p id="forgotMsg" style="font-size:11px;color:#00a65a;margin-top:10px"></p><button class="link" onclick="closeForgot()" style="margin-top:10px">Cerrar</button></div></div>
+<div class="modal" id="modalForgot"><div class="modal-box"><h3>Restablecer contraseña</h3><p style="font-size:12px;color:#6b7da1;margin:8px 0 14px">Te enviaremos un código de 6 dígitos a tu correo corporativo registrado.</p><input id="forgotEmail" placeholder="Correo registrado"/><button class="btn" onclick="sendCode()">Enviar código</button><div id="codeArea" class="hidden" style="margin-top:14px"><input id="forgotCode" placeholder="Código 6 dígitos" style="letter-spacing:4px;text-align:center"/><input id="forgotNewPass" type="password" placeholder="Nueva contraseña"/><button class="btn" style="background:#00b368" onclick="changePass()">Cambiar contraseña</button></div><p id="forgotMsg" style="font-size:11px;color:#00a65a;margin-top:10px"></p><button class="link" onclick="closeForgot()" style="margin-top:10px">Cerrar</button></div></div>
 
 <script>
-let selectedPlan='pro', selectedPrice=59;
-function switchTab(t){ viewLogin.classList.toggle('hidden',t!=='login'); viewReg.classList.toggle('hidden',t!=='reg'); tLogin.classList.toggle('active',t==='login'); tReg.classList.toggle('active',t==='reg'); }
-function selectPlan(el,n,p){ document.querySelectorAll('.plan').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selectedPlan=n; selectedPrice=p; }
-function openForgot(){ modalForgot.classList.add('open'); forgotEmail.value=loginEmail.value; }
-function closeForgot(){ modalForgot.classList.remove('open'); }
+let selectedPlan='premium', periodo='anual';
+const precios = { basico:{anual:800000,trimestral:80000}, premium:{anual:1400000,trimestral:95000}, gold:{anual:2400000,trimestral:120000} };
+function switchTab(t){ document.getElementById('viewLogin').classList.toggle('hidden',t!=='login'); document.getElementById('viewReg').classList.toggle('hidden',t!=='reg'); document.getElementById('tLogin').classList.toggle('active',t==='login'); document.getElementById('tReg').classList.toggle('active',t==='reg'); }
+function selectPlan(el,name){ document.querySelectorAll('.plan').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selectedPlan=name; }
+function setPeriodo(p){ periodo=p; btnAnual.style.background=p==='anual'?'#173a80':'transparent'; btnAnual.style.color=p==='anual'?'white':'#6b7da1'; btnTrim.style.background=p==='trimestral'?'#173a80':'transparent'; btnTrim.style.color=p==='trimestral'?'white':'#6b7da1'; document.querySelectorAll('.priceAnual').forEach(e=>e.classList.toggle('hidden',p!=='anual')); document.querySelectorAll('.priceTrim').forEach(e=>e.classList.toggle('hidden',p!=='trimestral')); }
+function openForgot(){ document.getElementById('modalForgot').classList.add('open'); document.getElementById('forgotEmail').value=document.getElementById('loginEmail').value; }
+function closeForgot(){ document.getElementById('modalForgot').classList.remove('open'); }
 async function doLogin(){
-  const body={email:loginEmail.value,password:loginPass.value,empresa:loginEmpresa.value};
-  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const d=await r.json(); if(d.token){localStorage.setItem('token',d.token); location.href='/dashboard.html';} else alert(d.error||'Error login');
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:loginEmail.value,password:loginPass.value,empresa:loginEmpresa.value})});
+  const d=await r.json(); if(d.token){ localStorage.setItem('token',d.token); location.href='/dashboard.html'; } else alert(d.error||'Error login');
 }
 async function doRegister(){
-  if(!terms.checked) return alert('Debes aceptar términos');
+  if(!terms.checked) return alert('Debes aceptar términos y condiciones');
   if(!regNombre.value||!regEmail.value||!regPass.value) return alert('Completa todos los campos');
-  regMsg.innerText='Creando agencia '+regNombre.value+' con plan '+selectedPlan+'...';
-  const body={nombre:regNombre.value,email:regEmail.value,password:regPass.value,plan:selectedPlan,aceptaTerminos:true};
+  const monto=precios[selectedPlan][periodo];
+  regMsg.innerText=`Creando ${regNombre.value} - ${selectedPlan.toUpperCase()} ${periodo} $${monto.toLocaleString('es-CO')}...`;
+  const body={nombre:regNombre.value,email:regEmail.value,password:regPass.value,plan:selectedPlan,periodo,monto,aceptaTerminos:true};
   const r=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const d=await r.json();
-  if(d.ok){
-    regMsg.innerHTML=`✅ Agencia creada!<br>Plan: <b>${selectedPlan} ($${selectedPrice})</b><br>Código: <b style="font-size:22px;letter-spacing:2px">${d.codigoAcceso}</b><br>Ya puedes ingresar con ese código y el correo ${regEmail.value}`;
-    setTimeout(()=>{ switchTab('login'); loginEmpresa.value=d.codigoAcceso; loginEmail.value=regEmail.value; },1200);
-  } else regMsg.innerText=d.error||'Error';
+  if(d.ok){ regMsg.innerHTML=`✅ Agencia creada!<br>Plan <b>${selectedPlan.toUpperCase()} ${periodo}</b> - $${monto.toLocaleString('es-CO')}<br>Código: <b style="font-size:22px;letter-spacing:2px">${d.codigoAcceso}</b><br>Ingresa con ese código.`; setTimeout(()=>{ switchTab('login'); loginEmpresa.value=d.codigoAcceso; loginEmail.value=regEmail.value; },1200); } else regMsg.innerText=d.error||'Error';
 }
-async function sendCode(){ const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:forgotEmail.value})}); const d=await r.json(); forgotMsg.innerText=d.message; if(d.testCode) forgotMsg.innerText+=` | TEST: ${d.testCode}`; codeArea.classList.remove('hidden'); }
+async function sendCode(){ const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:forgotEmail.value})}); const d=await r.json(); forgotMsg.innerText=d.message||d.error; if(d.testCode) forgotMsg.innerText+=` | TEST: ${d.testCode}`; codeArea.classList.remove('hidden'); }
 async function changePass(){ const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:forgotEmail.value,code:forgotCode.value,newPassword:forgotNewPass.value})}); const d=await r.json(); forgotMsg.innerText=d.message||d.error; if(r.ok) setTimeout(closeForgot,1500); }
 </script></body></html>
