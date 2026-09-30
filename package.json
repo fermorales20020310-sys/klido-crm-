@@ -1,20 +1,12 @@
 {
-  "name": "klido-crm-v13-final",
-  "version": "13.0.0",
-  "description": "Klido CRM - Producto Final API Oficial Meta",
+  "name": "klido-crm-oficial",
+  "version": "11.0.0",
   "main": "server.js",
-  "engines": { "node": ">=18" },
   "scripts": { "start": "node server.js" },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.8",
     "pg": "^8.11.3",
-    "socket.io": "^4.7.4",
-    "xlsx": "^0.18.5"
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1"
   }
 }
