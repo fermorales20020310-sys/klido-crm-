@@ -2,7 +2,9 @@
   "name": "klido-crm",
   "version": "10.8.4",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
