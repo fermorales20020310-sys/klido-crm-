@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'klido-secreto-2025';
 
 app.get('/health', (req,res) => res.status(200).send('ok'));
-server.listen(PORT, '0.0.0.0', () => console.log(`✅ Klido 12.3 Seguro Online ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`✅ Klido 12.4 FINAL Seguro Online ${PORT}`));
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -39,11 +39,21 @@ const contactosDB = db('contactos');
 const chatsDB = db('chats');
 const codigosDB = db('codigos');
 
+// CORREO REAL - GMAIL SMTP - LLEGA SI O SI
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: (process.env.EMAIL_PASS||'').replace(/\s/g,'')
+  },
+  tls: { rejectUnauthorized: false }
 });
-transporter.verify((err)=>{ if(err) console.log('⚠️ Mail:', err.message); else console.log('✅ Correo activo:', process.env.EMAIL_USER); });
+transporter.verify((err)=>{
+  if(err) console.log('❌ MAIL ERROR:', err.message, '- Revisa EMAIL_USER y EMAIL_PASS en Railway Variables');
+  else console.log('✅ Correo listo para enviar desde:', process.env.EMAIL_USER);
+});
 
 const FER_EMAIL = "fermorales20020310@gmail.com";
 const FER_PASS = "Mafe2002@";
@@ -64,7 +74,7 @@ function auth(req,res,next){
   try{ req.user = jwt.verify(token, JWT_SECRET); next(); }catch{ res.status(401).json({error:'token invalido'}); }
 }
 
-// LOGIN SIN CÓDIGO - SOLO NOMBRE EMPRESA + CORREO + CONTRASEÑA + TERMINOS
+// LOGIN FINAL - SIN CODIGO - NOMBRE EMPRESA + CORREO + CONTRASEÑA
 app.post('/api/login', async (req,res)=>{
   try{
     const {email,password,nombre} = req.body;
@@ -78,15 +88,15 @@ app.post('/api/login', async (req,res)=>{
     const empresas = empresasDB.get();
     const emp = empresas.find(e=> e.id===user.empresaId);
     if(nombre && emp && user.rol!=='superadmin'){
-      console.log(`LOGIN: ${emailClean} empresa ingresada "${nombre}" | real "${emp.nombre}" | plan ${emp.plan}`);
+      console.log(`LOGIN: ${emailClean} ingresó empresa "${nombre}" | real "${emp.nombre}"`);
     }
     const token = jwt.sign({id:user.id, rol:user.rol, empresaId:user.empresaId, plan:emp?.plan||'all', codigoAcceso:emp?.codigoAcceso}, JWT_SECRET, {expiresIn:'7d'});
-    console.log(`LOGIN OK: ${emailClean} | Empresa:${emp?.nombre||'SUPERADMIN'} | Plan:${emp?.plan||'ALL'}`);
+    console.log(`LOGIN OK: ${emailClean} | Empresa:${emp?.nombre||'SUPERADMIN'}`);
     res.json({token, user:{id:user.id, nombre:user.nombre, empresaNombre: emp?.nombre||'SuperAdmin', email:user.email, rol:user.rol, empresaId:user.empresaId, plan:emp?.plan||'all', codigoAcceso:emp?.codigoAcceso, montoAnual:emp?.montoAnual}});
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-// CREAR EMPRESA - CODIGO SOLO SE GENERA UNA VEZ AL REGISTRAR Y LLEGA AL CORREO
+// CREAR EMPRESA - CODIGO SOLO SE GENERA UNA VEZ Y LLEGA AL CORREO
 app.post('/api/public/crear-empresa', async (req,res)=>{
   try{
     const {nombre,email,password,plan,codigoIngresado,aceptaTerminos} = req.body;
@@ -110,18 +120,22 @@ app.post('/api/public/crear-empresa', async (req,res)=>{
     usuariosDB.set(allUsers);
 
     if(process.env.EMAIL_USER && process.env.EMAIL_PASS){
-      const htmlCorreo = `<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:520px;margin:auto;background:white;border-radius:20px;padding:32px;text-align:center;border:1px solid #e6ecf7"><h2 style="color:#0a1931">KLIDO AVANZA</h2><p style="color:#173a80;font-weight:700">Agencia ${nombre} activada</p><p>Plan: <b>${plan.toUpperCase()} - $${monto.toLocaleString('es-CO')}/año</b></p><div style="background:#eef3ff;border:2px solid #173a80;color:#173a80;font-size:28px;font-weight:900;letter-spacing:4px;padding:14px;border-radius:14px;margin:18px 0">${codigo}</div><p style="font-size:12px">Código: ${codigo} solo habilita plan ${plan.toUpperCase()}<br>Correo: ${email.toLowerCase()}<br>Guárdalo, es tu acceso exclusivo.</p></div></div>`;
       try{
-        await transporter.sendMail({ from: `"Klido Avanza" <${process.env.EMAIL_USER}>`, to: email.toLowerCase(), subject: `✅ Agencia ${nombre} activada - Código ${codigo} - Plan ${plan.toUpperCase()}`, html: htmlCorreo });
-        console.log(`📧 Confirmación enviada a ${email} con código ${codigo}`);
-      }catch(e){ console.log('❌ Mail error:', e.message); }
+        await transporter.sendMail({
+          from: `"Klido Avanza Consulting" <${process.env.EMAIL_USER}>`,
+          to: email.toLowerCase(),
+          subject: `✅ Agencia ${nombre} activada - Código ${codigo}`,
+          html: `<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:520px;margin:auto;background:white;border-radius:20px;padding:32px;text-align:center;border:1px solid #e6ecf7"><h2 style="color:#0a1931">KLIDO AVANZA CONSULTING</h2><p style="color:#173a80;font-weight:700">Agencia ${nombre} activada</p><p>Plan: <b>${plan.toUpperCase()} - $${monto.toLocaleString('es-CO')}/año</b></p><div style="background:#eef3ff;border:2px solid #173a80;color:#173a80;font-size:28px;font-weight:900;letter-spacing:4px;padding:14px;border-radius:14px;margin:18px 0">${codigo}</div><p style="font-size:12px">Guarda este código, es tu acceso exclusivo.</p></div></div>`
+        });
+        console.log(`📧 Confirmación enviada a ${email}`);
+      }catch(e){ console.log('❌ Mail error crear empresa:', e.message); }
     }
     console.log(`✅ AGENCIA CREADA: ${nombre} Plan:${plan} CODIGO:${codigo}`);
     res.json({ok:true, empresa:nueva, codigoAcceso:codigo});
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-// RECUPERAR CONTRASEÑA - CODIGO SOLO AL CORREO, NUNCA AL FRONTEND - SEGURIDAD MAXIMA
+// OLVIDE CONTRASEÑA - SOLO AL CORREO, NUNCA EN PANTALLA
 app.post('/api/auth/forgot', async (req,res)=>{
   try{
     const {email} = req.body;
@@ -132,20 +146,24 @@ app.post('/api/auth/forgot', async (req,res)=>{
     const codigos = codigosDB.get();
     codigos.push({ email: emailClean, code, expira: Date.now()+15*60*1000, usado:false });
     codigosDB.set(codigos);
-    if(process.env.EMAIL_USER && process.env.EMAIL_PASS){
-      try{
-        await transporter.sendMail({
-          from: `"Klido Avanza - Seguridad" <${process.env.EMAIL_USER}>`,
-          to: emailClean,
-          subject: `🔐 Código de recuperación Klido`,
-          html: `<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:480px;margin:auto;background:white;border-radius:16px;padding:28px;border:1px solid #e6ecf7;text-align:center"><h2 style="color:#0a1931">KLIDO AVANZA CONSULTING</h2><p>Tu código de recuperación es:</p><div style="background:#173a80;color:white;font-size:32px;font-weight:900;letter-spacing:6px;padding:14px;border-radius:12px;margin:16px 0">${code}</div><p style="font-size:11px;color:#6b7da1">Expira en 15 min. Nunca compartas este código.</p></div></div>`
-        });
-        console.log(`📧 Código recuperación enviado SOLO a ${emailClean}`);
-      }catch(e){ console.log('❌ Error mail recup:', e.message); }
-    } else {
-      console.log(`🔐 CODIGO RECUP (solo log servidor): ${emailClean} -> ${code}`);
+    console.log(`🔐 Código ${code} generado para ${emailClean}`);
+    if(!process.env.EMAIL_USER ||!process.env.EMAIL_PASS){
+      return res.status(500).json({error:'Correo no configurado en servidor. Configura EMAIL_USER y EMAIL_PASS en Railway'});
     }
-    res.json({message:`Código enviado a ${emailClean}. Revisa tu correo (y spam). Expira en 15 minutos.`});
+    try{
+      const info = await transporter.sendMail({
+        from: `"Klido Avanza - Seguridad" <${process.env.EMAIL_USER}>`,
+        to: emailClean,
+        subject: `Tu código de recuperación Klido es ${code}`,
+        html: `<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:480px;margin:auto;background:white;border-radius:16px;padding:28px;text-align:center;border:1px solid #e6ecf7"><h2 style="color:#0a1931">KLIDO AVANZA</h2><p style="font-size:14px">Tu código de recuperación es:</p><div style="background:#173a80;color:white;font-size:34px;font-weight:900;letter-spacing:8px;padding:16px;border-radius:12px;margin:18px 0">${code}</div><p style="font-size:11px;color:#6b7da1">Expira en 15 minutos. Revisa SPAM si no lo ves.</p></div></div>`,
+        text: `Tu código Klido es: ${code} - Expira en 15 min`
+      });
+      console.log(`✅ Código ${code} ENVIADO a ${emailClean} ${info.messageId}`);
+      return res.json({message:`Código enviado a ${emailClean}. Revisa tu correo y SPAM. Expira en 15 minutos.`});
+    }catch(mailErr){
+      console.log('❌ SMTP ERROR:', mailErr.message);
+      return res.status(500).json({error:`Error enviando correo: ${mailErr.message}`});
+    }
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
@@ -156,7 +174,7 @@ app.post('/api/auth/reset', async (req,res)=>{
     const emailClean = String(email).toLowerCase().trim();
     const codigos = codigosDB.get();
     const reg = codigos.find(c=> c.email===emailClean && c.code===String(code).trim() &&!c.usado && c.expira>Date.now());
-    if(!reg) return res.status(400).json({error:'Código inválido o expirado. Solicita uno nuevo'});
+    if(!reg) return res.status(400).json({error:'Código inválido o expirado'});
     if(String(newPassword).length < 6) return res.status(400).json({error:'Contraseña mínimo 6 caracteres'});
     const usuarios = usuariosDB.get(); const u = usuarios.find(x=>x.email.toLowerCase()===emailClean);
     if(!u) return res.status(404).json({error:'Usuario no existe'});
@@ -165,6 +183,19 @@ app.post('/api/auth/reset', async (req,res)=>{
     console.log(`✅ Contraseña cambiada para ${emailClean}`);
     res.json({message:'Contraseña cambiada correctamente. Ya puedes ingresar.'});
   }catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.get('/api/test-mail', async (req,res)=>{
+  try{
+    const to = process.env.EMAIL_USER || FER_EMAIL;
+    await transporter.sendMail({
+      from: `"Test Klido" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: 'Test Klido funciona',
+      html: '<h2>Si ves esto, el correo YA funciona ✅</h2>'
+    });
+    res.json({ok:true, message:`Correo de prueba enviado a ${to}`});
+  }catch(e){ res.status(500).json({ok:false, error:e.message}); }
 });
 
 app.get('/api/empresas', auth, (req,res)=> res.json(empresasDB.get()));
