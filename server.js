@@ -1,147 +1,87 @@
-// KLIDO CRM V11 OFICIAL - Basado en tu V10.8.3 estable + PRO
-try{ require('dotenv').config(); }catch(e){}
-const express = require('express');
-const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
-const path = require('path');
-const app = express();
-
-app.use(express.json({limit:'30mb'}));
-app.use((req,res,next)=>{
-  res.header('Access-Control-Allow-Origin','*');
-  res.header('Access-Control-Allow-Methods','GET,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers','Content-Type');
-  if(req.method==='OPTIONS') return res.sendStatus(200);
-  next();
-});
+require('dotenv').config();
+const express=require('express'),http=require('http'),{Server}=require('socket.io');
+const cors=require('cors'),multer=require('multer'),xlsx=require('xlsx'),axios=require('axios');
+const bcrypt=require('bcryptjs'),jwt=require('jsonwebtoken'),{v4:uuidv4}=require('uuid');
+const nodemailer=require('nodemailer'),path=require('path');
+const app=express();const server=http.createServer(app);
+const io=new Server(server,{cors:{origin:"*"}});
+app.use(cors());app.use(express.json({limit:'50mb'}));
 app.use(express.static(path.join(__dirname,'public')));
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl:{rejectUnauthorized:false} });
-
-async function ensureTables(){
-  await pool.query(`CREATE TABLE IF NOT EXISTS users(agency_id TEXT, username TEXT, password_hash TEXT, role TEXT, display_name TEXT, plan TEXT DEFAULT 'premium', PRIMARY KEY(agency_id,username))`);
-  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'premium'`);
-  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name TEXT`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS chats(agency_id TEXT, wa_id TEXT, name TEXT, last_message TEXT, last_message_at BIGINT, unread INT DEFAULT 0, source TEXT DEFAULT 'direct', assigned_to TEXT, PRIMARY KEY(agency_id,wa_id))`);
-  await pool.query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS assigned_to TEXT`);
-  await pool.query(`ALTER TABLE chats ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'direct'`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS messages(id SERIAL PRIMARY KEY, agency_id TEXT, wa_id TEXT, text TEXT, direction TEXT, timestamp BIGINT, sent_by TEXT)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS password_resets(agency_id TEXT, email TEXT, token TEXT, expires_at BIGINT)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS campaigns(id SERIAL PRIMARY KEY, agency_id TEXT, template TEXT, total INT, sent INT DEFAULT 0, status TEXT DEFAULT 'pending', created_at BIGINT, contacts JSONB)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS templates(agency_id TEXT, name TEXT, status TEXT, language TEXT, PRIMARY KEY(agency_id,name))`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS ai_config(agency_id TEXT PRIMARY KEY, enabled BOOLEAN DEFAULT false)`);
-  await pool.query(`CREATE TABLE IF NOT EXISTS calls(id SERIAL PRIMARY KEY, agency_id TEXT, wa_id TEXT, duration INT, note TEXT, created_at BIGINT, created_by TEXT)`);
-  console.log('>>> KLIDO V11 OFICIAL TABLAS OK');
-}
-
-// HEALTH para Railway - pongo los 2 para que no falle nunca
-app.get('/health',(req,res)=>res.json({ok:true, v:'V11 OFICIAL PRO', status:'KLIDO FUNCIONAL'}));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V11 OFICIAL PRO', status:'KLIDO FUNCIONAL'}));
-app.get('/api/config-info',(req,res)=>res.json({status:'OFICIAL', v:'V11'}));
-
-// PLANES REALES
-app.get('/api/planes',(req,res)=>res.json([
-  {id:'basico', nombre:'BÁSICO', precio:'$800.000 / año', mant:'$80.000 / trim', color:'#0ea5e9', features:['Inbox ilimitado','Trabajadores ilimitados','Campañas','Historial completo','Soporte 3133181851']},
-  {id:'premium', nombre:'PREMIUM', precio:'$1.300.000 / año', mant:'$95.000 / trim', color:'#8b5cf6', features:['Todo Básico','IA Respuestas','Métricas IA','Segmentación']},
-  {id:'gold', nombre:'GOLD', precio:'$2.400.000 / año', mant:'$120.000 / trim', color:'#f59e0b', features:['Todo Premium','Llamadas WA','IA Entrenada','Onboarding dedicado']}
-]));
-
-app.post('/api/login',async(req,res)=>{
-  try{
-    const ag = (req.body.agency_id||'').toLowerCase().trim();
-    const u = (req.body.username||req.body.email||'').toLowerCase().trim();
-    const pw = req.body.password||'';
-    const r = await pool.query(`SELECT * FROM users WHERE agency_id=$1 AND LOWER(username)=LOWER($2)`, [ag, u]);
-    if(!r.rows.length) return res.status(401).json({error:'No existe '+u+' en empresa '+ag});
-    const ok = await bcrypt.compare(pw, r.rows[0].password_hash);
-    if(!ok) return res.status(401).json({error:'Contraseña incorrecta'});
-    res.json({agency_id:r.rows[0].agency_id, username:r.rows[0].username, role:r.rows[0].role, plan:r.rows[0].plan, display_name:r.rows[0].display_name});
-  }catch(e){ res.status(500).json({error:e.message}); }
-});
-
-app.get('/api/crear-jefe', async (req,res)=>{
-  try{
-    const agency_id=(req.query.agency_id||'').toLowerCase().trim();
-    const username=(req.query.username||'').toLowerCase().trim();
-    const password=req.query.password||'';
-    const name=req.query.name||username;
-    const finalPlan=(req.query.plan||'premium').toLowerCase().trim();
-    if(!agency_id||!username||!password) return res.json({ok:false, error:'Falta datos'});
-    const hash=await bcrypt.hash(password,10);
-    await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,'jefe',$4,$5) ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role='jefe', display_name=$4, plan=$5`, [agency_id, username, hash, name, finalPlan]);
-    res.json({ok:true, plan:finalPlan, msg:'Empresa creada '+agency_id});
-  }catch(e){ res.json({ok:false, error:e.message}); }
-});
-
-app.post('/api/forgot-password', async (req,res)=>{
-  try{
-    const clean=(req.body.email||'').trim().toLowerCase();
-    const users=await pool.query(`SELECT agency_id FROM users WHERE LOWER(username)=LOWER($1)`, [clean]);
-    if(!users.rows.length) return res.status(404).json({error:'Correo no registrado'});
-    const code=Math.floor(100000+Math.random()*900000).toString();
-    const expires=Date.now()+1000*60*15;
-    for(let u of users.rows){
-      await pool.query(`DELETE FROM password_resets WHERE LOWER(email)=LOWER($1)`, [clean]);
-      await pool.query(`INSERT INTO password_resets(agency_id,email,token,expires_at) VALUES($1,$2,$3,$4)`, [u.agency_id, clean, code, expires]);
-    }
-    res.json({ok:true, code:code});
-  }catch(e){ res.status(500).json({error:e.message}); }
-});
-app.post('/api/reset-password', async (req,res)=>{
-  try{
-    const token=(req.body.token||'').trim();
-    const clean=(req.body.email||'').trim().toLowerCase();
-    const np=req.body.newPassword||'';
-    const r=await pool.query(`SELECT * FROM password_resets WHERE token=$1 AND LOWER(email)=LOWER($2) ORDER BY expires_at DESC LIMIT 1`, [token, clean]);
-    if(!r.rows.length) return res.status(400).json({error:'Código incorrecto'});
-    if(Date.now()>Number(r.rows[0].expires_at)) return res.status(400).json({error:'Código expirado'});
-    const hash=await bcrypt.hash(np,10);
-    await pool.query(`UPDATE users SET password_hash=$1 WHERE LOWER(username)=LOWER($2)`, [hash, clean]);
-    await pool.query(`DELETE FROM password_resets WHERE LOWER(email)=LOWER($1)`, [clean]);
-    res.json({ok:true});
-  }catch(e){ res.status(500).json({error:e.message}); }
-});
-
-app.get('/api/chats',async(req,res)=>{
-  const ag=(req.query.agency_id||'').toLowerCase().trim(); if(!ag) return res.json([]);
-  const worker=(req.query.worker||'').toLowerCase().trim();
-  if(worker && worker!=='undefined' && worker!==''){
-    const r=await pool.query(`SELECT * FROM chats WHERE agency_id=$1 AND (assigned_to=$2 OR wa_id IN (SELECT wa_id FROM messages WHERE agency_id=$1 AND sent_by=$2)) ORDER BY last_message_at DESC LIMIT 200`, [ag, worker]);
-    return res.json(r.rows);
-  }
-  const r=await pool.query(`SELECT * FROM chats WHERE agency_id=$1 ORDER BY last_message_at DESC LIMIT 400`, [ag]); res.json(r.rows);
-});
-app.get('/api/messages/:wa_id',async(req,res)=>{ const r=await pool.query(`SELECT * FROM messages WHERE agency_id=$1 AND wa_id=$2 ORDER BY timestamp ASC LIMIT 1000`, [req.query.agency_id, req.params.wa_id]); res.json(r.rows); });
-app.post('/api/messages/send',async(req,res)=>{
-  const ag=(req.body.agency_id||'').toLowerCase().trim(); const wa_id=req.body.wa_id; const text=req.body.text; const user=(req.body.username||'').toLowerCase().trim();
-  await pool.query(`INSERT INTO messages(agency_id,wa_id,text,direction,timestamp,sent_by) VALUES($1,$2,$3,'out',$4,$5)`, [ag, wa_id, text, Date.now(), user]);
-  await pool.query(`INSERT INTO chats(agency_id,wa_id,last_message,last_message_at,unread,assigned_to) VALUES($1,$2,$3,$4,0,$5) ON CONFLICT(agency_id,wa_id) DO UPDATE SET last_message=$3,last_message_at=$4,unread=0,assigned_to=COALESCE(chats.assigned_to,$5)`, [ag, wa_id, text, Date.now(), user]);
-  res.json({ok:true});
-});
-app.post('/api/chats/read',async(req,res)=>{ await pool.query(`UPDATE chats SET unread=0 WHERE agency_id=$1 AND wa_id=$2`, [req.body.agency_id, req.body.wa_id]); res.json({ok:true}); });
-app.get('/api/workers',async(req,res)=>{ const ag=(req.query.agency_id||'').toLowerCase().trim(); const r=await pool.query(`SELECT agency_id,username,role,display_name,plan FROM users WHERE agency_id=$1 ORDER BY CASE WHEN role='jefe' THEN 0 ELSE 1 END`, [ag]); res.json(r.rows); });
-app.post('/api/workers',async(req,res)=>{
-  const ag=(req.body.agency_id||'').toLowerCase().trim(); const em=(req.body.email||'').toLowerCase().trim(); const pw=req.body.password||''; const role=req.body.role==='admin'?'admin':'trabajador';
-  const hash=await bcrypt.hash(pw,10);
-  const boss=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 AND role='jefe' LIMIT 1`, [ag]); const plan=boss.rows[0]?.plan||'premium';
-  await pool.query(`INSERT INTO users(agency_id,username,password_hash,role,display_name,plan) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(agency_id,username) DO UPDATE SET password_hash=$3, role=$4`, [ag, em, hash, role, em, plan]); res.json({ok:true});
-});
-app.delete('/api/workers/:id',async(req,res)=>{ const ag=(req.query.agency_id||'').toLowerCase().trim(); const id=decodeURIComponent(req.params.id).toLowerCase().trim(); await pool.query(`DELETE FROM users WHERE agency_id=$1 AND LOWER(username)=LOWER($2) AND role!='jefe'`, [ag, id]); res.json({ok:true}); });
-app.get('/api/stats',async(req,res)=>{
-  const ag=(req.query.agency_id||'').toLowerCase().trim();
-  const boss=await pool.query(`SELECT plan FROM users WHERE agency_id=$1 AND role='jefe' LIMIT 1`, [ag]);
-  const total=await pool.query(`SELECT COUNT(*) FROM chats WHERE agency_id=$1`, [ag]);
-  const unread=await pool.query(`SELECT COUNT(*) FROM chats WHERE agency_id=$1 AND unread>0`, [ag]);
-  const camp=await pool.query(`SELECT COUNT(*) FROM chats WHERE agency_id=$1 AND source='campaign'`, [ag]);
-  const today=await pool.query(`SELECT COUNT(*) FROM messages WHERE agency_id=$1 AND timestamp>$2`, [ag, Date.now()-86400000]);
-  const ia=await pool.query(`SELECT COUNT(*) FROM messages WHERE agency_id=$1 AND sent_by='IA'`, [ag]);
-  const calls=await pool.query(`SELECT COUNT(*) FROM calls WHERE agency_id=$1`, [ag]);
-  res.json({today:Number(today.rows[0].count), unread:Number(unread.rows[0].count), campaign:Number(camp.rows[0].count), ia:Number(ia.rows[0].count), calls:Number(calls.rows[0].count), totalChats:Number(total.rows[0].count), currentPlan:boss.rows[0]?.plan||'premium'});
-});
-app.get('/api/ai/config',async(req,res)=>{ const r=await pool.query(`SELECT enabled FROM ai_config WHERE agency_id=$1`, [req.query.agency_id]); res.json({enabled: r.rows[0]?.enabled||false}); });
-app.post('/api/ai/toggle',async(req,res)=>{ await pool.query(`INSERT INTO ai_config(agency_id,enabled) VALUES($1,$2) ON CONFLICT(agency_id) DO UPDATE SET enabled=$2`, [req.body.agency_id, req.body.enabled]); res.json({ok:true}); });
-app.post('/api/calls/log',async(req,res)=>{ await pool.query(`INSERT INTO calls(agency_id,wa_id,duration,note,created_at,created_by) VALUES($1,$2,$3,$4,$5,$6)`, [req.body.agency_id, req.body.wa_id, req.body.duration||0, req.body.note||'', Date.now(), req.body.username||'']); res.json({ok:true}); });
-app.get('/api/calls',async(req,res)=>{ const r=await pool.query(`SELECT * FROM calls WHERE agency_id=$1 ORDER BY id DESC LIMIT 100`, [req.query.agency_id]); res.json(r.rows); });
-
 const PORT=process.env.PORT||3000;
-(async()=>{ await ensureTables(); app.listen(PORT,'0.0.0.0',()=>console.log(`🚀 KLIDO V11 OFICIAL PRO en ${PORT} - FUNCIONAL`)); })();
+const JWT=process.env.JWT_SECRET||'klido_secret_2026_real';
+let empresas=[],codigos={},mensajes={},contactos={},campanas=[],plantillas=[];
+let transporter=null;
+if(process.env.SMTP_USER){transporter=nodemailer.createTransport({host:process.env.SMTP_HOST||'smtp.gmail.com',port:587,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}});}
+function codigoPlan(p){return `KLIDO-${p.toUpperCase()}-${Math.random().toString(36).substring(2,8).toUpperCase()}-${Date.now().toString().slice(-4)}`;}
+async function syncPlantillas(){
+ if(!process.env.WHATSAPP_TOKEN||!process.env.WABA_ID)return;
+ try{const r=await axios.get(`https://graph.facebook.com/${process.env.GRAPH_VERSION||'v20.0'}/${process.env.WABA_ID}/message_templates`,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+ plantillas=r.data.data.filter(t=>t.status==='APPROVED');console.log('[Klido] Plantillas:',plantillas.length);}catch(e){console.log('Error plantillas',e.message);}
+}
+setInterval(syncPlantillas,5*60*1000);syncPlantillas();
+app.get('/health',(req,res)=>res.json({status:'ok',v12:true,plantillas:plantillas.length}));
+app.get('/api/plantillas',(req,res)=>res.json(plantillas));
+app.post('/api/empresas/crear',async(req,res)=>{
+ const{nombre,correo,password,plan}=req.body;
+ if(empresas.find(e=>e.correo===correo))return res.status(400).json({error:'Correo ya registrado'});
+ const hash=await bcrypt.hash(password,10);const c=codigoPlan(plan);
+ const emp={id:uuidv4(),nombre,correo,passwordHash:hash,plan,codigoPlan:c,activo:true,createdAt:new Date()};
+ empresas.push(emp);contactos[emp.id]=[];mensajes[emp.id]={};
+ res.json({ok:true,empresa:{id:emp.id,nombre,correo,plan,codigoPlan:c}});
+});
+app.post('/api/login',async(req,res)=>{
+ const{correo,password,codigoPlan}=req.body;const emp=empresas.find(e=>e.correo===correo);
+ if(!emp)return res.status(404).json({error:'Empresa no existe'});
+ if(!(await bcrypt.compare(password,emp.passwordHash)))return res.status(401).json({error:'Pass incorrecta'});
+ if(codigoPlan&&codigoPlan!==emp.codigoPlan)return res.status(401).json({error:'Código de plan inválido'});
+ const token=jwt.sign({id:emp.id,plan:emp.plan},JWT,{expiresIn:'12h'});
+ res.json({ok:true,token,empresa:{id:emp.id,nombre:emp.nombre,plan:emp.plan}});
+});
+app.post('/api/recuperar/enviar',async(req,res)=>{
+ const{correo}=req.body;const emp=empresas.find(e=>e.correo===correo);
+ if(!emp)return res.status(404).json({error:'Correo no registrado'});
+ const code=Math.floor(100000+Math.random()*900000).toString();codigos[correo]={code,expires:Date.now()+15*60*1000};
+ if(transporter)await transporter.sendMail({from:process.env.SMTP_USER,to:correo,subject:'Klido - Código recuperación',html:`<h2>Tu código: ${code}</h2><p>Expira 15min</p>`});
+ console.log(`CODIGO ${correo} -> ${code}`);
+ res.json({ok:true,mensaje:'Código enviado (revisa spam). Expira 15min',previewCode:!transporter?code:undefined});
+});
+app.post('/api/recuperar/cambiar',async(req,res)=>{
+ const{correo,code,nuevaPassword}=req.body;const d=codigos[correo];
+ if(!d||d.code!==code||Date.now()>d.expires)return res.status(400).json({error:'Código inválido'});
+ const emp=empresas.find(e=>e.correo===correo);emp.passwordHash=await bcrypt.hash(nuevaPassword,10);delete codigos[correo];
+ res.json({ok:true});
+});
+function auth(req,res,next){const h=req.headers.authorization;if(!h)return res.status(401).json({error:'No token'});try{req.user=jwt.verify(h.replace('Bearer ',''),JWT);next();}catch{res.status(401).json({error:'Token inválido'})}}
+app.get('/api/inbox',auth,(req,res)=>res.json(contactos[req.user.id]||[]));
+app.get('/api/mensajes/:tel',auth,(req,res)=>res.json(mensajes[req.user.id]?.[req.params.tel]||[]));
+app.post('/api/mensajes/enviar',auth,async(req,res)=>{
+ const{telefono,tipo,contenido}=req.body;if(!mensajes[req.user.id])mensajes[req.user.id]={};if(!mensajes[req.user.id][telefono])mensajes[req.user.id][telefono]=[];
+ const m={id:uuidv4(),de:'yo',tipo,contenido,fecha:new Date()};mensajes[req.user.id][telefono].push(m);
+ if(tipo==='text'&&process.env.WHATSAPP_TOKEN){try{await axios.post(`https://graph.facebook.com/${process.env.GRAPH_VERSION||'v20.0'}/${process.env.PHONE_NUMBER_ID}/messages`,{messaging_product:'whatsapp',to:telefono,type:'text',text:{body:contenido}},{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});}catch(e){}}
+ io.to(req.user.id).emit('nuevo_mensaje',{telefono,mensaje:m});res.json({ok:true,mensaje:m});
+});
+app.post('/webhook',(req,res)=>{
+ const entry=req.body.entry?.[0]?.changes?.[0]?.value;
+ if(entry?.messages){const tel=entry.messages[0].from;const txt=entry.messages[0].text?.body||`[${entry.messages[0].type}]`;const empId=empresas[0]?.id;
+ if(empId){if(!mensajes[empId])mensajes[empId]={};if(!mensajes[empId][tel])mensajes[empId][tel]=[];mensajes[empId][tel].push({id:uuidv4(),de:'cliente',tipo:'text',contenido:txt,fecha:new Date()});
+ let c=contactos[empId].find(x=>x.telefono===tel);if(!c){c={id:uuidv4(),telefono,nombre:entry.contacts?.[0]?.profile?.name||tel,noLeido:true,esCampana:false};contactos[empId].unshift(c);}else c.noLeido=true;
+ io.to(empId).emit('nuevo_mensaje_cliente',{telefono:tel,contenido:txt});}}res.sendStatus(200);
+});
+app.get('/webhook',(req,res)=>{if(req.query['hub.verify_token']===process.env.VERIFY_TOKEN)res.send(req.query['hub.challenge']);else res.sendStatus(403);});
+const upload=multer({dest:'uploads/'});
+app.post('/api/campanas/crear',auth,upload.single('excel'),async(req,res)=>{
+ const{nombre,plantillaId}=req.body;const plantilla=plantillas.find(p=>p.id===plantillaId)||plantillas[0];
+ if(!plantilla)return res.status(400).json({error:'No hay plantillas aprobadas'});
+ const wb=xlsx.readFile(req.file.path);const data=xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+ const tels=data.map(r=>Object.values(r).find(v=>String(v).match(/^[0-9]{10,15}$/))).filter(Boolean).map(t=>String(t).replace(/\D/g,''));
+ const camp={id:uuidv4(),empresaId:req.user.id,nombre,plantilla:plantilla.name,total:tels.length,enviados:0,fecha:new Date(),estado:'en_proceso',telefonos:tels};
+ campanas.push(camp);let bloque=0;
+ const enviarBloque=async()=>{const lote=tels.slice(bloque*50,(bloque+1)*50);if(lote.length===0){camp.estado='finalizada';return;}
+ for(let tel of lote){try{await axios.post(`https://graph.facebook.com/${process.env.GRAPH_VERSION||'v20.0'}/${process.env.PHONE_NUMBER_ID}/messages`,{messaging_product:'whatsapp',to:tel,type:'template',template:{name:plantilla.name,language:{code:plantilla.language||'es_CO'}}},{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});camp.enviados++;}catch(e){}await new Promise(r=>setTimeout(r,1500));}
+ bloque++;io.to(req.user.id).emit('campana_update',camp);if(bloque*50<tels.length)setTimeout(enviarBloque,5*60*60*1000);else camp.estado='finalizada';};
+ enviarBloque();res.json({ok:true,campana:camp,mensaje:`Campaña iniciada ${tels.length} números bloques 50/5h antibaneo`});
+});
+app.get('/api/campanas',auth,(req,res)=>res.json(campanas.filter(c=>c.empresaId===req.user.id)));
+io.on('connection',socket=>{socket.on('join_empresa',id=>socket.join(id));});
+app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+server.listen(PORT,()=>console.log(`Klido V12 REAL en ${PORT}`));
