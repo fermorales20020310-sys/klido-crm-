@@ -9,13 +9,12 @@ body{background:#eef2f9;min-height:100vh;display:flex;align-items:center;justify
 .left{background:radial-gradient(120% 120% at 20% 20%,#1d4aa8 0%,#0a1931 65%);padding:40px 44px;display:flex;flex-direction:column;color:white}
 .logo-wrap{display:flex;align-items:center;gap:16px}
 .logo-wrap img{width:84px;height:84px;object-fit:contain;background:white;border-radius:20px;padding:10px}
-.brand b{font-size:42px;font-weight:900;letter-spacing:-1px;line-height:1}
+.brand b{font-size:42px;font-weight:900;line-height:1}
 .brand span{font-size:13px;letter-spacing:4px;opacity:.9;font-weight:600;text-transform:uppercase}
-.left h1{font-size:48px;line-height:.95;font-weight:900;margin:36px 0 14px;letter-spacing:-1.5px}
+.left h1{font-size:48px;line-height:.95;font-weight:900;margin:36px 0 14px}
 .left h1 i{color:#8fb1ff;font-style:normal}
 .slogan{color:#b9c9ec;font-size:14.5px;line-height:1.6;max-width:480px}
-.slogan b{color:white}
-.badge-api{display:inline-flex;margin-top:14px;background:rgba(0,255,170,.15);border:1px solid rgba(0,255,170,.3);color:#5cffb0;padding:8px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px}
+.badge-api{display:inline-flex;margin-top:14px;background:rgba(0,255,170,.15);border:1px solid rgba(0,255,170,.3);color:#5cffb0;padding:8px 14px;border-radius:20px;font-size:11px;font-weight:700}
 .features{margin-top:auto;display:flex;gap:10px;flex-wrap:wrap}
 .feat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:10px 14px;border-radius:14px;font-size:12px}
 .right{padding:26px 30px;background:#fbfcff;display:flex;flex-direction:column;overflow-y:auto}
@@ -29,11 +28,12 @@ input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid #d8e0ef;b
 .link{color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none}
 .row{display:flex;justify-content:space-between;align-items:center;margin:10px 0 16px;font-size:12px}
 .plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0 14px}
-.plan{border:2px solid #e6ecf7;border-radius:16px;padding:12px 10px;cursor:pointer;text-align:center;background:#f8faff;transition:.2s}
-.plan.selected{border-color:var(--blue);background:#eef3ff;transform:scale(1.03)}
+.plan{border:2px solid #e6ecf7;border-radius:16px;padding:14px 10px;cursor:pointer;text-align:center;background:#f8faff;transition:.2s}
+.plan.selected{border-color:var(--blue);background:#eef3ff;transform:scale(1.03);box-shadow:0 8px 20px rgba(23,58,128,.15)}
 .plan b{font-size:12px;display:block}
-.monto{font-weight:900;color:#0a1931;font-size:13px;margin:4px 0}
-.mant{font-size:10px;color:#00a86b;font-weight:700;background:#e6fff4;border-radius:8px;padding:4px 6px;display:inline-block;margin-top:4px}
+.monto{font-weight:900;color:#0a1931;font-size:13px;margin:6px 0 2px}
+.monto-ia{color:#173a80}
+.mant{font-size:10px;color:#00a86b;font-weight:700;background:#e6fff4;border:1px solid #b7f5d8;border-radius:20px;padding:5px 8px;display:inline-block;margin-top:6px}
 .terms{font-size:11px;color:#6b7da1;display:flex;gap:8px;align-items:flex-start;margin:12px 0}
 .modal{position:fixed;inset:0;background:rgba(5,12,28,.6);display:none;place-items:center;padding:20px;z-index:50}
 .modal.open{display:grid}
@@ -44,21 +44,21 @@ input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid #d8e0ef;b
   <div class="left">
     <div class="logo-wrap"><img src="/logo.png"/><div class="brand"><b>KLIDO</b><span>avanza consulting</span></div></div>
     <h1>El mejor CRM<br>que tu empresa<br><i>puede tener.</i></h1>
-    <p class="slogan"><b>Klido Avanza Consulting — CRM empresarial multiagencia para API oficial de Meta (WhatsApp Business API).</b><br>Gestiona todas tus agencias, números, equipos, campañas y ventas desde un solo lugar. 100% profesional, seguro y con soporte Avanza.</p>
-    <div class="badge-api">✓ MULTIAGENCIA CERTIFICADA PARA META API OFICIAL</div>
-    <div class="features"><div class="feat">✓ Seguro y confiable</div><div class="feat">✓ Integración WhatsApp Business API</div><div class="feat">✓ Soporte Avanza Consulting</div></div>
+    <p class="slogan"><b>Klido Avanza Consulting — CRM empresarial multiagencia para API oficial de Meta (WhatsApp Business API).</b><br>Gestiona todas tus agencias, números, equipos, campañas y ventas desde un solo lugar.</p>
+    <div class="badge-api">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
+    <div class="features"><div class="feat">✓ Seguro y confiable</div><div class="feat">✓ WhatsApp Business API</div><div class="feat">✓ Soporte Avanza Consulting</div></div>
   </div>
   <div class="right">
     <div class="tabs"><button class="tab active" id="tLogin" onclick="switchTab('login')">Ingresar</button><button class="tab" id="tReg" onclick="switchTab('reg')">Crear empresa</button></div>
 
     <div id="viewLogin" class="card">
-      <h3>Ingresar a tu agencia</h3>
-      <input id="loginEmpresa" placeholder="Código de agencia - déjalo vacío si eres SuperAdmin"/>
+      <h3>Ingresar</h3>
+      <input id="loginEmpresa" placeholder="Código de agencia (vacío si eres SuperAdmin)"/>
       <input id="loginEmail" placeholder="Correo" value="fermorales20020310@gmail.com"/>
       <input id="loginPass" type="password" placeholder="Contraseña" value="Mafe2002@"/>
       <div class="row"><label style="display:flex;gap:6px;align-items:center;color:#6b7da1"><input type="checkbox" style="width:auto;margin:0" checked/> Recordarme</label><button class="link" onclick="openForgot()">¿Olvidaste tu contraseña?</button></div>
       <button class="btn" onclick="doLogin()">Ingresar al CRM →</button>
-      <p style="font-size:10px;color:#8aa0c7;margin-top:10px;text-align:center">SuperAdmin: fermorales20020310@gmail.com</p>
+      <p style="font-size:10px;color:#6b7da1;margin-top:10px;text-align:center">Login SuperAdmin funcional</p>
     </div>
 
     <div id="viewReg" class="card hidden">
@@ -66,56 +66,59 @@ input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid #d8e0ef;b
       <input id="regNombre" placeholder="Nombre de la agencia / empresa"/>
       <input id="regEmail" placeholder="Correo del administrador"/>
       <input id="regPass" type="password" placeholder="Crear contraseña admin"/>
-      <label style="font-size:12px;font-weight:700;margin:8px 0;display:block">Selecciona tu plan (Anual + Mantenimiento trimestral aparte)</label>
+      <label style="font-size:12px;font-weight:700;margin:10px 0;display:block">Selecciona tu plan - Anual + Mantenimiento trimestral aparte</label>
       <div class="plans">
         <div class="plan" onclick="selectPlan(this,'basico')">
-          <b>Básico</b><div class="monto">$800.000/año</div><div class="mant">+ $80.000 trim. mantenimiento</div><div style="font-size:10px;margin-top:6px;color:#6b7da1">3 asesores<br>API Meta</div>
+          <b>Básico</b>
+          <div class="monto">$800.000/año</div>
+          <div class="mant">+ $80.000/trim mant.</div>
+          <div style="font-size:10px;margin-top:8px;color:#6b7da1">3 asesores<br>API Meta</div>
         </div>
         <div class="plan selected" onclick="selectPlan(this,'premium')">
-          <b>Premium + IA</b><div class="monto" style="color:#173a80">$1.400.000/año</div><div class="mant">+ $95.000 trim. mantenimiento</div><div style="font-size:10px;margin-top:6px;color:#6b7da1">10 asesores<br>IA incluida</div>
+          <b>Premium + IA</b>
+          <div class="monto monto-ia">$1.400.000/año</div>
+          <div class="mant">+ $95.000/trim mant.</div>
+          <div style="font-size:10px;margin-top:8px;color:#6b7da1">10 asesores<br>IA incluida</div>
         </div>
         <div class="plan" onclick="selectPlan(this,'gold')">
-          <b>Gold + IA + Llamadas</b><div class="monto">$2.400.000/año</div><div class="mant">+ $120.000 trim. mantenimiento</div><div style="font-size:10px;margin-top:6px;color:#6b7da1">Ilimitado<br>IA + Llamadas</div>
+          <b>Gold + IA + Llamadas</b>
+          <div class="monto">$2.400.000/año</div>
+          <div class="mant">+ $120.000/trim mant.</div>
+          <div style="font-size:10px;margin-top:8px;color:#6b7da1">Ilimitado<br>IA + Llamadas</div>
         </div>
       </div>
-      <div class="terms"><input type="checkbox" id="terms" checked style="width:auto;margin-top:2px"/><label for="terms">Acepto <b>Términos y Condiciones</b> y Política de Privacidad de Klido Avanza Consulting. Entiendo que el mantenimiento trimestral es aparte del pago anual.</label></div>
-      <button class="btn" onclick="doRegister()">Crear agencia y generar código →</button>
+      <div class="terms"><input type="checkbox" id="terms" checked style="width:auto;margin-top:2px"/><label for="terms">Acepto <b>Términos y Condiciones</b> y entiendo que el mantenimiento trimestral es adicional al pago anual.</label></div>
+      <button class="btn" onclick="doRegister()">Crear empresa y generar código →</button>
       <p id="regMsg" style="font-size:12px;margin-top:12px;color:#173a80"></p>
     </div>
   </div>
 </div>
 
-<div class="modal" id="modalForgot"><div class="modal-box"><h3>Restablecer contraseña</h3><p style="font-size:12px;color:#6b7da1;margin:8px 0 14px">Te enviaremos un código de 6 dígitos a tu correo registrado.</p><input id="forgotEmail" placeholder="Correo"/><button class="btn" onclick="sendCode()">Enviar código</button><div id="codeArea" class="hidden" style="margin-top:14px"><input id="forgotCode" placeholder="Código 6 dígitos" style="letter-spacing:4px;text-align:center"/><input id="forgotNewPass" type="password" placeholder="Nueva contraseña"/><button class="btn" style="background:#00b368" onclick="changePass()">Cambiar contraseña</button></div><p id="forgotMsg" style="font-size:11px;color:#00a65a;margin-top:10px"></p><button class="link" onclick="closeForgot()" style="margin-top:10px">Cerrar</button></div></div>
+<div class="modal" id="modalForgot"><div class="modal-box"><h3>Restablecer</h3><input id="forgotEmail" placeholder="Correo"/><button class="btn" onclick="sendCode()">Enviar código</button><div id="codeArea" class="hidden" style="margin-top:14px"><input id="forgotCode" placeholder="Código"/><input id="forgotNewPass" type="password" placeholder="Nueva contraseña"/><button class="btn" style="background:#00b368" onclick="changePass()">Cambiar</button></div><p id="forgotMsg" style="font-size:11px;margin-top:10px"></p><button class="link" onclick="closeForgot()">Cerrar</button></div></div>
 
 <script>
 let selectedPlan='premium';
-const precios = {
-  basico: {anual:800000, mantenimiento:80000},
-  premium: {anual:1400000, mantenimiento:95000},
-  gold: {anual:2400000, mantenimiento:120000}
-};
+const precios = { basico:{anual:800000, mant:80000}, premium:{anual:1400000, mant:95000}, gold:{anual:2400000, mant:120000} };
 function switchTab(t){ viewLogin.classList.toggle('hidden',t!=='login'); viewReg.classList.toggle('hidden',t!=='reg'); tLogin.classList.toggle('active',t==='login'); tReg.classList.toggle('active',t==='reg'); }
 function selectPlan(el,name){ document.querySelectorAll('.plan').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selectedPlan=name; }
 function openForgot(){ modalForgot.classList.add('open'); forgotEmail.value=loginEmail.value; }
 function closeForgot(){ modalForgot.classList.remove('open'); }
 async function doLogin(){
-  const body={email:loginEmail.value.trim(),password:loginPass.value,empresa:loginEmpresa.value.trim()};
-  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:loginEmail.value.trim(),password:loginPass.value,empresa:loginEmpresa.value.trim()})});
   const d=await r.json();
-  if(d.token){ localStorage.setItem('token',d.token); localStorage.setItem('user',JSON.stringify(d.user)); alert('Bienvenida '+d.user.nombre+' - Klido Avanza'); location.href='/dashboard.html'; }
+  if(d.token){ localStorage.setItem('token',d.token); alert('Bienvenida '+d.user.nombre); location.href='/dashboard.html'; }
   else alert(d.error||'Error');
 }
 async function doRegister(){
   if(!terms.checked) return alert('Acepta términos');
-  if(!regNombre.value||!regEmail.value||!regPass.value) return alert('Completa campos');
-  const montoAnual=precios[selectedPlan].anual; const mant=precios[selectedPlan].mantenimiento;
-  regMsg.innerText=`Creando ${regNombre.value} ${selectedPlan.toUpperCase()} $${montoAnual.toLocaleString('es-CO')} + $${mant.toLocaleString('es-CO')} trim mant...`;
-  const body={nombre:regNombre.value,email:regEmail.value,password:regPass.value,plan:selectedPlan,anual:montoAnual,mantenimiento:mant,aceptaTerminos:true};
+  const p=precios[selectedPlan];
+  regMsg.innerText=`Creando... Plan ${selectedPlan} $${p.anual.toLocaleString('es-CO')}/año + $${p.mant.toLocaleString('es-CO')} trim`;
+  const body={nombre:regNombre.value,email:regEmail.value,password:regPass.value,plan:selectedPlan,anual:p.anual,mantenimiento:p.mant,aceptaTerminos:true};
   const r=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const d=await r.json();
-  if(d.ok){ regMsg.innerHTML=`✅ Agencia creada!<br>Plan <b>${selectedPlan.toUpperCase()}</b>: $${montoAnual.toLocaleString('es-CO')}/año<br>Mantenimiento: $${mant.toLocaleString('es-CO')}/trim<br>Código: <b style="font-size:22px">${d.codigoAcceso}</b>`; setTimeout(()=>{ switchTab('login'); loginEmpresa.value=d.codigoAcceso; loginEmail.value=regEmail.value; },1200); }
+  if(d.ok){ regMsg.innerHTML=`✅ Creada! Código: <b style="font-size:22px">${d.codigoAcceso}</b><br>$${p.anual.toLocaleString('es-CO')}/año + $${p.mant.toLocaleString('es-CO')} trim`; setTimeout(()=>{ switchTab('login'); loginEmpresa.value=d.codigoAcceso; loginEmail.value=regEmail.value; },1000); }
   else regMsg.innerText=d.error;
 }
-async function sendCode(){ const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:forgotEmail.value})}); const d=await r.json(); forgotMsg.innerText=d.message||d.error; if(d.testCode) forgotMsg.innerText+=` | TEST: ${d.testCode}`; codeArea.classList.remove('hidden'); }
-async function changePass(){ const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:forgotEmail.value,code:forgotCode.value,newPassword:forgotNewPass.value})}); const d=await r.json(); forgotMsg.innerText=d.message||d.error; if(r.ok) setTimeout(closeForgot,1500); }
+async function sendCode(){ const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:forgotEmail.value})}); const d=await r.json(); forgotMsg.innerText=d.message||d.error; if(d.testCode) forgotMsg.innerText+=` COD: ${d.testCode}`; codeArea.classList.remove('hidden'); }
+async function changePass(){ const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:forgotEmail.value,code:forgotCode.value,newPassword:forgotNewPass.value})}); const d=await r.json(); forgotMsg.innerText=d.message||d.error; if(r.ok) setTimeout(closeForgot,1200); }
 </script></body></html>
