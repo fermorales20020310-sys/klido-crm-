@@ -2,7 +2,7 @@ require('dotenv').config();
 const express=require('express'),http=require('http'),{Server}=require('socket.io');
 const cors=require('cors'),multer=require('multer'),xlsx=require('xlsx'),axios=require('axios');
 const bcrypt=require('bcryptjs'),jwt=require('jsonwebtoken'),{v4:uuidv4}=require('uuid');
-const nodemailer=require('nodemailer'),path=require('path');
+const nodemailer=require('nodemailer'),path=require('path'),fs=require('fs');
 const app=express();const server=http.createServer(app);
 const io=new Server(server,{cors:{origin:"*"}});
 app.use(cors());app.use(express.json({limit:'50mb'}));
@@ -74,14 +74,88 @@ app.post('/api/campanas/crear',auth,upload.single('excel'),async(req,res)=>{
  if(!plantilla)return res.status(400).json({error:'No hay plantillas aprobadas'});
  const wb=xlsx.readFile(req.file.path);const data=xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
  const tels=data.map(r=>Object.values(r).find(v=>String(v).match(/^[0-9]{10,15}$/))).filter(Boolean).map(t=>String(t).replace(/\D/g,''));
- const camp={id:uuidv4(),empresaId:req.user.id,nombre,plantilla:plantilla.name,total:tels.length,enviados:0,fecha:new Date(),estado:'en_proceso',telefonos:tels};
+ const camp={id:uuidv4(),empresaId:req.user.id,nombre,plantilla:plantilla.name,total:tels.length,enviados:0,fecha:new Date(),estado:'en_proceso',telefonos:tels,created_at:new Date()};
  campanas.push(camp);let bloque=0;
  const enviarBloque=async()=>{const lote=tels.slice(bloque*50,(bloque+1)*50);if(lote.length===0){camp.estado='finalizada';return;}
  for(let tel of lote){try{await axios.post(`https://graph.facebook.com/${process.env.GRAPH_VERSION||'v20.0'}/${process.env.PHONE_NUMBER_ID}/messages`,{messaging_product:'whatsapp',to:tel,type:'template',template:{name:plantilla.name,language:{code:plantilla.language||'es_CO'}}},{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});camp.enviados++;}catch(e){}await new Promise(r=>setTimeout(r,1500));}
- bloque++;io.to(req.user.id).emit('campana_update',camp);if(bloque*50<tels.length)setTimeout(enviarBloque,5*60*60*1000);else camp.estado='finalizada';};
- enviarBloque();res.json({ok:true,campana:camp,mensaje:`Campaña iniciada ${tels.length} números bloques 50/5h antibaneo`});
+ bloque++;io.to(req.user.id).emit('campana_update',camp);if(bloque*50<tels.length)setTimeout(enviarBloque,5*60*1000);else camp.estado='finalizada';};
+ enviarBloque();res.json({ok:true,campana:camp,mensaje:`Campaña iniciada ${tels.length} números bloques 50/5min antibaneo`});
 });
 app.get('/api/campanas',auth,(req,res)=>res.json(campanas.filter(c=>c.empresaId===req.user.id)));
+
+// ===== COMPATIBILIDAD CON TU campanas.html =====
+app.get('/api/templates',auth,async(req,res)=>{
+  if(plantillas.length===0) await syncPlantillas();
+  res.json(plantillas.map(p=>({nombre:p.name, categoria:p.category, contenido:p.components, status:p.status, language:p.language})));
+});
+
+app.post('/api/campanas/upload',auth,upload.single('file'),async(req,res)=>{
+  try{
+    if(!req.file) return res.status(400).json({error:'No file'});
+    const wb=xlsx.readFile(req.file.path);
+    const data=xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const tels=data.map(r=>{
+      const val=Object.values(r).find(v=>String(v).replace(/\D/g,'').length>=10);
+      return val? String(val).replace(/\D/g,'') : null;
+    }).filter(Boolean).map(t=>{
+      if(t.length===10) return '57'+t;
+      return t;
+    });
+    if(!fs.existsSync('uploads')) fs.mkdirSync('uploads');
+    // Guardar contactos con punto amarillo 🟡
+    if(!contactos[req.user.id]) contactos[req.user.id]=[];
+    const ids=[];
+    tels.forEach(t=>{
+      let c=contactos[req.user.id].find(x=>x.telefono===t);
+      if(!c){ c={id:uuidv4(), telefono:t, nombre:t, noLeido:false, esCampana:true}; contactos[req.user.id].push(c); }
+      else c.esCampana=true;
+      ids.push(c.id);
+    });
+    fs.unlinkSync(req.file.path);
+    res.json({ok:true, detectados:tels.length, contactos_ids:ids, telefonos:tels});
+  }catch(e){ console.log(e); res.status(500).json({error:e.message}); }
+});
+
+app.post('/api/campanas/enviar',auth,async(req,res)=>{
+  const {plantilla, contactos_ids}=req.body;
+  const plantillaReal=plantillas.find(p=>p.name===plantilla) || plantillas[0];
+  if(!plantillaReal) return res.status(400).json({error:'No hay plantillas aprobadas. Haz Sync.'});
+  const tels=contactos_ids.map(id=>{
+    const c=(contactos[req.user.id]||[]).find(x=>x.id===id);
+    return c? c.telefono : null;
+  }).filter(Boolean);
+  const camp={id:uuidv4(), empresaId:req.user.id, nombre:`Campaña ${plantilla}`, plantilla, total:tels.length, enviados:0, estado:'en_proceso', telefonos:tels, created_at:new Date(), fecha:new Date()};
+  campanas.push(camp);
+  // Envio antibaneo 50 cada 5 min
+  let idx=0;
+  const enviarBloque=async()=>{
+    const lote=tels.slice(idx, idx+50);
+    if(lote.length===0){ camp.estado='completado'; io.to(req.user.id).emit('campana_update',camp); return; }
+    for(let tel of lote){
+      try{
+        await axios.post(`https://graph.facebook.com/${process.env.GRAPH_VERSION||'v20.0'}/${process.env.PHONE_NUMBER_ID}/messages`,{
+          messaging_product:'whatsapp', to:tel, type:'template', template:{name:plantillaReal.name, language:{code:plantillaReal.language||'es_CO'}}
+        },{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+        camp.enviados++;
+      }catch(e){ console.log('Error envio',tel,e.response?.data); }
+      await new Promise(r=>setTimeout(r,800));
+    }
+    idx+=50;
+    io.to(req.user.id).emit('campana_update',camp);
+    if(idx < tels.length) setTimeout(enviarBloque, 5*60*1000);
+    else camp.estado='completado';
+  };
+  enviarBloque();
+  res.json({ok:true, campana:camp, mensaje:`Campaña iniciada con ${tels.length} números - antibaneo 50/5min - punto amarillo 🟡 activo`});
+});
+
+app.get('/api/campanas/:id/logs',auth,(req,res)=>{
+  const camp=campanas.find(c=>String(c.id)===req.params.id && c.empresaId===req.user.id);
+  if(!camp) return res.json([]);
+  const logs=(camp.telefonos||[]).map(t=>({telefono:t, estado: camp.enviados>0? 'enviado' : 'pendiente', fecha:camp.fecha}));
+  res.json(logs);
+});
+
 io.on('connection',socket=>{socket.on('join_empresa',id=>socket.join(id));});
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-server.listen(PORT,()=>console.log(`Klido V12 REAL en ${PORT}`));
+server.listen(PORT,()=>console.log(`Klido V12 REAL en ${PORT} - Alineado con campanas.html`));
