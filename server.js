@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'klido-secreto-2025';
 
 app.get('/health', (req,res) => res.status(200).send('ok'));
-server.listen(PORT, '0.0.0.0', () => console.log(`✅ Klido 12.2 Online ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`✅ Klido 12.3 Seguro Online ${PORT}`));
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -45,7 +45,6 @@ const transporter = nodemailer.createTransport({
 });
 transporter.verify((err)=>{ if(err) console.log('⚠️ Mail:', err.message); else console.log('✅ Correo activo:', process.env.EMAIL_USER); });
 
-// SUPERADMIN FER - FUNCIONAL SIEMPRE
 const FER_EMAIL = "fermorales20020310@gmail.com";
 const FER_PASS = "Mafe2002@";
 let users = usuariosDB.get();
@@ -57,6 +56,7 @@ if(!fer){
   fer.rol='superadmin'; fer.empresaId=null; fer.plan='all';
 }
 usuariosDB.set(users);
+console.log('✅ SuperAdmin funcional: '+FER_EMAIL);
 
 function auth(req,res,next){
   const token = req.headers.authorization?.split(' ')[1];
@@ -64,99 +64,107 @@ function auth(req,res,next){
   try{ req.user = jwt.verify(token, JWT_SECRET); next(); }catch{ res.status(401).json({error:'token invalido'}); }
 }
 
-// LOGIN FINAL - SIN CODIGO - SOLO NOMBRE EMPRESA + CORREO + CONTRASEÑA + TERMINOS
+// LOGIN SIN CÓDIGO - SOLO NOMBRE EMPRESA + CORREO + CONTRASEÑA + TERMINOS
 app.post('/api/login', async (req,res)=>{
   try{
     const {email,password,nombre} = req.body;
     const emailClean = String(email||'').trim().toLowerCase();
     if(!emailClean ||!password) return res.status(400).json({error:'Correo y contraseña requeridos'});
-
     let allUsers = usuariosDB.get();
     let user = allUsers.find(u=>u.email.toLowerCase()===emailClean);
     if(!user) return res.status(401).json({error:'Usuario no existe'});
-
     const ok = await bcrypt.compare(String(password), user.password);
     if(!ok) return res.status(401).json({error:'Clave incorrecta'});
-
     const empresas = empresasDB.get();
     const emp = empresas.find(e=> e.id===user.empresaId);
-
-    // Si es admin de agencia y puso nombre de empresa, valida que coincida (flexible)
-    if(user.rol!=='superadmin' && nombre && emp){
-      // no bloquea si escribe diferente, solo log
-      console.log(`Login: ${emailClean} puso empresa "${nombre}" | real "${emp.nombre}" | plan ${emp.plan}`);
+    if(nombre && emp && user.rol!=='superadmin'){
+      console.log(`LOGIN: ${emailClean} empresa ingresada "${nombre}" | real "${emp.nombre}" | plan ${emp.plan}`);
     }
-
     const token = jwt.sign({id:user.id, rol:user.rol, empresaId:user.empresaId, plan:emp?.plan||'all', codigoAcceso:emp?.codigoAcceso}, JWT_SECRET, {expiresIn:'7d'});
     console.log(`LOGIN OK: ${emailClean} | Empresa:${emp?.nombre||'SUPERADMIN'} | Plan:${emp?.plan||'ALL'}`);
     res.json({token, user:{id:user.id, nombre:user.nombre, empresaNombre: emp?.nombre||'SuperAdmin', email:user.email, rol:user.rol, empresaId:user.empresaId, plan:emp?.plan||'all', codigoAcceso:emp?.codigoAcceso, montoAnual:emp?.montoAnual}});
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-// CREAR EMPRESA - CODIGO SE GENERA UNA VEZ AL REGISTRAR - DEBAJO DEL PLAN
+// CREAR EMPRESA - CODIGO SOLO SE GENERA UNA VEZ AL REGISTRAR Y LLEGA AL CORREO
 app.post('/api/public/crear-empresa', async (req,res)=>{
   try{
     const {nombre,email,password,plan,codigoIngresado,aceptaTerminos} = req.body;
     if(!nombre||!email||!password||!plan) return res.status(400).json({error:'Faltan datos'});
     if(!codigoIngresado ||!String(codigoIngresado).trim()) return res.status(400).json({error:'Debes ingresar tu CÓDIGO DE INGRESO recibido tras el pago'});
     if(!aceptaTerminos) return res.status(400).json({error:'Acepta términos'});
-
     let allUsers = usuariosDB.get();
     if(allUsers.find(u=>u.email.toLowerCase()===String(email).toLowerCase())) return res.status(400).json({error:'Correo ya registrado'});
-
     const codigo = String(codigoIngresado).toUpperCase().trim();
-    if(codigo.length < 5) return res.status(400).json({error:'Código de ingreso inválido, mínimo 5 caracteres'});
-
+    if(codigo.length < 5) return res.status(400).json({error:'Código inválido'});
     const empresas = empresasDB.get();
     if(empresas.find(e=>e.codigoAcceso===codigo)){
-      return res.status(400).json({error:`El código ${codigo} ya fue usado. Cada código solo activa una agencia y solo da acceso al plan pagado.`});
+      return res.status(400).json({error:`El código ${codigo} ya fue usado. Cada código solo activa una agencia.`});
     }
-
     const precios = { basico:800000, premium:1400000, gold:2400000 };
     const monto = precios[plan]||800000;
     const empresaId = uuidv4();
-    const nueva = {
-      id:empresaId, nombre, codigoAcceso: codigo, plan, montoAnual:monto,
-      estado:'activo', multiagencia:true, metaApi:true, accesoExclusivo:true,
-      createdAt:new Date()
-    };
+    const nueva = { id:empresaId, nombre, codigoAcceso: codigo, plan, montoAnual:monto, estado:'activo', multiagencia:true, metaApi:true, accesoExclusivo:true, createdAt:new Date() };
     empresas.push(nueva); empresasDB.set(empresas);
     allUsers.push({ id: uuidv4(), nombre:'Admin '+nombre, email:email.toLowerCase(), password:bcrypt.hashSync(password,10), rol:'admin', empresaId, createdAt:new Date() });
     usuariosDB.set(allUsers);
 
-    // Envía confirmación al correo de quien se registra
     if(process.env.EMAIL_USER && process.env.EMAIL_PASS){
-      const htmlCorreo = `<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:520px;margin:auto;background:white;border-radius:20px;padding:32px;text-align:center;border:1px solid #e6ecf7"><h2 style="color:#0a1931">KLIDO AVANZA CONSULTING</h2><p style="color:#173a80;font-weight:700">Agencia ${nombre} activada</p><p>Plan: <b>${plan.toUpperCase()} - $${monto.toLocaleString('es-CO')}/año</b></p><div style="background:#eef3ff;border:2px solid #173a80;color:#173a80;font-size:28px;font-weight:900;letter-spacing:4px;padding:14px;border-radius:14px;margin:18px 0">${codigo}</div><p style="font-size:12px">Código: <b>${codigo}</b> solo habilita plan ${plan.toUpperCase()}<br>Correo: ${email.toLowerCase()}</p></div></div>`;
+      const htmlCorreo = `<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:520px;margin:auto;background:white;border-radius:20px;padding:32px;text-align:center;border:1px solid #e6ecf7"><h2 style="color:#0a1931">KLIDO AVANZA</h2><p style="color:#173a80;font-weight:700">Agencia ${nombre} activada</p><p>Plan: <b>${plan.toUpperCase()} - $${monto.toLocaleString('es-CO')}/año</b></p><div style="background:#eef3ff;border:2px solid #173a80;color:#173a80;font-size:28px;font-weight:900;letter-spacing:4px;padding:14px;border-radius:14px;margin:18px 0">${codigo}</div><p style="font-size:12px">Código: ${codigo} solo habilita plan ${plan.toUpperCase()}<br>Correo: ${email.toLowerCase()}<br>Guárdalo, es tu acceso exclusivo.</p></div></div>`;
       try{
-        await transporter.sendMail({ from: `"Klido Avanza" <${process.env.EMAIL_USER}>`, to: email.toLowerCase(), subject: `✅ Agencia ${nombre} activada - ${plan.toUpperCase()} - ${codigo}`, html: htmlCorreo });
-        console.log(`📧 Confirmación enviada a ${email}`);
+        await transporter.sendMail({ from: `"Klido Avanza" <${process.env.EMAIL_USER}>`, to: email.toLowerCase(), subject: `✅ Agencia ${nombre} activada - Código ${codigo} - Plan ${plan.toUpperCase()}`, html: htmlCorreo });
+        console.log(`📧 Confirmación enviada a ${email} con código ${codigo}`);
       }catch(e){ console.log('❌ Mail error:', e.message); }
     }
-
-    console.log(`✅ AGENCIA CREADA: ${nombre} Plan:${plan} CODIGO:${codigo} Email:${email}`);
+    console.log(`✅ AGENCIA CREADA: ${nombre} Plan:${plan} CODIGO:${codigo}`);
     res.json({ok:true, empresa:nueva, codigoAcceso:codigo});
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-app.post('/api/auth/forgot', (req,res)=>{
-  const {email} = req.body;
-  const user = usuariosDB.get().find(u=>u.email.toLowerCase()===String(email).toLowerCase());
-  if(!user) return res.status(404).json({error:'No registrado'});
-  const code = Math.floor(100000 + Math.random()*900000).toString();
-  const codigos = codigosDB.get(); codigos.push({ email: email.toLowerCase(), code, expira: Date.now()+15*60*1000, usado:false }); codigosDB.set(codigos);
-  console.log(`CODIGO RECUP ${email}: ${code}`);
-  res.json({message:`Código enviado a ${email}`, testCode: code});
+// RECUPERAR CONTRASEÑA - CODIGO SOLO AL CORREO, NUNCA AL FRONTEND - SEGURIDAD MAXIMA
+app.post('/api/auth/forgot', async (req,res)=>{
+  try{
+    const {email} = req.body;
+    const emailClean = String(email||'').toLowerCase().trim();
+    const user = usuariosDB.get().find(u=>u.email.toLowerCase()===emailClean);
+    if(!user) return res.status(404).json({error:'Correo no registrado'});
+    const code = Math.floor(100000 + Math.random()*900000).toString();
+    const codigos = codigosDB.get();
+    codigos.push({ email: emailClean, code, expira: Date.now()+15*60*1000, usado:false });
+    codigosDB.set(codigos);
+    if(process.env.EMAIL_USER && process.env.EMAIL_PASS){
+      try{
+        await transporter.sendMail({
+          from: `"Klido Avanza - Seguridad" <${process.env.EMAIL_USER}>`,
+          to: emailClean,
+          subject: `🔐 Código de recuperación Klido`,
+          html: `<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:480px;margin:auto;background:white;border-radius:16px;padding:28px;border:1px solid #e6ecf7;text-align:center"><h2 style="color:#0a1931">KLIDO AVANZA CONSULTING</h2><p>Tu código de recuperación es:</p><div style="background:#173a80;color:white;font-size:32px;font-weight:900;letter-spacing:6px;padding:14px;border-radius:12px;margin:16px 0">${code}</div><p style="font-size:11px;color:#6b7da1">Expira en 15 min. Nunca compartas este código.</p></div></div>`
+        });
+        console.log(`📧 Código recuperación enviado SOLO a ${emailClean}`);
+      }catch(e){ console.log('❌ Error mail recup:', e.message); }
+    } else {
+      console.log(`🔐 CODIGO RECUP (solo log servidor): ${emailClean} -> ${code}`);
+    }
+    res.json({message:`Código enviado a ${emailClean}. Revisa tu correo (y spam). Expira en 15 minutos.`});
+  }catch(e){ res.status(500).json({error:e.message}); }
 });
+
 app.post('/api/auth/reset', async (req,res)=>{
-  const {email, code, newPassword} = req.body;
-  const codigos = codigosDB.get();
-  const reg = codigos.find(c=> c.email===String(email).toLowerCase() && c.code===String(code) &&!c.usado && c.expira>Date.now());
-  if(!reg) return res.status(400).json({error:'Código inválido'});
-  const usuarios = usuariosDB.get(); const u = usuarios.find(x=>x.email.toLowerCase()===String(email).toLowerCase());
-  if(!u) return res.status(404).json({error:'no existe'});
-  u.password = await bcrypt.hash(newPassword, 10); usuariosDB.set(usuarios);
-  reg.usado=true; codigosDB.set(codigos);
-  res.json({message:'Contraseña cambiada'});
+  try{
+    const {email, code, newPassword} = req.body;
+    if(!email||!code||!newPassword) return res.status(400).json({error:'Faltan datos'});
+    const emailClean = String(email).toLowerCase().trim();
+    const codigos = codigosDB.get();
+    const reg = codigos.find(c=> c.email===emailClean && c.code===String(code).trim() &&!c.usado && c.expira>Date.now());
+    if(!reg) return res.status(400).json({error:'Código inválido o expirado. Solicita uno nuevo'});
+    if(String(newPassword).length < 6) return res.status(400).json({error:'Contraseña mínimo 6 caracteres'});
+    const usuarios = usuariosDB.get(); const u = usuarios.find(x=>x.email.toLowerCase()===emailClean);
+    if(!u) return res.status(404).json({error:'Usuario no existe'});
+    u.password = await bcrypt.hash(newPassword, 10); usuariosDB.set(usuarios);
+    reg.usado=true; codigosDB.set(codigos);
+    console.log(`✅ Contraseña cambiada para ${emailClean}`);
+    res.json({message:'Contraseña cambiada correctamente. Ya puedes ingresar.'});
+  }catch(e){ res.status(500).json({error:e.message}); }
 });
 
 app.get('/api/empresas', auth, (req,res)=> res.json(empresasDB.get()));
