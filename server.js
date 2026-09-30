@@ -22,29 +22,36 @@ server.listen(PORT, '0.0.0.0', () => console.log(`✅ Klido 12.2 Avanza Online e
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
-if(!fs.existsSync('uploads')) fs.mkdirSync('uploads');
+if(!fs.existsSync('uploads')) fs.mkdirSync('uploads',{recursive:true});
 
 const DATA_DIR = path.join(__dirname, 'data');
 if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, {recursive:true});
 const db = (name) => {
   const f = path.join(DATA_DIR, name+'.json');
   if(!fs.existsSync(f)) fs.writeFileSync(f, '[]');
-  return {
-    get: () => JSON.parse(fs.readFileSync(f,'utf8')),
-    set: (d) => fs.writeFileSync(f, JSON.stringify(d,null,2)),
-  }
+  return { get: () => JSON.parse(fs.readFileSync(f,'utf8')), set: (d) => fs.writeFileSync(f, JSON.stringify(d,null,2)) }
 }
 const empresasDB = db('empresas');
 const usuariosDB = db('usuarios');
 const campanasDB = db('campanas');
 const contactosDB = db('contactos');
 const chatsDB = db('chats');
-const codigosDB = db('codigos'); // para reset password
+const codigosDB = db('codigos');
 
-if(usuariosDB.get().length === 0){
-  const hash = bcrypt.hashSync('admin123', 10);
-  usuariosDB.set([{ id: uuidv4(), nombre:'Admin', email:'admin@klido.com', password:hash, rol:'superadmin', empresaId:null }]);
-  console.log('Seed admin@klido.com / admin123');
+// --- SUPERADMIN FER ---
+const FER_EMAIL = "fermorales20020310@gmail.com";
+const FER_PASS = "Mafe2002@";
+let usuariosInit = usuariosDB.get();
+let fer = usuariosInit.find(u=>u.email===FER_EMAIL);
+if(!fer){
+  const hash = bcrypt.hashSync(FER_PASS, 10);
+  usuariosInit.push({ id: uuidv4(), nombre:'Fer Morales - SuperAdmin', email:FER_EMAIL, password:hash, rol:'superadmin', empresaId:null, createdAt:new Date() });
+  usuariosDB.set(usuariosInit);
+  console.log('✅ SuperAdmin creado: '+FER_EMAIL);
+} else {
+  fer.password = bcrypt.hashSync(FER_PASS, 10);
+  fer.rol = 'superadmin';
+  usuariosDB.set(usuariosInit);
 }
 
 function auth(req,res,next){
@@ -53,13 +60,15 @@ function auth(req,res,next){
   try{ req.user = jwt.verify(token, JWT_SECRET); next(); }catch{ res.status(401).json({error:'token invalido'}); }
 }
 
-// --- AUTH LOGIN (acepta codigo de empresa o email) ---
 app.post('/api/login', async (req,res)=>{
   const {email,password, empresa} = req.body;
   let user = usuariosDB.get().find(u=>u.email===email);
-  if(!user && empresa){
-    const emp = empresasDB.get().find(e=> e.codigoAcceso===empresa || e.id===empresa );
-    if(emp) user = usuariosDB.get().find(u=> u.empresaId===emp.id && u.email===email);
+  if(empresa){
+    const emp = empresasDB.get().find(e=> e.codigoAcceso===String(empresa).toUpperCase() || e.id===empresa );
+    if(emp){
+      const found = usuariosDB.get().find(u=> u.empresaId===emp.id && u.email===email);
+      if(found) user = found;
+    }
   }
   if(!user) return res.status(401).json({error:'Usuario no existe en esa empresa'});
   const ok = await bcrypt.compare(password, user.password);
@@ -68,86 +77,53 @@ app.post('/api/login', async (req,res)=>{
   res.json({token, user:{id:user.id, nombre:user.nombre, email:user.email, rol:user.rol, empresaId:user.empresaId}});
 });
 
-// --- NUEVO: CREAR EMPRESA PROFESIONAL CON PLAN Y TERMINOS ---
 app.post('/api/public/crear-empresa', async (req,res)=>{
-  const {nombre,email,password,plan, aceptaTerminos} = req.body;
-  if(!nombre ||!email ||!password ||!plan) return res.status(400).json({error:'Faltan datos: nombre, correo, contraseña y plan'});
-  if(!aceptaTerminos) return res.status(400).json({error:'Debes aceptar términos y condiciones'});
-
+  const {nombre,email,password,plan,periodo,aceptaTerminos} = req.body;
+  if(!nombre ||!email ||!password ||!plan) return res.status(400).json({error:'Faltan datos'});
+  if(!aceptaTerminos) return res.status(400).json({error:'Debes aceptar términos'});
   const usuarios = usuariosDB.get();
   if(usuarios.find(u=>u.email===email)) return res.status(400).json({error:'Correo ya registrado'});
+
+  const precios = { basico:{anual:800000,trimestral:80000}, premium:{anual:1400000,trimestral:95000}, gold:{anual:2400000,trimestral:120000} };
+  const per = periodo==='trimestral'? 'trimestral' : 'anual';
+  const monto = precios[plan]?.[per] || 0;
 
   const codigoAcceso = Math.random().toString(36).substring(2,8).toUpperCase();
   const empresaId = uuidv4();
   const empresas = empresasDB.get();
-
-  // Simula pago - aqui va tu pasarela real (Wompi/MercadoPago)
-  const nuevaEmpresa = {
-    id: empresaId,
-    nombre,
-    codigoAcceso,
-    plan, // starter, pro, enterprise
-    estado:'activo',
-    pago: { estado:'pagado', fecha: new Date(), monto: plan==='starter'?29: plan==='pro'?59:129 },
-    createdAt: new Date()
-  };
+  const nuevaEmpresa = { id: empresaId, nombre, codigoAcceso, plan, periodo: per, monto, estado:'activo', pago:{estado:'pagado', fecha:new Date(), monto}, createdAt:new Date() };
   empresas.push(nuevaEmpresa); empresasDB.set(empresas);
-
   const hash = await bcrypt.hash(password, 10);
-  const nuevoAdmin = {
-    id: uuidv4(),
-    nombre: 'Admin '+nombre,
-    email,
-    password:hash,
-    rol:'admin',
-    empresaId,
-    createdAt:new Date()
-  };
-  usuarios.push(nuevoAdmin); usuariosDB.set(usuarios);
-
-  console.log(`✅ Empresa creada: ${nombre} Plan:${plan} Codigo:${codigoAcceso} Email:${email}`);
-
-  res.json({ok:true, empresa: nuevaEmpresa, codigoAcceso, mensaje:'Empresa creada y plan '+plan+' activado. Usa el código '+codigoAcceso+' para ingresar.'});
+  usuarios.push({ id: uuidv4(), nombre:'Admin '+nombre, email, password:hash, rol:'admin', empresaId, createdAt:new Date() });
+  usuariosDB.set(usuarios);
+  console.log(`✅ Agencia creada: ${nombre} ${plan} ${per} $${monto} Codigo:${codigoAcceso}`);
+  res.json({ok:true, empresa:nuevaEmpresa, codigoAcceso});
 });
 
-// --- NUEVO: OLVIDE CONTRASEÑA ---
 app.post('/api/auth/forgot', (req,res)=>{
   const {email} = req.body;
   if(!email) return res.status(400).json({error:'Correo requerido'});
   const user = usuariosDB.get().find(u=>u.email===email);
-  if(!user) return res.status(404).json({error:'Correo no registrado en Klido'});
-
+  if(!user) return res.status(404).json({error:'Correo no registrado'});
   const code = Math.floor(100000 + Math.random()*900000).toString();
   const codigos = codigosDB.get();
   codigos.push({ email, code, expira: Date.now()+15*60*1000, usado:false });
   codigosDB.set(codigos);
-
-  console.log(`📧 CODIGO RECUPERACION para ${email}: ${code} - Expira 15min`);
-  // Aqui conectas tu servicio de email real (Brevo/SendGrid)
-
-  res.json({message:`Código enviado a ${email} (revisa spam). Código: ${code} - SOLO EN MODO TEST se muestra aqui`, testCode: code });
+  console.log(`📧 CODIGO ${email}: ${code}`);
+  res.json({message:`Código enviado a ${email} (revisa spam)`, testCode: code});
 });
-
 app.post('/api/auth/reset', async (req,res)=>{
   const {email, code, newPassword} = req.body;
-  if(!email ||!code ||!newPassword) return res.status(400).json({error:'Faltan datos'});
-
   const codigos = codigosDB.get();
   const registro = codigos.find(c=> c.email===email && c.code===String(code) &&!c.usado && c.expira > Date.now());
   if(!registro) return res.status(400).json({error:'Código inválido o expirado'});
-
-  const usuarios = usuariosDB.get();
-  const u = usuarios.find(x=>x.email===email);
-  if(!u) return res.status(404).json({error:'Usuario no existe'});
-
-  u.password = await bcrypt.hash(newPassword, 10);
-  usuariosDB.set(usuarios);
-
+  const usuarios = usuariosDB.get(); const u = usuarios.find(x=>x.email===email);
+  if(!u) return res.status(404).json({error:'no existe'});
+  u.password = await bcrypt.hash(newPassword, 10); usuariosDB.set(usuarios);
   registro.usado = true; codigosDB.set(codigos);
-  res.json({message:'✅ Contraseña cambiada correctamente. Ya puedes ingresar.'});
+  res.json({message:'✅ Contraseña cambiada'});
 });
 
-// --- EMPRESAS (solo superadmin) ---
 app.get('/api/empresas', auth, (req,res)=>{ res.json(empresasDB.get()); });
 app.post('/api/empresas', auth, (req,res)=>{
   if(req.user.rol!=='superadmin') return res.status(403).json({error:'solo superadmin'});
@@ -158,7 +134,6 @@ app.post('/api/empresas', auth, (req,res)=>{
   res.json(nueva);
 });
 
-// --- USUARIOS ---
 app.get('/api/usuarios', auth, (req,res)=>{
   let users = usuariosDB.get();
   if(req.user.rol!=='superadmin') users = users.filter(u=>u.empresaId===req.user.empresaId);
@@ -176,7 +151,6 @@ app.post('/api/usuarios', auth, async (req,res)=>{
   res.json({id:nuevo.id, nombre, email, rol:nuevo.rol, empresaId: targetEmpresa});
 });
 
-// --- CAMPAÑAS ---
 app.get('/api/campanas', auth, (req,res)=>{
   let camps = campanasDB.get();
   if(req.user.rol!=='superadmin') camps = camps.filter(c=>c.empresaId===req.user.empresaId);
@@ -192,7 +166,6 @@ app.post('/api/campanas', auth, (req,res)=>{
   res.json(nueva);
 });
 
-// --- EXCEL ---
 const upload = multer({ dest: 'uploads/' });
 app.post('/api/campanas/:id/upload', auth, upload.single('file'), (req,res)=>{
   try{
@@ -200,16 +173,14 @@ app.post('/api/campanas/:id/upload', auth, upload.single('file'), (req,res)=>{
     const wb = xlsx.readFile(req.file.path);
     const sheet = wb.Sheets[wb.SheetNames[0]];
     const rows = xlsx.utils.sheet_to_json(sheet);
-    const contactos = contactosDB.get();
-    let count = 0;
+    const contactos = contactosDB.get(); let count=0;
     rows.forEach(r=>{
       const tel = r.telefono || r.Telefono || r.celular || r.Celular || r.phone;
       if(!tel) return;
       contactos.push({ id: uuidv4(), campanaId, empresaId: req.user.empresaId, nombre: r.nombre || r.Nombre || '', telefono: String(tel), estado:'pendiente', asesorId:null, createdAt:new Date(), data:r });
       count++;
     });
-    contactosDB.set(contactos);
-    fs.unlinkSync(req.file.path);
+    contactosDB.set(contactos); fs.unlinkSync(req.file.path);
     const camps = campanasDB.get(); const c = camps.find(x=>x.id===campanaId);
     if(c){ c.totalContactos += count; campanasDB.set(camps); }
     res.json({ok:true, importados: count});
@@ -229,9 +200,9 @@ app.post('/api/whatsapp/webhook', (req,res)=>{
   chats.push({id:uuidv4(),...msg, createdAt:new Date()}); chatsDB.set(chats);
   io.emit('mensaje_nuevo', msg); res.json({ok:true});
 });
-
 app.get('*', (req,res)=>{
   const p = path.join(__dirname,'public','index.html');
   if(fs.existsSync(p)) return res.sendFile(p);
   res.send('Klido CRM 12.2 OK');
 });
+console.log('Módulos cargados, CRM listo');
