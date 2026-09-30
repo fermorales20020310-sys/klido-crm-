@@ -19,7 +19,6 @@ const io = new Server(server, { cors: { origin: "*" } });
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 
-// --- ESTA ES LA CLAVE PARA TU ESTRUCTURA ---
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 app.use('/public', express.static(publicPath));
@@ -65,9 +64,24 @@ const auth = (req,res,next)=>{
   catch{ res.status(401).json({error:'no auth'}) }
 };
 
+// --- FIX V12 CRITICO PARA PRESENTACION 3PM ---
 function getCreds(agenciaRow){
-  return { token: agenciaRow?.access_token || META_TOKEN, waba: agenciaRow?.waba_id || WABA_ID_GLOBAL, phone: agenciaRow?.phone_number_id || PHONE_ID_GLOBAL }
+  let token = agenciaRow?.access_token || META_TOKEN;
+
+  // Si la tabla está con PEGA_ o token corto/inválido, usa el de Variables de Railway
+  if (!token || token.includes('PEGA_') || token.length < 80) {
+    console.log('⚠️ FIX V12: Tabla agencias con PEGA_, usando WHATSAPP_TOKEN de Variables');
+    token = META_TOKEN;
+  }
+
+  // Auto-repara la tabla en background para no volver a fallar
+  if (agenciaRow && META_TOKEN && META_TOKEN.length > 80 && (!agenciaRow.access_token || agenciaRow.access_token.includes('PEGA_'))) {
+     pool.query("UPDATE agencias SET access_token = $1 WHERE id=$2", [META_TOKEN, agenciaRow.id]).catch(()=>{});
+  }
+
+  return { token: token, waba: agenciaRow?.waba_id || WABA_ID_GLOBAL, phone: agenciaRow?.phone_number_id || PHONE_ID_GLOBAL }
 }
+
 async function syncTemplatesForAgencia(agencia_id){
   try{
     const ag = await pool.query(`SELECT * FROM agencias WHERE id=$1`,[agencia_id]);
@@ -84,14 +98,12 @@ async function syncTemplatesForAgencia(agencia_id){
   }catch(e){ console.log('sync err', e.message) }
 }
 
-// --- RUTAS HTML TUYAS ---
 app.get('/', (req,res)=> res.sendFile(path.join(publicPath, 'index.html')));
 app.get('/campanas', (req,res)=> res.sendFile(path.join(publicPath, 'campanas.html')));
 app.get('/login', (req,res)=> res.sendFile(path.join(publicPath, 'login.html')));
 app.get('/legal', (req,res)=> res.sendFile(path.join(publicPath, 'legal.html')));
 app.get('/terminos', (req,res)=> res.sendFile(path.join(publicPath, 'terminos.html')));
 
-// --- API MULTIAGENCIA ---
 app.post('/api/register-empresa', async (req,res)=>{
   const { empresa, email, password, plan } = req.body;
   const slug = empresa.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '-' + Date.now().toString().slice(-4);
@@ -220,4 +232,4 @@ app.post('/api/webhook', async (req,res)=>{
 io.on('connection', s=>{ s.on('join_agencia', id=> s.join(`agencia_${id}`)); });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', ()=> console.log(`🚀 KLIDO FINAL MULTIAGENCIA PUBLIC/ OK en ${PORT} - WABA ${WABA_ID_GLOBAL}`));
+server.listen(PORT, '0.0.0.0', ()=> console.log(`🚀 KLIDO V12 FIX PEGA_ OK en ${PORT} - WABA ${WABA_ID_GLOBAL}`));
