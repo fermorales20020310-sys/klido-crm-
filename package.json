@@ -1,7 +1,7 @@
 {
   "name": "klido-crm-v12-final",
   "version": "12.0.0",
-  "description": "Klido CRM Multiagencia - API Oficial WhatsApp Business",
+  "description": "Klido CRM Multiagencia - API Oficial WhatsApp Business - FIX PEGA_ V12",
   "main": "server.js",
   "engines": {
     "node": ">=18.0.0"
