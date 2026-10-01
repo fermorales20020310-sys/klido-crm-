@@ -1,11 +1,23 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO ADMIN DUEÑAS v111 - Avanza Consulting</title><link rel="icon" href="logo.png">
 <style>:root{--bg:#070d1c;--card:#111d33;--border:#233656;--gold:#f59e0b;--blue:#3B82F6;--text:#e2e8f0;--muted:#94a3b8}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui}.header{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:10}.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:20px}.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}.kpi b{font-size:22px;color:#fff} table{width:100%;border-collapse:collapse;font-size:11px} th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left} button.p{padding:6px 10px;border-radius:8px;border:0;background:var(--gold);color:#000;font-weight:700;cursor:pointer;font-size:11px} button.b{padding:6px 10px;border-radius:8px;border:0;background:#22c55e;color:#000;font-weight:700;cursor:pointer;font-size:11px} button.s{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:11px} button.r{padding:6px 10px;border-radius:8px;border:0;background:#ef4444;color:#fff;cursor:pointer;font-size:11px} input{padding:8px;border-radius:8px;border:1px solid var(--border);background:#0a1428;color:#fff} .pill{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700} .ok{background:#dcfce7;color:#166534} .pend{background:#fef3c7;color:#92400e} .bloq{background:#fee2e2;color:#991b1b}
+.notifWrap{background:#1a2744;border:1px solid #f59e0b;border-radius:12px;padding:12px 14px;margin:0 20px 12px;display:none}
+.notifItem{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:11px}
 @media(max-width:1000px){.grid{grid-template-columns:1fr 1fr}}
 </style></head><body>
 <div class="header"><div><b>KLIDO AVANZA CONSULTING - DUEÑAS v111 PRO</b><div style="font-size:11px;color:var(--muted)">Seguimiento total agencias inscritas, plan, trabajadores, campañas, bloqueo, consumo, ventas, código activación pago, contrato PDF - Tiempo real - WPP 3133181851</div></div><div style="display:flex;gap:8px;align-items:center"><span id="userInfo" style="font-size:11px;color:var(--muted)"></span><button class="s" onclick="location.href='/crm.html?v=111'">Volver CRM</button><button class="s" onclick="localStorage.clear();location.href='/index.html?v=111'">Salir</button></div></div>
+
+<!-- NUEVO: NOTIFICACIONES PENDIENTES GERENTE -->
+<div class="notifWrap" id="notifWrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <b style="color:var(--gold)">🔔 Nuevas empresas pendientes para desbloquear (registro con código 6 dígitos)</b>
+    <span id="notifCount" style="background:var(--gold);color:#000;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">0</span>
+  </div>
+  <div id="notifList"></div>
+</div>
+
 <div class="grid" id="kpis"></div>
 <div style="padding:0 20px 20px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:14px">Agencias - Máx 10 - Todo aislado, sin cruzar info - Solo plan pagado desbloqueado</b><button class="p" onclick="load()">↻ Actualizar tiempo real</button></div><div style="overflow:auto"><table><thead><tr><th>Agencia / Email / ID</th><th>Plan / Anual / Trim</th><th>Estado pago / Código activación</th><th>Estado / Onboarding</th><th>Trabajadores / Usuarios / Campañas / Mensajes</th><th>Última / Contrato</th><th>Acción Gerencia</th></tr></thead><tbody id="tbody"></tbody></table></div>
-<div style="margin-top:14px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:11px;color:var(--muted)">💡 Flujo v111: Empresa se registra → queda pendiente_pago en historial → tú das click <b>Activar y enviar código pago</b> → genera KLIDO-XXXX-1234 y lo manda a su correo registrado → ella va a index → Activar cuenta → ingresa → contrato PDF auto + onboarding 60s + white-label + IA lista (solo falta OPENAI_API_KEY) + métricas mantenimiento trimestral.</div>
+<div style="margin-top:14px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:11px;color:var(--muted)">💡 Flujo v111: Empresa se registra con código 6 dígitos → queda pendiente_gerente + notificación aquí → tú das click <b>Desbloquear</b> o <b>Activar + Enviar código pago KLIDO-XXXX</b> → ella ya ingresa → contrato PDF auto + onboarding 60s.</div>
 </div>
 <script>
 let token=localStorage.getItem('token')||localStorage.getItem('klido_token'); if(!token) location.href='/index.html?v=111';
@@ -15,16 +27,38 @@ async function load(){
  const porPlan={basico:0,premium:0,gold:0}; let ingresos=0; let activas=0;
  d.agencias.forEach(a=>{porPlan[a.plan]=(porPlan[a.plan]||0)+1; if(a.pagado) activas++; if(a.plan==='basico') ingresos+=800000; if(a.plan==='premium') ingresos+=1400000; if(a.plan==='gold') ingresos+=2400000;});
  document.getElementById('kpis').innerHTML=`<div class="kpi"><b>${d.total}/10</b><br>Total agencias inscritas / Restan ${d.restan}</div><div class="kpi"><b>${activas}</b><br>Activas pagadas - Tiempo real</div><div class="kpi"><b>B:${porPlan.basico||0} P:${porPlan.premium||0} G:${porPlan.gold||0}</b><br>Por plan - Básico/Premium/Gold</div><div class="kpi"><b>$${(ingresos/1000000).toFixed(2)}M</b><br>Ventas anuales KLIDO totales</div><div class="kpi"><b>$${(ingresos*0.3/1000000).toFixed(2)}M/año</b><br>Estimado mant. trim ($80k/$95k/$120k)</div>`;
+
+ // === NUEVO: NOTIFICACIONES ===
+ const notifs = (d.notificaciones||[]).filter(n=>!n.leida);
+ const wrap = document.getElementById('notifWrap');
+ if(notifs.length>0){
+   wrap.style.display='block';
+   document.getElementById('notifCount').textContent = notifs.length;
+   document.getElementById('notifList').innerHTML = notifs.map(n=>`
+     <div class="notifItem">
+       <div><b>${n.nombre}</b> - ${n.email} - Plan <b>${n.plan.toUpperCase()}</b> <span style="color:var(--muted)">${new Date(n.fecha).toLocaleString()}</span></div>
+       <div style="display:flex;gap:6px">
+         <button class="b" onclick="desbloquear('${n.empresaId}')">🔓 Desbloquear y activar</button>
+         <button class="p" onclick="activar('${n.empresaId}')">📧 Activar + enviar código KLIDO</button>
+       </div>
+     </div>
+   `).join('');
+ } else {
+   wrap.style.display='none';
+ }
+
  document.getElementById('tbody').innerHTML=d.agencias.map(a=>{
    const planPrecio=a.plan==='basico'?`$800k/año + $80k trim`:a.plan==='premium'?`$1.4M/año + $95k trim`:`$2.4M/año + $120k trim`;
-   return `<tr>
+   const esPendiente = a.estado==='pendiente_gerente' || a.estado==='pendiente_pago';
+   return `<tr style="${esPendiente?'background:rgba(245,158,11,.08)':''}">
    <td><b>${a.nombre}</b><br><span style="color:var(--muted)">${a.email}</span><br><span style="color:var(--muted);font-size:9px">${a.id}</span></td>
    <td><span class="pill" style="background:#0a1428">${a.plan.toUpperCase()}</span><br><span style="font-size:10px">${planPrecio}</span><br><span style="font-size:9px;color:var(--muted)">IA:${a.plan!=='basico'?'✓':'🔒'} Llamadas:${a.plan==='gold'?'📞':''}</span></td>
-   <td><span class="pill ${a.pagado?'ok':'pend'}">${a.pagado?'Pagado':'Pendiente pago'}</span><br><span style="font-size:9px">Código: ${a.codigoActivacion||'pendiente'}</span><br><span style="font-size:9px;color:var(--muted)">Mant: ${a.mantenimiento||'pendiente'}</span></td>
+   <td><span class="pill ${a.pagado?'ok':'pend'}">${a.pagado?'Pagado':'Pendiente'}</span><br><span style="font-size:9px">Código: ${a.codigoActivacion||'pendiente'}</span><br><span style="font-size:9px;color:var(--muted)">Mant: ${a.mantenimiento||'pendiente'}</span></td>
    <td><span class="pill ${a.estado==='activa'?'ok':a.estado==='bloqueada'?'bloq':'pend'}">${a.estado}</span><br><span style="font-size:9px">${a.creado?new Date(a.creado).toLocaleDateString():''}</span></td>
-   <td>Trab: ${a.trabajadores} / Usu: ${a.usuarios}<br>Camp: ${a.campanas||0} / Msj: ${a.mensajes||0}<br><span style="font-size:9px;color:var(--muted)">Sin cruzar info</span></td>
+   <td>Trab: ${a.trabajadores||0} / Usu: ${a.usuarios||0}<br>Camp: ${a.campanas||0} / Msj: ${a.mensajes||0}</td>
    <td>${a.creado?new Date(a.creado).toLocaleString():''}<br><a href="/api/contrato/${a.id}" target="_blank" style="color:var(--gold);font-size:10px">📄 Contrato PDF</a></td>
    <td style="display:flex;flex-direction:column;gap:4px">
+   ${esPendiente?`<button class="b" onclick="desbloquear('${a.id}')">🔓 Desbloquear (ya pagó / ya validé)</button>`:''}
    <button class="b" onclick="activar('${a.id}')">✅ Activar + Enviar código pago al correo registrado</button>
    <button class="p" onclick="toggle('${a.id}','activa',true)">Desbloquear</button>
    <button class="r" onclick="toggle('${a.id}','bloqueada',false)">Bloquear</button>
@@ -33,7 +67,12 @@ async function load(){
  }).join('');
  document.getElementById('userInfo').textContent=JSON.parse(localStorage.getItem('user')||'{}').email||'';
 }
-async function activar(id){const r=await api('/api/admin/activar',{method:'POST',body:JSON.stringify({agenciaId:id})}); const d=await r.json(); alert(d.mensaje||`Código ${d.codigo} enviado a correo registrado`); load();}
+async function activar(id){const r=await api('/api/admin/activar',{method:'POST',body:JSON.stringify({agenciaId:id})}); const d=await r.json(); alert(d.mensaje||`Código ${d.codigo} enviado`); load();}
+async function desbloquear(id){
+  if(!confirm('¿Desbloquear y activar esta empresa? Quedará activa y podrá ingresar.')) return;
+  const r=await api('/api/gerente/desbloquear/'+id,{method:'POST'});
+  const d=await r.json(); alert(d.mensaje||'Desbloqueada'); load();
+}
 async function toggle(id,estado,pagado){await api('/api/admin/bloquear',{method:'POST',body:JSON.stringify({agenciaId:id,estado,pagado})}); load();}
 function verContrato(id){window.open(`/api/contrato/${id}`,'_blank');}
 load(); setInterval(load,15000);
