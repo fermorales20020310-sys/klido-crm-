@@ -3,219 +3,157 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KLIDO AVANZA CONSULTING - CRM</title>
+<title>KLIDO AVANZA - CRM</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
 body{background:#eef2f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .card{width:100%;max-width:1100px;background:white;border-radius:28px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;box-shadow:0 20px 60px rgba(10,25,49,0.15)}
-.left{background:linear-gradient(145deg,#0a1931 0%,#12367a 55%,#1a4da3 100%);color:white;padding:40px 36px;position:relative;display:flex;flex-direction:column}
+.left{background:linear-gradient(145deg,#0a1931 0%,#12367a 55%,#1a4da3 100%);color:white;padding:40px 36px;display:flex;flex-direction:column}
 .logo{display:flex;align-items:center;gap:12px;margin-bottom:40px}
 .logo-icon{width:56px;height:56px;background:white;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px}
 .logo h1{font-weight:900;letter-spacing:1px;font-size:28px}
-.logo span{font-weight:400;font-size:11px;letter-spacing:4px;opacity:0.8;display:block;margin-top:2px}
-.left h2{font-size:44px;line-height:0.95;font-weight:900;margin-bottom:16px;letter-spacing:-1px}
-.left h2 i{font-style:italic;font-weight:800}
+.logo span{font-weight:400;font-size:11px;letter-spacing:4px;opacity:0.8;display:block}
+.left h2{font-size:44px;line-height:0.95;font-weight:900;margin-bottom:16px}
+.left h2 i{font-style:italic}
 .left p{font-size:13px;line-height:1.5;color:#a9c0e8;margin-bottom:18px}
 .badge{border:1px solid rgba(80,255,180,0.3);background:rgba(80,255,180,0.1);color:#4dffb0;border-radius:30px;padding:8px 14px;font-size:10px;font-weight:800;letter-spacing:1px;display:inline-block}
 .right{background:#f7f9fc;padding:18px 22px}
 .tabs{background:#eef2f7;border-radius:14px;padding:6px;display:flex;margin-bottom:16px}
-.tabs button{flex:1;border:0;padding:12px;border-radius:10px;font-weight:700;cursor:pointer;transition:0.2s}
-.tabs button.active{background:#1e3a76;color:white;box-shadow:0 4px 12px rgba(30,58,118,0.3)}
+.tabs button{flex:1;border:0;padding:12px;border-radius:10px;font-weight:700;cursor:pointer}
+.tabs button.active{background:#1e3a76;color:white}
 .tabs button:not(.active){background:transparent;color:#6b7da1}
 .form-card{background:white;border-radius:20px;padding:22px;border:1px solid #e8edf5}
 .form-card h3{font-size:16px;margin-bottom:14px;color:#0a1931}
-input{width:100%;background:#f3f6fb;border:1px solid #e6ecf0;border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:13px;outline:none;transition:0.2s}
+input,select{width:100%;background:#f3f6fb;border:1px solid #e6ecf0;border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:13px;outline:none}
 input:focus{border-color:#1e3a76;background:white}
 .check{display:flex;align-items:center;gap:8px;font-size:11px;color:#6b7da1;margin:8px 0}
 .check input{width:auto;margin:0}
-.check a{color:#1e3a76;text-decoration:underline;font-weight:600}
-.btn{width:100%;background:#1e3a76;color:white;border:0;border-radius:12px;padding:14px;font-weight:800;cursor:pointer;margin-top:10px;transition:0.2s}
-.btn:hover{background:#152a5a;transform:translateY(-1px)}
-.btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.btn{width:100%;background:#1e3a76;color:white;border:0;border-radius:12px;padding:14px;font-weight:800;cursor:pointer;margin-top:10px}
+.btn:hover{background:#152a5a}
 .link{font-size:11px;color:#1e3a76;font-weight:700;cursor:pointer;text-decoration:underline;background:none;border:0}
-.flex{ display:flex; justify-content:space-between; align-items:center }
+.flex{display:flex;justify-content:space-between;align-items:center}
 .hidden{display:none}
-@media(max-width:900px){.card{grid-template-columns:1fr}.left{padding:28px}}
 </style>
 </head>
 <body>
 <div class="card">
-  <div class="left">
-    <div class="logo">
-      <div class="logo-icon">🧜‍♂️</div>
-      <div><h1>KLIDO<span>AVANZA CONSULTING</span></h1></div>
-    </div>
-    <h2>El mejor CRM<br>que tu empresa<br><i>puede tener.</i></h2>
-    <p>Klido Avanza Consulting — CRM multiagencia para API oficial de Meta (WhatsApp Business API).</p>
-    <div class="badge">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
-    <div style="margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;padding-top:30px">
-      <span style="background:rgba(255,255,255,0.1);border-radius:20px;padding:6px 12px;font-size:10px">✓ Seguro y confiable</span>
-      <span style="background:rgba(255,255,255,0.1);border-radius:20px;padding:6px 12px;font-size:10px">✓ API Meta Oficial</span>
-      <span style="background:rgba(255,255,255,0.1);border-radius:20px;padding:6px 12px;font-size:10px">✓ Soporte Avanza</span>
-    </div>
-  </div>
-  <div class="right">
-    <div class="tabs">
-      <button id="tabLogin" class="active" onclick="switchTab('login')">Ingresar</button>
-      <button id="tabCrear" onclick="switchTab('crear')">Crear empresa</button>
-    </div>
-
-    <!-- LOGIN -->
-    <div id="panelLogin" class="form-card">
-      <h3>Ingresar a tu agencia</h3>
-      <input id="empresaNombre" type="text" value="KLIDO AVANZA" placeholder="Nombre de la empresa o agencia">
-      <input id="email" type="email" value="fermorales20020310@gmail.com" placeholder="Correo electrónico">
-      <input id="password" type="password" placeholder="Contraseña" value="">
-      <div class="check"><input type="checkbox" id="termLogin" checked> <label for="termLogin">Acepto <a href="#">Términos y Condiciones</a> y Política de Privacidad</label></div>
-      <div class="flex">
-        <div class="check" style="margin:0"><input type="checkbox" id="remember" checked> <label for="remember">Recordarme</label></div>
-        <button class="link" onclick="openForgot()">¿Olvidaste tu contraseña?</button>
-      </div>
-      <button id="btnLogin" class="btn" onclick="doLogin()">Ingresar al CRM →</button>
-      <p id="loginMsg" style="font-size:11px;margin-top:10px;color:#e11d48"></p>
-    </div>
-
-    <!-- CREAR EMPRESA -->
-    <div id="panelCrear" class="form-card hidden">
-      <h3>Crear nueva agencia</h3>
-      <input id="c_nombre" placeholder="Nombre de la agencia">
-      <input id="c_email" type="email" placeholder="Correo admin">
-      <input id="c_pass" type="password" placeholder="Contraseña">
-      <input id="c_codigo" placeholder="Código de acceso (ej: KLIDO001)">
-      <select id="c_plan" style="width:100%;background:#f3f6fb;border:1px solid #e6ecf0;border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:13px">
-        <option value="basico">Básico - $800.000/año</option>
-        <option value="premium">Premium - $1.400.000/año</option>
-        <option value="gold">Gold - $2.400.000/año</option>
-      </select>
-      <div class="check"><input type="checkbox" id="c_term" checked><label for="c_term">Acepto Términos y Condiciones</label></div>
-      <button class="btn" onclick="doCrear()">Crear agencia →</button>
-      <p id="crearMsg" style="font-size:11px;margin-top:10px"></p>
-    </div>
-
-    <!-- FORGOT -->
-    <div id="panelForgot" class="form-card hidden">
-      <h3>Recuperar contraseña</h3>
-      <input id="f_email" type="email" placeholder="Tu correo">
-      <button class="btn" onclick="doForgot()">Enviar código</button>
-      <div id="f_codeArea" class="hidden" style="margin-top:12px">
-        <input id="f_code" placeholder="Código de 6 dígitos">
-        <input id="f_newpass" type="password" placeholder="Nueva contraseña">
-        <button class="btn" onclick="doReset()">Cambiar contraseña</button>
-      </div>
-      <p id="f_msg" style="font-size:11px;margin-top:10px"></p>
-      <button class="link" style="margin-top:10px" onclick="switchTab('login')">← Volver a ingresar</button>
-    </div>
-  </div>
+<div class="left">
+<div class="logo"><div class="logo-icon">🧜‍♂️</div><div><h1>KLIDO<span>AVANZA CONSULTING</span></h1></div></div>
+<h2>El mejor CRM<br>que tu empresa<br><i>puede tener.</i></h2>
+<p>Klido Avanza Consulting — CRM multiagencia para API oficial de Meta (WhatsApp Business API).</p>
+<div class="badge">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
 </div>
-
+<div class="right">
+<div class="tabs"><button id="tabLogin" class="active" onclick="switchTab('login')">Ingresar</button><button id="tabCrear" onclick="switchTab('crear')">Crear empresa</button></div>
+<div id="panelLogin" class="form-card">
+<h3>Ingresar a tu agencia</h3>
+<input id="empresaNombre" type="text" value="KLIDO AVANZA" placeholder="Nombre de la empresa o agencia">
+<input id="email" type="email" placeholder="Correo electrónico" value="fermorales20020310@gmail.com">
+<input id="password" type="password" placeholder="Contraseña">
+<div class="check"><input type="checkbox" id="termLogin" checked><label>Acepto Términos y Condiciones</label></div>
+<div class="flex"><div class="check" style="margin:0"><input type="checkbox" id="remember" checked><label>Recordarme</label></div><button class="link" onclick="openForgot()">¿Olvidaste tu contraseña?</button></div>
+<button id="btnLogin" class="btn" onclick="doLogin()">Ingresar al CRM →</button>
+<p id="loginMsg" style="font-size:11px;margin-top:10px;color:#e11d48"></p>
+</div>
+<div id="panelCrear" class="form-card hidden">
+<h3>Crear nueva agencia</h3>
+<input id="c_nombre" placeholder="Nombre de la agencia">
+<input id="c_email" type="email" placeholder="Correo admin">
+<input id="c_pass" type="password" placeholder="Contraseña">
+<input id="c_codigo" placeholder="Código de acceso (ej: KLIDO001)">
+<select id="c_plan"><option value="basico">Básico - $800.000/año</option><option value="premium">Premium - $1.400.000/año</option><option value="gold">Gold - $2.400.000/año</option></select>
+<div class="check"><input type="checkbox" id="c_term" checked><label>Acepto Términos</label></div>
+<button class="btn" onclick="doCrear()">Crear agencia →</button>
+<p id="crearMsg" style="font-size:11px;margin-top:10px"></p>
+</div>
+<div id="panelForgot" class="form-card hidden">
+<h3>Recuperar contraseña</h3>
+<input id="f_email" type="email" placeholder="Tu correo">
+<button class="btn" onclick="doForgot()">Enviar código</button>
+<div id="f_codeArea" class="hidden" style="margin-top:12px"><input id="f_code" placeholder="Código de 6 dígitos"><input id="f_newpass" type="password" placeholder="Nueva contraseña"><button class="btn" onclick="doReset()">Cambiar contraseña</button></div>
+<p id="f_msg" style="font-size:11px;margin-top:10px"></p>
+<button class="link" onclick="switchTab('login')">← Volver</button>
+</div>
+</div>
+</div>
 <script>
-let currentTab='login';
 function switchTab(t){
-  currentTab=t;
-  document.getElementById('panelLogin').classList.toggle('hidden', t!=='login');
-  document.getElementById('panelCrear').classList.toggle('hidden', t!=='crear');
-  document.getElementById('panelForgot').classList.add('hidden');
-  document.getElementById('tabLogin').classList.toggle('active', t==='login');
-  document.getElementById('tabCrear').classList.toggle('active', t==='crear');
-  if(t==='login'){
-    const emp=document.getElementById('empresaNombre');
-    if(!emp.value) emp.value='KLIDO AVANZA';
-  }
+document.getElementById('panelLogin').classList.toggle('hidden', t!=='login');
+document.getElementById('panelCrear').classList.toggle('hidden', t!=='crear');
+document.getElementById('panelForgot').classList.add('hidden');
+document.getElementById('tabLogin').classList.toggle('active', t==='login');
+document.getElementById('tabCrear').classList.toggle('active', t==='crear');
+const emp=document.getElementById('empresaNombre');
+if(emp && !emp.value.trim()) emp.value='KLIDO AVANZA';
 }
 function openForgot(){
-  document.getElementById('panelLogin').classList.add('hidden');
-  document.getElementById('panelCrear').classList.add('hidden');
-  document.getElementById('panelForgot').classList.remove('hidden');
+document.getElementById('panelLogin').classList.add('hidden');
+document.getElementById('panelCrear').classList.add('hidden');
+document.getElementById('panelForgot').classList.remove('hidden');
 }
-
 async function doLogin(){
-  const email=document.getElementById('email').value.trim();
-  const password=document.getElementById('password').value;
-  let empresa=document.getElementById('empresaNombre').value.trim();
-  if(!empresa) empresa='KLIDO AVANZA'; // FIX: si está vacío, pon KLIDO
-  document.getElementById('empresaNombre').value=empresa;
-
-  if(!email || !password){
-    document.getElementById('loginMsg').innerText='Ingresa correo y contraseña';
-    return;
-  }
-  document.getElementById('btnLogin').innerText='Ingresando...';
-  document.getElementById('loginMsg').innerText='';
-  try{
-    const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-    const data=await res.json();
-    if(!res.ok) throw new Error(data.error||'Error login');
-    localStorage.setItem('klido_token', data.token);
-    localStorage.setItem('klido_user', JSON.stringify(data.user));
-    // Si tu app tiene dashboard, redirige. Si no, muestra ok
-    document.getElementById('loginMsg').style.color='green';
-    document.getElementById('loginMsg').innerText='¡Entrando como '+data.user.nombre+'!';
-    setTimeout(()=>location.href='/dashboard.html',800);
-    if(!window.location.pathname.includes('dashboard')){
-      setTimeout(()=>{ alert('Login OK - Bienvenido '+data.user.nombre); location.reload(); },500);
-    }
-  }catch(e){
-    document.getElementById('loginMsg').innerText=e.message;
-  }finally{
-    document.getElementById('btnLogin').innerText='Ingresar al CRM →';
-  }
+const email=document.getElementById('email').value.trim();
+const password=document.getElementById('password').value;
+let empresa=document.getElementById('empresaNombre').value.trim();
+if(!empresa) empresa='KLIDO AVANZA';
+document.getElementById('empresaNombre').value=empresa;
+if(!email||!password){document.getElementById('loginMsg').innerText='Pon correo y contraseña';return;}
+document.getElementById('btnLogin').innerText='Ingresando...';
+try{
+const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+const data=await res.json();
+if(!res.ok) throw new Error(data.error);
+localStorage.setItem('klido_token',data.token);
+localStorage.setItem('klido_user',JSON.stringify(data.user));
+document.getElementById('loginMsg').style.color='green';
+document.getElementById('loginMsg').innerText='Bienvenido '+data.user.nombre;
+setTimeout(()=>location.href='/dashboard.html',600);
+}catch(e){document.getElementById('loginMsg').innerText=e.message;}
+finally{document.getElementById('btnLogin').innerText='Ingresar al CRM →';}
 }
-
 async function doCrear(){
-  const nombre=document.getElementById('c_nombre').value.trim();
-  const email=document.getElementById('c_email').value.trim();
-  const password=document.getElementById('c_pass').value;
-  const codigoIngresado=document.getElementById('c_codigo').value.trim();
-  const plan=document.getElementById('c_plan').value;
-  const acepta=document.getElementById('c_term').checked;
-  if(!nombre||!email||!password||!codigoIngresado){ document.getElementById('crearMsg').innerText='Faltan datos'; return; }
-  try{
-    const res=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan,codigoIngresado,aceptaTerminos:acepta})});
-    const data=await res.json();
-    if(!res.ok) throw new Error(data.error);
-    document.getElementById('crearMsg').style.color='green';
-    document.getElementById('crearMsg').innerText='Agencia creada! Código: '+data.codigoAcceso+' - Ahora ingresa';
-    setTimeout(()=>switchTab('login'),1500);
-  }catch(e){ document.getElementById('crearMsg').innerText=e.message; }
+const nombre=document.getElementById('c_nombre').value.trim();
+const email=document.getElementById('c_email').value.trim();
+const password=document.getElementById('c_pass').value;
+const codigoIngresado=document.getElementById('c_codigo').value.trim();
+const plan=document.getElementById('c_plan').value;
+if(!nombre||!email||!password||!codigoIngresado){document.getElementById('crearMsg').innerText='Faltan datos';return;}
+try{
+const res=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan,codigoIngresado,aceptaTerminos:true})});
+const data=await res.json();
+if(!res.ok) throw new Error(data.error);
+document.getElementById('crearMsg').style.color='green';
+document.getElementById('crearMsg').innerText='Creada! Código: '+data.codigoAcceso;
+setTimeout(()=>switchTab('login'),1200);
+}catch(e){document.getElementById('crearMsg').innerText=e.message;}
 }
-
 async function doForgot(){
-  const email=document.getElementById('f_email').value.trim();
-  if(!email) return document.getElementById('f_msg').innerText='Pon tu correo';
-  document.getElementById('f_msg').innerText='Enviando...';
-  try{
-    const res=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
-    const data=await res.json();
-    if(!res.ok) throw new Error(data.error);
-    document.getElementById('f_msg').style.color='green';
-    document.getElementById('f_msg').innerText=data.message;
-    document.getElementById('f_codeArea').classList.remove('hidden');
-  }catch(e){ document.getElementById('f_msg').innerText=e.message; }
+const email=document.getElementById('f_email').value.trim();
+if(!email) return;
+document.getElementById('f_msg').innerText='Enviando...';
+try{
+const res=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+const data=await res.json();
+if(!res.ok) throw new Error(data.error);
+document.getElementById('f_msg').style.color='green';
+document.getElementById('f_msg').innerText=data.message;
+document.getElementById('f_codeArea').classList.remove('hidden');
+}catch(e){document.getElementById('f_msg').innerText=e.message;}
 }
-
 async function doReset(){
-  const email=document.getElementById('f_email').value.trim();
-  const code=document.getElementById('f_code').value.trim();
-  const newPassword=document.getElementById('f_newpass').value;
-  if(!code||!newPassword) return document.getElementById('f_msg').innerText='Pon código y nueva clave';
-  try{
-    const res=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,code,newPassword})});
-    const data=await res.json();
-    if(!res.ok) throw new Error(data.error);
-    document.getElementById('f_msg').style.color='green';
-    document.getElementById('f_msg').innerText=data.message+' - Ya puedes ingresar';
-    setTimeout(()=>switchTab('login'),1500);
-  }catch(e){ document.getElementById('f_msg').innerText=e.message; }
+const email=document.getElementById('f_email').value.trim();
+const code=document.getElementById('f_code').value.trim();
+const newPassword=document.getElementById('f_newpass').value;
+try{
+const res=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,code,newPassword})});
+const data=await res.json();
+if(!res.ok) throw new Error(data.error);
+document.getElementById('f_msg').style.color='green';
+document.getElementById('f_msg').innerText=data.message;
+setTimeout(()=>switchTab('login'),1200);
+}catch(e){document.getElementById('f_msg').innerText=e.message;}
 }
-
-// Auto-llenar KLIDO si está vacío al cargar
-window.addEventListener('DOMContentLoaded',()=>{
-  const emp=document.getElementById('empresaNombre');
-  if(emp && !emp.value) emp.value='KLIDO AVANZA';
-  // Enter para login
-  document.getElementById('password')?.addEventListener('keypress',(e)=>{ if(e.key==='Enter') doLogin(); });
-});
 </script>
 </body>
 </html>
