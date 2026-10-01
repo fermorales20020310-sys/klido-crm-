@@ -1,1 +1,142 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO AVANZA CONSULTING</title><link rel="icon" href="/logo.png"><style>:root{--bg:#070e22;--side:#0e1c38;--bd:#1d3a6b;--gold:#f59e0b;--gold2:#fbbf24}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#e2e8f0;font-family:Inter,system-ui;display:flex;height:100vh;overflow:hidden}.side{width:260px;background:var(--side);border-right:1px solid var(--bd);padding:18px;display:flex;flex-direction:column}.logo{display:flex;gap:12px;align-items:center;margin-bottom:22px}.logo img{width:80px!important;height:80px!important;object-fit:contain;background:#fff;border-radius:16px;padding:6px}.logo b{font-size:12px;line-height:1.1;font-weight:900}.menu button{width:100%;padding:12px;border:0;background:transparent;color:#7a8ab0;text-align:left;border-radius:12px;cursor:pointer;margin:2px 0}.menu button.active{background:var(--gold);color:#000;font-weight:800}.main{flex:1;overflow:hidden}.planes{flex:1;padding:28px;overflow:auto;background:radial-gradient(800px 400px at 20% 0%,#162a55 0%,var(--bg) 55%)}.planes h1{font-size:26px;margin:0}.sub{color:#7a8ab0;font-size:13px;margin:6px 0 22px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px}.card{background:linear-gradient(180deg,#1a2e5e,#14254e);border:1px solid var(--bd);border-radius:20px;padding:24px;min-height:500px;display:flex;flex-direction:column}.card.gold{border-color:var(--gold);box-shadow:0 0 30px rgba(245,158,11,.2)}.badge{position:absolute;top:14px;right:14px;background:var(--gold2);color:#000;font-size:10px;font-weight:900;padding:4px 9px;border-radius:20px}.price{font-size:32px;font-weight:900;margin:8px 0}.price small{font-size:11px;color:#7a8ab0;display:block;line-height:1.4}.card ul{list-style:none;padding:0;margin:16px 0;font-size:12px;line-height:2.2;color:#b9c7e6}.btn{margin-top:auto;width:100%;padding:12px;border-radius:12px;border:1px solid var(--bd);background:transparent;color:#7dd3e0;font-weight:700;cursor:pointer}.btnG{margin-top:auto;width:100%;padding:12px;border-radius:12px;border:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:900;cursor:pointer}</style></head><body><div class="side"><div class="logo"><img src="/logo.png?v=108"><div><b>KLIDO<br>AVANZA<br>CONSULTING</b></div></div><div class="menu"><button class="active">💳 Planes</button><button onclick="location.href='/inbox.html'">📥 Bandeja</button><button onclick="logout()">🚪 Salir</button></div></div><div class="main"><div class="planes"><h1>Planes KLIDO Avanza Consulting - Anual</h1><div class="sub">Pago anual + mantenimiento trimestral aparte.</div><div class="grid"><div class="card"><h3>Básico</h3><div class="price">$800k<small>/año + $80k cada 3 meses<br>Sin IA - API Meta oficial</small></div><ul><li>✓ 1 envío a la vez</li><li>✓ 2 usuarios</li><li>✓ Inbox ilimitado</li><li>✓ 1,000 contactos</li></ul><button class="btn" onclick="up('Basico')">Actualizar</button></div><div class="card"><h3>Premium + IA</h3><div class="price">$1.4M<small>/año + $95k cada 3 meses<br>Con IA incluida</small></div><ul><li>✓ 5 envíos simultáneos</li><li>✓ 5 usuarios</li><li>✓ IA incluida</li><li>✓ 10,000 contactos</li></ul><button class="btn" onclick="up('Premium')">Actualizar</button></div><div class="card gold" style="position:relative"><div class="badge">RECOMENDADO</div><h3>Gold + IA + Llamadas</h3><div class="price" style="color:var(--gold2)">$2.4M<small>/año + $120k cada 3 meses<br>IA + Llamada directa</small></div><ul><li>✓ Ilimitados</li><li>✓ IA insights</li><li>✓ 📞 Llamadas con IA</li><li>✓ Soporte dedicado</li></ul><button class="btnG" onclick="up('Gold')">Actualizar a Gold</button></div></div></div></div><script>function up(p){const u=JSON.parse(localStorage.getItem('user')||'{}');window.open(`https://wa.me/573001112233?text=${encodeURIComponent(`Hola KLIDO! Soy ${u.email||''} quiero ${p}`)}`,'_blank')}function logout(){localStorage.clear();location.href='/'}</script></body></html>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO v110 - Avanza Consulting</title><link rel="icon" href="logo.png">
+<style>
+:root{--blue:#0b1a3a;--bg:#f8fafc;--card:#fff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--gold:#f59e0b;--green:#22c55e;--red:#ef4444}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text)}
+header{height:64px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:12px} .brand img{width:80px!important;height:80px!important;background:#fff;border-radius:12px;padding:5px;object-fit:contain;border:1px solid var(--border)} .brand b{font-size:20px;letter-spacing:1px} .brand span{font-size:10px;letter-spacing:2px;color:var(--muted);display:block;font-weight:700}
+.pill{padding:6px 12px;border-radius:20px;background:#eef2ff;font-size:11px;font-weight:700}
+.nav{display:flex;gap:8px;flex-wrap:wrap} .nav button{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;font-weight:600} .nav button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.main{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 64px)} .side{background:#fff;border-right:1px solid var(--border);padding:12px} .content{padding:18px;overflow:auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px}
+.msg{padding:10px;border:1px solid var(--border);border-radius:12px;margin:6px 0;background:#fff;display:flex;justify-content:space-between;gap:8px} .msg.unread{border-left:4px solid var(--blue)} .msg.campana{border-left:4px solid #f59e0b;background:#fffbeb} .tag{font-size:9px;padding:3px 8px;border-radius:20px;font-weight:700} .tag.amarilla{background:#fde68a;color:#92400e} .tag.online{background:#dcfce7;color:#166534}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#f8fafc;margin:5px 0;font-size:12px}
+.btn{padding:10px 14px;border-radius:10px;border:0;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;font-size:12px} .btn.ghost{background:#fff;color:var(--text);border:1px solid var(--border)} .btn.gold{background:var(--gold);color:#000} .btn.green{background:var(--green);color:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px} .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.kpi{padding:12px;border-radius:14px;background:#fff;border:1px solid var(--border);text-align:center} .kpi b{font-size:22px;display:block}
+.lock{opacity:.5;pointer-events:none;position:relative} .lock::after{content:'🔒 Solo Premium/Gold';position:absolute;top:8px;right:8px;font-size:9px;background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:10px}
+.floatWpp{position:fixed;bottom:20px;right:20px;background:#25D366;color:#fff;padding:12px 16px;border-radius:50px;font-weight:800;font-size:12px;box-shadow:0 8px 20px rgba(0,0,0,.3);text-decoration:none;z-index:99}
+@media(max-width:900px){.main{grid-template-columns:1fr}.side{display:none}}
+</style></head><body>
+<header>
+<div class="brand"><img src="logo.png?v=110"><div><b>KLIDO</b><span>AVANZA CONSULTING</span></div><div class="pill" id="planPill">Cargando plan...</div></div>
+<div class="nav">
+<button class="active" onclick="go('inbox')">📥 Bandeja</button>
+<button onclick="go('campanas')">📢 Campañas</button>
+<button onclick="go('trabajadores')">👥 Equipo</button>
+<button onclick="go('calendario')">📅 Calendario</button>
+<button onclick="go('metricas')">📊 Métricas</button>
+<button onclick="go('planes')">💎 Planes</button>
+<button onclick="go('config')">⚙️ Config</button>
+<button onclick="go('ayuda')">🆘 Ayuda 24/7</button>
+<button id="adminBtn" style="display:none" onclick="go('admin')">👑 Gerencia</button>
+<button onclick="logout()">Salir</button>
+</div>
+</header>
+
+<div class="main">
+<div class="side">
+<div class="card"><b id="userName">Cargando...</b><div id="userEmail" style="font-size:11px;color:var(--muted)"></div><div id="agenciaId" style="font-size:10px;color:var(--muted);margin-top:4px"></div></div>
+<div class="card"><b>Filtros bandeja</b><button class="btn ghost" style="width:100%;margin-top:6px" onclick="loadInbox('')">Todos + Online</button><button class="btn ghost" style="width:100%;margin-top:6px" onclick="loadInbox('noleidos')">No leídos</button><button class="btn ghost" style="width:100%;margin-top:6px;background:#fffbeb;border-color:#f59e0b" onclick="loadInbox('campana')">🏷️ Etiqueta amarilla (Campañas)</button></div>
+<div class="card"><b>Tu plan</b><div id="planDetail" style="font-size:11px;margin-top:6px"></div><a id="upWpp" target="_blank" style="display:block;margin-top:8px;text-align:center;padding:8px;background:#25D366;color:#fff;border-radius:10px;font-size:11px;text-decoration:none;font-weight:800">Actualizar por WPP 3133181851</a></div>
+</div>
+
+<div class="content">
+<!-- INBOX -->
+<div id="sec-inbox"><div class="card"><h3>📥 Bandeja de Entrada Tiempo Real - Fotos, Audios, Archivos - Online, No leídos, Etiqueta amarilla campañas</h3><div id="inboxList">Cargando mensajes...</div></div></div>
+
+<!-- CAMPAÑAS -->
+<div id="sec-campanas" style="display:none"><div class="grid2">
+<div class="card"><h3>📢 Campañas - Subir Excel + Antibaneo por secciones</h3><p style="font-size:11px;color:var(--muted)">Sube Excel, selecciona números automático, política antibaneo: envía por secciones para evitar spam. Historial y monitoreo.</p><input type="file" id="excelFile" accept=".xlsx,.xls"><select id="tplSelect"><option>Cargando plantillas aprobadas...</option></select><button class="btn" onclick="uploadExcel()">1. Subir Excel y detectar números</button><div id="excelInfo" style="font-size:11px;margin-top:8px"></div><button class="btn gold" style="margin-top:8px" onclick="sendCamp()">2. Enviar campaña antibaneo</button><div id="campInfo" style="font-size:11px;margin-top:8px"></div></div>
+<div class="card"><h3>Historial y seguimiento campañas</h3><div id="campHist"></div></div>
+</div></div>
+
+<!-- EQUIPO -->
+<div id="sec-trabajadores" style="display:none"><div class="card"><h3>👥 Equipo - Jefe y Trabajadores mismo plan, sin cruzar info</h3><div id="trabList"></div><h4 style="margin-top:12px">Agregar trabajador (hereda tu plan)</h4><input id="tNombre" placeholder="Nombre trabajador"><input id="tEmail" placeholder="Correo trabajador"><input id="tPass" type="password" placeholder="Contraseña"><button class="btn" onclick="addTrab()">Agregar</button><div id="tMsg" style="font-size:11px"></div></div></div>
+
+<!-- CALENDARIO -->
+<div id="sec-calendario" style="display:none"><div class="card"><h3>📅 Calendario - Citas importantes y recordatorios por cliente</h3><div class="grid2"><div><input id="calCliente" placeholder="Número cliente"><input id="calFecha" type="datetime-local"><textarea id="calNota" placeholder="Nota seguimiento / cita"></textarea><button class="btn" onclick="addCal()">Añadir cita / recordatorio</button></div><div id="calList"></div></div></div></div>
+
+<!-- METRICAS -->
+<div id="sec-metricas" style="display:none"><div class="grid3"><div class="kpi"><b id="kTotal">0</b><span>Total mensajes</span></div><div class="kpi"><b id="kUnread">0</b><span>No leídos</span></div><div class="kpi"><b id="kCamp">0</b><span>Campañas (amarilla)</span></div></div><div class="card" style="margin-top:12px"><h3>Estadísticas equipo - Seguimiento organizado</h3><div id="teamStats"></div></div></div>
+
+<!-- PLANES -->
+<div id="sec-planes" style="display:none"><div class="card"><h3>💎 Planes - Pago anual + mantenimiento trimestral aparte - Beneficios por plan - Tu WPP 3133181851</h3><div class="grid3">
+<div style="border:2px solid #0b1a3a;border-radius:16px;padding:14px"><b>BÁSICO</b><div style="font-weight:800;margin:6px 0">$800.000/año<br><small style="color:var(--muted)">+ $80.000 mantenimiento trimestral aparte</small></div><ul style="font-size:11px;line-height:1.6"><li>1 envío a la vez</li><li>2 usuarios</li><li>1,000 contactos</li><li>Inbox + Fotos/Audios/Archivos</li><li>Sin IA 🔒</li><li>Sin llamadas 🔒</li></ul><button class="btn" style="width:100%" onclick="upPlan('basico')">Adquirir por WPP 3133181851</button></div>
+<div style="border:2px solid #7c3aed;border-radius:16px;padding:14px"><b>PREMIUM + IA</b><div style="font-weight:800;margin:6px 0">$1.400.000/año<br><small style="color:var(--muted)">+ $95.000 mantenimiento trimestral aparte</small></div><ul style="font-size:11px;line-height:1.6"><li>5 envíos simultáneos</li><li>5 usuarios</li><li>10,000 contactos</li><li>✓ IA incluida</li><li>Sin llamadas 🔒</li></ul><button class="btn gold" style="width:100%" onclick="upPlan('premium')">Adquirir Premium por WPP</button></div>
+<div style="border:2px solid #f59e0b;border-radius:16px;padding:14px;background:#fffbeb"><b>GOLD + IA + LLAMADAS</b><div style="font-weight:800;margin:6px 0">$2.400.000/año<br><small style="color:var(--muted)">+ $120.000 mantenimiento trimestral aparte</small></div><ul style="font-size:11px;line-height:1.6"><li>Envíos ilimitados</li><li>Usuarios ilimitados</li><li>✓ IA + Insights</li><li>📞 Llamadas con IA</li><li>Soporte dedicado 24/7</li></ul><button class="btn" style="width:100%;background:#f59e0b;color:#000" onclick="upPlan('gold')">Adquirir Gold por WPP</button></div>
+</div><p style="font-size:11px;color:var(--muted);margin-top:10px">Al ingresar con correo y contraseña solo ves tu plan pagado y desbloqueado. Básico no ve IA ni llamadas, Premium ve IA, Gold ve todo.</p></div></div>
+
+<!-- CONFIG -->
+<div id="sec-config" style="display:none"><div class="card"><h3>⚙️ Configuración - Qué ofrece KLIDO y cómo lo ofrece</h3><p style="font-size:12px;line-height:1.7;color:#475569">
+<b>KLIDO v110 PRO - Plataforma en Producción, No Demo. API Oficial Meta WhatsApp Business.</b><br><br>
+<b>Autónomo:</b> Crea agencias (máx 10), grupo trabajos, seguimiento, códigos al correo registrado sin que tengas que vigilar. Cada agencia aislada, trabajadores mismo plan del jefe, no cruzan info, no acceso a planes no pagados.<br><br>
+<b>Bandeja:</b> Online, no leídos, etiqueta amarilla campañas, segmentar, agregar info relevante cliente para seguimiento y métricas.<br>
+<b>Campañas:</b> Subir Excel selecciona números automático, política antibaneo por secciones para evitar spam, seguimiento monitoreo historial, solo plantillas aprobadas por Meta que se suben auto al aprobar.<br>
+<b>Planes:</b> Precio anual + mantenimiento trimestral aparte, beneficios distintos, adquirir redirige a WPP 3133181851.<br>
+<b>Calendario:</b> Citas importantes, recordatorios por cliente.<br>
+<b>Legal:</b> Términos, Ley 1581, pago anual + mantenimiento trimestral aparte.<br>
+<b>Tiempo real:</b> Fotos, audios, archivos. Panel jefe: segmentación, agregar/eliminar trabajador, asignar chat, métricas, calendario, estadísticas equipo. Panel trabajador: chats asignados, métricas propias, calendario. Gerencia Avanza: métricas, plan, pagado o no, bloqueo/desbloqueo tiempo real.<br><br>
+<b>Colores y logo 80px se mantienen.</b>
+</p></div></div>
+
+<!-- AYUDA -->
+<div id="sec-ayuda" style="display:none"><div class="card"><h3>🆘 Soporte Directo 24/7 Avanza Consulting</h3><p style="font-size:12px">Soporte 24/7 profesional para empresas. WPP: <b>3133181851</b></p><a href="https://wa.me/573133181851?text=Hola%20Avanza%20necesito%20soporte%20KLIDO%2024/7%20" target="_blank" class="btn green" style="display:inline-block;text-decoration:none">💬 Abrir WPP Soporte 24/7: 3133181851</a><div style="margin-top:12px;font-size:11px;color:var(--muted)">API Activa, Railway pago, plataforma profesional, no demo, no prueba.</div></div></div>
+
+<!-- ADMIN GERENCIA -->
+<div id="sec-admin" style="display:none"><div class="card"><h3>👑 Panel Gerencia Avanza - Métricas, plan, pagado o no, bloqueo/desbloqueo tiempo real - Total agencias</h3><div id="adminList"></div></div></div>
+
+</div>
+</div>
+
+<a class="floatWpp" href="https://wa.me/573133181851?text=Hola%20Avanza%20soporte%20KLIDO%20PRO%20" target="_blank">💬 Soporte 24/7 3133181851</a>
+
+<script>
+const WPP='573133181851'; let currentCampId=null; let user=null; let token=localStorage.getItem('token');
+if(!token) location.href='/index.html?v=110';
+function api(path,opt={}){opt.headers=opt.headers||{};opt.headers['Authorization']='Bearer '+token;opt.headers['Content-Type']=opt.headers['Content-Type']||'application/json';return fetch(path,opt)}
+async function init(){
+ const u=JSON.parse(localStorage.getItem('user')||'{}'); user=u;
+ document.getElementById('userName').textContent=u.nombre||'Usuario'; document.getElementById('userEmail').textContent=u.email; document.getElementById('agenciaId').textContent='Agencia: '+(u.agenciaId||'');
+ document.getElementById('planPill').textContent=(u.plan||'basico').toUpperCase(); document.getElementById('upWpp').href=`https://wa.me/${WPP}?text=Quiero%20actualizar%20mi%20plan%20KLIDO%20soy%20${u.email}`;
+ document.getElementById('planDetail').innerHTML=`Plan actual: <b>${u.plan}</b><br>Usuarios max: ${u.limites?.maxUsuarios||'-'}<br>Envío: ${u.limites?.maxEnvio||'-'}<br>${u.limites?.ia?'✓ IA':'🔒 Sin IA'}<br>${u.limites?.llamadas?'📞 Llamadas':''}`;
+ if(u.email==='admin@klido.com'||u.email==='avanzaconsultingyl@gmail.com') document.getElementById('adminBtn').style.display='inline-block';
+ loadInbox(''); loadTemplates(); loadMetricas(); loadTrabajadores(); loadCalendario(); loadCampHist();
+ if(u.email==='admin@klido.com'||u.email==='avanzaconsultingyl@gmail.com') loadAdmin();
+}
+function go(sec){document.querySelectorAll('[id^="sec-"]').forEach(s=>s.style.display='none');document.getElementById('sec-'+sec).style.display='block';document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active')); if(sec==='inbox') loadInbox('')}
+async function loadInbox(filtro){
+ const r=await api(`/api/mensajes${filtro?'?filtro='+filtro:''}`); const msgs=await r.json();
+ document.getElementById('inboxList').innerHTML=msgs.map(m=>`<div class="msg ${!m.leido?'unread':''} ${m.origen==='campana'?'campana':''}">
+ <div><b>${m.nombre||m.numero}</b> ${m.etiqueta?`<span class="tag amarilla">🏷️ ${m.etiqueta}</span>`:''} ${m.online?'<span class="tag online">● Online</span>':''}<br><span style="font-size:12px">${m.texto}</span><br><small style="color:#64748b">${new Date(m.timestamp).toLocaleString()} - ${m.segmento||'nuevo'} ${m.asignadoA?' - Asignado: '+m.asignadoA:''}</small>
+ <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap"><button class="btn ghost" style="padding:4px 8px;font-size:10px" onclick="seg('${m.id}','interesado')">Interesado</button><button class="btn ghost" style="padding:4px 8px;font-size:10px" onclick="seg('${m.id}','cliente')">Cliente</button><button class="btn ghost" style="padding:4px 8px;font-size:10px" onclick="followPrompt('${m.id}')">Seguimiento+Calendario</button><button class="btn ghost" style="padding:4px 8px;font-size:10px" onclick="assignPrompt('${m.id}')">Asignar chat</button></div>
+ </div><div><button class="btn ghost" style="padding:4px 8px" onclick="markRead('${m.id}')">Leído</button></div></div>`).join('')||'Sin mensajes';
+}
+async function seg(id,seg){await api('/api/mensajes/segmentar',{method:'POST',body:JSON.stringify({id,segmento:seg})}); loadInbox('')}
+async function followPrompt(id){const nota=prompt('Nota relevante cliente para seguimiento y calendario:'); if(!nota) return; const fecha=prompt('Fecha recordatorio YYYY-MM-DDTHH:mm o deja vacío:')||new Date().toISOString(); await api('/api/mensajes/seguimiento',{method:'POST',body:JSON.stringify({id,nota,fecha})}); loadInbox(''); loadCalendario();}
+async function assignPrompt(id){const trab=prompt('ID trabajador para asignar chat (ver en Equipo):'); if(!trab) return; await api('/api/mensajes/asignar',{method:'POST',body:JSON.stringify({id,trabajadorId:trab})}); loadInbox('')}
+async function markRead(id){await api('/api/mensajes/segmentar',{method:'POST',body:JSON.stringify({id,segmento:'leido'})}); loadInbox('')}
+async function uploadExcel(){
+ const file=document.getElementById('excelFile').files[0]; if(!file) return alert('Selecciona Excel');
+ const fd=new FormData(); fd.append('excel',file);
+ const r=await fetch('/api/campanas/excel',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd}); const d=await r.json();
+ if(!r.ok) return alert(d.error); currentCampId=d.campanaId; document.getElementById('excelInfo').textContent=`Detectados ${d.total} números - ${d.antibaneo} - Campana ID: ${d.campanaId}`;
+}
+async function loadTemplates(){const r=await api('/api/templates'); const t=await r.json(); document.getElementById('tplSelect').innerHTML=t.map(x=>`<option value="${x.name}">${x.name} - ${x.status} - ${x.language||'es'}</option>`).join('')||'<option>Sin plantillas aprobadas aún</option>'}
+async function sendCamp(){
+ if(!currentCampId) return alert('Primero sube Excel'); const tpl=document.getElementById('tplSelect').value;
+ const r=await api('/api/campanas/enviar',{method:'POST',body:JSON.stringify({campanaId:currentCampId,template:tpl})}); const d=await r.json();
+ document.getElementById('campInfo').textContent=`${d.ok?'Enviado':''} Lote ${d.enviados} - Restan ${d.restan} - ${d.antibaneo||d.estado}`; loadCampHist();
+}
+async function loadCampHist(){const r=await api('/api/campanas/historial'); const h=await r.json(); document.getElementById('campHist').innerHTML=h.map(c=>`<div style="font-size:11px;padding:6px;border-bottom:1px solid #e2e8f0"><b>${c.id}</b> - ${c.total} nums - ${c.enviados||0} enviados - ${c.estado} - ${new Date(c.fecha).toLocaleString()}</div>`).join('')}
+async function loadTrabajadores(){const r=await api('/api/trabajadores'); const t=await r.json(); document.getElementById('trabList').innerHTML=t.map(x=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:6px;border-bottom:1px solid #e2e8f0"><span><b>${x.nombre}</b> - ${x.email} - ID:${x.id}</span><button class="btn ghost" style="padding:2px 8px" onclick="delTrab('${x.id}')">Eliminar</button></div>`).join('')||'Sin trabajadores - agrega, heredan tu plan'}
+async function addTrab(){const nombre=document.getElementById('tNombre').value; const email=document.getElementById('tEmail').value; const password=document.getElementById('tPass').value; const r=await api('/api/trabajadores',{method:'POST',body:JSON.stringify({nombre,email,password})}); const d=await r.json(); document.getElementById('tMsg').textContent=d.error||'Agregado - hereda tu plan '+user.plan; if(r.ok) loadTrabajadores();}
+async function delTrab(id){if(!confirm('Eliminar?')) return; await api('/api/trabajadores/'+id,{method:'DELETE'}); loadTrabajadores();}
+async function loadCalendario(){const r=await api('/api/calendario'); const c=await r.json(); document.getElementById('calList').innerHTML=c.map(x=>`<div style="font-size:11px;padding:6px;border-bottom:1px solid #e2e8f0"><b>${x.cliente}</b> - ${new Date(x.fecha).toLocaleString()}<br>${x.nota}</div>`).join('')||'Sin citas'}
+async function addCal(){const cliente=document.getElementById('calCliente').value; const fecha=document.getElementById('calFecha').value; const nota=document.getElementById('calNota').value; await api('/api/calendario',{method:'POST',body:JSON.stringify({cliente,fecha,nota})}); loadCalendario();}
+async function loadMetricas(){const r=await api('/api/metricas'); const m=await r.json(); document.getElementById('kTotal').textContent=m.totalMensajes||0; document.getElementById('kUnread').textContent=m.noLeidos||0; document.getElementById('kCamp').textContent=m.campana||0; document.getElementById('teamStats').innerHTML=(m.equipo||[]).map(e=>`<div style="font-size:12px;padding:6px;border-bottom:1px solid #e2e8f0"><b>${e.nombre}</b> - Chats asignados: ${e.chats} - Métricas propias: ${e.metricasPropias}</div>`).join('')||'Sin equipo aún - métricas propias si eres trabajador';}
+function upPlan(p){window.open(`https://wa.me/${WPP}?text=${encodeURIComponent('Hola Avanza! Quiero plan '+p.toUpperCase()+' KLIDO para mi empresa. Mi correo: '+user.email)}`,'_blank')}
+async function loadAdmin(){const r=await api('/api/admin/agencias'); const d=await r.json(); document.getElementById('adminList').innerHTML=`<div style="font-size:12px;margin-bottom:8px">Total: ${d.total}/10 - Restan: ${d.restan} - WPP Gerencia: ${d.wpp}</div>`+d.agencias.map(a=>`<div style="font-size:11px;padding:8px;border:1px solid #e2e8f0;border-radius:10px;margin:6px 0"><b>${a.nombre}</b> - ${a.email}<br>Plan:${a.plan} Estado:${a.estado} Pagado:${a.pagado?'Sí':'No'} Usuarios:${a.usuarios} Mensajes:${a.mensajes}<br><button class="btn green" style="padding:4px 8px;margin-top:4px" onclick="adminAct('${a.id}','activa',true)">Activar/Pagado</button><button class="btn ghost" style="padding:4px 8px" onclick="adminAct('${a.id}','bloqueada',false)">Bloquear</button></div>`).join('')}
+async function adminAct(id,estado,pagado){await api('/api/admin/bloquear',{method:'POST',body:JSON.stringify({agenciaId:id,estado,pagado})}); loadAdmin();}
+function logout(){localStorage.clear(); location.href='/index.html?v=110';}
+init(); setInterval(()=>{if(document.getElementById('sec-inbox').style.display!=='none') loadInbox('')}, 8000);
+</script></body></html>
