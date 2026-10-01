@@ -1,117 +1,115 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO v112 PRO - CRM Avanza Consulting</title><link rel="icon" href="logo.png">
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO v112.1 PRO - Bandeja + Responder</title><link rel="icon" href="logo.png">
 <style>
-:root{--azul-osc:#0b1a3a;--azul-mid:#102542;--azul-borde:#1A335F;--azul-claro:#3B82F6;--azul-fondo:#EAF4FF;--azul-card:#F0F7FF;--texto:#0F172A;--gold:#f59e0b;--green:#22c55e;--yellow:#facc15}
+:root{--osc:#0b1a3a;--mid:#102542;--borde:#1A335F;--claro:#3B82F6;--fondo:#EAF4FF;--card:#F0F7FF;--texto:#0F172A;--gold:#f59e0b}
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui}
-body{display:flex;height:100vh;background:var(--azul-fondo);color:var(--texto)}
-.sidebar{width:300px;background:var(--azul-osc);border-right:1px solid var(--azul-borde);display:flex;flex-direction:column;padding:16px 14px;gap:8px;overflow:auto}
-.logoBox{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border:1px solid var(--azul-borde);border-radius:18px;padding:12px}
+body{display:flex;height:100vh;background:var(--fondo);color:var(--texto)}
+.sidebar{width:300px;background:var(--osc);border-right:1px solid var(--borde);display:flex;flex-direction:column;padding:16px 14px;gap:8px;overflow:auto}
+.logoBox{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border:1px solid var(--borde);border-radius:18px;padding:12px}
 .logoBox img{width:90px!important;height:90px!important;background:#fff;border-radius:16px;padding:8px;object-fit:contain}
 .logoBox b{font-size:26px!important;color:#fff;line-height:.9;font-weight:900}
 .logoBox div div{font-size:11px!important;color:#93c5fd;font-weight:800;letter-spacing:2px;margin-top:2px}
 .planTag{text-align:center;padding:8px;background:#102542;border:1px solid #1A335F;border-radius:20px;color:#60A5FA;font-size:10px;font-weight:800;margin:8px 0}
 .nav{padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
-.nav.active{background:#fff;color:var(--azul-osc);border-color:#fff;font-weight:800}
+.nav.active{background:#fff;color:var(--osc);font-weight:800}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.top{padding:14px 20px;background:var(--azul-card);border-bottom:1px solid #CBD9F0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.top b{color:var(--azul-osc);font-size:12px}
-.btnTop{padding:9px 14px;border-radius:20px;border:1px solid #CBD9F0;background:#fff;color:var(--azul-osc);font-size:11px;font-weight:700;cursor:pointer}
-.content{flex:1;overflow:auto;padding:18px;background:var(--azul-fondo)}
-.card{background:#fff;border:1px solid #CBD9F0;border-radius:16px;padding:18px;box-shadow:0 4px 20px rgba(10,25,49,.06);margin-bottom:16px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.input{width:100%;padding:12px;border-radius:12px;border:1px solid #CBD9F0;background:#fff;margin-top:8px;font-size:13px}
-.btnDark{padding:10px 16px;border-radius:12px;border:0;background:var(--azul-osc);color:#fff;font-weight:700;cursor:pointer;margin-top:10px}
-.btnGold{padding:10px 16px;border-radius:12px;border:0;background:var(--gold);color:#000;font-weight:800;cursor:pointer}
-.kanban{display:flex;gap:12px;overflow:auto;padding-bottom:10px}
-.kcol{min-width:220px;background:var(--azul-card);border:1px solid #CBD9F0;border-radius:14px;padding:10px}
-.kcol h4{font-size:11px;color:var(--azul-osc);margin-bottom:8px;text-transform:uppercase}
-.kcard{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin-bottom:8px;cursor:grab;font-size:11px}
-.kcard.yellow{width:8px;height:8px;background:var(--yellow);border-radius:50%;display:inline-block;margin-right:6px}
-.badge{padding:3px 8px;border-radius:20px;font-size:9px;font-weight:800;background:#eef2ff;color:#0b1a3a}
-.support{position:fixed;right:18px;bottom:18px;background:#25D366;color:#fff;padding:12px 16px;border-radius:50px;font-size:12px;font-weight:800;text-decoration:none;box-shadow:0 6px 16px rgba(0,0,0,.2)}
-@media(max-width:900px){body{flex-direction:column;height:auto}.sidebar{width:100%}.grid2,.grid3{grid-template-columns:1fr}}
+.top{padding:12px 18px;background:var(--card);border-bottom:1px solid #CBD9F0;display:flex;justify-content:space-between;align-items:center}
+.btnTop{padding:8px 12px;border-radius:20px;border:1px solid #CBD9F0;background:#fff;color:var(--osc);font-size:11px;font-weight:700;cursor:pointer}
+.content{flex:1;display:flex;overflow:hidden;background:var(--fondo)}
+.listPane{width:38%;background:#fff;border-right:1px solid #CBD9F0;display:flex;flex-direction:column;overflow:hidden}
+.chatPane{flex:1;display:flex;flex-direction:column;background:#dbeafe}
+.chatItem{padding:12px 14px;border-bottom:1px solid #e2e8f0;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.chatItem:hover{background:#f0f7ff}
+.chatItem.unread{border-left:3px solid var(--claro);background:#eff6ff}
+.chatItem.active{background:#0b1a3a;color:#fff}
+.c-name{font-weight:800;font-size:12px}
+.c-last{font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:72%;padding:10px 12px;border-radius:14px;font-size:12px;line-height:1.4}
+.msg.other{background:#fff;align-self:flex-start;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.msg.me{background:#0b1a3a;color:#fff;align-self:flex-end}
+.inputArea{padding:10px;background:#fff;border-top:1px solid #CBD9F0;display:flex;gap:8px;align-items:center}
+.inputArea input[type=text]{flex:1;padding:11px 14px;border-radius:20px;border:1px solid #CBD9F0;outline:none}
+.input{width:100%;padding:10px;border-radius:10px;border:1px solid #CBD9F0;background:#fff;font-size:12px}
+.btnDark{padding:10px 14px;border-radius:10px;border:0;background:var(--osc);color:#fff;font-weight:700;cursor:pointer}
+.support{position:fixed;right:18px;bottom:18px;background:#25D366;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.25);text-decoration:none;z-index:99}
+.support svg{width:26px;height:26px;fill:#fff}
+.badge{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:800;background:#eef2ff}
+@media(max-width:900px){body{flex-direction:column;height:auto}.sidebar{width:100%}.content{flex-direction:column}.listPane{width:100%;height:40vh}}
 </style></head><body>
 <div class="sidebar">
 <div class="logoBox"><img src="logo.png?v=112"><div><b>KLIDO</b><div>AVANZA CONSULTING</div></div></div>
-<div class="planTag" id="planTag">CARGANDO PLAN...</div>
-<div style="padding:6px 4px"><b id="agNombre" style="color:#fff;font-size:13px">Cargando...</b><div id="agEmail" style="font-size:11px;color:#94a3b8"></div><div id="agId" style="font-size:9px;color:#64748b;margin-top:2px"></div><div id="waId" style="font-size:9px;color:#60a5fa;margin-top:2px"></div></div>
-
+<div class="planTag" id="planTag">BASICO - SIN IA</div>
+<div style="padding:6px 4px"><b id="agNombre" style="color:#fff;font-size:13px"></b><div id="agEmail" style="font-size:11px;color:#94a3b8"></div><div id="waId" style="font-size:9px;color:#60a5fa;margin-top:2px"></div></div>
 <button class="nav active" id="n-bandeja" onclick="go('bandeja')">📩 Bandeja <span id="c-noLeidos" class="badge">0</span></button>
-<button class="nav" id="n-kanban" onclick="go('kanban')">📊 Kanban <span class="badge">Nuevo→Ganado</span></button>
-<button class="nav" id="n-campanas" onclick="go('campanas')">📢 Campañas <span class="badge" style="background:#fef08a">🟡 Anti-baneo</span></button>
-<button class="nav" id="n-equipo" onclick="go('equipo')">👥 Equipo <span class="badge" id="c-equipo">0</span></button>
-<button class="nav" id="n-calendario" onclick="go('calendario')">📅 Calendario</button>
-<button class="nav" id="n-metricas" onclick="go('metricas')">📈 Métricas</button>
-<button class="nav" id="n-planes" onclick="go('planes')">💎 Planes & Pagos</button>
-<button class="nav" id="n-ia" onclick="go('ia')">🤖 IA <span class="badge">Premium/Gold</span></button>
-<button class="nav" id="n-config" onclick="go('config')">⚙️ Config</button>
-<button class="nav" onclick="window.open('https://wa.me/573133181851?text=Hola%20Avanza%20ayuda%20KLIDO%20v112','_blank')">🆘 Ayuda 24/7</button>
+<button class="nav" onclick="go('kanban')">📊 Kanban <span class="badge">Nuevo→Ganado</span></button>
+<button class="nav" onclick="location.href='/campanas.html?v=112'">📢 Campañas <span class="badge" style="background:#fef08a">Anti-baneo</span></button>
+<button class="nav" onclick="go('equipo')">👥 Equipo</button>
+<button class="nav" onclick="go('calendario')">📅 Calendario</button>
+<button class="nav" onclick="go('metricas')">📈 Métricas</button>
+<button class="nav" onclick="go('planes')">💎 Planes & Pagos</button>
+<button class="nav" onclick="go('config')">⚙️ Config</button>
 <button class="nav" onclick="logout()" style="margin-top:auto;color:#f87171">⎋ Salir</button>
 </div>
-
 <div class="main">
-<div class="top"><b id="topTitle">KLIDO v112 PRO - Solo plan pagado desbloqueado - Ley 1581 - API Oficial - ACOL 1338474282683914</b><div style="display:flex;gap:8px"><button class="btnTop" onclick="showOnboard()">🎯 Cómo funciona</button><button class="btnTop" onclick="go('bandeja')">📩 Bandeja</button></div></div>
+<div class="top"><b id="topTitle">KLIDO v112.1 - Bandeja responde - ACOL BASICO - Ley 1581</b><div style="display:flex;gap:6px"><button class="btnTop" onclick="cargarMensajes()">🔄 Actualizar</button><button class="btnTop" onclick="location.href='/app.html?v=112'">💬 App</button></div></div>
 <div class="content" id="content"></div>
 </div>
-
-<a class="support" href="https://wa.me/573133181851?text=Hola%20Avanza%20KLIDO%20v112" target="_blank">💬 Soporte 3133181851</a>
+<a class="support" href="https://wa.me/573133181851?text=Hola%20Avanza%20KLIDO%20v112.1" target="_blank" title="Soporte 24/7">
+<svg viewBox="0 0 24 24"><path d="M19.05 4.94A9.91 9.91 0 0 0 12.04 2C6.58 2 2.15 6.43 2.15 11.9c0 1.75.46 3.45 1.32 4.95L2.05 22l5.26-1.38a9.9 9.9 0 0 0 4.73 1.2h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.65-1.03-5.14-2.9-7-1.87-1.87-4.36-2.9-7-2.9zm-7.01 16.6h-.01a8.26 8.26 0 0 1-4.21-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.55 3.7-8.25 8.26-8.25 2.21 0 4.28.86 5.84 2.42a8.21 8.21 0 0 1 2.41 5.83c0 4.55-3.7 8.25-8.25 8.25zm4.53-6.17c-.25-.12-1.47-.73-1.7-.81-.23-.09-.39-.12-.56.12-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.08s.89 2.41 1.01 2.58c.12.17 1.75 2.67 4.24 3.75.59.26 1.05.41 1.41.52.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg>
+</a>
 <audio id="msgSound" src="message.mp3" preload="auto"></audio>
-
 <script>
 let user=JSON.parse(localStorage.getItem('user')||'{}');let token=localStorage.getItem('token');if(!token)location.href='/index.html?v=112';
-let currentView='bandeja';
-document.getElementById('agNombre').textContent=user.nombre||'Empresa';document.getElementById('agEmail').textContent=user.email;
-document.getElementById('agId').textContent='Agencia: '+(user.agenciaId||'');document.getElementById('waId').textContent='WA API: '+(user.waPhoneId||'1338474282683914 - ACOL');
-function setPlanTag(){const p=(user.plan||'basico').toUpperCase();const ia=user.limites?.ia?'CON IA':'SIN IA';const ll=user.limites?.llamadas?'+ Llamadas':'';document.getElementById('planTag').textContent=`${p} - ${ia} ${ll} - Solo plan pagado`;}
-setPlanTag();
-
-function go(v){currentView=v;document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));const el=document.getElementById('n-'+v);if(el)el.classList.add('active');if(v==='bandeja')renderBandeja();if(v==='kanban')renderKanban();if(v==='campanas')renderCampanas();if(v==='equipo')renderEquipo();if(v==='calendario')renderCalendario();if(v==='metricas')renderMetricas();if(v==='planes')renderPlanes();if(v==='ia')renderIA();if(v==='config')renderConfig();}
-async function api(path,opts={}){opts.headers=opts.headers||{};opts.headers['Authorization']='Bearer '+token;if(opts.body&&!(opts.body instanceof FormData))opts.headers['Content-Type']='application/json';const r=await fetch(path,opts);if(r.status===401){logout();return}return r;}
-
+document.getElementById('agNombre').textContent=user.nombre||'Empresa';document.getElementById('agEmail').textContent=user.email;document.getElementById('waId').textContent='WA: '+(user.waPhoneId||'1338474282683914')+' - ACOL BASICO';
+let allMsgs=[],chatSel=null,chatSelId=null,filtro='';
+function api(p,o={}){o.headers=o.headers||{};o.headers['Authorization']='Bearer '+token;if(o.body&&!(o.body instanceof FormData))o.headers['Content-Type']='application/json';return fetch(p,o)}
+function go(v){if(v==='bandeja')renderBandeja();if(v==='kanban')location.href='/crm.html?view=kanban&v=112';if(v==='equipo'||v==='calendario'||v==='metricas'||v==='planes'||v==='config')location.href='/crm.html?view='+v+'&v=112';}
+async function cargarMensajes(){const r=await api('/api/mensajes');allMsgs=await r.json();document.getElementById('c-noLeidos').textContent=allMsgs.filter(m=>!m.leido).length;if(currentRender)currentRender();try{if(allMsgs.some(m=>!m.leido))document.getElementById('msgSound').play();}catch{}}
+let currentRender=null;
 async function renderBandeja(){
- const c=document.getElementById('content');c.innerHTML='<div class="card"><h3>📩 Bandeja en tiempo real - No leídos → Leídos - 🟡 Campaña</h3><p style="font-size:11px;color:#64748b">Acepta audios, fotos, videos, archivos. Sonido message.mp3 al llegar.</p><div id="lista" style="margin-top:12px">Cargando...</div><div style="margin-top:12px;display:flex;gap:8px"><input id="sendNumero" class="input" placeholder="Número 57..." style="flex:1"><input id="sendFile" type="file" class="input" style="flex:1"><select id="sendTipo" class="input" style="flex:1"><option value="archivo">Archivo</option><option value="foto">Foto</option><option value="audio">Audio</option><option value="video">Video</option></select><button class="btnDark" onclick="sendMedia()">Enviar media</button></div></div>';
- const r=await api('/api/mensajes');const msgs=await r.json();document.getElementById('c-noLeidos').textContent=msgs.filter(m=>!m.leido).length;
- document.getElementById('lista').innerHTML=msgs.slice(0,100).map(m=>`<div style="padding:10px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between"><div><b>${m.nombre||m.numero}</b> ${m.etiqueta==='amarilla'?'<span class="badge" style="background:#fef08a">🟡 Campaña</span>':''} ${!m.leido?'<span class="badge" style="background:#fecaca">No leído</span>':''}<div style="font-size:11px;color:#475569">${m.texto||''} ${m.mediaUrl?`<a href="${m.mediaUrl}" target="_blank">📎 Ver</a>`:''}</div><div style="font-size:9px;color:#94a3b8">Kanban: ${m.kanban||'nuevo'} | ${new Date(m.timestamp).toLocaleString()}</div></div><div><button class="btnTop" onclick="marcarLeido('${m.id}')">Leído</button><button class="btnTop" onclick="moverKanbanPrompt('${m.id}')">Kanban</button></div></div>`).join('')||'Sin mensajes';
- try{document.getElementById('msgSound').play();}catch{}
+currentRender=renderBandejaList;
+const c=document.getElementById('content');
+c.innerHTML=`<div class="listPane"><div style="padding:10px;display:flex;gap:6px;border-bottom:1px solid #e2e8f0"><input id="search" class="input" placeholder="Buscar número..." oninput="renderBandejaList()"><button class="btnTop" onclick="filtro='';renderBandejaList()">Todos</button><button class="btnTop" onclick="filtro='noleidos';renderBandejaList()">No leídos</button><button class="btnTop" onclick="filtro='campana';renderBandejaList()">🟡</button></div><div id="list" style="flex:1;overflow:auto"></div></div>
+<div class="chatPane"><div id="chatHead" style="padding:12px;background:#fff;border-bottom:1px solid #CBD9F0;font-size:12px;font-weight:800">Selecciona un chat para contestar</div><div id="chatMsgs" class="msgs"><div style="text-align:center;color:#64748b;margin-top:40px;font-size:11px">KLIDO v112.1 - Click en chat izquierda para ver archivos y responder</div></div>
+<div class="inputArea"><input id="fileInput" type="file" style="display:none"><button class="btnTop" onclick="document.getElementById('fileInput').click()">📎</button><select id="fTipo" style="padding:8px;border-radius:10px;border:1px solid #CBD9F0;font-size:11px"><option value="foto">Foto</option><option value="audio">Audio</option><option value="video">Video</option><option value="archivo">Archivo</option></select><input id="txtInput" type="text" placeholder="Escribe mensaje para contestar..."><button class="btnDark" onclick="enviarRespuesta()">Enviar</button></div></div>`;
+await cargarMensajes();renderBandejaList();
 }
-async function marcarLeido(id){await api('/api/mensajes/leer',{method:'POST',body:JSON.stringify({id})});renderBandeja();}
-async function moverKanbanPrompt(id){const etapa=prompt('Etapa: nuevo, negociacion, cotizado, ganado, perdido','negociacion');if(!etapa)return;await api('/api/kanban/mover',{method:'POST',body:JSON.stringify({id,etapa})});renderBandeja();}
-async function sendMedia(){const numero=document.getElementById('sendNumero').value;const file=document.getElementById('sendFile').files[0];const tipo=document.getElementById('sendTipo').value;if(!file||!numero)return alert('Número y archivo');const fd=new FormData();fd.append('file',file);fd.append('numero',numero);fd.append('tipo',tipo);await api('/api/mensajes/media',{method:'POST',body:fd});alert('Enviado');renderBandeja();}
-
-async function renderKanban(){
- const c=document.getElementById('content');c.innerHTML='<div class="card"><h3>📊 Kanban CRM - Arrastra mentalmente: Nuevo → Negociación → Cotizado → Ganado / Perdido</h3><div class="kanban" id="kanban">Cargando...</div></div>';
- const r=await api('/api/kanban');const k=await r.json();
- const cols={nuevo:'Nuevo Prospecto',negociacion:'En Negociación',cotizado:'Cotizado',ganado:'Ganado ✅',perdido:'Perdido ❌'};
- document.getElementById('kanban').innerHTML=Object.keys(cols).map(col=>`<div class="kcol"><h4>${cols[col]} (${(k[col]||[]).length})</h4>${(k[col]||[]).map(m=>`<div class="kcard" draggable="true" ondragstart="drag(event,'${m.id}')" onclick="moverKanbanPrompt('${m.id}')"><span class="yellow"></span><b>${m.nombre||m.numero}</b><div>${m.texto||''}</div><div style="font-size:9px;color:#64748b">${new Date(m.timestamp).toLocaleDateString()}</div></div>`).join('')}</div>`).join('');
+function renderBandejaList(){
+let list=allMsgs;if(filtro==='noleidos')list=list.filter(m=>!m.leido);if(filtro==='campana')list=list.filter(m=>m.origen==='campana');
+const q=document.getElementById('search')?.value?.toLowerCase()||'';if(q)list=list.filter(m=>(m.numero||'').includes(q)||(m.nombre||'').toLowerCase().includes(q));
+const map={};list.forEach(m=>{const k=m.numero;if(!map[k])map[k]={phone:k,nombre:m.nombre||k,last:m,unread:m.leido?0:1,msgs:[m]};else{map[k].msgs.push(m);if(!m.leido)map[k].unread++;if(new Date(m.timestamp)>new Date(map[k].last.timestamp))map[k].last=m;}});
+const chats=Object.values(map).sort((a,b)=>new Date(b.last.timestamp)-new Date(a.last.timestamp));
+document.getElementById('list').innerHTML=chats.map(ch=>`<div class="chatItem ${ch.unread?'unread':''} ${chatSel===ch.phone?'active':''}" onclick="abrirChat('${ch.phone}')"><div><div class="c-name">${ch.nombre} ${ch.last.origen==='campana'?'🟡':''}</div><div class="c-last">${ch.last.texto||'[media]'} ${ch.last.mediaUrl?'📎':''}</div><div style="font-size:9px;color:#94a3b8">${ch.last.kanban||'nuevo'} - ${new Date(ch.last.timestamp).toLocaleString()}</div></div><div style="display:flex;flex-direction:column;gap:4px"><span class="badge">${ch.msgs.length}</span>${ch.unread?`<span class="badge" style="background:#ef4444;color:#fff">${ch.unread}</span>`:''}</div></div>`).join('')||'<div style="padding:20px;color:#94a3b8;font-size:11px">Sin chats</div>';
 }
-function drag(e,id){e.dataTransfer.setData('id',id);}
-async function renderCampanas(){
- const c=document.getElementById('content');c.innerHTML=`<div class="card"><h3>📢 Campañas Anti-Baneo 50/5min - Solo plantillas APROBADAS META auto-sync</h3><div style="margin-top:10px"><input id="excelFile" type="file" class="input"><button class="btnDark" onclick="uploadExcel()">Subir Excel - Detecta teléfonos automático</button><div id="excelRes" style="margin-top:10px;font-size:11px"></div></div><div style="margin-top:16px"><select id="plantilla" class="input"></select><input id="campId" class="input" placeholder="ID Campaña (auto)"><button class="btnGold" onclick="enviarCamp()">Enviar bloque 50 anti-baneo</button></div><div id="hist" style="margin-top:16px"></div></div>`;
- const rt=await api('/api/templates');const tpls=await rt.json();document.getElementById('plantilla').innerHTML=tpls.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join('');
- const rh=await api('/api/campanas/historial');const h=await rh.json();document.getElementById('hist').innerHTML='<h4 style="font-size:12px;margin:10px 0">Historial</h4>'+h.map(ca=>`<div style="padding:8px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:6px;font-size:11px">${ca.nombre||ca.id} - ${ca.total} nums - ${ca.enviados}/${ca.total} - ${ca.estado} <button class="btnTop" onclick="verLogs('${ca.id}')">Logs</button></div>`).join('');
+async function abrirChat(phone){
+chatSel=phone;renderBandejaList();
+const msgs=allMsgs.filter(m=>m.numero===phone).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
+chatSelId=msgs[0]?.id;
+document.getElementById('chatHead').innerHTML=`<div style="display:flex;justify-content:space-between"><div><b>${msgs[0]?.nombre||phone}</b> - ${phone} - ${msgs.length} mensajes</div><div><button class="btnTop" onclick="marcarLeido('${msgs[0]?.id}')">Leído</button><button class="btnTop" onclick="moverKanban()">Kanban</button></div></div>`;
+document.getElementById('chatMsgs').innerHTML=msgs.map(m=>{
+let media='';if(m.mediaUrl){if(m.mediaType==='foto'||m.texto?.includes('[foto]'))media=`<div><img src="${m.mediaUrl}" style="max-width:220px;border-radius:12px;margin-top:6px;cursor:pointer" onclick="window.open('${m.mediaUrl}','_blank')"></div>`;else if(m.mediaType==='audio'||m.texto?.includes('[audio]'))media=`<div><audio controls src="${m.mediaUrl}" style="width:220px;margin-top:6px"></audio></div>`;else if(m.mediaType==='video')media=`<div><video controls src="${m.mediaUrl}" style="max-width:220px;border-radius:12px;margin-top:6px"></video></div>`;else media=`<div style="margin-top:6px"><a href="${m.mediaUrl}" target="_blank" style="color:#3B82F6;font-weight:700">📎 Ver archivo: ${m.texto}</a></div>`;}
+return `<div class="msg ${m.origen==='campana'?'other':'other'}"><div style="font-size:9px;color:#64748b">${m.origen==='campana'?'🟡 Campaña':''} ${m.kanban?`📌${m.kanban}`:''} ${new Date(m.timestamp).toLocaleTimeString()}</div><div>${m.texto}</div>${media}</div>`}).join('');
+document.getElementById('chatMsgs').scrollTop=document.getElementById('chatMsgs').scrollHeight;
 }
-async function uploadExcel(){const f=document.getElementById('excelFile').files[0];if(!f)return alert('Excel');const fd=new FormData();fd.append('file',f);const r=await api('/api/campanas/upload',{method:'POST',body:fd});const j=await r.json();if(!r.ok)return alert(j.error);document.getElementById('campId').value=j.campanaId;document.getElementById('excelRes').textContent=`Detectados ${j.detectados} números - ID ${j.campanaId}`;}
-async function enviarCamp(){const campanaId=document.getElementById('campId').value;const plantilla=document.getElementById('plantilla').value;const r=await api('/api/campanas/enviar',{method:'POST',body:JSON.stringify({campanaId,plantilla})});const j=await r.json();alert(j.estado||j.error);renderCampanas();}
-async function verLogs(id){const r=await api('/api/campanas/'+id+'/logs');const logs=await r.json();alert(JSON.stringify(logs.slice(0,10),null,2));}
-
-async function renderEquipo(){const r=await api('/api/trabajadores');const eq=await r.json();const c=document.getElementById('content');c.innerHTML=`<div class="card"><h3>👥 Equipo - Mismo plan que jefe: ${user.plan}</h3><div style="margin-top:10px"><input id="tNombre" class="input" placeholder="Nombre trabajador"><input id="tEmail" class="input" placeholder="Correo"><input id="tPass" type="password" class="input" placeholder="Contraseña"><button class="btnDark" onclick="addTrab()">Añadir (max ${user.limites?.maxUsuarios||2})</button></div><div style="margin-top:16px">${eq.map(t=>`<div style="padding:8px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:6px;display:flex;justify-content:space-between"><div><b>${t.nombre}</b><div style="font-size:11px">${t.email}</div></div><button class="btnTop" onclick="delTrab('${t.id}')">Eliminar</button></div>`).join('')||'Sin trabajadores'}</div></div>`;}
-async function addTrab(){const nombre=document.getElementById('tNombre').value;const email=document.getElementById('tEmail').value;const password=document.getElementById('tPass').value;const r=await api('/api/trabajadores',{method:'POST',body:JSON.stringify({nombre,email,password})});const j=await r.json();if(!r.ok)return alert(j.error);renderEquipo();}
-async function delTrab(id){if(!confirm('Eliminar?'))return;await api('/api/trabajadores/'+id,{method:'DELETE'});renderEquipo();}
-
-async function renderCalendario(){const r=await api('/api/calendario');const cal=await r.json();const c=document.getElementById('content');c.innerHTML=`<div class="card"><h3>📅 Calendario - Recordatorios citas / ventas</h3><div class="grid2"><div><input id="calCliente" class="input" placeholder="Cliente / número"><input id="calFecha" type="datetime-local" class="input"><input id="calNota" class="input" placeholder="Nota: cita, venta, seguimiento"><button class="btnDark" onclick="addCal()">Guardar recordatorio</button></div><div>${cal.map(ev=>`<div style="padding:8px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:6px;font-size:11px"><b>${ev.cliente}</b> - ${new Date(ev.fecha).toLocaleString()}<div>${ev.nota}</div><div style="color:#64748b">Por ${ev.por}</div></div>`).join('')||'Sin recordatorios'}</div></div></div>`;}
-async function addCal(){const cliente=document.getElementById('calCliente').value;const fecha=document.getElementById('calFecha').value;const nota=document.getElementById('calNota').value;await api('/api/calendario',{method:'POST',body:JSON.stringify({cliente,fecha,nota})});renderCalendario();}
-
-async function renderMetricas(){const r=await api('/api/metricas');const m=await r.json();const c=document.getElementById('content');c.innerHTML=`<div class="grid3"><div class="card"><h3>Total mensajes</h3><p style="font-size:24px;font-weight:900">${m.totalMensajes}</p></div><div class="card"><h3>No leídos</h3><p style="font-size:24px;font-weight:900">${m.noLeidos}</p></div><div class="card"><h3>Sin responder >2h</h3><p style="font-size:24px;font-weight:900">${m.sinResponder}</p></div></div><div class="card"><h3>Plan: ${m.plan.toUpperCase()} - Límites: ${m.limites.maxUsuarios} usuarios, ${m.limites.maxContactos} contactos</h3><p>Tiempo respuesta promedio ${m.tiempoRespuestaPromedio} - Tasa cierre ${m.tasaCierre}</p><p style="font-size:11px;color:#64748b">WA ID: ${m.waPhoneId} - Justifica mant trimestral $${m.limites.mant}</p></div>`;}
-
-function renderPlanes(){const c=document.getElementById('content');const p=user.limites;const planes={basico:{precio:'$800k/año + $80k/trim',ben:'Sin IA, 2 usuarios, 1k contactos'},premium:{precio:'$1.4M/año + $95k/trim',ben:'Con IA, 5 usuarios, 10k contactos'},gold:{precio:'$2.4M/año + $120k/trim',ben:'IA+Llamadas, ilimitado, white-label'}};c.innerHTML=`<div class="card"><h3>💎 Planes - Anual + Mant. Trimestral aparte - Solo pagado desbloqueado</h3><div class="grid3" style="margin-top:12px">${Object.keys(planes).map(k=>`<div style="border:2px solid ${user.plan===k?'#0b1a3a':'#e2e8f0'};border-radius:16px;padding:14px;background:${user.plan===k?'#f0f7ff':'#fff'}"><b>${k.toUpperCase()} ${user.plan===k?'(TU PLAN)':''}</b><div style="font-size:12px;font-weight:800;margin:6px 0">${planes[k].precio}</div><div style="font-size:11px;color:#475569">${planes[k].ben}</div><button class="btnGold" style="width:100%;margin-top:10px" onclick="window.open('https://wa.me/573133181851?text=Quiero%20adquirir%20plan%20${k.toUpperCase()}%20KLIDO%20v112','_blank')">Adquirir → WPP 3133181851</button></div>`).join('')}</div><div style="margin-top:12px;font-size:11px;color:#64748b">Botón adquirir redirige a tu WPP 3133181851 con precios anuales y mant trimestral y beneficios. Ley 1581.</div></div>`;}
-
-function renderIA(){const c=document.getElementById('content');c.innerHTML=`<div class="card"><h3>🤖 IA - Resumen + Sugerencia (Solo Premium/Gold)</h3><p style="font-size:11px">Tu plan ${user.plan} ${user.limites?.ia?'CON IA ✅':'SIN IA ❌ - Adquiere Premium en Planes'}</p><div style="margin-top:10px"><input id="iaTexto" class="input" placeholder="Texto chat a resumir"><button class="btnDark" onclick="iaResumen()">Resumir IA</button><div id="iaRes" style="margin-top:10px;font-size:12px"></div></div></div>`;}
-async function iaResumen(){const texto=document.getElementById('iaTexto').value;const r=await api('/api/ia/resumen',{method:'POST',body:JSON.stringify({texto,numero:'test'})});const j=await r.json();document.getElementById('iaRes').textContent=j.resumen||j.error;}
-
-function renderConfig(){const c=document.getElementById('content');c.innerHTML=`<div class="card"><h3>⚙️ Config - White-label + Contrato - Cómo funciona KLIDO paso a paso</h3><div class="grid2"><div><h4 style="font-size:12px;margin:8px 0">Paso a paso KLIDO v112</h4><p style="font-size:11px;line-height:1.6">1. Registra empresa → Código 6 dígitos llega a tu correo (RESEND seguro)<br>2. Gerencia Avanza activa → Te llega código KLIDO-XXXX SOLO a tu correo<br>3. Activa tu plan en /index → Solo accedes al plan pagado (Básico/Premium/Gold)<br>4. Configura WA API ID ${user.waPhoneId||'1338474282683914'} en Config<br>5. Bandeja tiempo real con audios/fotos/videos/archivos + sonido<br>6. Kanban arrastra clientes Nuevo→Ganado/Perdido<br>7. Sube Excel → Detecta teléfonos auto → Solo plantillas APROBADAS META auto-sync<br>8. Campañas anti-baneo bloques 50 cada 5min<br>9. Calendario recordatorio auto 1 día antes<br>10. Métricas justifican mant trim + Contrato PDF anual Ley 1581</p><div style="margin-top:12px"><input id="wlNombre" class="input" placeholder="Nombre marca white-label"><input id="wlLogo" class="input" placeholder="URL logo"><button class="btnDark" onclick="guardarWL()">Guardar White-label $200k extra</button></div></div><div><h4 style="font-size:12px;margin:8px 0">Contrato & Legal</h4><button class="btnGold" onclick="window.open('/api/contrato/'+user.agenciaId,'_blank')">Ver / Imprimir Contrato PDF Ley 1581</button><div style="margin-top:12px;font-size:11px;background:#fff;padding:10px;border-radius:10px;border:1px solid #CBD9F0">Datos en /data con backups, Cloud API Oficial, max 10 agencias, soporte 24/7 3133181851, ACOL WA ${user.waPhoneId||'1338474282683914'}</div><button class="btnDark" style="margin-top:12px" onclick="window.open('https://wa.me/573133181851?text=Ayuda%20KLIDO%20v112','_blank')">🆘 Ayuda / Soporte WPP</button></div></div></div>`;}
-async function guardarWL(){const nombre=document.getElementById('wlNombre').value;const logo=document.getElementById('wlLogo').value;const r=await api('/api/agencia/white-label',{method:'POST',body:JSON.stringify({nombre,logo})});const j=await r.json();alert(j.mensaje||'Guardado');}
-function showOnboard(){alert('KLIDO v112: 1-Código correo, 2-Código desbloqueo plan solo correo, 3-Login solo plan pagado, 4-Bandeja+Kanban+Media+Campañas anti-baneo+Calendario+Métricas+Contrato Ley1581');}
+async function marcarLeido(id){await api('/api/mensajes/leer',{method:'POST',body:JSON.stringify({id})});cargarMensajes();}
+async function moverKanban(){const etapa=prompt('Etapa: nuevo, negociacion, cotizado, ganado, perdido','negociacion');if(!etapa||!chatSelId)return;await api('/api/kanban/mover',{method:'POST',body:JSON.stringify({id:chatSelId,etapa})});cargarMensajes();}
+async function enviarRespuesta(){
+const texto=document.getElementById('txtInput').value.trim();const file=document.getElementById('fileInput').files[0];const tipo=document.getElementById('fTipo').value;
+if(!chatSel)return alert('Selecciona chat');
+if(file){
+ const fd=new FormData();fd.append('file',file);fd.append('numero',chatSel);fd.append('tipo',tipo);
+ await api('/api/mensajes/media',{method:'POST',body:fd});
+ document.getElementById('fileInput').value='';document.getElementById('txtInput').value='';cargarMensajes();setTimeout(()=>abrirChat(chatSel),500);return;
+}
+if(!texto)return alert('Escribe mensaje o adjunta archivo');
+ // Envio texto como mensaje outbound (se guarda y se podrá enviar por API oficial Meta si configuras token)
+ const fd=new FormData(); // usamos endpoint media para texto también como archivo simulado, pero guardamos como mensaje
+ // Guardado directo como mensaje outbound
+ const r=await api('/api/mensajes/media',{method:'POST',body:(() => {const f=new FormData();f.append('numero',chatSel);f.append('tipo','texto');f.append('file',new Blob([texto],{type:'text/plain'}),'mensaje.txt');return f;})()});
+ // Además push local para ver inmediato
+ allMsgs.push({id:Date.now().toString(),numero:chatSel,nombre:user.nombre||'Yo',texto:texto,timestamp:new Date(),leido:true,agenciaId:user.agenciaId,origen:'outbound',kanban:'negociacion'});
+ document.getElementById('txtInput').value='';abrirChat(chatSel);
+}
 function logout(){localStorage.clear();location.href='/index.html?v=112';}
-go('bandeja');
-setInterval(async()=>{if(currentView==='bandeja'){const r=await api('/api/mensajes');const msgs=await r.json();const noLeidos=msgs.filter(m=>!m.leido).length;document.getElementById('c-noLeidos').textContent=noLeidos;}},5000);
+renderBandeja();setInterval(cargarMensajes,6000);
 </script></body></html>
