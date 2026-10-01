@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>KLIDO Dashboard</title>
+<style>body{font-family:Inter,sans-serif;background:#f4f7fb;padding:30px} .box{background:white;padding:30px;border-radius:20px;max-width:700px;margin:auto}</style>
+</head><body><div class="box"><h1>KLIDO AVANZA - Dashboard</h1><p id="user"></p><button onclick="localStorage.clear();location.href='/'">Salir</button></div>
+<script>
+const u=JSON.parse(localStorage.getItem('klido_user')||'{}');
+document.getElementById('user').innerText='Hola '+(u.nombre||'')+' - '+ (u.email||'')+' - Rol: '+(u.rol||'');
+if(!localStorage.getItem('klido_token')) location.href='/';
+</script></body></html>
