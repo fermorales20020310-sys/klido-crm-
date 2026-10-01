@@ -1,7 +1,7 @@
 {
   "name": "klido-avanza-crm",
-  "version": "111.0.0",
-  "description": "KLIDO v111 PRO - CRM Autonomo API Oficial Meta - Avanza Consulting - Max 10 agencias - Activacion codigo pago + Contrato PDF + Onboarding 60s + White-label + IA resumen/sugerencia + Metricas mantenimiento + Antibaneo 50/5min + Etiqueta amarilla - Produccion - Solo falta dominio + IA KEY - WPP 3133181851",
+  "version": "112.0.0",
+  "description": "KLIDO v112 PRO - CRM Multiagencia Cloud API Oficial Meta - Kanban Nuevo->Ganado/Perdido + Inbox audios/fotos/videos/archivos + Calendario + Campañas anti-baneo bloques 50 + Solo plantillas aprobadas META auto-sync + Código desbloqueo plan por correo solo plan pagado + Pagos WPP 3133181851 anual+mant trim + Panel Jefe/Trabajador/Gerente + ACOL WA 1338474282683914 + RESEND+SMTP + Ley 1581 + Backups /data - Producción 100% funcional",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
