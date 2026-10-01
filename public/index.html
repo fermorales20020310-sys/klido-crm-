@@ -9,19 +9,19 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
 body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .card{width:100%;max-width:1080px;display:grid;grid-template-columns:440px 1fr;background:white;border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.08)}
-.left{background:radial-gradient(100% 100% at 0% 0%, #1a3d8f 0%, #0f2450 100%);padding:36px 32px;color:white;display:flex;flex-direction:column;position:relative}
+.left{background:radial-gradient(100% 100% at 0% 0%, #1a3d8f 0%, #0f2450 100%);padding:36px 32px;color:white;display:flex;flex-direction:column}
 .logo{display:flex;gap:12px;align-items:center}
-.logo-box{width:54px;height:54px;background:white;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px}
-.logo b{font-size:28px;letter-spacing:1px;line-height:1}
-.logo span{font-size:10px;letter-spacing:4px;opacity:0.9;font-weight:400;display:block}
-.left h2{margin-top:48px;font-size:42px;line-height:0.95;font-weight:900;letter-spacing:-0.5px}
+.logo img{width:54px;height:54px;background:white;border-radius:14px;object-fit:contain;padding:6px}
+.logo b{font-size:28px;letter-spacing:1px;line-height:1;display:block}
+.logo span{font-size:10px;letter-spacing:4px;opacity:0.9;font-weight:400;display:block;margin-top:2px}
+.left h2{margin-top:48px;font-size:42px;line-height:0.95;font-weight:900}
 .left h2 i{font-style:italic;font-weight:800}
 .left .desc{margin-top:18px;font-size:12px;line-height:1.5;color:#8aa4d1}
 .badge{margin-top:24px;border:1px solid rgba(0,255,160,0.3);background:rgba(0,255,160,0.08);color:#2aff9a;font-size:9px;font-weight:800;letter-spacing:1px;border-radius:30px;padding:10px 16px;display:inline-block}
 .right{background:#f7f9fc;padding:20px}
 .tabs{display:flex;background:#eef2f7;border-radius:16px;padding:5px;margin-bottom:18px}
 .tabs button{flex:1;border:0;padding:12px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer}
-.tabs button.active{background:#1e345e;color:white;box-shadow:0 4px 12px rgba(30,52,94,0.3)}
+.tabs button.active{background:#1e345e;color:white}
 .tabs button:not(.active){background:transparent;color:#8a9bb8}
 .panel{background:white;border-radius:20px;padding:22px;border:1px solid #eef2f7}
 .panel h3{font-size:15px;color:#1a2744;margin-bottom:16px}
@@ -29,10 +29,9 @@ body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify
 .inp:focus{border-color:#1e345e;background:white}
 .check{font-size:11px;color:#5c6f8f;display:flex;gap:7px;align-items:center;margin:6px 0}
 .btn{width:100%;background:#1e345e;color:white;border:0;border-radius:14px;padding:15px;font-weight:800;cursor:pointer;margin-top:14px}
-.btn:active{transform:scale(0.98)}
 .link{font-size:11px;color:#1e345e;font-weight:800;text-decoration:underline;background:none;border:0;cursor:pointer}
-#app{display:none;min-height:100vh;width:100%;background:#f4f7fb;padding:30px}
 .hidden{display:none}
+#appView{display:none;max-width:1100px;width:100%}
 @media(max-width:900px){.card{grid-template-columns:1fr}}
 </style>
 </head>
@@ -40,13 +39,16 @@ body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify
 
 <div id="loginView" class="card">
   <div class="left">
-    <div class="logo"><div class="logo-box">🧜‍♀️</div><div><b>KLIDO</b><span>AVANZA CONSULTING</span></div></div>
+    <div class="logo">
+      <img src="/logo.png" alt="KLIDO">
+      <div><b>KLIDO</b><span>AVANZA CONSULTING</span></div>
+    </div>
     <h2>El mejor CRM<br>que tu empresa<br><i>puede tener.</i></h2>
     <div class="desc">Klido Avanza Consulting — CRM multiagencia para API oficial de Meta (WhatsApp Business API).</div>
     <div class="badge">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
   </div>
   <div class="right">
-    <div class="tabs"><button id="tLogin" class="active" onclick="tab('login')">Ingresar</button><button id="tCrear" onclick="tab('crear')">Crear empresa</button></div>
+    <div class="tabs"><button id="tLogin" class="active" onclick="switchTab('login')">Ingresar</button><button id="tCrear" onclick="switchTab('crear')">Crear empresa</button></div>
     
     <div id="pLogin" class="panel">
       <h3>Ingresar a tu agencia</h3>
@@ -75,58 +77,75 @@ body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify
       <button class="btn" onclick="doForgot()">Enviar código</button>
       <div id="f_codeArea" class="hidden"><input id="f_code" class="inp" placeholder="Código 6 dígitos" style="margin-top:12px"><input id="f_newpass" class="inp" type="password" placeholder="Nueva contraseña"><button class="btn" onclick="doReset()">Cambiar contraseña</button></div>
       <p id="f_msg" style="margin-top:10px;font-size:12px"></p>
-      <button class="link" style="margin-top:12px" onclick="tab('login')">← Volver</button>
+      <button class="link" style="margin-top:12px" onclick="switchTab('login')">← Volver</button>
     </div>
   </div>
 </div>
 
-<div id="app">
-  <div style="max-width:1100px;margin:auto;background:white;border-radius:24px;padding:28px">
-    <div style="display:flex;justify-content:space-between;align-items:center"><h2>Bienvenido <span id="uName"></span> 🚀</h2><button class="btn" style="width:auto;padding:10px 20px" onclick="logout()">Salir</button></div>
+<div id="appView">
+  <div style="background:white;border-radius:24px;padding:28px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2>Bienvenido <span id="uName">Fer</span> 🚀</h2><button class="btn" style="width:auto;padding:10px 20px" onclick="logout()">Salir</button></div>
     <p id="uInfo" style="margin-top:10px;color:#5c6f8f"></p>
-    <div style="margin-top:24px;padding:20px;background:#f1f5fa;border-radius:16px">Tu CRM KLIDO está activo. Aquí va tu dashboard, campañas, contactos, etc.</div>
+    <div style="margin-top:24px;padding:20px;background:#f1f5fa;border-radius:16px">CRM KLIDO activo. Aquí va tu dashboard, campañas, contactos.</div>
   </div>
 </div>
 
 <script>
-function tab(t){
+function switchTab(t){
   document.getElementById('pLogin').classList.toggle('hidden', t!=='login');
   document.getElementById('pCrear').classList.toggle('hidden', t!=='crear');
   document.getElementById('pForgot').classList.add('hidden');
   document.getElementById('tLogin').classList.toggle('active', t==='login');
   document.getElementById('tCrear').classList.toggle('active', t==='crear');
-  const e=document.getElementById('empresaNombre'); if(e && !e.value) e.value='KLIDO AVANZA';
+  const e=document.getElementById('empresaNombre'); if(e && !e.value.trim()) e.value='KLIDO AVANZA';
 }
-function openForgot(){ document.getElementById('pLogin').classList.add('hidden'); document.getElementById('pCrear').classList.add('hidden'); document.getElementById('pForgot').classList.remove('hidden'); }
-
-function showApp(user){
-  document.getElementById('loginView').style.display='none';
-  document.getElementById('app').style.display='block';
-  document.getElementById('uName').innerText=user.nombre||'Fer';
-  document.getElementById('uInfo').innerText=user.email+' - Rol: '+user.rol+' - Empresa: '+(user.empresaNombre||'KLIDO AVANZA');
+function openForgot(){ 
+  document.getElementById('pLogin').classList.add('hidden'); 
+  document.getElementById('pCrear').classList.add('hidden'); 
+  document.getElementById('pForgot').classList.remove('hidden'); 
 }
 
 async function doLogin(){
   const email=document.getElementById('email').value.trim();
   const password=document.getElementById('password').value;
-  let empresa=document.getElementById('empresaNombre').value.trim(); if(!empresa) empresa='KLIDO AVANZA';
+  let empresa=document.getElementById('empresaNombre').value.trim() || 'KLIDO AVANZA';
   document.getElementById('empresaNombre').value=empresa;
-  const msg=document.getElementById('loginMsg'); msg.innerText='Ingresando...';
+  const msg=document.getElementById('loginMsg');
+  msg.style.color='#0a7a2e'; msg.innerText='Ingresando...';
   try{
     const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error);
-    localStorage.setItem('klido_token',d.token); localStorage.setItem('klido_user',JSON.stringify(d.user));
-    msg.innerText='Bienvenido '+d.user.nombre+' SuperAdmin'; 
-    // FIX QUE FALTABA: ahora sí avanza
-    setTimeout(()=>showApp(d.user),600);
+    localStorage.setItem('klido_token',d.token);
+    localStorage.setItem('klido_user',JSON.stringify(d.user));
+    msg.innerText='Bienvenido '+d.user.nombre+' SuperAdmin';
+    // ESTO ES LO QUE TE FALTABA PARA AVANZAR
+    setTimeout(()=>{
+      document.getElementById('loginView').style.display='none';
+      document.getElementById('appView').style.display='block';
+      document.getElementById('uName').innerText=d.user.nombre;
+      document.getElementById('uInfo').innerText=d.user.email+' - Rol: '+d.user.rol;
+      // si tienes dashboard.html, también puedes ir allá
+      // location.href='/dashboard.html';
+    },700);
   }catch(e){ msg.style.color='#d00'; msg.innerText=e.message; }
 }
 
-function checkSession(){
-  const t=localStorage.getItem('klido_token'); const u=localStorage.getItem('klido_user');
-  if(t && u){ try{ showApp(JSON.parse(u)); }catch{} }
-}
 function logout(){ localStorage.clear(); location.reload(); }
+
+// Auto-entrar si ya tiene sesión
+(function(){
+  const t=localStorage.getItem('klido_token');
+  const u=localStorage.getItem('klido_user');
+  if(t && u){
+    try{
+      const user=JSON.parse(u);
+      document.getElementById('loginView').style.display='none';
+      document.getElementById('appView').style.display='block';
+      document.getElementById('uName').innerText=user.nombre;
+      document.getElementById('uInfo').innerText=user.email+' - Rol: '+user.rol;
+    }catch{}
+  }
+})();
 
 async function doCrear(){
   const nombre=document.getElementById('c_nombre').value.trim();
@@ -136,7 +155,9 @@ async function doCrear(){
   try{
     const r=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan:'basico',codigoIngresado,aceptaTerminos:true})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error);
-    document.getElementById('crearMsg').innerText='Creada! Código: '+d.codigoAcceso; setTimeout(()=>tab('login'),1000);
+    document.getElementById('crearMsg').style.color='green';
+    document.getElementById('crearMsg').innerText='Creada! Código: '+d.codigoAcceso;
+    setTimeout(()=>switchTab('login'),1000);
   }catch(e){ document.getElementById('crearMsg').innerText=e.message; }
 }
 async function doForgot(){
@@ -145,7 +166,9 @@ async function doForgot(){
   try{
     const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error);
-    document.getElementById('f_msg').innerText=d.message; document.getElementById('f_codeArea').classList.remove('hidden');
+    document.getElementById('f_msg').style.color='green';
+    document.getElementById('f_msg').innerText=d.message;
+    document.getElementById('f_codeArea').classList.remove('hidden');
   }catch(e){ document.getElementById('f_msg').innerText=e.message; }
 }
 async function doReset(){
@@ -155,10 +178,11 @@ async function doReset(){
   try{
     const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,code,newPassword})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error);
-    document.getElementById('f_msg').innerText=d.message; setTimeout(()=>tab('login'),1000);
+    document.getElementById('f_msg').style.color='green';
+    document.getElementById('f_msg').innerText=d.message;
+    setTimeout(()=>switchTab('login'),1000);
   }catch(e){ document.getElementById('f_msg').innerText=e.message; }
 }
-checkSession();
 </script>
 </body>
 </html>
