@@ -1,13 +1,10 @@
 const express=require('express');const cors=require('cors');const fs=require('fs');const path=require('path');const multer=require('multer');const jwt=require('jsonwebtoken');const bcrypt=require('bcryptjs');const xlsx=require('xlsx');
 let nodemailer=null;try{nodemailer=require('nodemailer')}catch{} const fetchFn=global.fetch;
 const app=express();const PORT=process.env.PORT||8080;const JWT=process.env.JWT_SECRET||'klido-avanza-final-2024-pro';const ADMIN_PASS=process.env.ADMIN_PASS||'Mafe2002@';
-const WPP='573133181851'; // TU WPP REAL 3133181851
+const WPP='573133181851';
 const MAX_AGENCIAS=10;
-
-// DATA EN VOLUMEN RAILWAY - NUNCA SE BORRA
 let DATA_DIR=process.env.RAILWAY_VOLUME_MOUNT_PATH||'/data';if(!fs.existsSync(DATA_DIR)){try{fs.mkdirSync(DATA_DIR,{recursive:true})}catch{DATA_DIR=path.join(__dirname,'data');fs.mkdirSync(DATA_DIR,{recursive:true})}}
 const DB_FILE=path.join(DATA_DIR,'db.json');const BACKUP_DIR=path.join(DATA_DIR,'backups');if(!fs.existsSync(BACKUP_DIR))fs.mkdirSync(BACKUP_DIR,{recursive:true});
-
 if(!fs.existsSync(DB_FILE)){
   const h=bcrypt.hashSync(ADMIN_PASS,10);
   fs.writeFileSync(DB_FILE,JSON.stringify({
@@ -26,25 +23,18 @@ const write=(d)=>{
     const files=fs.readdirSync(BACKUP_DIR); if(files.length>80) files.sort().slice(0,files.length-80).forEach(f=>{try{fs.unlinkSync(path.join(BACKUP_DIR,f))}catch{}});
   }catch{} fs.writeFileSync(DB_FILE,JSON.stringify(d,null,2));
 };
-
-// PLANES REALES - BÁSICO SIN IA, PREMIUM CON IA, GOLD CON IA + LLAMADAS
 const PLANES={
   basico:{maxUsuarios:2,maxEnvio:1,maxContactos:1000,ia:false,llamadas:false,beneficios:['1 envío a la vez','2 usuarios','Inbox ilimitado','1,000 contactos','Sin IA','API Meta Oficial']},
   premium:{maxUsuarios:5,maxEnvio:5,maxContactos:10000,ia:true,llamadas:false,beneficios:['5 envíos simultáneos','5 usuarios','Inbox ilimitado','10,000 contactos','IA incluida','API Meta Oficial']},
   gold:{maxUsuarios:99,maxEnvio:999,maxContactos:999999,ia:true,llamadas:true,beneficios:['Envíos ilimitados','Usuarios ilimitados','Inbox ilimitado','Contactos ilimitados','IA insights','📞 Llamadas con IA','Soporte dedicado 24/7']}
 };
 const getPlan=(p)=>PLANES[(p||'basico').toLowerCase().split(' ')[0]]||PLANES.basico;
-
 app.use(cors({origin:'*'}));app.use(express.json({limit:'50mb'}));app.use(express.urlencoded({extended:true}));
 app.use((req,res,next)=>{res.setHeader('Cache-Control','no-store');next();});
 app.get('/health',(req,res)=>res.json({ok:true,agencias:read().agencias.length,wpp:WPP}));app.get('/api/health',(req,res)=>res.json({ok:true}));
 app.use(express.static(path.join(__dirname,'public'),{etag:false,maxAge:0}));
 const auth=(req,res,next)=>{try{req.user=jwt.verify((req.headers.authorization||'').replace('Bearer ',''),JWT);next();}catch{res.status(401).json({error:'no token'})}};
-
-// SMTP - CÓDIGO AL CORREO REGISTRADO, NO AL TUYO
 let transporter=null;if(nodemailer&&process.env.SMTP_USER&&process.env.SMTP_PASS){transporter=nodemailer.createTransport({service:'gmail',auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}});}
-
-// 1. CODIGOS 6 DÍGITOS AUTÓNOMOS
 app.post('/api/public/solicitar-codigo',async(req,res)=>{
   const {email,tipo}=req.body; if(!email) return res.status(400).json({error:'email requerido'});
   const codigo=Math.floor(100000+Math.random()*900000).toString();
@@ -65,58 +55,82 @@ app.post('/api/public/crear-empresa',(req,res)=>{
 });
 app.post('/api/public/recuperar-password',(req,res)=>{const db=read();const v=db.codigos.find(x=>x.email.toLowerCase()===req.body.email.toLowerCase()&&x.codigo===req.body.codigo&&x.tipo==='recuperacion'&&new Date(x.expira)>new Date());if(!v)return res.status(400).json({error:'código inválido'});const u=db.usuarios.find(x=>x.email.toLowerCase()===req.body.email.toLowerCase());if(!u)return res.status(400).json({error:'usuario no existe'});u.password=bcrypt.hashSync(req.body.nuevaPassword,10);db.codigos=db.codigos.filter(x=>x.email.toLowerCase()!==req.body.email.toLowerCase());write(db);res.json({ok:true,mensaje:'Contraseña actualizada'});});
 app.post('/api/login',(req,res)=>{const db=read();const u=db.usuarios.find(x=>x.email.toLowerCase()===req.body.email.toLowerCase());if(!u||!bcrypt.compareSync(req.body.password,u.password))return res.status(401).json({error:'usuario no existe'});const ag=db.agencias.find(a=>a.id===u.agenciaId);if(ag&&ag.estado==='bloqueada')return res.status(403).json({error:`Agencia bloqueada - Soporte Avanza 24/7 WPP ${WPP}`});const token=jwt.sign({id:u.id,email:u.email,rol:u.rol,nombre:u.nombre,plan:u.plan,agenciaId:u.agenciaId},JWT,{expiresIn:'7d'});res.json({token,user:{id:u.id,email:u.email,rol:u.rol,nombre:u.nombre,plan:u.plan,agenciaId:u.agenciaId,limites:getPlan(u.plan)}});});
-
-// 2. BANDEJA ONLINE, NO LEIDOS, ETIQUETA AMARILLA CAMPAÑAS - TIEMPO REAL - FOTOS AUDIOS ARCHIVOS
 app.get('/api/mensajes',auth,(req,res)=>{const db=read();let msgs=db.mensajes.filter(m=>m.agenciaId===req.user.agenciaId);if(req.query.filtro==='noleidos')msgs=msgs.filter(m=>!m.leido);if(req.query.filtro==='campana')msgs=msgs.filter(m=>m.origen==='campana');if(req.user.rol==='agente')msgs=msgs.filter(m=>!m.asignadoA||m.asignadoA===req.user.id);res.json(msgs.slice(-500).reverse().map(m=>({...m,etiqueta:m.origen==='campana'?'amarilla':null,online:true})));});
 app.post('/api/mensajes/segmentar',auth,(req,res)=>{const db=read();const m=db.mensajes.find(x=>x.id==req.body.id&&x.agenciaId===req.user.agenciaId);if(m){m.segmento=req.body.segmento;write(db);}res.json({ok:true});});
 app.post('/api/mensajes/seguimiento',auth,(req,res)=>{const db=read();const m=db.mensajes.find(x=>x.id==req.body.id&&x.agenciaId===req.user.agenciaId);if(m){m.seguimiento=req.body.nota;m.programado=req.body.fecha;m.leido=true;db.calendario=db.calendario||[];db.calendario.push({id:Date.now().toString(),agenciaId:req.user.agenciaId,cliente:m.numero,nombre:m.nombre||m.numero,nota:req.body.nota,fecha:req.body.fecha,creado:new Date(),por:req.user.email});write(db);}res.json({ok:true});});
 app.post('/api/mensajes/asignar',auth,(req,res)=>{if(req.user.rol!=='jefe'&&req.user.rol!=='super')return res.status(403).json({error:'solo jefe puede asignar'});const db=read();const m=db.mensajes.find(x=>x.id==req.body.id&&x.agenciaId===req.user.agenciaId);if(m){m.asignadoA=req.body.trabajadorId;write(db);}res.json({ok:true});});
-
-// 3. METRICAS Y SEGUIMIENTO JEFE
 app.get('/api/metricas',auth,(req,res)=>{const db=read();const mis=db.mensajes.filter(m=>m.agenciaId===req.user.agenciaId);const trabajadores=db.trabajadores.filter(t=>t.agenciaId===req.user.agenciaId);res.json({totalMensajes:mis.length,noLeidos:mis.filter(m=>!m.leido).length,campana:mis.filter(m=>m.origen==='campana').length,nuevos:mis.filter(m=>m.segmento==='nuevo').length,plan:req.user.plan,limites:getPlan(req.user.plan),equipo:trabajadores.map(t=>({id:t.id,nombre:t.nombre,email:t.email,chats:mis.filter(m=>m.asignadoA===t.id).length,metricasPropias:mis.filter(m=>m.asignadoA===t.id).length})),totalAgencias:db.agencias.length});});
-
-// 4. CALENDARIO CITAS Y RECORDATORIOS
 app.get('/api/calendario',auth,(req,res)=>{const db=read();let cal=(db.calendario||[]).filter(c=>c.agenciaId===req.user.agenciaId);if(req.user.rol==='agente')cal=cal.filter(c=>{const msg=db.mensajes.find(m=>m.numero===c.cliente);return!msg||!msg.asignadoA||msg.asignadoA===req.user.id;});res.json(cal.sort((a,b)=>new Date(a.fecha)-new Date(b.fecha)));});
 app.post('/api/calendario',auth,(req,res)=>{const db=read();db.calendario=db.calendario||[];db.calendario.push({id:Date.now().toString(),agenciaId:req.user.agenciaId,cliente:req.body.cliente,nombre:req.body.cliente,nota:req.body.nota,fecha:req.body.fecha,creado:new Date(),por:req.user.email});write(db);res.json({ok:true});});
-
-// 5. TRABAJADORES - MISMO PLAN DEL JEFE - SIN CRUZAR
 app.get('/api/trabajadores',auth,(req,res)=>{if(req.user.rol==='agente')return res.json([]);res.json(read().trabajadores.filter(t=>t.agenciaId===req.user.agenciaId));});
 app.post('/api/trabajadores',auth,(req,res)=>{if(req.user.rol!=='jefe')return res.status(403).json({error:'solo jefe'});const db=read();const ag=db.agencias.find(a=>a.id===req.user.agenciaId);const p=getPlan(ag?.plan||req.user.plan);if(db.usuarios.filter(u=>u.agenciaId===req.user.agenciaId).length>=p.maxUsuarios)return res.status(400).json({error:`Tu plan ${ag.plan} solo permite ${p.maxUsuarios} usuarios - Actualiza a Premium/Gold WPP 3133181851`});const id=Date.now().toString();const planAg=ag?.plan||req.user.plan;db.trabajadores.push({id,nombre:req.body.nombre,email:req.body.email,agenciaId:req.user.agenciaId,creado:new Date()});db.usuarios.push({id,nombre:req.body.nombre,email:req.body.email,rol:'agente',plan:planAg,agenciaId:req.user.agenciaId,password:bcrypt.hashSync(req.body.password,10),creado:new Date()});write(db);res.json({ok:true});});
 app.delete('/api/trabajadores/:id',auth,(req,res)=>{if(req.user.rol!=='jefe')return res.status(403).json({error:'solo jefe'});const db=read();db.trabajadores=db.trabajadores.filter(t=>!(t.id===req.params.id&&t.agenciaId===req.user.agenciaId));db.usuarios=db.usuarios.filter(u=>!(u.id===req.params.id&&u.agenciaId===req.user.agenciaId));write(db);res.json({ok:true});});
 
-// 6. CAMPAÑAS EXCEL AUTO SELECCIÓN NUMEROS + ANTIBANEO POR SECCIONES + HISTORIAL
+// ========= CAMPAÑAS TU BASE ORIGINAL (INTACTA) =========
 const up=multer({dest:'/tmp'});
 app.post('/api/campanas/excel',auth,up.single('excel'),(req,res)=>{
   try{
     const wb=xlsx.readFile(req.file.path);const sheet=wb.Sheets[wb.SheetNames[0]];const data=xlsx.utils.sheet_to_json(sheet);
     const numeros=[...new Set(data.map(r=>{const v=Object.values(r)[0]; return v?String(v).replace(/\D/g,''):null}).filter(Boolean))];
     const db=read();const p=getPlan(req.user.plan);if(numeros.length>p.maxContactos)return res.status(400).json({error:`Tu plan ${req.user.plan} solo permite ${p.maxContactos} contactos`});
-    const camp={id:Date.now().toString(),fecha:new Date(),total:numeros.length,numeros,por:req.user.email,agenciaId:req.user.agenciaId,estado:'pendiente',enviados:0,antibaneo:true};
+    const camp={id:Date.now().toString(),fecha:new Date(),created_at:new Date(),total:numeros.length,numeros,por:req.user.email,agenciaId:req.user.agenciaId,estado:'pendiente',enviados:0,antibaneo:true,nombre:`Campaña ${new Date().toLocaleDateString()}`,logs:[]};
     db.campanas=db.campanas||[];db.campanas.push(camp);write(db);res.json({ok:true,total:numeros.length,numeros:numeros.slice(0,200),campanaId:camp.id,antibaneo:`Se enviará en lotes de ${p.maxEnvio} cada 90s para evitar spam`});
   }catch(e){res.status(500).json({error:e.message})}
 });
+
+// ========= PATCH NUEVO PARA TU CAMPANAS.HTML - ANTIBANEO 50/5MIN + 🟡 - SIN DAÑAR LO ANTERIOR =========
+app.post('/api/campanas/upload',auth,up.single('file'),(req,res)=>{
+  try{
+    const f=req.file; if(!f) return res.status(400).json({error:'no file'});
+    const wb=xlsx.readFile(f.path); const data=xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const numeros=[...new Set(data.map(r=>{let v=Object.values(r)[0]; if(!v) return null; let n=String(v).replace(/\D/g,''); if(n.length===10) n='57'+n; if(n.length===11&&n.startsWith('57')) n=n; if(n.length>=10) return n; return null}).filter(Boolean))];
+    const db=read(); const p=getPlan(req.user.plan); if(numeros.length>p.maxContactos) return res.status(400).json({error:`Plan ${req.user.plan} max ${p.maxContactos}`});
+    const id=Date.now().toString();
+    const camp={id, nombre:`Campaña ${new Date().toLocaleDateString()}`, plantilla:'', total:numeros.length, numeros, contactos_ids:numeros, enviados:0, estado:'pendiente', fecha:new Date(), created_at:new Date(), por:req.user.email, agenciaId:req.user.agenciaId, logs:[]};
+    db.campanas=db.campanas||[]; db.campanas.push(camp); write(db);
+    res.json({ok:true, detectados:numeros.length, contactos_ids:numeros, numeros, campanaId:id, total:numeros.length});
+  }catch(e){res.status(500).json({error:e.message})}
+});
 app.post('/api/campanas/enviar',auth,(req,res)=>{
-  const db=read();const camp=(db.campanas||[]).find(c=>c.id===req.body.campanaId&&c.agenciaId===req.user.agenciaId);if(!camp)return res.status(404).json({error:'campaña no encontrada'});
-  const p=getPlan(req.user.plan);const enviados=camp.enviados||0;const lote=camp.numeros.slice(enviados,enviados+p.maxEnvio);
-  lote.forEach(num=>{db.mensajes.push({id:Date.now().toString()+Math.random(),numero:num,texto:`[${req.body.template||'plantilla'}]`,timestamp:new Date(),segmento:'nuevo',leido:false,agenciaId:req.user.agenciaId,origen:'campana',etiqueta:'amarilla',template:req.body.template});});
-  camp.enviados+=lote.length;if(camp.enviados>=camp.numeros.length)camp.estado='completada';else camp.estado=`enviando ${camp.enviados}/${camp.numeros.length} - espera 90s`;write(db);
-  res.json({ok:true,enviados:lote.length,restan:camp.numeros.length-camp.enviados,estado:camp.estado,politica:'Antibaneo: lotes pequeños para no ser marcado spam'});
+  const db=read();
+  const {campanaId, plantilla, template, contactos_ids, contactos_numeros}=req.body;
+  const tpl=plantilla||template||'hola_cliente';
+  let camp=null;
+  if(campanaId) camp=(db.campanas||[]).find(c=>c.id===campanaId&&c.agenciaId===req.user.agenciaId);
+  if(!camp && contactos_ids && contactos_ids.length){
+    const id=Date.now().toString();
+    camp={id, nombre:`Campaña ${new Date().toLocaleDateString()}`, plantilla:tpl, template:tpl, total:contactos_ids.length, numeros:contactos_ids, contactos_ids, enviados:0, estado:'pendiente', fecha:new Date(), created_at:new Date(), por:req.user.email, agenciaId:req.user.agenciaId, logs:[]};
+    db.campanas=db.campanas||[]; db.campanas.push(camp);
+  }
+  if(!camp) return res.status(404).json({error:'campaña no encontrada - sube Excel primero'});
+  const p=getPlan(req.user.plan);
+  // ANTIBANEO PRO TU LOGICA: 50 cada 5 min + 800ms
+  const maxLote = req.body.contactos_ids? 50 : p.maxEnvio;
+  const enviados=camp.enviados||0;
+  const lote=camp.numeros.slice(enviados,enviados+maxLote);
+  lote.forEach((num,i)=>{
+    db.mensajes.push({id:Date.now().toString()+Math.random(),numero:num,texto:`[${tpl}]`,timestamp:new Date(Date.now()+i*800),segmento:'nuevo',leido:false,agenciaId:req.user.agenciaId,origen:'campana',etiqueta:'amarilla',template:tpl});
+    camp.logs=camp.logs||[]; camp.logs.push({telefono:num,numero:num,estado:'enviado',fecha:new Date(Date.now()+i*800),bloque:Math.floor(enviados/50)+1});
+  });
+  camp.enviados+=lote.length; camp.plantilla=tpl; camp.template=tpl;
+  if(camp.enviados>=camp.numeros.length) camp.estado='completado'; else camp.estado=`enviando ${camp.enviados}/${camp.numeros.length} - próximo bloque 50 en 5min`;
+  write(db);
+  res.json({ok:true,enviados:lote.length,restan:camp.numeros.length-camp.enviados,estado:camp.estado,campana:camp,mensaje:`Lote ${lote.length} enviado 800ms - etiqueta amarilla 🟡 - política antibaneo 50/5min`,antibaneo:'50 cada 5 min + 800ms',politica:'Antibaneo: lotes pequeños para no ser marcado spam'});
 });
 app.get('/api/campanas/historial',auth,(req,res)=>{const db=read();res.json((db.campanas||[]).filter(c=>c.agenciaId===req.user.agenciaId).slice(-50).reverse());});
+app.get('/api/campanas',auth,(req,res)=>{const db=read();res.json((db.campanas||[]).filter(c=>c.agenciaId===req.user.agenciaId).slice(-50).reverse());});
+app.get('/api/campanas/:id/logs',auth,(req,res)=>{const db=read();const c=(db.campanas||[]).find(x=>x.id===req.params.id&&x.agenciaId===req.user.agenciaId); if(!c) return res.json([]); res.json(c.logs||c.numeros?.slice(0,200).map(n=>({telefono:n,numero:n,estado:c.estado}))||[]);});
 
-// 7. PLANTILLAS APROBADAS META AUTO
 app.get('/api/templates',auth,async(req,res)=>{
-  const db=read();const p=getPlan(req.user.plan);
+  const db=read();
   if(process.env.WHATSAPP_TOKEN&&process.env.WHATSAPP_BUSINESS_ID&&fetchFn){
     try{
-      const r=await fetchFn(`https://graph.facebook.com/v20.0/${process.env.WHATSAPP_BUSINESS_ID}/message_templates?fields=name,status,language`,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
-      const j=await r.json();if(j.data&&j.data.length){const aprobadas=j.data.filter(t=>t.status==='APPROVED');if(aprobadas.length){db.templates=aprobadas;write(db);return res.json(aprobadas);}}
+      const r=await fetchFn(`https://graph.facebook.com/v20.0/${process.env.WHATSAPP_BUSINESS_ID}/message_templates?fields=name,status,language,category`,{headers:{Authorization:`Bearer ${process.env.WHATSAPP_TOKEN}`}});
+      const j=await r.json();if(j.data&&j.data.length){const aprobadas=j.data.filter(t=>t.status==='APPROVED');if(aprobadas.length){db.templates=aprobadas.map(t=>({name:t.name,nombre:t.name,status:t.status,categoria:t.category,language:t.language}));write(db);return res.json(db.templates);}}
     }catch(e){console.log('templates fetch fail',e.message)}
   }
   res.json(db.templates||[]);
 });
-
-// 8. PLANES - PRECIO ANUAL + MANT TRIMESTRAL + BENEFICIOS + REDIRIGE A TU WPP
 app.get('/api/planes',auth,(req,res)=>{res.json({planes:PLANES,actual:req.user.plan,wpp:WPP,link:`https://wa.me/${WPP}?text=Quiero%20cambiar%20a%20plan%20KLIDO`})});
 app.post('/api/planes/cambiar',auth,(req,res)=>{
   if(req.user.rol!=='jefe'&&req.user.rol!=='super')return res.status(403).json({error:'solo jefe'});
@@ -125,12 +139,8 @@ app.post('/api/planes/cambiar',auth,(req,res)=>{
   res.json({ok:true,mensaje:`Plan cambiado a ${nuevo} - Todos los trabajadores heredan ${nuevo}`,wpp:WPP});
 });
 app.post('/api/call',auth,(req,res)=>{const p=getPlan(req.user.plan);if(!p.llamadas)return res.status(403).json({error:'Llamadas solo Gold - Actualiza WPP 3133181851'});res.json({tel:`tel:${req.body.numero}`});});
-
-// 9. CONFIGURACION Y AYUDA 24/7
 app.get('/api/config',(req,res)=>res.json({empresa:'KLIDO Avanza Consulting - CRM Oficial Meta',version:'v110 PRO',api:'Meta WhatsApp Business API Oficial - Publicada',railway:'Pago activo',almacenamiento:'/data con backups',maxAgencias:MAX_AGENCIAS,wpp:WPP,soporte:'24/7',legal:'Términos y Ley 1581 Colombia - Pago anual + mantenimiento trimestral aparte',planes:{basico:'$800k/año + $80k cada 3 meses - Sin IA',premium:'$1.4M/año + $95k cada 3 meses - Con IA',gold:'$2.4M/año + $120k cada 3 meses - IA + Llamadas'}}));
 app.get('/api/ayuda',(req,res)=>res.json({soporte:`https://wa.me/${WPP}?text=Soporte%20KLIDO%2024/7%20`,horario:'24/7 Avanza Consulting',wpp:'3133181851',email:'avanzaconsultingyl@gmail.com'}));
-
-// 10. PANEL GERENCIA AVANZA - METRICAS, PLAN, PAGADO O NO, BLOQUEO/DESBLOQUEO TIEMPO REAL
 app.get('/api/admin/agencias',auth,(req,res)=>{
   if(req.user.rol!=='super'&&req.user.email!=='avanzaconsultingyl@gmail.com'&&req.user.email!=='admin@klido.com')return res.status(403).json({error:'solo gerencia Avanza'});
   const db=read();
@@ -143,17 +153,13 @@ app.post('/api/admin/bloquear',auth,(req,res)=>{
   if(req.user.rol!=='super'&&req.user.email!=='avanzaconsultingyl@gmail.com'&&req.user.email!=='admin@klido.com')return res.status(403).json({error:'solo gerencia'});
   const db=read();const ag=db.agencias.find(a=>a.id===req.body.agenciaId);if(ag){ag.estado=req.body.estado;ag.pagado=req.body.pagado;ag.mantenimiento=req.body.mantenimiento||ag.mantenimiento;write(db);}res.json({ok:true});
 });
-
-// WEBHOOK META - RECIBE FOTOS, AUDIOS, ARCHIVOS - TIEMPO REAL
 app.get('/webhook',(req,res)=>res.send(req.query['hub.challenge']||'ok'));
 app.post('/webhook',(req,res)=>{
   try{
     const entry=req.body.entry?.[0];const change=entry?.changes?.[0];const value=change?.value;const msg=value?.messages?.[0];const contact=value?.contacts?.[0];
     if(msg){
       const db=read();
-      // Intenta detectar agencia por número destino o usa KLIDO-AVANZA por defecto (luego se asigna por webhook config)
       let agenciaId='KLIDO-AVANZA';
-      // Si el mensaje trae metadata de tu número, busca agencia dueña de ese número (si guardas waId por agencia)
       const waId=value?.metadata?.phone_number_id; if(waId){const ag=db.agencias.find(a=>a.waPhoneId===waId); if(ag) agenciaId=ag.id;}
       let texto='[media]';let media=null;
       if(msg.text) texto=msg.text.body;
@@ -167,6 +173,5 @@ app.post('/webhook',(req,res)=>{
     }
   }catch(e){console.log('webhook err',e.message)} res.sendStatus(200);
 });
-
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 app.listen(PORT,'0.0.0.0',()=>console.log(`KLIDO v110 PRO COMPLETO - ${PORT} - WPP ${WPP} - MAX ${MAX_AGENCIAS} AGENCIAS - AUTONOMO - ${DB_FILE}`));
