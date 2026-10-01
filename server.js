@@ -26,13 +26,18 @@ if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR,{recursive:true});
 const db = (n) => { const f=path.join(DATA_DIR,n+'.json'); if(!fs.existsSync(f)) fs.writeFileSync(f,'[]'); return {get:()=>JSON.parse(fs.readFileSync(f,'utf8')), set:(d)=>fs.writeFileSync(f, JSON.stringify(d,null,2))} }
 const empresasDB=db('empresas'), usuariosDB=db('usuarios'), campanasDB=db('campanas'), contactosDB=db('contactos'), chatsDB=db('chats'), codigosDB=db('codigos');
 
+// TRANSPORTER SMTP (respaldo) + RESEND por HTTPS (principal - no da timeout en Railway)
 let transporter = null;
 if(process.env.EMAIL_USER && process.env.EMAIL_PASS){
   transporter = nodemailer.createTransport({
-    host:'smtp.gmail.com', port:587, secure:false,
+    host:'smtp.gmail.com', port:465, secure:true,
     auth:{ user:process.env.EMAIL_USER, pass:String(process.env.EMAIL_PASS).replace(/\s/g,'') },
     connectionTimeout:10000, greetingTimeout:10000, socketTimeout:10000
   });
+  console.log('📧 SMTP configurado:', process.env.EMAIL_USER);
+}
+if(process.env.RESEND_API_KEY){
+  console.log('📧 Resend HTTPS configurado - sin timeout');
 }
 
 const FER_EMAIL="fermorales20020310@gmail.com", FER_PASS="Mafe2002@";
@@ -80,31 +85,49 @@ app.post('/api/public/crear-empresa', async (req,res)=>{
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-// SOLO ESTO ACTUALIZADO - YA NO DA "Application failed to respond" Y NO MUESTRA CODIGO EN PANTALLA
+// FIX DEFINITIVO: ENVIO POR HTTPS - YA NO DA CONNECTION TIMEOUT
 app.post('/api/auth/forgot', async (req,res)=>{
   try{
     const emailClean=String(req.body.email||'').toLowerCase().trim();
+    if(!emailClean) return res.status(400).json({error:'Ingresa correo'});
     const user=usuariosDB.get().find(u=>u.email.toLowerCase()===emailClean);
     if(!user) return res.status(404).json({error:'Correo no registrado'});
     const code=Math.floor(100000+Math.random()*900000).toString();
     const codigos=codigosDB.get(); codigos.push({email:emailClean,code,expira:Date.now()+15*60*1000,usado:false}); codigosDB.set(codigos);
     console.log(`CODIGO ${code} para ${emailClean}`);
-
-    // Respuesta inmediata para que no se caiga
     res.json({message:`Código enviado a ${emailClean}. Revisa tu correo y SPAM. Llega en 30 segundos.`});
 
-    // Envío en segundo plano
-    if(transporter){
+    // 1. Intenta por Resend HTTPS (no lo bloquea Railway)
+    if(process.env.RESEND_API_KEY){
+      try{
+        const resp = await fetch('https://api.resend.com/emails',{
+          method:'POST',
+          headers:{'Authorization':`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},
+          body:JSON.stringify({
+            from:'Klido Avanza <onboarding@resend.dev>',
+            to:emailClean,
+            subject:`Tu código Klido: ${code}`,
+            html:`<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:480px;margin:auto;background:white;border-radius:16px;padding:28px;text-align:center;border:1px solid #e6ecf7"><h2 style="color:#0a1931;margin:0">KLIDO AVANZA</h2><p style="color:#4b5a7a">Tu código de recuperación:</p><div style="background:#173a80;color:white;font-size:34px;font-weight:900;letter-spacing:8px;padding:16px;border-radius:12px;margin:18px 0">${code}</div><p style="font-size:11px;color:#6b7da1">Expira en 15 minutos.<br>Si no fuiste tú, ignora este correo.</p></div></div>`
+          })
+        });
+        const data = await resp.json();
+        if(data.error) console.log('❌ Resend error:', JSON.stringify(data.error));
+        else console.log(`✅ CORREO ENVIADO por Resend a ${emailClean} id:${data.id}`);
+      }catch(e){ console.log('❌ Resend fetch error:', e.message); }
+    }
+    // 2. Respaldo SMTP por 465
+    else if(transporter){
       transporter.sendMail({
         from:`"Klido Avanza" <${process.env.EMAIL_USER}>`,
         to:emailClean,
         subject:`Tu código Klido: ${code}`,
-        text:`Tu código es: ${code}`,
-        html:`<div style="font-family:Arial;background:#f6f8fb;padding:30px"><div style="max-width:480px;margin:auto;background:white;border-radius:16px;padding:28px;text-align:center"><h2>KLIDO AVANZA</h2><p>Tu código:</p><div style="background:#173a80;color:white;font-size:34px;font-weight:900;letter-spacing:8px;padding:16px;border-radius:12px">${code}</div><p style="font-size:11px;color:#6b7da1">Expira 15 min - Revisa SPAM</p></div></div>`
-      }).then(i=>console.log(`✅ Enviado a ${emailClean}`)).catch(e=>console.log('❌ Mail error:', e.message));
+        html:`<div style="font-family:Arial;padding:30px"><div style="max-width:480px;margin:auto;text-align:center"><h2>KLIDO</h2><div style="background:#173a80;color:white;font-size:34px;padding:16px;border-radius:12px;letter-spacing:8px">${code}</div></div></div>`
+      }).then(()=>console.log(`✅ Enviado SMTP a ${emailClean}`)).catch(e=>console.log('❌ Mail error:', e.message));
+    } else {
+      console.log('⚠️ Sin RESEND_API_KEY ni EMAIL_USER/PASS - código solo en logs');
     }
   }catch(e){
-    console.log(e);
+    console.log('Error forgot:', e.message);
     if(!res.headersSent) res.status(500).json({error:e.message});
   }
 });
@@ -115,20 +138,29 @@ app.post('/api/auth/reset', async (req,res)=>{
     const emailClean=String(email).toLowerCase().trim();
     const codigos=codigosDB.get();
     const reg=codigos.find(c=>c.email===emailClean && c.code===String(code).trim() &&!c.usado && c.expira>Date.now());
-    if(!reg) return res.status(400).json({error:'Código inválido o expirado'});
+    if(!reg) return res.status(400).json({error:'Código inválido o expirado. Pide uno nuevo'});
     if(String(newPassword).length<6) return res.status(400).json({error:'Min 6 caracteres'});
     const usuarios=usuariosDB.get(); const u=usuarios.find(x=>x.email.toLowerCase()===emailClean);
     if(!u) return res.status(404).json({error:'Usuario no existe'});
     u.password=await bcrypt.hash(newPassword,10); usuariosDB.set(usuarios);
     reg.usado=true; codigosDB.set(codigos);
-    res.json({message:'Contraseña cambiada correctamente'});
+    res.json({message:'Contraseña cambiada correctamente. Ya puedes ingresar'});
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 
 app.get('/api/test-mail', async (req,res)=>{
-  if(!transporter) return res.json({ok:false, error:'Falta EMAIL_USER/PASS en Railway'});
-  try{ const info=await transporter.sendMail({from:`"Test" <${process.env.EMAIL_USER}>`,to:process.env.EMAIL_USER,subject:'Test Klido',html:'<h2>Funciona</h2>'}); res.json({ok:true, id:info.messageId}); }
-  catch(e){ res.status(500).json({ok:false, error:e.message}); }
+  if(!process.env.RESEND_API_KEY &&!transporter) return res.json({ok:false, error:'Falta RESEND_API_KEY o EMAIL_USER/PASS en Railway'});
+  const emailTest = process.env.EMAIL_USER || 'fermorales20020310@gmail.com';
+  try{
+    if(process.env.RESEND_API_KEY){
+      const r = await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:'Klido Test <onboarding@resend.dev>',to:emailTest,subject:'Test Klido OK',html:'<h2>Correo funciona ✅ por Resend</h2>'})});
+      const j = await r.json();
+      return res.json({ok:true, via:'resend', response:j});
+    }else{
+      const info=await transporter.sendMail({from:`"Test Klido" <${process.env.EMAIL_USER}>`,to:emailTest,subject:'Test Klido OK',html:'<h2>Funciona por SMTP</h2>'});
+      return res.json({ok:true, via:'smtp', id:info.messageId});
+    }
+  }catch(e){ res.status(500).json({ok:false, error:e.message}); }
 });
 
 app.get('/api/empresas',auth,(req,res)=>res.json(empresasDB.get()));
