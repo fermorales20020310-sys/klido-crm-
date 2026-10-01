@@ -8,19 +8,19 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
 body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.card{width:100%;max-width:1120px;display:grid;grid-template-columns:440px 1fr;background:white;border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.08)}
-.left{background:radial-gradient(100% 100% at 0% 0%, #1a3d8f 0%, #0f2450 100%);padding:36px 32px;color:white;display:flex;flex-direction:column}
-.logo{display:flex;gap:12px;align-items:center}
-.logo img{width:54px;height:54px;background:white;border-radius:14px;object-fit:contain;padding:6px}
-.logo b{font-size:28px;letter-spacing:1px;line-height:1}
-.logo span{font-size:10px;letter-spacing:4px;opacity:0.9;font-weight:400;display:block;margin-top:2px}
-.left h2{margin-top:48px;font-size:42px;line-height:0.95;font-weight:900}
+.card{width:100%;max-width:1150px;display:grid;grid-template-columns:460px 1fr;background:white;border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.08)}
+.left{background:radial-gradient(100% 100% at 0% 0%, #1a3d8f 0%, #0f2450 100%);padding:38px 34px;color:white;display:flex;flex-direction:column}
+.logo{display:flex;gap:14px;align-items:center}
+.logo img{width:72px;height:72px;background:white;border-radius:16px;object-fit:contain;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.logo b{font-size:30px;letter-spacing:1px;line-height:1}
+.logo span{font-size:11px;letter-spacing:4px;opacity:0.9;font-weight:500;display:block;margin-top:3px}
+.left h2{margin-top:54px;font-size:44px;line-height:0.92;font-weight:900}
 .left h2 i{font-style:italic;font-weight:800}
-.left .desc{margin-top:18px;font-size:12px;line-height:1.5;color:#8aa4d1}
-.badge{margin-top:24px;border:1px solid rgba(0,255,160,0.3);background:rgba(0,255,160,0.08);color:#2aff9a;font-size:9px;font-weight:800;letter-spacing:1px;border-radius:30px;padding:10px 16px;display:inline-block}
-.right{background:#f7f9fc;padding:20px}
+.left .desc{margin-top:18px;font-size:12.5px;line-height:1.5;color:#8aa4d1}
+.badge{margin-top:26px;border:1px solid rgba(0,255,160,0.3);background:rgba(0,255,160,0.08);color:#2aff9a;font-size:9.5px;font-weight:800;letter-spacing:1px;border-radius:30px;padding:11px 18px;display:inline-block}
+.right{background:#f7f9fc;padding:22px}
 .tabs{display:flex;background:#eef2f7;border-radius:16px;padding:5px;margin-bottom:18px}
-.tabs button{flex:1;border:0;padding:12px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer}
+.tabs button{flex:1;border:0;padding:13px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;transition:0.2s}
 .tabs button.active{background:#1e345e;color:white;box-shadow:0 4px 12px rgba(30,52,94,0.3)}
 .tabs button:not(.active){background:transparent;color:#8a9bb8}
 .panel{background:white;border-radius:20px;padding:22px;border:1px solid #eef2f7}
@@ -29,16 +29,15 @@ body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify
 .inp:focus, select:focus{border-color:#1e345e;background:white}
 .check{font-size:11px;color:#5c6f8f;display:flex;gap:7px;align-items:center;margin:6px 0}
 .btn{width:100%;background:#1e345e;color:white;border:0;border-radius:14px;padding:15px;font-weight:800;cursor:pointer;margin-top:14px}
-.btn:disabled{opacity:0.6}
 .link{font-size:11px;color:#1e345e;font-weight:800;text-decoration:underline;background:none;border:0;cursor:pointer}
 .hidden{display:none}
-.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
-.plan{border:2px solid #e6ecf3;border-radius:14px;padding:10px;text-align:center;cursor:pointer;transition:0.2s}
-.plan.active{border-color:#1e345e;background:#f0f4ff}
-.plan b{display:block;font-size:12px}
-.plan span{font-size:10px;color:#5c6f8f}
-.codeBox{margin-top:16px;background:#eef6ff;border:1px dashed #1e345e;border-radius:14px;padding:14px;text-align:center}
-.codeBox b{font-size:18px;letter-spacing:2px;color:#1e345e}
+.plans{margin-top:4px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.plan{border:2px solid #e6ecf3;border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:0.2s;background:#f8fafc}
+.plan.active{border-color:#1e345e;background:#eef4ff}
+.plan b{font-size:12px;display:block;color:#1a2744}
+.plan span{font-size:10px;color:#5c6f8f;display:block;margin-top:2px}
+.codeBox{margin-top:16px;background:#eef6ff;border:1.5px dashed #1e345e;border-radius:14px;padding:16px;text-align:center}
+.codeBox b{font-size:20px;letter-spacing:2px;color:#1e345e;display:block;margin:6px 0}
 #appView{display:none;max-width:1100px;width:100%}
 @media(max-width:900px){.card{grid-template-columns:1fr}.plans{grid-template-columns:1fr}}
 </style>
@@ -48,7 +47,7 @@ body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify
 <div id="loginView" class="card">
   <div class="left">
     <div class="logo">
-      <img src="/logo.png" alt="KLIDO">
+      <img src="/logo.png" alt="KLIDO AVANZA">
       <div><b>KLIDO</b><span>AVANZA CONSULTING</span></div>
     </div>
     <h2>El mejor CRM<br>que tu empresa<br><i>puede tener.</i></h2>
@@ -63,7 +62,7 @@ body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify
       <input id="empresaNombre" class="inp" value="KLIDO AVANZA" placeholder="Nombre empresa">
       <input id="email" class="inp" type="email" value="fermorales20020310@gmail.com" placeholder="Correo">
       <input id="password" class="inp" type="password" placeholder="Contraseña">
-      <div class="check"><input type="checkbox" id="termLogin" checked> Acepto Términos y Condiciones</div>
+      <div class="check"><input type="checkbox" checked> Acepto Términos y Condiciones</div>
       <div class="check"><input type="checkbox" checked> Recordarme <span style="margin-left:auto"><button class="link" onclick="openForgot()">¿Olvidaste tu contraseña?</button></span></div>
       <button class="btn" onclick="doLogin()">Ingresar al CRM →</button>
       <p id="loginMsg" style="margin-top:12px;font-size:12px;color:#0a7a2e;font-weight:700"></p>
@@ -75,12 +74,12 @@ body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify
       <input id="c_email" class="inp" type="email" placeholder="Correo admin">
       <input id="c_pass" class="inp" type="password" placeholder="Contraseña">
       <input id="c_codigo" class="inp" placeholder="Código (ej: KLIDO001)">
-      
-      <label style="font-size:11px;font-weight:800;color:#1a2744;margin-bottom:6px;display:block">Elige tu plan:</label>
+
+      <label style="font-size:11px;font-weight:800;color:#1a2744;margin:8px 0 8px;display:block">Selecciona tu plan:</label>
       <div class="plans">
-        <div class="plan active" id="plan-basico" onclick="selectPlan('basico')"><b>Básico</b><span>$800.000/año</span></div>
-        <div class="plan" id="plan-premium" onclick="selectPlan('premium')"><b>Premium</b><span>$1.400.000/año</span></div>
-        <div class="plan" id="plan-gold" onclick="selectPlan('gold')"><b>Gold</b><span>$2.400.000/año</span></div>
+        <div class="plan active" id="plan-basico" onclick="selectPlan('basico')"><b>Básico</b><span>$800.000/año</span><span style="font-size:9px">1 agencia - 3 usuarios</span></div>
+        <div class="plan" id="plan-premium" onclick="selectPlan('premium')"><b>Premium</b><span>$1.400.000/año</span><span style="font-size:9px">3 agencias - 10 users</span></div>
+        <div class="plan" id="plan-gold" onclick="selectPlan('gold')"><b>Gold</b><span>$2.400.000/año</span><span style="font-size:9px">Ilimitado</span></div>
       </div>
       <select id="c_plan" class="hidden"><option value="basico" selected>basico</option><option value="premium">premium</option><option value="gold">gold</option></select>
 
@@ -88,10 +87,10 @@ body{background:#eef3fb;min-height:100vh;display:flex;align-items:center;justify
       <button class="btn" onclick="doCrear()">Crear agencia →</button>
       
       <div id="codeResult" class="codeBox hidden">
-        <div style="font-size:11px">¡Agencia creada! Guarda tu código de acceso:</div>
+        <div style="font-size:11px;font-weight:700;color:#1a2744">¡Pago confirmado! Código de activación generado:</div>
         <b id="codeGenerated">KLIDO0001</b>
-        <div style="font-size:10px;margin-top:6px;color:#5c6f8f">Este código lo usará tu cliente para activar su licencia después del pago. Copialo.</div>
-        <button class="btn" style="margin-top:10px;padding:10px" onclick="copyCode()">Copiar código</button>
+        <div style="font-size:10px;color:#5c6f8f;line-height:1.4">Guarda este código. Es el que tu cliente usará para activar su licencia después de comprar el plan. Este código se genera automáticamente luego del pago.</div>
+        <button class="btn" style="margin-top:10px;padding:10px;font-size:12px" onclick="copyCode()">Copiar código 📋</button>
       </div>
       <p id="crearMsg" style="margin-top:10px;font-size:12px;color:#d00"></p>
     </div>
@@ -140,7 +139,6 @@ function copyCode(){
   const code=document.getElementById('codeGenerated').innerText;
   navigator.clipboard.writeText(code); alert('Código copiado: '+code);
 }
-
 async function doLogin(){
   const email=document.getElementById('email').value.trim();
   const password=document.getElementById('password').value;
@@ -163,7 +161,6 @@ async function doLogin(){
   }catch(e){ msg.style.color='#d00'; msg.innerText=e.message; }
 }
 function logout(){ localStorage.clear(); location.reload(); }
-
 async function doCrear(){
   const nombre=document.getElementById('c_nombre').value.trim();
   const email=document.getElementById('c_email').value.trim();
@@ -173,15 +170,13 @@ async function doCrear(){
   const acepta=document.getElementById('c_term').checked;
   const msg=document.getElementById('crearMsg');
   if(!nombre||!email||!password||!codigoIngresado){ msg.innerText='Faltan datos'; return; }
-  msg.innerText='Creando...';
+  msg.style.color='#1e345e'; msg.innerText='Creando agencia...';
   try{
     const r=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan,codigoIngresado,aceptaTerminos:acepta})});
     const d=await r.json(); if(!r.ok) throw new Error(d.error);
     msg.style.color='green'; msg.innerText='¡Agencia creada con éxito!';
     document.getElementById('codeGenerated').innerText=d.codigoAcceso || codigoIngresado;
     document.getElementById('codeResult').classList.remove('hidden');
-    // Guarda el código para después del pago
-    setTimeout(()=>{ alert('Código generado: '+(d.codigoAcceso||codigoIngresado)+' - Guárdalo para activar luego del pago'); },500);
   }catch(e){ msg.style.color='#d00'; msg.innerText=e.message; }
 }
 async function doForgot(){
@@ -207,7 +202,6 @@ async function doReset(){
     setTimeout(()=>switchTab('login'),1000);
   }catch(e){ document.getElementById('f_msg').innerText=e.message; }
 }
-// Auto-login si ya tiene token
 (function(){
   const t=localStorage.getItem('klido_token');
   const u=localStorage.getItem('klido_user');
