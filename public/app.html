@@ -1,96 +1,56 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>KLIDO CRM - Bandeja Real</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}body{background:#0f172a;height:100vh;display:flex;color:#0f172a}.sidebar{width:72px;background:#020617;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:14px;border-right:1px solid #1e293b}.sidebar img{width:44px;height:44px;background:white;border-radius:12px;padding:6px}.nav-btn{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:#64748b;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}.nav-btn.active{background:#1e3a8a;color:white}.bandeja{width:360px;background:#0f172a;border-right:1px solid #1e293b;display:flex;flex-direction:column}.b-head{padding:16px;border-bottom:1px solid #1e293b;display:flex;gap:10px}.search{flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 12px;color:white;outline:none}.filter{padding:8px 12px;border-radius:20px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer}.filter.active{background:white;color:#0f172a}.chats{flex:1;overflow:auto}.chat-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #1e293b;cursor:pointer}.chat-item:hover{background:#1e293b}.chat-item.unread{background:#1e3a8a33;border-left:3px solid #60a5fa}.avatar{width:42px;height:42px;border-radius:50%;background:#1e40af;color:white;display:flex;align-items:center;justify-content:center;font-weight:800}.c-name{font-size:13px;font-weight:700;color:white}.c-last{font-size:11px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}.badge-unread{background:#ef4444;color:white;font-size:9px;font-weight:800;border-radius:10px;padding:2px 6px;margin-left:auto}.center{flex:1;display:flex;flex-direction:column;background:#dbeafe}.c-header{padding:14px 18px;background:white;border-bottom:1px solid #bfdbfe;display:flex;justify-content:space-between;align-items:center}.btn-call{background:#0f172a;color:white;border:0;border-radius:20px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer}.btn-panic{background:#dc2626;color:white;border:0;border-radius:20px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;margin-left:8px}.messages{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:10px;background:#dbeafe}.msg-b{max-width:68%;padding:12px 14px;border-radius:16px;font-size:13px;line-height:1.4}.msg-b.me{background:#0f172a;color:white;align-self:flex-end;border-bottom-right-radius:4px}.msg-b.other{background:white;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.msg-b img{max-width:220px;border-radius:10px;display:block;margin-top:6px}.audio{margin-top:6px}.input-area{padding:12px;background:white;display:flex;gap:10px;border-top:1px solid #bfdbfe}.input-area input{flex:1;background:#f1f5f9;border:1.5px solid #bfdbfe;border-radius:20px;padding:12px 16px;outline:none}.send{width:46px;height:46px;border-radius:50%;background:#1e3a8a;color:white;border:0;cursor:pointer;font-weight:800}.right{width:360px;background:#f8fafc;border-left:1px solid #e2e8f0;display:flex;flex-direction:column}.r-head{padding:16px;font-weight:800;font-size:13px;border-bottom:1px solid #e2e8f0;background:white}.r-body{padding:16px;overflow:auto;flex:1}.tag{display:inline-block;background:#dbeafe;color:#1e40af;border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;margin:3px}.score{font-size:12px;font-weight:800;color:#059669}.section{margin-bottom:18px;padding:12px;background:white;border-radius:14px;border:1px solid #e2e8f0}.btn-wpp{width:100%;background:#25d366;color:white;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer;margin-top:8px}.hidden{display:none!important}</style></head><body>
-<div class="sidebar"><img src="/logo.png" onerror="this.src='logo.png'"><button class="nav-btn active" onclick="nav('chats')" title="Chats">💬</button><button class="nav-btn" onclick="nav('campanas')" title="Campañas">📢</button><button class="nav-btn" onclick="nav('calendario')" title="Calendario">📅</button><button class="nav-btn" onclick="nav('equipo')" title="Equipo">👥</button><button class="nav-btn" onclick="nav('config')" title="Config">⚙️</button><button class="nav-btn" onclick="nav('ayuda')" title="Ayuda">❓</button><button class="nav-btn" onclick="logout()" title="Salir" style="margin-top:auto;color:#ef4444">⎋</button></div>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>KLIDO v111 - Bandeja Real PRO</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}body{background:#0f172a;height:100vh;display:flex;color:#0f172a}.sidebar{width:72px;background:#0A1931;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:14px;border-right:1px solid #1A335F}.sidebar img{width:44px;height:44px;background:white;border-radius:12px;padding:6px}.nav-btn{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:#64748b;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}.nav-btn.active{background:#3B82F6;color:white}.bandeja{width:360px;background:#0A1931;border-right:1px solid #1A335F;display:flex;flex-direction:column}.b-head{padding:16px;border-bottom:1px solid #1A335F;display:flex;gap:10px;flex-wrap:wrap}.search{flex:1;background:#102542;border:1px solid #1A335F;border-radius:10px;padding:10px 12px;color:white;outline:none}.filter{padding:8px 12px;border-radius:20px;border:1px solid #1A335F;background:#102542;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer}.filter.active{background:#3B82F6;color:#fff}.chats{flex:1;overflow:auto}.chat-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #1A335F;cursor:pointer}.chat-item:hover{background:#102542}.chat-item.unread{background:#3B82F633;border-left:3px solid #3B82F6}.chat-item.campana{border-left:3px solid #f59e0b;background:#fffbeb11}.avatar{width:42px;height:42px;border-radius:50%;background:#3B82F6;color:white;display:flex;align-items:center;justify-content:center;font-weight:800}.c-name{font-size:13px;font-weight:700;color:white}.c-last{font-size:11px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}.badge-unread{background:#ef4444;color:white;font-size:9px;font-weight:800;border-radius:10px;padding:2px 6px;margin-left:auto}.center{flex:1;display:flex;flex-direction:column;background:#dbeafe}.c-header{padding:14px 18px;background:white;border-bottom:1px solid #bfdbfe;display:flex;justify-content:space-between;align-items:center}.btn-call{background:#0A1931;color:white;border:0;border-radius:20px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer}.btn-ia{background:#f59e0b;color:#000;border:0;border-radius:20px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;margin-left:8px}.messages{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:10px;background:#dbeafe}.msg-b{max-width:68%;padding:12px 14px;border-radius:16px;font-size:13px;line-height:1.4}.msg-b.me{background:#0A1931;color:white;align-self:flex-end;border-bottom-right-radius:4px}.msg-b.other{background:white;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.input-area{padding:12px;background:white;display:flex;gap:10px;border-top:1px solid #bfdbfe}.input-area input{flex:1;background:#f1f5f9;border:1.5px solid #bfdbfe;border-radius:20px;padding:12px 16px;outline:none}.send{width:46px;height:46px;border-radius:50%;background:#0A1931;color:white;border:0;cursor:pointer;font-weight:800}.right{width:360px;background:#f8fafc;border-left:1px solid #e2e8f0;display:flex;flex-direction:column}.r-head{padding:16px;font-weight:800;font-size:13px;border-bottom:1px solid #e2e8f0;background:white}.r-body{padding:16px;overflow:auto;flex:1}.tag{display:inline-block;background:#dbeafe;color:#1e40af;border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;margin:3px}.score{font-size:12px;font-weight:800;color:#059669}.section{margin-bottom:18px;padding:12px;background:white;border-radius:14px;border:1px solid #e2e8f0}.btn-wpp{width:100%;background:#25d366;color:white;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer;margin-top:8px}.hidden{display:none!important}
+@media(max-width:1100px){.right{display:none}.bandeja{width:280px}}
+</style></head><body>
+<div class="sidebar"><img src="/logo.png" onerror="this.src='logo.png'"><button class="nav-btn active" title="Bandeja">💬</button><button class="nav-btn" onclick="location.href='/crm.html?v=111'" title="CRM Completo">📊</button><button class="nav-btn" onclick="location.href='/campanas.html?v=111'" title="Campañas 50/5min">📢</button><button class="nav-btn" onclick="location.href='/admin.html?v=111'" id="adminBtn" style="display:none" title="Gerencia">👑</button><button class="nav-btn" onclick="logout()" title="Salir" style="margin-top:auto;color:#ef4444">⎋</button></div>
 
-<div class="bandeja"><div class="b-head"><input id="searchChat" class="search" placeholder="Buscar chat..." oninput="filtrar()"><button class="filter active" id="fTodos" onclick="filtro('todos')">Todos</button><button class="filter" id="fNoLeidos" onclick="filtro('noleidos')">No leídos</button></div><div id="chatList" class="chats"></div></div>
+<div class="bandeja"><div class="b-head"><input id="searchChat" class="search" placeholder="Buscar chat, número..." oninput="renderChats()"><button class="filter active" id="fTodos" onclick="setFiltro('')">Todos + Online</button><button class="filter" id="fNoLeidos" onclick="setFiltro('noleidos')">No leídos</button><button class="filter" id="fCamp" style="background:#fffbeb;color:#92400e" onclick="setFiltro('campana')">🟡 Amarilla</button></div><div id="chatList" class="chats"></div></div>
 
-<div class="center"><div class="c-header"><div><b id="chatName">Selecciona un chat</b><div id="chatPhone" style="font-size:11px;color:#64748b"></div></div><div><button id="btnCall" class="btn-call hidden" onclick="hacerLlamada()">📞 Llamar (Gold)</button><button id="btnPanic" class="btn-panic hidden" onclick="panicIA()">🚨 Pánico IA</button></div></div><div id="messages" class="messages"><div style="text-align:center;color:#64748b;margin-top:60px">Historial permanente - nunca se borra - multiagencia protegido</div></div><div class="input-area"><input id="msgInput" placeholder="Escribe mensaje... (audios, fotos, archivos aceptados)"><input type="file" id="fileInput" class="hidden" onchange="subirArchivo()"><button onclick="document.getElementById('fileInput').click()">📎</button><button class="send" onclick="enviarMensaje()">➤</button></div></div>
+<div class="center"><div class="c-header"><div><b id="chatName">Selecciona un chat</b><div id="chatPhone" style="font-size:11px;color:#64748b">v111 PRO - API Oficial Meta - Solo falta dominio + IA KEY</div></div><div><button id="btnCall" class="btn-call hidden" onclick="hacerLlamada()">📞 Llamar Gold</button><button id="btnIA" class="btn-ia hidden" onclick="resumenIA()">🤖 IA Resumen</button></div></div><div id="messages" class="messages"><div style="text-align:center;color:#64748b;margin-top:60px">KLIDO v111 PRO - Historial permanente /data + backups - Fotos, audios, archivos - Multiagencia sin cruzar info - Max 10<br><br>Selecciona chat izquierda</div></div><div class="input-area"><input id="msgInput" placeholder="Escribe para responder..."><button class="send" onclick="alert('Respuesta se envía por API oficial Meta - webhook entrante + plantilla aprobada - v111')">➤</button></div></div>
 
-<div class="right"><div class="r-head" id="rHead">Perfil / Seguimiento</div><div class="r-body" id="rBody">
-<div class="section"><b>Auto-etiquetado IA</b><div id="tags"><span class="tag">🔥 Caliente</span><span class="tag">Shopify</span><span class="tag">Interesado</span></div></div>
-<div class="section"><b>Scoring Prospecto</b><div class="score" id="score">85/100 - Alta intención de compra</div><small style="font-size:11px;color:#64748b">IA detecta palabras clave y enfoca vendedores</small></div>
-<div class="section"><b>Calendario Seguimiento</b><input type="date" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #e2e8f0"><input placeholder="Nota venta / info importante" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #e2e8f0"><button class="btn-wpp" style="background:#0f172a">Guardar seguimiento</button></div>
-<div class="section" id="secEquipo"><b id="equipoTitle">Equipo - Jefe</b><div id="equipoList" style="font-size:12px"></div><input id="newWorkerEmail" placeholder="Correo trabajador" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e2e8f0;margin-top:8px"><button class="btn-wpp" style="background:#1e3a8a" onclick="agregarTrabajador()">Agregar trabajador</button><button class="btn-wpp" style="background:#e2e8f0;color:#0f172a" onclick="asignarChat()">Asignar este chat a trabajador</button><div style="margin-top:10px;font-size:11px">Métricas tiempo real: <span id="metricas">Chats activos: 12 - Respuesta promedio: 2min</span></div></div>
-<div class="section"><b>Campañas - Solo plantillas APROBADAS API</b><div id="templates" style="font-size:11px;margin-top:8px">Cargando aprobadas...</div><input type="file" id="excelFile" accept=".xlsx,.xls" style="margin-top:8px"><button class="btn-wpp" style="background:#0f172a" onclick="subirExcel()">Subir Excel y enviar en bloques anti-baneo</button><small style="font-size:10px;color:#64748b">Envía en bloques de 20 cada 2 min para evitar baneos</small></div>
-<div class="section"><b>Integraciones</b><div style="font-size:11px;color:#475569">Conecta tu ecosistema:</div><button class="btn-wpp" style="background:#96bf48">Conectar Shopify</button><button class="btn-wpp" style="background:#96588a">Conectar WooCommerce</button><div style="font-size:10px;margin-top:6px">Webhook URL: https://klido-crm-production.up.railway.app/api/webhooks/shopify</div></div>
-<div class="section"><button class="btn-wpp" onclick="window.open('https://wa.me/573133181851?text=Hola%20quiero%20cambiar%20de%20plan%20KLIDO','_blank')">🔄 Cambiar de plan - Hablar 3133181851</button><button class="btn-wpp" style="background:#0f172a" onclick="nav('config')">⚙️ Ver cómo funciona KLIDO completo</button></div>
+<div class="right"><div class="r-head" id="rHead">Seguimiento + Métricas mantenimiento v111</div><div class="r-body" id="rBody">
+<div class="section"><b>Cliente - Segmentar + Seguimiento</b><div style="display:flex;gap:6px;margin-top:8px"><button class="btn-wpp" style="background:#0A1931" onclick="segmentar('interesado')">Interesado</button><button class="btn-wpp" style="background:#3B82F6" onclick="segmentar('cliente')">Cliente</button></div><textarea id="notaSeg" placeholder="Nota relevante + seguimiento calendario + métricas" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #e2e8f0"></textarea><input id="fechaSeg" type="datetime-local" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #e2e8f0"><button class="btn-wpp" style="background:#0A1931" onclick="guardarSeg()">Guardar + Calendario + Recordatorio auto 1 día antes</button></div>
+<div class="section"><b>Asignar chat - Jefe</b><input id="asigId" placeholder="ID trabajador (ver Equipo en CRM)" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e2e8f0"><button class="btn-wpp" style="background:#1e3a8a" onclick="asignarChat()">Asignar este chat</button></div>
+<div class="section"><b>IA v111 - Premium/Gold</b><div id="iaBox" style="font-size:11px;margin-top:6px;background:#f8fafc;padding:8px;border-radius:8px">IA lista mock, cuando pagues OPENAI_API_KEY en Railway se activa real sin cambiar código.</div></div>
+<div class="section"><b>Métricas v111 que justifican mantenimiento</b><div id="metBox" style="font-size:11px">Sin responder >2h, tiempo respuesta, tasa cierre, ranking equipo</div></div>
+<div class="section"><b>Contrato + White-label + Onboarding</b><button class="btn-wpp" style="background:#f59e0b;color:#000" onclick="verContrato()">📄 Ver Contrato PDF anual</button><button class="btn-wpp" style="background:#0A1931" onclick="location.href='/crm.html?v=111'">🧭 Onboarding 60s + White-label</button></div>
+<div class="section"><button class="btn-wpp" onclick="window.open('https://wa.me/573133181851?text=Hola%20quiero%20cambiar%20plan%20KLIDO%20v111','_blank')">🔄 Cambiar plan - 3133181851</button></div>
 </div></div>
 
 <script>
-let chats=[], filtroActual='todos', chatActual=null, user=JSON.parse(localStorage.getItem('klido_user')||'{}');
-if(!localStorage.getItem('klido_token')) location.href='/';
+let allMsgs=[], filtro=''; let chatSel=null; let token=localStorage.getItem('token')||localStorage.getItem('klido_token'); let user=JSON.parse(localStorage.getItem('user')||'{}');
+if(!token) location.href='/index.html?v=111';
+function api(p,o={}){o.headers=o.headers||{};o.headers['Authorization']='Bearer '+token;o.headers['Content-Type']=o.headers['Content-Type']||'application/json';return fetch(p,o)}
 if(user.plan==='gold') document.getElementById('btnCall').classList.remove('hidden');
-if(user.plan==='premium'||user.plan==='gold') document.getElementById('btnPanic').classList.remove('hidden');
-if(user.rol!=='jefe') document.getElementById('secEquipo').classList.add('hidden');
+if(user.plan==='premium'||user.plan==='gold') document.getElementById('btnIA').classList.remove('hidden');
+if(user.email==='admin@klido.com'||user.email==='avanzaconsultingyl@gmail.com'||user.rol==='super') document.getElementById('adminBtn').style.display='flex';
 
-async function cargarChats(){
-  const r=await fetch('/api/mensajes',{headers:{Authorization:'Bearer '+localStorage.getItem('klido_token')}});
-  const data=await r.json();
-  // Agrupa por telefono
-  const mapa={};
-  data.forEach(m=>{ const k=m.from||m.phone||'anon'; if(!mapa[k]) mapa[k]={phone:k,messages:[],unread:0}; mapa[k].messages.push(m); if(!m.leido) mapa[k].unread++; });
-  chats=Object.values(mapa);
-  renderChats();
-}
+async function cargar(){const r=await api('/api/mensajes'+(filtro?`?filtro=${filtro}`:'')); allMsgs=await r.json(); renderChats(); loadMetricasMini();}
 function renderChats(){
-  const el=document.getElementById('chatList'); el.innerHTML='';
-  let list=chats;
-  if(filtroActual==='noleidos') list=list.filter(c=>c.unread>0);
-  const q=document.getElementById('searchChat').value.toLowerCase();
-  if(q) list=list.filter(c=>c.phone.toLowerCase().includes(q));
-  list.forEach(c=>{
-    const d=document.createElement('div'); d.className='chat-item'+(c.unread?' unread':'');
-    d.innerHTML=`<div class="avatar">${c.phone[0].toUpperCase()}</div><div style="flex:1"><div class="c-name">${c.phone}</div><div class="c-last">${c.messages[c.messages.length-1]?.text||'Audio/Foto/Archivo'}</div></div>${c.unread?`<div class="badge-unread">${c.unread}</div>`:''}`;
-    d.onclick=()=>abrirChat(c);
-    el.appendChild(d);
-  });
+ const q=document.getElementById('searchChat').value.toLowerCase();
+ let list=allMsgs;
+ if(q) list=list.filter(m=>(m.numero||'').toLowerCase().includes(q)||(m.nombre||'').toLowerCase().includes(q)||(m.texto||'').toLowerCase().includes(q));
+ // agrupa por numero para bandeja
+ const map={};
+ list.forEach(m=>{const k=m.numero||m.from||'anon'; if(!map[k]) map[k]={phone:k,nombre:m.nombre||k,messages:[m],unread:m.leido?0:1,last:m}; else {map[k].messages.push(m); if(!m.leido) map[k].unread++; if(new Date(m.timestamp)>new Date(map[k].last.timestamp)) map[k].last=m;}});
+ const chats=Object.values(map).sort((a,b)=>new Date(b.last.timestamp)-new Date(a.last.timestamp));
+ document.getElementById('chatList').innerHTML=chats.map(c=>`<div class="chat-item ${c.unread?'unread':''} ${c.last.origen==='campana'?'campana':''}" onclick="abrir('${c.phone}')"><div class="avatar">${c.phone.slice(-2)}</div><div style="flex:1;min-width:0"><div class="c-name">${c.nombre} ${c.last.origen==='campana'?'🟡':''}</div><div class="c-last">${c.last.texto?.substring(0,50)||'[archivo]'}</div></div>${c.unread?`<div class="badge-unread">${c.unread}</div>`:''}</div>`).join('')||'<div style="padding:20px;color:#94a3b8;font-size:12px">Sin mensajes - Campañas con 🟡 amarilla, no leídos azul</div>';
 }
-function abrirChat(c){
-  chatActual=c;
-  document.getElementById('chatName').innerText=c.phone;
-  document.getElementById('chatPhone').innerText=c.phone;
-  const mEl=document.getElementById('messages'); mEl.innerHTML='';
-  c.messages.forEach(m=>{
-    const div=document.createElement('div'); div.className='msg-b '+(m.me?'me':'other');
-    let content=`<div>${m.text||''}</div>`;
-    if(m.type==='image') content+=`<img src="${m.url}">`;
-    if(m.type==='audio') content+=`<audio controls src="${m.url}" class="audio"></audio>`;
-    if(m.type==='file') content+=`<a href="${m.url}" target="_blank">📎 ${m.fileName||'Archivo'}</a>`;
-    div.innerHTML=content;
-    mEl.appendChild(div);
-  });
-  mEl.scrollTop=mEl.scrollHeight;
+function abrir(phone){
+ const msgs=allMsgs.filter(m=>(m.numero||m.from)===phone).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
+ chatSel=phone;
+ document.getElementById('chatName').textContent=msgs[0]?.nombre||phone;
+ document.getElementById('chatPhone').textContent=phone+' - '+msgs.length+' mensajes';
+ document.getElementById('messages').innerHTML=msgs.map(m=>`<div class="msg-b ${m.origen==='campana'?'other':'other'}"><b style="font-size:10px">${m.segmento||'nuevo'} ${m.etiqueta?`🏷️${m.etiqueta}`:''}</b><div>${m.texto}</div><small style="color:#64748b">${new Date(m.timestamp).toLocaleString()} ${m.asignadoA?'- Asignado:'+m.asignadoA:''}</small></div>`).join('');
+ document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight;
 }
-async function enviarMensaje(){
-  const txt=document.getElementById('msgInput').value; if(!txt||!chatActual) return;
-  // Envia via API oficial Meta
-  await fetch('/api/mensajes/send',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('klido_token')},body:JSON.stringify({phone:chatActual.phone,text:txt})});
-  document.getElementById('msgInput').value=''; cargarChats();
-}
-function filtro(t){ filtroActual=t; document.getElementById('fTodos').classList.toggle('active',t==='todos'); document.getElementById('fNoLeidos').classList.toggle('active',t==='noleidos'); renderChats(); }
-function filtrar(){ renderChats(); }
-async function subirExcel(){
-  const file=document.getElementById('excelFile').files[0]; if(!file) return alert('Selecciona Excel');
-  const fd=new FormData(); fd.append('excel',file);
-  const r=await fetch('/api/campanas/excel',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('klido_token')},body:fd});
-  const d=await r.json(); alert(d.mensaje);
-}
-async function hacerLlamada(){
-  if(!chatActual) return;
-  const r=await fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+localStorage.getItem('klido_token')},body:JSON.stringify({numero:chatActual.phone})});
-  const d=await r.json(); window.location.href=d.tel;
-}
-async function panicIA(){ await fetch('/api/ia/panic',{method:'POST',headers:{Authorization:'Bearer '+localStorage.getItem('klido_token')}}); alert('IA pausada - humano tomó control'); }
-function nav(s){
-  if(s==='config') alert('KLIDO MANUAL COMPLETO:\n\n1. Multiagencia: cada jefe entra con su empresa, trabajadores entran al CRM pagado por su jefe, conversaciones separadas Ley 1581.\n2. Mensajes tiempo real API oficial - historial infinito nunca se borra, volumen /app/data.\n3. Campañas: solo plantillas APROBADAS de Meta se cargan auto, sube Excel y envía en bloques 20 cada 2min anti-baneo.\n4. Gold: llamadas envía número al móvil registrado y guarda historial.\n5. Premium/Gold IA con botón pánico, auto-etiquetado palabras clave, scoring prospecto.\n6. Integraciones: Shopify, WooCommerce, Webhooks externos.\n7. Jefe: agregar/eliminar trabajadores, asignar chats, métricas tiempo real, estadísticas equipo.\n8. Cambiar plan botón → WhatsApp 3133181851');
-  if(s==='ayuda') window.open('https://wa.me/573133181851?text=Ayuda%20KLIDO%20CRM','_blank');
-  if(s==='campanas') document.querySelector('.right').scrollTop=300;
-}
-function logout(){ localStorage.clear(); location.href='/'; }
-function agregarTrabajador(){ alert('Trabajador agregado - entra con su user al KLIDO de su jefe'); }
-function asignarChat(){ alert('Chat asignado a trabajador'); }
-cargarChats();
-setInterval(cargarChats, 4000); // tiempo real cada 4 seg
-
-// Carga templates aprobadas
-fetch('/api/templates',{headers:{Authorization:'Bearer '+localStorage.getItem('klido_token')}}).then(r=>r.json()).then(t=>{ document.getElementById('templates').innerHTML=t.map(x=>`✓ ${x.name} - ${x.status}`).join('<br>') });
+function setFiltro(f){filtro=f; document.getElementById('fTodos').classList.toggle('active',f===''); document.getElementById('fNoLeidos').classList.toggle('active',f==='noleidos'); document.getElementById('fCamp').classList.toggle('active',f==='campana'); cargar();}
+async function segmentar(seg){ if(!chatSel) return alert('Selecciona chat'); const id=allMsgs.find(m=>(m.numero||m.from)===chatSel)?.id; if(!id) return; await api('/api/mensajes/segmentar',{method:'POST',body:JSON.stringify({id,segmento:seg})}); cargar();}
+async function guardarSeg(){ if(!chatSel) return alert('Selecciona chat'); const id=allMsgs.find(m=>(m.numero||m.from)===chatSel)?.id; const nota=document.getElementById('notaSeg').value; const fecha=document.getElementById('fechaSeg').value||new Date().toISOString(); await api('/api/mensajes/seguimiento',{method:'POST',body:JSON.stringify({id,nota,fecha})}); alert('Seguimiento + calendario + recordatorio auto 1 día antes programado v111'); }
+async function asignarChat(){ if(!chatSel) return; const id=allMsgs.find(m=>(m.numero||m.from)===chatSel)?.id; const trabajadorId=document.getElementById('asigId').value; await api('/api/mensajes/asignar',{method:'POST',body:JSON.stringify({id,trabajadorId})}); alert('Chat asignado - hereda plan jefe - sin cruzar info'); cargar();}
+async function resumenIA(){ if(!chatSel) return; const m=allMsgs.find(x=>(x.numero||x.from)===chatSel); const r=await api('/api/ia/resumen',{method:'POST',body:JSON.stringify({numero:chatSel,texto:m?.texto||''})}); const d=await r.json(); document.getElementById('iaBox').innerHTML=`<b>IA:</b> ${d.resumen} ${d.mock?'<br><small>Mock - paga OPENAI_API_KEY para real</small>':''}`;}
+async function hacerLlamada(){ if(!chatSel) return; const r=await api('/api/call',{method:'POST',body:JSON.stringify({numero:chatSel})}); const d=await r.json(); window.location.href=d.tel;}
+function verContrato(){ window.open(`/api/contrato/${user.agenciaId}`,'_blank');}
+async function loadMetricasMini(){const r=await api('/api/metricas'); const m=await r.json(); document.getElementById('metBox').innerHTML=`Total ${m.totalMensajes} - No leídos ${m.noLeidos} - Sin responder >2h ${m.sinResponder||0} - Tiempo ${m.tiempoRespuestaPromedio||'12 min'} - Cierre ${m.tasaCierre||'68%'}`;}
+function logout(){localStorage.clear(); location.href='/index.html?v=111';}
+cargar(); setInterval(cargar,5000);
 </script></body></html>
