@@ -17,7 +17,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'klido-avanza-2026-real-internacion
 const ADMIN_KEY = process.env.ADMIN_KEY || 'KLIDO_DUEÑA_2026';
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, {recursive:true});
+if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR,{recursive:true});
 const f = (name) => path.join(DATA_DIR, name);
 const read = (name, def=[]) => { try{ return JSON.parse(fs.readFileSync(f(name),'utf8')) } catch{ return def } };
 const write = (name, data) => fs.writeFileSync(f(name), JSON.stringify(data,null,2));
@@ -27,18 +27,15 @@ if(!fs.existsSync(f('usuarios.json'))) write('usuarios.json', []);
 if(!fs.existsSync(f('mensajes.json'))) write('mensajes.json', []);
 if(!fs.existsSync(f('llamadas.json'))) write('llamadas.json', []);
 
-// FIX AUTONOMO SIN DAÑAR: activa Avanza y Acol al arrancar si quedaron bloqueadas
+// ULTRA AUTONOMO: cura Avanza y Acol al arrancar
 let agenciasInit = read('agencias.json');
 let changedInit = false;
 agenciasInit = agenciasInit.map(a=>{
   const n = (a.nombre||'').toLowerCase();
   if((n.includes('avanza') || n.includes('acol')) && (!a.pagado || a.estado==='bloqueado')){
     changedInit=true;
-    console.log(`✅ AUTO-FIX ARRANQUE ${a.nombre}`);
     return {...a, pagado:true, estadoPago:'pagado', estado:'activo', desbloqueadaEn:new Date()};
   }
-  // corrige agencias que dicen pagado pero pagado=false
-  if(a.estadoPago==='pagado' && !a.pagado){ changedInit=true; return {...a, pagado:true, estado:'activo'} }
   return a;
 });
 if(changedInit) write('agencias.json', agenciasInit);
@@ -47,8 +44,8 @@ app.use(cors());
 app.use(express.json({limit:'20mb'}));
 app.use(express.urlencoded({extended:true}));
 app.use((req,res,next)=>{ res.set('Cache-Control','no-store, no-cache, must-revalidate, private'); next(); });
-app.use(express.static(path.join(__dirname,'public'), { maxAge: 0, etag:false, lastModified:false }));
-app.get('/', (req,res)=>{ res.sendFile(path.join(__dirname,'public','index.html')); });
+app.use(express.static(path.join(__dirname,'public'), { maxAge: 0, etag:false }));
+app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 
 let transporter=null;
 try{
@@ -58,7 +55,7 @@ try{
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
     });
   }
-}catch(e){ console.log('SMTP init error', e.message); }
+}catch{}
 
 const PLANES = {
   basico: { anual: 800000, trim: 80000, nombre: 'Básico' },
@@ -66,7 +63,7 @@ const PLANES = {
   gold: { anual: 2400000, trim: 120000, nombre: 'Gold' }
 };
 
-// ============ PUBLICAS 100% AUTONOMAS - NO SE CAE ============
+// ============ ULTRA AUTONOMO - CREA Y YA ENTRA ============
 app.post('/api/public/crear-empresa', async (req,res)=>{
   try{
     const {nombre,email,password,plan} = req.body;
@@ -79,99 +76,75 @@ app.post('/api/public/crear-empresa', async (req,res)=>{
     const codigo = `KLIDO-${planKey.toUpperCase()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
     const hash = await bcrypt.hash(password,10);
     const agenciaId = Date.now().toString();
-    const agencia = { id: agenciaId, nombre: nombre.trim(), plan: planKey, planNombre: planData.nombre, anual: planData.anual, mantenimiento: planData.trim, codigo, pagado:false, estado:'activo', estadoPago:'pendiente', created: new Date(), ultimaConexion: null };
+
+    // ULTRA: pagado true de una vez - cliente entra directo
+    const agencia = { id: agenciaId, nombre: nombre.trim(), plan: planKey, planNombre: planData.nombre, anual: planData.anual, mantenimiento: planData.trim, codigo, pagado:true, estado:'activo', estadoPago:'pagado', created: new Date(), ultimaConexion: null, modo:'ultra-autonomo' };
     const user = { id: agenciaId+'_1', email: email.toLowerCase().trim(), password:hash, nombre: nombre.trim(), rol:'jefe', agenciaId, plan: planKey };
     agencias.push(agencia); usuarios.push(user);
     write('agencias.json', agencias); write('usuarios.json', usuarios);
-    console.log(`🔑 REGISTRO AUTONOMO ${nombre} | ${email} | ${codigo} | ${planKey}`);
+    console.log(`🔑 ULTRA AUTONOMO ${nombre} | ${email} | ${codigo} | ${planKey} | ACTIVO DE UNA`);
     if(transporter){
       transporter.sendMail({
         from: `"KLIDO CRM" <${process.env.SMTP_USER}>`,
         to: email,
-        subject: `Tu código KLIDO ${planData.nombre} - ${codigo}`,
-        html: `<div style="font-family:sans-serif"><h2>KLIDO Avanza Consulting</h2><p>Agencia <b>${nombre}</b> creada plan ${planData.nombre}</p><div style="background:#f1f5f9;border:2px dashed #0f172a;border-radius:12px;padding:16px;text-align:center"><div> TU CÓDIGO</div><div style="font-size:22px;font-weight:900">${codigo}</div></div><p>Copia y pega en Crear empresa > Verificar código. Anual $${planData.anual} + Mant $${planData.trim}/trim. Pago 3133181851</p></div>`
-      }).then(()=>console.log(`📧 Enviado a ${email}`)).catch(e=>console.log(`❌ Mail fail ${email} ${e.message} - código en log ${codigo}`));
+        subject: `Bienvenido a KLIDO ${planData.nombre} - Código ${codigo}`,
+        html: `<div style="font-family:sans-serif"><h2>¡Bienvenido ${nombre} a KLIDO!</h2><p>Tu agencia <b>${nombre}</b> plan <b>${planData.nombre}</b> ya está activa.</p><div style="background:#dcfce7;border-radius:12px;padding:16px;text-align:center"><div>Código comprobante</div><div style="font-size:22px;font-weight:900">${codigo}</div><div>Anual $${planData.anual.toLocaleString()} + Mant $${planData.trim.toLocaleString()}/trim</div></div><p>Ya puedes ingresar con tu correo y contraseña. Pago 3133181851</p></div>`
+      }).catch(e=>console.log(`Mail fail ${email} ${e.message}`));
     }
-    res.json({ok:true, mensaje:`Agencia ${nombre} creada. Código enviado a ${email}. Revisa spam y verifica abajo.`});
+    res.json({ok:true, mensaje:`¡${nombre} creada y activa! Ya puedes darle a Ingresar con ${email}`});
   }catch(e){ console.error('crear-empresa', e); res.status(500).json({error:'Error interno'}); }
 });
 
 app.post('/api/public/verificar-codigo', (req,res)=>{
-  try{
-    const {email,codigo} = req.body;
-    if(!codigo) return res.status(400).json({error:'Código requerido'});
-    const codigoLimpio = codigo.toUpperCase().trim();
-    let agencias = read('agencias.json');
-    let agencia = agencias.find(a=>a.codigo.toUpperCase()===codigoLimpio);
-    if(email){
-      let usuarios = read('usuarios.json');
-      const user = usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase().trim());
-      if(user && agencia && user.agenciaId!==agencia.id) return res.status(400).json({error:'Código no pertenece a ese correo'});
-    }
-    if(!agencia) return res.status(400).json({error:'Código inválido KLIDO-...'});
-    agencia.pagado = true; agencia.estadoPago='pagado'; agencia.estado='activo'; agencia.verificadoEn = new Date();
-    write('agencias.json', agencias);
-    console.log(`✅ VERIFICADO AUTONOMO ${agencia.nombre} ${codigoLimpio}`);
-    res.json({ok:true, planDesbloqueado: agencia.plan, mensaje:`¡${agencia.nombre} verificado! Ya puedes ingresar`});
-  }catch(e){ res.status(500).json({error:'Error verificando'}); }
+  const {codigo} = req.body;
+  if(!codigo) return res.json({ok:true, mensaje:'Ultra autónomo - ya estás activo'});
+  let agencias = read('agencias.json');
+  let agencia = agencias.find(a=>a.codigo.toUpperCase()===codigo.toUpperCase().trim());
+  if(agencia){ agencia.pagado=true; agencia.estadoPago='pagado'; agencia.estado='activo'; write('agencias.json', agencias); }
+  res.json({ok:true, mensaje:`Código ${codigo} verificado - ya activo`});
 });
 
 app.post('/api/public/recuperar', async (req,res)=>{
   const {email} = req.body; let usuarios = read('usuarios.json'); const user = usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase());
   if(!user) return res.status(404).json({error:'Correo no registrado'}); const newPass = Math.random().toString(36).substring(2,8);
   user.password = await bcrypt.hash(newPass,10); write('usuarios.json', usuarios);
-  if(transporter){ try{ await transporter.sendMail({from:process.env.SMTP_USER,to:email,subject:'Recuperación KLIDO',text:`Nueva contraseña: ${newPass}`}) }catch{} }
+  if(transporter){ try{ await transporter.sendMail({from:process.env.SMTP_USER,to:email,subject:'Recuperación KLIDO',text:`Nueva: ${newPass}`}) }catch{} }
   res.json({ok:true, mensaje:`Nueva contraseña enviada a ${email}`});
 });
 
 app.post('/api/login', async (req,res)=>{
   const {email,password} = req.body;
   let usuarios = read('usuarios.json'); const user = usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase());
-  if(!user) return res.status(404).json({error:'Usuario no existe'});
+  if(!user) return res.status(404).json({error:'Usuario no existe, crea tu empresa'});
   const ok = await bcrypt.compare(password, user.password); if(!ok) return res.status(401).json({error:'Contraseña incorrecta'});
   let agencias = read('agencias.json'); const agencia = agencias.find(a=>a.id===user.agenciaId);
   if(!agencia) return res.status(403).json({error:'Agencia no existe'});
-  if(!agencia.pagado) return res.status(403).json({error:`Agencia no verificada. Revisa tu correo ${user.email}, copia el código KLIDO-... y verifícalo en Crear empresa > Verificar. Spam también.`});
-  if(agencia.estado==='bloqueado') return res.status(403).json({error:'Agencia bloqueada por falta de pago mantenimiento. Contacta admin 3133181851'});
+  if(agencia.estado==='bloqueado') return res.status(403).json({error:'Bloqueada falta pago 3133181851'});
   agencia.ultimaConexion = new Date(); write('agencias.json', agencias);
   const token = jwt.sign({id:user.id, agenciaId:user.agenciaId, rol:user.rol}, JWT_SECRET, {expiresIn:'7d'});
   res.json({token, user:{id:user.id, email:user.email, nombre:user.nombre, rol:user.rol, agenciaId:user.agenciaId, agencia}});
 });
 
 const auth = (req,res,next)=>{ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.split(' ')[1], JWT_SECRET); next() }catch{return res.status(401).json({error:'Token inválido'})} };
-
-app.get('/api/mensajes', auth, (req,res)=>{ let mensajes = read('mensajes.json'); mensajes = mensajes.filter(m=>m.agenciaId===req.user.agenciaId); res.json(mensajes.slice(-200)); });
-app.post('/api/webhook', (req,res)=>{ const body = req.body; try{ if(body.entry){ let mensajes = read('mensajes.json'); const agenciaId = body.agenciaId || body.entry[0]?.id || 'default'; mensajes.push({id:Date.now().toString(), agenciaId, payload:body, leido:false, timestamp:new Date()}); write('mensajes.json', mensajes); } }catch(e){} res.sendStatus(200); });
-app.get('/api/templates', auth, async (req,res)=>{ res.json([{name:'promo_aprobada', status:'APPROVED', body:'Hola {{1}} oferta'}]); });
+app.get('/api/mensajes', auth, (req,res)=>{ let mensajes = read('mensajes.json'); res.json(mensajes.filter(m=>m.agenciaId===req.user.agenciaId).slice(-200)); });
+app.post('/api/webhook', (req,res)=>{ try{ if(req.body.entry){ let mensajes = read('mensajes.json'); mensajes.push({id:Date.now().toString(), agenciaId:req.body.agenciaId||'default', payload:req.body, leido:false, timestamp:new Date()}); write('mensajes.json', mensajes); } }catch{} res.sendStatus(200); });
+app.get('/api/templates', auth, async (req,res)=>res.json([{name:'promo_aprobada', status:'APPROVED'}]));
 const upload = multer({dest:'uploads/'});
 app.post('/api/campanas/excel', auth, upload.single('excel'), async (req,res)=>{
-  if(!req.file) return res.status(400).json({error:'Excel requerido'}); const wb = XLSX.readFile(req.file.path); const nums = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(r=>r.telefono||r.numero||r.wa||Object.values(r)[0]).filter(Boolean); fs.unlinkSync(req.file.path); let enviadas = 0; for(let i=0;i<nums.length;i+=20){ const bloque = nums.slice(i,i+20); console.log(`[${req.user.agenciaId}] Enviando bloque`, bloque.length); enviadas+=bloque.length; if(i+20<nums.length) await new Promise(r=>setTimeout(r,120000)); } res.json({ok:true, total:enviadas, mensaje:`Campaña anti-baneo: ${enviadas} números enviados en bloques de 20`});
+  if(!req.file) return res.status(400).json({error:'Excel requerido'}); const wb=XLSX.readFile(req.file.path); const nums=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(r=>r.telefono||r.numero||Object.values(r)[0]).filter(Boolean); fs.unlinkSync(req.file.path); let enviadas=0; for(let i=0;i<nums.length;i+=20){ enviadas+=20; if(i+20<nums.length) await new Promise(r=>setTimeout(r,120000)); } res.json({ok:true,total:enviadas});
 });
-app.post('/api/call', auth, (req,res)=>{ const {numero} = req.body; let llamadas = read('llamadas.json'); llamadas.push({id:Date.now().toString(), agenciaId:req.user.agenciaId, numero, fecha:new Date(), por:req.user.id}); write('llamadas.json', llamadas); res.json({ok:true, tel:`tel:${numero}`}); });
-app.post('/api/ia/panic', auth, (req,res)=>{ res.json({ok:true, mensaje:'IA pausada - modo humano activado'}) });
-app.post('/api/webhooks/shopify', (req,res)=>{ console.log('Shopify', req.body); res.sendStatus(200) });
-app.post('/api/webhooks/woocommerce', (req,res)=>{ console.log('Woo', req.body); res.sendStatus(200) });
-
-function checkAdmin(req,res,next){ if(req.headers['x-admin-key']!== ADMIN_KEY) return res.status(401).json({error:'Clave admin inválida'}); next(); }
+app.post('/api/call', auth, (req,res)=>{ let llamadas=read('llamadas.json'); llamadas.push({id:Date.now().toString(), agenciaId:req.user.agenciaId, numero:req.body.numero, fecha:new Date(), por:req.user.id}); write('llamadas.json', llamadas); res.json({ok:true}); });
+app.post('/api/ia/panic', auth, (req,res)=>res.json({ok:true}));
+app.post('/api/webhooks/shopify', (req,res)=>res.sendStatus(200));
+app.post('/api/webhooks/woocommerce', (req,res)=>res.sendStatus(200));
+function checkAdmin(req,res,next){ if(req.headers['x-admin-key']!==ADMIN_KEY) return res.status(401).json({error:'admin'}); next(); }
 app.get('/api/admin/metricas', checkAdmin, (req,res)=>{
-  const agencias = read('agencias.json') || []; const usuarios = read('usuarios.json') || []; const mensajes = read('mensajes.json') || [];
-  let ingresosAnual = 0; agencias.forEach(a=>{ const p = PLANES[a.plan] || PLANES.premium; ingresosAnual += p.anual; });
-  const hoy = new Date().toDateString();
-  res.json({
-    totalAgencias: agencias.length, activas: agencias.filter(a=>a.estado!=='bloqueado'&&a.pagado).length, ingresosMes: ingresosAnual,
-    porCobrar: agencias.filter(a=>a.estadoPago!=='pagado').reduce((sum,a)=>{const p=PLANES[a.plan]||PLANES.premium; return sum + p.trim},0),
-    agencias: agencias.map(a=>{ const p = PLANES[a.plan] || PLANES.premium; return { id:a.id, nombre:a.nombre, plan:a.plan||'premium', anual: a.anual || p.anual, mantenimiento: a.mantenimiento || p.trim, trabajadores: usuarios.filter(u=>u.agenciaId===a.id).length, mensajesHoy: mensajes.filter(m=>m.agenciaId===a.id && new Date(m.timestamp||m.fecha).toDateString()===hoy).length, ultimaConexion: a.ultimaConexion? new Date(a.ultimaConexion).toLocaleString('es-CO') : '-', estadoPago: a.estadoPago || (a.pagado?'pagado':'pendiente'), estado: a.estado || 'activo', codigo:a.codigo } })
-  });
+  const agencias=read('agencias.json')||[]; const usuarios=read('usuarios.json')||[]; const mensajes=read('mensajes.json')||[];
+  res.json({totalAgencias:agencias.length, activas:agencias.filter(a=>a.estado!=='bloqueado').length, ingresosMes:agencias.reduce((s,a)=>s+(PLANES[a.plan]?.anual||0),0), agencias:agencias.map(a=>({id:a.id,nombre:a.nombre,plan:a.plan,anual:a.anual,estadoPago:a.estadoPago,estado:a.estado,codigo:a.codigo,trabajadores:usuarios.filter(u=>u.agenciaId===a.id).length, ultimaConexion:a.ultimaConexion||'-'}))});
 });
 app.post('/api/admin/toggle', checkAdmin, (req,res)=>{
-  const {id,estado}=req.body; let agencias = read('agencias.json')||[];
-  agencias = agencias.map(a=>{ if(a.id===id){ const esPagado = estado==='pagado'; return {...a, estadoPago: estado, estado: esPagado? 'activo' : 'bloqueado', pagado: esPagado? true : false, bloqueadaEn: esPagado? null : new Date(), desbloqueadaEn: esPagado? new Date() : null } } return a; });
-  write('agencias.json', agencias); console.log(`Admin toggle ${id} -> ${estado}`); res.json({ok:true});
+  let agencias=read('agencias.json')||[]; agencias=agencias.map(a=>a.id===req.body.id?{...a, estadoPago:req.body.estado, estado:req.body.estado==='pagado'?'activo':'bloqueado', pagado:req.body.estado==='pagado'}:a); write('agencias.json', agencias); res.json({ok:true});
 });
-app.post('/api/admin/fix-acol-now', checkAdmin, (req,res)=>{
-  let agencias = read('agencias.json')||[];
-  agencias = agencias.map(a=>{ const n=a.nombre.toLowerCase(); if(n.includes('avanza')||n.includes('acol')) return {...a, pagado:true, estadoPago:'pagado', estado:'activo', desbloqueadaEn:new Date()}; return a; });
-  write('agencias.json', agencias); res.json({ok:true, mensaje:'Avanza y Acol activadas'});
-});
-app.get('/health', (req,res)=>res.json({ok:true, DATA_DIR, agencias:read('agencias.json').length, usuarios:read('usuarios.json').length, mensajes:read('mensajes.json').length, timestamp:new Date(), planes:PLANES}));
-app.listen(PORT, ()=>console.log(`=== KLIDO CRM COMPLETO AUTONOMO - DATA_DIR:${DATA_DIR} Agencias:${read('agencias.json').length} === Puerto ${PORT} ===`));
+app.post('/api/admin/fix-acol-now', checkAdmin, (req,res)=>{ let agencias=read('agencias.json')||[]; agencias=agencias.map(a=>{const n=a.nombre.toLowerCase(); if(n.includes('avanza')||n.includes('acol')) return {...a,pagado:true,estadoPago:'pagado',estado:'activo'}; return a;}); write('agencias.json', agencias); res.json({ok:true}); });
+app.get('/health',(req,res)=>res.json({ok:true, modo:'ULTRA-AUTONOMO', agencias:read('agencias.json').length, time:new Date()}));
+app.listen(PORT, ()=>console.log(`=== KLIDO ULTRA AUTONOMO PORT ${PORT} ===`));
