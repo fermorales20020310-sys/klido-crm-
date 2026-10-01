@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO - Avanza Consulting</title><link rel="icon" href="logo.png">
 <style>
-:root{--blue:#0b1a3a;--blue2:#08122b;--card:#ffffff;--border:#e2e8f0;--gold:#f59e0b}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,system-ui;background:#f8fafc;height:100vh;display:flex}
-.left{width:56%;background:radial-gradient(900px 600px at 20% 10%, #1a3a8a 0%, #0b1a3a 55%, #050c1f 100%);color:#fff;padding:28px 36px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-.brand{display:flex;align-items:center;gap:12px} .brand img{width:64px;height:64px;background:#fff;border-radius:14px;padding:4px;object-fit:contain} .brand b{font-size:28px;letter-spacing:1px} .brand span{font-size:10px;letter-spacing:4px;color:#94a3b8;display:block;margin-top:-2px}
-.hero h1{font-size:52px;line-height:.95;margin:30px 0 14px;font-weight:900} .hero h1 span{color:#60a5fa} .hero p{color:#cbd5e1;font-size:14px;line-height:1.6;max-width:460px} .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px;margin-top:14px;color:#bfdbfe}
+:root{--blue:#0b1a3a;--card:#ffffff;--border:#e2e8f0}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui;background:#f8fafc;height:100vh;display:flex}
+.left{width:56%;background:radial-gradient(900px 600px at 20% 10%, #1a3a8a 0%, #0b1a3a 55%, #050c1f 100%);color:#fff;padding:28px 36px;display:flex;flex-direction:column;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px} .brand img{width:64px;height:64px;background:#fff;border-radius:14px;padding:4px;object-fit:contain} .brand b{font-size:28px;letter-spacing:1px}
+.hero h1{font-size:52px;line-height:.95;margin:30px 0 14px;font-weight:900} .hero h1 span{color:#60a5fa} .hero p{color:#cbd5e1;font-size:14px;line-height:1.6;max-width:460px} .badge{display:inline-flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px;margin-top:14px;color:#bfdbfe}
 .bottom-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px} .bb{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px}
 .right{width:44%;background:var(--card);display:flex;align-items:center;justify-content:center;padding:20px}
 .card{width:100%;max-width:420px}
 .tabs{display:flex;background:#eef2ff;border-radius:12px;padding:4px;margin-bottom:18px} .tab{flex:1;padding:10px;border-radius:10px;text-align:center;font-size:13px;cursor:pointer;color:#64748b;font-weight:600} .tab.active{background:#0b1220;color:#fff}
-input,select{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--border);background:#f8fafc;margin:7px 0;font-size:13px}
-.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0} .plan{border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center;cursor:pointer;background:#f8fafc} .plan.active{border:2px solid #0b1220;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.08)} .plan b{font-size:12px;display:block} .plan .price{font-size:12px;font-weight:800;margin:4px 0} .plan .small{font-size:10px;color:#64748b;line-height:1.3}
+input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--border);background:#f8fafc;margin:7px 0;font-size:13px}
+.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0} .plan{border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center;cursor:pointer;background:#f8fafc} .plan.active{border:2px solid #0b1220;background:#fff} .plan b{font-size:12px} .plan .price{font-size:12px;font-weight:800;margin:4px 0} .plan .small{font-size:10px;color:#64748b}
 button.primary{width:100%;padding:13px;border-radius:12px;border:0;background:#0b1220;color:#fff;font-weight:800;cursor:pointer;margin-top:10px}
-.row{display:flex;align-items:center;gap:8px;font-size:11px;color:#475569;margin:8px 0} .row a{color:#0b1220;font-weight:700;text-decoration:underline;cursor:pointer}
+.row{display:flex;align-items:center;gap:8px;font-size:11px;color:#475569;margin:8px 0}
 .muted{font-size:11px;color:#64748b}
-.codeBox{display:flex;gap:6px} .codeBox button{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0b1220;color:#fff;cursor:pointer;font-size:11px;white-space:nowrap}
+.codeBox{display:flex;gap:6px} .codeBox button{padding:10px 12px;border-radius:10px;border:0;background:#0b1220;color:#fff;cursor:pointer;font-size:11px;white-space:nowrap}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:20} .modal.open{display:flex} .modal .box{background:#fff;border-radius:16px;padding:20px;width:380px}
-@media(max-width:900px){body{flex-direction:column;height:auto}.left,.right{width:100%}.left{padding:20px}.hero h1{font-size:36px}}
+@media(max-width:900px){body{flex-direction:column;height:auto}.left,.right{width:100%}.hero h1{font-size:36px}}
 </style></head><body>
 <div class="left">
 <div>
-<div class="brand"><img src="logo.png" onerror="this.style.background='#fff'"><div><b>KLIDO</b> AVANZA CONSULTING<span>AVANZA CONSULTING</span></div></div>
+<div class="brand"><img src="logo.png"><div><b>KLIDO</b> AVANZA CONSULTING</div></div>
 <div class="hero">
 <h1>El mejor CRM<br>que tu empresa<br><span>puede tener.</span></h1>
 <p><b>Klido Avanza Consulting — CRM empresarial multiagencia para API oficial de Meta (WhatsApp Business API).</b><br>Gestiona todas tus agencias, números, equipos, campañas y ventas desde un solo lugar.</p>
@@ -36,11 +36,11 @@ button.primary{width:100%;padding:13px;border-radius:12px;border:0;background:#0
 <div class="tabs"><div class="tab active" id="tLog" onclick="tab('login')">Ingresar</div><div class="tab" id="tReg" onclick="tab('reg')">Crear empresa</div></div>
 
 <div id="loginBox">
-<input id="lEmail" placeholder="Correo del administrador" value="avanzaconsultingyl@gmail.com">
-<input id="lPass" type="password" placeholder="Contraseña" value="Mafe2002@">
-<div class="row"><input type="checkbox" id="lTerms" checked style="width:auto"><label for="lTerms">Acepto <a onclick="showTerms()">Términos y Condiciones</a></label></div>
+<input id="lEmail" placeholder="Correo del administrador">
+<input id="lPass" type="password" placeholder="Contraseña">
+<div class="row"><input type="checkbox" id="lTerms" checked style="width:auto"><label for="lTerms">Acepto <a onclick="showTerms()" style="font-weight:700;text-decoration:underline;cursor:pointer;color:#0b1220">Términos y Condiciones</a></label></div>
 <button class="primary" onclick="doLogin()">Ingresar →</button>
-<div style="display:flex;justify-content:space-between;margin-top:10px"><a style="font-size:11px;color:#475569;cursor:pointer" onclick="openForgot()">¿Olvidaste contraseña?</a><span class="muted">Gold activo para Avanza</span></div>
+<div style="margin-top:12px"><a style="font-size:11px;color:#475569;cursor:pointer;text-decoration:underline" onclick="openForgot()">¿Olvidaste contraseña?</a></div>
 <div id="lMsg" class="muted" style="margin-top:8px"></div>
 </div>
 
@@ -55,17 +55,17 @@ button.primary{width:100%;padding:13px;border-radius:12px;border:0;background:#0
 <div class="plan" data-plan="premium" onclick="pick('premium')"><b>Premium + IA</b><div class="price">$1.400.000/año</div><div class="small">+ $95.000/trim mant.<br><br>10 asesores<br>IA incluida</div></div>
 <div class="plan" data-plan="gold" onclick="pick('gold')"><b>Gold + IA + Llamadas</b><div class="price">$2.400.000/año</div><div class="small">+ $120.000/trim mant.<br><br>Ilimitado<br>IA + Llamadas</div></div>
 </div>
-<div class="codeBox"><input id="rCode" placeholder="Código 6 dígitos"><button onclick="reqCode('registro')">Enviar código a mi Gmail</button></div>
-<p class="muted">El código se envía DESDE fermorales20020310@gmail.com pero te llega a ti. Revisa spam.</p>
-<div class="row"><input type="checkbox" id="rTerms" style="width:auto"><label for="rTerms">Acepto <a onclick="showTerms()">Términos y Condiciones</a> y entiendo que el mantenimiento trimestral es adicional al pago anual.</label></div>
+<div class="codeBox"><input id="rCode" placeholder="Código 6 dígitos"><button onclick="reqCode('registro')">Enviar código</button></div>
+<p class="muted">El código te llega a tu correo. Revisa spam.</p>
+<div class="row"><input type="checkbox" id="rTerms" style="width:auto"><label for="rTerms">Acepto Términos y entiendo que el mantenimiento trimestral es adicional.</label></div>
 <button class="primary" onclick="doReg()">Crear empresa y generar código →</button>
 <div id="rMsg" class="muted"></div>
 </div>
 </div>
 </div>
 
-<div class="modal" id="fModal"><div class="box"><h3>Recuperar contraseña</h3><p class="muted">Código de 6 dígitos llegará a tu Gmail registrado (no al nuestro).</p><input id="fEmail" placeholder="Tu correo registrado"><div class="codeBox"><input id="fCode" placeholder="Código"><button onclick="reqCode('recuperacion','fEmail')" style="background:#0b1220;color:#fff;padding:10px 12px;border-radius:10px;border:0;cursor:pointer">Enviar código</button></div><input id="fNew" type="password" placeholder="Nueva contraseña"><button class="primary" onclick="doReset()">Actualizar</button><button onclick="closeM()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;cursor:pointer">Cerrar</button><div id="fMsg" class="muted"></div></div></div>
-<div class="modal" id="tModal"><div class="box"><h3>Términos y Condiciones KLIDO</h3><p style="font-size:12px;line-height:1.6;color:#475569">KLIDO CRM es plataforma real de producción. Tus datos son tuyos, no vendemos bases. Uso de API oficial Meta. Básico sin IA, Premium con IA historial, Gold con IA + llamada directa tel:. Pagos anual + mantenimiento trimestral aparte. Soporte Avanza Consulting vía WhatsApp. Al registrarte aceptas uso responsable.</p><button onclick="closeM()" style="width:100%;padding:10px;border-radius:10px;border:0;background:#0b1220;color:#fff;cursor:pointer">Entendido</button></div></div>
+<div class="modal" id="fModal"><div class="box"><h3>Recuperar contraseña</h3><input id="fEmail" placeholder="Tu correo registrado"><div class="codeBox"><input id="fCode" placeholder="Código"><button onclick="reqCode('recuperacion','fEmail')">Enviar código</button></div><input id="fNew" type="password" placeholder="Nueva contraseña"><button class="primary" onclick="doReset()">Actualizar</button><button onclick="closeM()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;cursor:pointer">Cerrar</button><div id="fMsg" class="muted"></div></div></div>
+<div class="modal" id="tModal"><div class="box"><h3>Términos KLIDO</h3><p style="font-size:12px;color:#475569;line-height:1.6">Plataforma real producción. Tus datos son tuyos. API oficial Meta. Básico sin IA, Premium con IA, Gold con IA + llamada tel:. Pagos anual + trim aparte. Soporte Avanza.</p><button onclick="closeM()" style="width:100%;padding:10px;border-radius:10px;border:0;background:#0b1220;color:#fff">Entendido</button></div></div>
 
 <script>
 let plan='basico';
@@ -78,7 +78,7 @@ async function reqCode(tipo, id){
  const emailEl = id==='fEmail'? document.getElementById('fEmail') : document.getElementById('rEmail');
  const email=emailEl.value.trim(); if(!email) return alert('Escribe tu correo');
  const r=await fetch('/api/public/solicitar-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,tipo})});
- const d=await r.json(); alert(d.mensaje+' - Revisa spam');
+ const d=await r.json(); alert(d.mensaje);
 }
 async function doReg(){
  const nombre=document.getElementById('rNombre').value.trim(); const email=document.getElementById('rEmail').value.trim(); const codigo=document.getElementById('rCode').value.trim(); const password=document.getElementById('rPass').value;
@@ -91,7 +91,7 @@ async function doReg(){
 }
 async function doLogin(){
  const email=document.getElementById('lEmail').value.trim(); const password=document.getElementById('lPass').value;
- if(!document.getElementById('lTerms').checked) return alert('Acepta términos');
+ if(!document.getElementById('lTerms').checked) return alert('Debes aceptar Términos');
  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
  const d=await r.json(); if(!r.ok){document.getElementById('lMsg').textContent=d.error; return}
  localStorage.setItem('token',d.token); localStorage.setItem('user',JSON.stringify(d.user)); location.href='/crm.html';
@@ -99,6 +99,6 @@ async function doLogin(){
 async function doReset(){
  const email=document.getElementById('fEmail').value.trim(); const codigo=document.getElementById('fCode').value.trim(); const nuevaPassword=document.getElementById('fNew').value;
  const r=await fetch('/api/public/recuperar-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo,nuevaPassword})});
- const d=await r.json(); document.getElementById('fMsg').textContent=d.mensaje||d.error; if(r.ok){alert('Contraseña actualizada'); closeM();}
+ const d=await r.json(); document.getElementById('fMsg').textContent=d.mensaje||d.error; if(r.ok){alert('Actualizada'); closeM();}
 }
 </script></body></html>
