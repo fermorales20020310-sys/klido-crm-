@@ -13,128 +13,189 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 8080;
-const JWT_SECRET = process.env.JWT_SECRET || 'klido-avanza-2026-real-internacional';
+const JWT_SECRET = process.env.JWT_SECRET || 'klido-avanza-real-2026';
 const ADMIN_KEY = process.env.ADMIN_KEY || 'KLIDO_DUEÑA_2026';
 
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-const PUBLIC_DIR = path.join(__dirname, 'public');
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
-if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR,{recursive:true});
-if(!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR,{recursive:true});
-if(!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR,{recursive:true});
+const DATA_DIR = path.join(__dirname,'data');
+const PUBLIC_DIR = path.join(__dirname,'public');
+const UPLOAD_DIR = path.join(__dirname,'uploads');
+[DATA_DIR,PUBLIC_DIR,UPLOAD_DIR].forEach(d=>{if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true})});
 
-const f = (name) => path.join(DATA_DIR, name);
-const read = (name, def=[]) => { try{ return JSON.parse(fs.readFileSync(f(name),'utf8')) } catch{ return def } };
-const write = (name, data) => fs.writeFileSync(f(name), JSON.stringify(data,null,2));
+const f = n => path.join(DATA_DIR,n);
+const read = (n,d=[]) => { try{return JSON.parse(fs.readFileSync(f(n),'utf8'))}catch{return d}};
+const write = (n,data) => fs.writeFileSync(f(n), JSON.stringify(data,null,2));
 
-if(!fs.existsSync(f('agencias.json'))) write('agencias.json', []);
-if(!fs.existsSync(f('usuarios.json'))) write('usuarios.json', []);
-if(!fs.existsSync(f('mensajes.json'))) write('mensajes.json', []);
-if(!fs.existsSync(f('llamadas.json'))) write('llamadas.json', []);
+['agencias.json','usuarios.json','mensajes.json','llamadas.json','codigos.json','campanas.json','clientes.json'].forEach(file=>{if(!fs.existsSync(f(file))) write(file,[])});
 
-// ===== PARCHEADO - EMERGENCIA REAL CON LOGIN GOLD (no mas loop) =====
-const LOGIN_GOLD_HTML = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO CRM GOLD</title><style>body{font-family:system-ui;background:#0f172a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}.card{background:#1e293b;padding:32px;border-radius:16px;width:360px;box-shadow:0 20px 40px rgba(0,0,0,.4)}h2{margin:0 0 4px}.sub{color:#94a3b8;font-size:13px;margin-bottom:20px}input{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;margin-bottom:12px;box-sizing:border-box}button{width:100%;padding:12px;border-radius:8px;border:0;background:#f59e0b;color:#000;font-weight:800;cursor:pointer}button:disabled{opacity:.6}.ok{background:#065f46;color:#a7f3d0;padding:8px;border-radius:6px;margin-top:12px;font-size:13px;display:none}.err{background:#7f1d1d;color:#fecaca;padding:8px;border-radius:6px;margin-top:12px;font-size:13px;display:none}</style></head><body><div class="card"><h2>KLIDO CRM <span style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:12px;font-size:11px">GOLD</span></h2><div class="sub">Avanza Consulting<br>avanzaconsultingyl@gmail.com / Mafe2002@</div><input id="email" value="avanzaconsultingyl@gmail.com"><input id="pass" type="password" value="Mafe2002@"><button id="btn" onclick="login()">INGRESAR GOLD</button><div id="ok" class="ok"></div><div id="err" class="err"></div><p style="font-size:11px;color:#64748b;margin-top:14px;text-align:center">Si ves este login, tu server ya levanto. Luego sube tu CRM real con: git add -f public/ && git push</p></div><script>async function login(){const b=document.getElementById('btn');b.disabled=true;b.textContent='Entrando...';const email=document.getElementById('email').value.trim();const password=document.getElementById('pass').value;const ok=document.getElementById('ok');const err=document.getElementById('err');ok.style.display='none';err.style.display='none';try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const d=await r.json();if(!r.ok) throw new Error(d.error);ok.style.display='block';ok.textContent='EXITO '+d.user.agencia.nombre+' GOLD - Entraste!';localStorage.setItem('klido_token',d.token);}catch(e){err.style.display='block';err.textContent=e.message}finally{b.disabled=false;b.textContent='INGRESAR GOLD'}}</script></body></html>`;
-if(!fs.existsSync(path.join(PUBLIC_DIR,'index.html')) || fs.readFileSync(path.join(PUBLIC_DIR,'index.html'),'utf8').includes('Cargando sistema')){
-  fs.writeFileSync(path.join(PUBLIC_DIR,'index.html'), LOGIN_GOLD_HTML);
-}
-if(!fs.existsSync(path.join(PUBLIC_DIR,'crm.html'))){
-  fs.writeFileSync(path.join(PUBLIC_DIR,'crm.html'), LOGIN_GOLD_HTML);
-}
+// SMTP - TU GMAIL COMO REMITENTE, PERO EL CODIGO LLEGA AL QUE LO PIDE
+let transporter=null;
+const SMTP_USER = process.env.SMTP_USER || 'fermorales20020310@gmail.com';
+try{
+  transporter = nodemailer.createTransport({
+    service:'gmail',
+    auth:{user:SMTP_USER, pass:process.env.SMTP_PASS} // TIENES QUE PONER EN RAILWAY TU APP PASSWORD DE GMAIL
+  });
+}catch(e){console.log('SMTP no configurado, poner SMTP_PASS en Railway')}
 
-// ===== TU LOGICA ULTRA AUTONOMA INTACTA =====
-const AVANZA_EMAIL = 'avanzaconsultingyl@gmail.com';
-const AVANZA_PASS = 'Mafe2002@';
-let agenciasInit = read('agencias.json');
-let usuariosInit = read('usuarios.json');
-let changed = false;
+const PLANES={ basico:{anual:800000,trim:80000,nombre:'Básico',ia:false,call:false}, premium:{anual:1400000,trim:95000,nombre:'Premium',ia:true,call:false}, gold:{anual:2400000,trim:120000,nombre:'Gold',ia:true,call:true} };
 
-let avanzaAg = agenciasInit.find(a => (a.nombre||'').toLowerCase().includes('avanza'));
-if(!avanzaAg){
-  avanzaAg = { id: 'avanza-gold-'+Date.now(), nombre:'Avanza Consulting', plan:'gold', planNombre:'Gold', anual:2400000, mantenimiento:120000, codigo:'KLIDO-GOLD-MAFE-2026', pagado:true, estado:'activo', estadoPago:'pagado', created:new Date(), ultimaConexion:new Date() };
-  agenciasInit.push(avanzaAg); changed=true;
-} else {
-  if(avanzaAg.plan!=='gold' ||!avanzaAg.pagado || avanzaAg.estado!=='activo'){ avanzaAg.plan='gold'; avanzaAg.planNombre='Gold'; avanzaAg.pagado=true; avanzaAg.estado='activo'; avanzaAg.estadoPago='pagado'; changed=true; }
-}
-let avanzaUser = usuariosInit.find(u => u.email.toLowerCase()===AVANZA_EMAIL);
-const hashMafe = bcrypt.hashSync(AVANZA_PASS, 10);
-if(!avanzaUser){
-  avanzaUser = { id: avanzaAg.id+'_1', email: AVANZA_EMAIL, password: hashMafe, nombre:'Avanza Consulting', rol:'jefe', agenciaId: avanzaAg.id, plan:'gold' };
-  usuariosInit.push(avanzaUser); changed=true;
-} else {
-  avanzaUser.password = hashMafe; avanzaUser.agenciaId = avanzaAg.id; avanzaUser.plan='gold'; changed=true;
-}
-agenciasInit = agenciasInit.map(a=>{ const n=(a.nombre||'').toLowerCase(); if(n.includes('acol')||n.includes('avanza')) return {...a, pagado:true, estado:'activo', estadoPago:'pagado', plan: n.includes('avanza')?'gold':a.plan}; return a; });
-if(changed){ write('agencias.json', agenciasInit); write('usuarios.json', usuariosInit); console.log('AVANZA GOLD FORZADA: '+AVANZA_EMAIL+' / '+AVANZA_PASS); }
+// AVANZA GOLD FIJA
+const AVANZA_EMAIL='avanzaconsultingyl@gmail.com';
+let agencias=read('agencias.json'); let usuarios=read('usuarios.json');
+if(!agencias.find(a=>a.nombre.toLowerCase().includes('avanza'))){ agencias.push({id:'avanza-gold-1',nombre:'Avanza Consulting',plan:'gold',planNombre:'Gold',anual:2400000,mantenimiento:120000,codigo:'KLIDO-GOLD-MAFE-2026',pagado:true,estado:'activo',estadoPago:'pagado',created:new Date()}); write('agencias.json',agencias); agencias=read('agencias.json');}
+let avanzaAg=agencias.find(a=>a.nombre.toLowerCase().includes('avanza'));
+let avanzaUser=usuarios.find(u=>u.email.toLowerCase()===AVANZA_EMAIL);
+if(!avanzaUser){ usuarios.push({id:avanzaAg.id+'_1',email:AVANZA_EMAIL,password:bcrypt.hashSync('Mafe2002@',10),nombre:'Avanza Consulting',rol:'jefe',agenciaId:avanzaAg.id,plan:'gold',aceptoTerminos:true}); write('usuarios.json',usuarios); }
+else{ avanzaUser.password=bcrypt.hashSync('Mafe2002@',10); avanzaUser.plan='gold'; avanzaUser.agenciaId=avanzaAg.id; write('usuarios.json',usuarios); }
 
-app.use(cors());
-app.use(express.json({limit:'20mb'}));
-app.use(express.urlencoded({extended:true}));
-app.use((req,res,next)=>{ res.set('Cache-Control','no-store'); next(); });
+app.use(cors()); app.use(express.json({limit:'20mb'})); app.use(express.urlencoded({extended:true}));
 app.use(express.static(PUBLIC_DIR));
 
-let transporter=null;
-try{ if(process.env.SMTP_HOST && process.env.SMTP_USER){ transporter = nodemailer.createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT||587), secure:false, auth:{user:process.env.SMTP_USER, pass:process.env.SMTP_PASS} }); } }catch{}
-const PLANES = { basico:{anual:800000, trim:80000, nombre:'Básico'}, premium:{anual:1400000, trim:95000, nombre:'Premium'}, gold:{anual:2400000, trim:120000, nombre:'Gold'} };
-
-app.get('/api/public/crm-check',(req,res)=>{ res.json({hasCrm: fs.existsSync(path.join(PUBLIC_DIR,'crm.html')), hasIndex: fs.existsSync(path.join(PUBLIC_DIR,'index.html'))}); });
+// CODIGOS RECUPERACION
+function genCodigo(){ return Math.floor(100000+Math.random()*900000).toString(); }
+app.post('/api/public/solicitar-codigo', async (req,res)=>{
+  const {email, tipo} = req.body; // tipo: registro | recuperacion
+  const codigo=genCodigo(); let codigos=read('codigos.json');
+  codigos = codigos.filter(c=>c.email!==email); codigos.push({email:email.toLowerCase(), codigo, tipo, expira: Date.now()+15*60*1000, usado:false});
+  write('codigos.json', codigos);
+  if(transporter){
+    try{ await transporter.sendMail({ from:`KLIDO CRM <${SMTP_USER}>`, to: email, subject: tipo==='registro'? 'Código de verificación KLIDO' : 'Código recuperación KLIDO', html:`<div style="font-family:sans-serif"><h2>KLIDO CRM</h2><p>Tu código es:</p><h1 style="background:#0f172a;color:#f59e0b;padding:12px;border-radius:8px;letter-spacing:4px">${codigo}</h1><p>Expira en 15 minutos.</p><p>Si no solicitaste esto, ignóralo.</p></div>` }); }catch(e){console.log('Error enviando mail',e)}
+  }
+  res.json({ok:true, mensaje:`Código enviado a ${email}`, preview: codigo}); // preview solo para prueba, luego quítalo
+});
+app.post('/api/public/verificar-codigo',(req,res)=>{
+  const {email,codigo}=req.body; let codigos=read('codigos.json');
+  const c=codigos.find(x=>x.email===email.toLowerCase() && x.codigo===codigo &&!x.usado && x.expira>Date.now());
+  if(!c) return res.status(400).json({error:'Código inválido o expirado'});
+  c.usado=true; write('codigos.json',codigos);
+  res.json({ok:true});
+});
 app.post('/api/public/crear-empresa', async (req,res)=>{
-  try{
-    const {nombre,email,password,plan}=req.body;
-    if(!nombre||!email||!password) return res.status(400).json({error:'Completa todo'});
-    let agencias=read('agencias.json'); let usuarios=read('usuarios.json');
-    if(usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase())) return res.status(400).json({error:'Correo ya existe, dale Ingresar'});
-    const planKey=(plan||'premium').toLowerCase(); const planData=PLANES[planKey]||PLANES.premium;
-    const codigo=`KLIDO-${planKey.toUpperCase()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
-    const hash=await bcrypt.hash(password,10); const id=Date.now().toString();
-    const agencia={id, nombre:nombre.trim(), plan:planKey, planNombre:planData.nombre, anual:planData.anual, mantenimiento:planData.trim, codigo, pagado:true, estado:'activo', estadoPago:'pagado', created:new Date(), modo:'ultra-autonomo'};
-    const user={id:id+'_1', email:email.toLowerCase().trim(), password:hash, nombre:nombre.trim(), rol:'jefe', agenciaId:id, plan:planKey};
-    agencias.push(agencia); usuarios.push(user); write('agencias.json', agencias); write('usuarios.json', usuarios);
-    res.json({ok:true, mensaje:`¡${nombre} creada y activa! Ya puedes Ingresar`});
-  }catch(e){ console.error(e); res.status(500).json({error:'Error interno'}); }
+  const {nombre,email,password,plan,codigo, aceptoTerminos}=req.body;
+  if(!aceptoTerminos) return res.status(400).json({error:'Debes aceptar Términos y Condiciones'});
+  let codigos=read('codigos.json'); const okCode=codigos.find(c=>c.email===email.toLowerCase() && c.usado);
+  if(!okCode) return res.status(400).json({error:'Verifica tu correo con el código primero'});
+  let agencias=read('agencias.json'); let usuarios=read('usuarios.json');
+  if(usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase())) return res.status(400).json({error:'Ya existe, ingresa'});
+  const planKey=(plan||'basico').toLowerCase(); const id=Date.now().toString();
+  const agencia={id,nombre,plan:planKey,planNombre:PLANES[planKey].nombre,anual:PLANES[planKey].anual,mantenimiento:PLANES[planKey].trim,codigo:`KLIDO-${planKey.toUpperCase()}-${Math.random().toString(36).slice(2,6).toUpperCase()}`,pagado:true,estado:'activo',estadoPago:'pagado',created:new Date(),waToken:null,waPhoneId:null};
+  const user={id:id+'_1',email:email.toLowerCase(),password:await bcrypt.hash(password,10),nombre,rol:'jefe',agenciaId:id,plan:planKey,aceptoTerminos:true};
+  agencias.push(agencia); usuarios.push(user); write('agencias.json',agencias); write('usuarios.json',usuarios);
+  res.json({ok:true, mensaje:'Empresa creada GOLD activa'});
 });
-app.post('/api/public/verificar-codigo', (req,res)=>res.json({ok:true, mensaje:'Ultra autónomo - ya activo'}));
-app.post('/api/public/recuperar', async (req,res)=>{
-  const {email}=req.body; let usuarios=read('usuarios.json'); const user=usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase());
-  if(!user) return res.status(404).json({error:'No existe'}); const newPass=Math.random().toString(36).slice(2,8);
-  user.password=await bcrypt.hash(newPass,10); write('usuarios.json', usuarios);
-  if(transporter){ try{ await transporter.sendMail({from:process.env.SMTP_USER,to:email,subject:'KLIDO nueva clave',text:`Nueva: ${newPass}`}) }catch{} }
-  res.json({ok:true, mensaje:`Nueva clave enviada`});
+app.post('/api/public/recuperar-password', async (req,res)=>{
+  const {email,nuevaPassword,codigo}=req.body; let codigos=read('codigos.json'); let usuarios=read('usuarios.json');
+  const c=codigos.find(x=>x.email===email.toLowerCase() && x.codigo===codigo && x.expira>Date.now());
+  if(!c) return res.status(400).json({error:'Código inválido'});
+  const u=usuarios.find(x=>x.email===email.toLowerCase()); if(!u) return res.status(404).json({error:'No existe'});
+  u.password=await bcrypt.hash(nuevaPassword,10); write('usuarios.json',usuarios);
+  codigos=codigos.filter(x=>!(x.email===email.toLowerCase() && x.codigo===codigo)); write('codigos.json',codigos);
+  res.json({ok:true, mensaje:'Contraseña actualizada'});
 });
+
 app.post('/api/login', async (req,res)=>{
-  const {email,password}=req.body; let usuarios=read('usuarios.json'); const user=usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase().trim());
-  if(!user) return res.status(404).json({error:'Usuario no existe'}); if(!await bcrypt.compare(password, user.password)) return res.status(401).json({error:'Contraseña incorrecta'});
-  let agencias=read('agencias.json'); const agencia=agencias.find(a=>a.id===user.agenciaId);
-  if(!agencia) return res.status(403).json({error:'Agencia no existe'}); agencia.ultimaConexion=new Date(); write('agencias.json', agencias);
-  const token=jwt.sign({id:user.id, agenciaId:user.agenciaId, rol:user.rol}, JWT_SECRET, {expiresIn:'7d'});
-  res.json({token, user:{id:user.id, email:user.email, nombre:user.nombre, rol:user.rol, agenciaId:user.agenciaId, agencia}});
+  const {email,password}=req.body; const usuarios=read('usuarios.json'); const user=usuarios.find(u=>u.email.toLowerCase()===email.toLowerCase().trim());
+  if(!user) return res.status(404).json({error:'No existe'}); if(!await bcrypt.compare(password,user.password)) return res.status(401).json({error:'Contraseña incorrecta'});
+  const agencias=read('agencias.json'); const agencia=agencias.find(a=>a.id===user.agenciaId); if(!agencia || agencia.estado==='bloqueado') return res.status(403).json({error:'Agencia bloqueada'});
+  agencia.ultimaConexion=new Date(); write('agencias.json',agencias);
+  const token=jwt.sign({id:user.id,agenciaId:user.agenciaId,rol:user.rol,email:user.email},JWT_SECRET,{expiresIn:'7d'});
+  res.json({token,user:{id:user.id,email:user.email,nombre:user.nombre,rol:user.rol,agenciaId:user.agenciaId,plan:agencia.plan,agencia}});
 });
-const auth=(req,res,next)=>{ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.split(' ')[1], JWT_SECRET); next() }catch{return res.status(401).json({error:'Token inválido'})} };
-app.get('/api/mensajes', auth, (req,res)=>{ let m=read('mensajes.json'); res.json(m.filter(x=>x.agenciaId===req.user.agenciaId).slice(-200)); });
-app.post('/api/webhook', (req,res)=>{ try{ let m=read('mensajes.json'); m.push({id:Date.now().toString(), payload:req.body, timestamp:new Date()}); write('mensajes.json', m); }catch{} res.sendStatus(200); });
-app.get('/api/templates', auth, async (req,res)=>res.json([{name:'promo_aprobada', status:'APPROVED'}]));
+const auth=(req,res,next)=>{ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.split(' ')[1],JWT_SECRET); next()}catch{return res.status(401).json({error:'Token invalido'})}};
+const checkRole=(roles)=>(req,res,next)=>{ if(!roles.includes(req.user.rol)) return res.status(403).json({error:'Sin permiso'}); next(); };
+
+// --- APP REAL ---
+app.get('/api/mensajes', auth, (req,res)=>{
+  let mensajes=read('mensajes.json'); let clientes=read('clientes.json');
+  let lista=mensajes.filter(m=>m.agenciaId===req.user.agenciaId);
+  if(req.user.rol==='trabajador') lista=lista.filter(m=>!m.asignadoA || m.asignadoA===req.user.id);
+  // segmentacion por query?tipo=no_leidos|bandeja|respondidos|nuevo|recurrente|irrelevante
+  const {tipo}=req.query;
+  if(tipo==='no_leidos') lista=lista.filter(m=>!m.leido);
+  if(tipo==='respondidos') lista=lista.filter(m=>m.respondido);
+  if(tipo) lista=lista.filter(m=>m.segmento===tipo || m.estado===tipo);
+  res.json(lista.slice(-500).reverse());
+});
+app.post('/api/mensajes/segmentar', auth, (req,res)=>{ let mensajes=read('mensajes.json'); mensajes=mensajes.map(m=> m.id===req.body.id? {...m, segmento:req.body.segmento} : m); write('mensajes.json',mensajes); res.json({ok:true}); });
+app.post('/api/mensajes/seguimiento', auth, (req,res)=>{ let mensajes=read('mensajes.json'); mensajes=mensajes.map(m=> m.id===req.body.id? {...m, seguimiento:req.body.nota, fechaSeguimiento:req.body.fecha, programado:req.body.fecha} : m); write('mensajes.json',mensajes); res.json({ok:true}); });
+app.post('/api/mensajes/asignar', auth, checkRole(['jefe','admin']), (req,res)=>{ let mensajes=read('mensajes.json'); mensajes=mensajes.map(m=> m.id===req.body.id? {...m, asignadoA:req.body.trabajadorId} : m); write('mensajes.json',mensajes); res.json({ok:true}); });
+app.get('/api/calendario', auth, (req,res)=>{ let mensajes=read('mensajes.json'); res.json(mensajes.filter(m=>m.agenciaId===req.user.agenciaId && m.programado)); });
+app.get('/api/clientes', auth, (req,res)=>{ let c=read('clientes.json'); res.json(c.filter(x=>x.agenciaId===req.user.agenciaId)); });
+app.post('/api/clientes/clasificar', auth, (req,res)=>{ let c=read('clientes.json'); c=c.map(x=> x.id===req.body.id? {...x, tipo:req.body.tipo} : x); write('clientes.json',c); res.json({ok:true}); }); // nuevo, recurrente, irrelevante
+
+// CAMPAÑAS + PLANTILLAS META AUTOMATICAS
+app.get('/api/templates', auth, async (req,res)=>{
+  const agencia=read('agencias.json').find(a=>a.id===req.user.agenciaId);
+  if(agencia && agencia.waToken && agencia.waPhoneId){
+    try{
+      const r=await fetch(`https://graph.facebook.com/v20.0/${agencia.waPhoneId}/message_templates?access_token=${agencia.waToken}`);
+      const j=await r.json(); if(j.data) return res.json(j.data);
+    }catch(e){}
+  }
+  res.json([{name:'promo_aprobada', status:'APPROVED', language:'es'},{name:'bienvenida', status:'APPROVED', language:'es'}]);
+});
 const upload=multer({dest:UPLOAD_DIR});
-app.post('/api/campanas/excel', auth, upload.single('excel'), async (req,res)=>{ if(!req.file) return res.status(400).json({error:'Excel'}); const wb=XLSX.readFile(req.file.path); const nums=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).map(r=>r.telefono||r.numero||Object.values(r)[0]).filter(Boolean); fs.unlinkSync(req.file.path); res.json({ok:true,total:nums.length}); });
-app.post('/api/call', auth, (req,res)=>{ let ll=read('llamadas.json'); ll.push({id:Date.now().toString(), agenciaId:req.user.agenciaId, numero:req.body.numero, fecha:new Date()}); write('llamadas.json', ll); res.json({ok:true}); });
-app.post('/api/ia/panic', auth, (req,res)=>res.json({ok:true}));
-app.post('/api/webhooks/shopify',(req,res)=>res.sendStatus(200));
-app.post('/api/webhooks/woocommerce',(req,res)=>res.sendStatus(200));
-function checkAdmin(req,res,next){ if(req.headers['x-admin-key']!==ADMIN_KEY) return res.status(401).json({error:'admin'}); next(); }
-app.get('/api/admin/metricas', checkAdmin, (req,res)=>{ const agencias=read('agencias.json')||[]; const usuarios=read('usuarios.json')||[]; res.json({totalAgencias:agencias.length, activas:agencias.filter(a=>a.estado!=='bloqueado').length, ingresosMes:agencias.reduce((s,a)=>s+(PLANES[a.plan]?.anual||0),0), agencias:agencias.map(a=>({id:a.id,nombre:a.nombre,plan:a.plan,anual:a.anual,estadoPago:a.estadoPago,estado:a.estado,codigo:a.codigo,trabajadores:usuarios.filter(u=>u.agenciaId===a.id).length, ultimaConexion:a.ultimaConexion||'-'}))}); });
-app.post('/api/admin/toggle', checkAdmin, (req,res)=>{ let agencias=read('agencias.json')||[]; agencias=agencias.map(a=>a.id===req.body.id?{...a,estadoPago:req.body.estado,estado:req.body.estado==='pagado'?'activo':'bloqueado',pagado:req.body.estado==='pagado'}:a); write('agencias.json', agencias); res.json({ok:true}); });
-app.post('/api/admin/fix-acol-now', checkAdmin, (req,res)=>{ let agencias=read('agencias.json')||[]; agencias=agencias.map(a=>{const n=a.nombre.toLowerCase(); if(n.includes('avanza')||n.includes('acol')) return {...a,pagado:true,estadoPago:'pagado',estado:'activo', plan: n.includes('avanza')?'gold':a.plan}; return a;}); write('agencias.json', agencias); res.json({ok:true}); });
-app.get('/health',(req,res)=>res.json({ok:true, modo:'ULTRA-AUTONOMO-GOLD-PARCHEADO-SIN-PERDER-LOGROS', hasCrm:fs.existsSync(path.join(PUBLIC_DIR,'crm.html')), hasIndex:fs.existsSync(path.join(PUBLIC_DIR,'index.html')), agencias:read('agencias.json').length, avanza:'avanzaconsultingyl@gmail.com / Mafe2002@ GOLD'}));
-
-// ===== PARCHE FINAL - YA NO DA Cannot GET NUNCA =====
-app.get('/crm.html', (req,res)=>{
-  const p = path.join(PUBLIC_DIR,'crm.html');
-  if(fs.existsSync(p)) return res.sendFile(p);
-  return res.sendFile(path.join(PUBLIC_DIR,'index.html'));
+app.post('/api/campanas/excel', auth, upload.single('excel'), (req,res)=>{
+  if(!req.file) return res.status(400).json({error:'Excel requerido'});
+  const wb=XLSX.readFile(req.file.path); const sheet=wb.Sheets[wb.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(sheet);
+  const nums=rows.map(r=>{ const v= r.telefono||r.Telefono||r.numero||r.Numero||r.phone||Object.values(r)[0]; return String(v).replace(/\D/g,''); }).filter(n=>n.length>=10);
+  fs.unlinkSync(req.file.path);
+  let campanas=read('campanas.json'); campanas.push({id:Date.now().toString(), agenciaId:req.user.agenciaId, total:nums.length, numeros:nums, plantilla:req.body.plantilla||'promo_aprobada', fecha:new Date(), por:req.user.id, estado:'pendiente'});
+  write('campanas.json',campanas);
+  res.json({ok:true,total:nums.length, numeros:nums.slice(0,5)});
 });
-app.get('*', (req,res)=>{
-  if(req.path.startsWith('/api/')) return res.status(404).json({error:'api no existe'});
-  const idx = path.join(PUBLIC_DIR,'index.html');
-  if(fs.existsSync(idx)) return res.sendFile(idx);
-  return res.send('KLIDO GOLD ACTIVO');
+app.get('/api/campanas/historial', auth, (req,res)=>{ let c=read('campanas.json'); res.json(c.filter(x=>x.agenciaId===req.user.agenciaId).reverse()); });
+app.get('/api/metricas', auth, (req,res)=>{
+  let mensajes=read('mensajes.json').filter(m=>m.agenciaId===req.user.agenciaId);
+  let campanas=read('campanas.json').filter(c=>c.agenciaId===req.user.agenciaId);
+  let llamadas=read('llamadas.json').filter(l=>l.agenciaId===req.user.agenciaId);
+  res.json({ totalMensajes:mensajes.length, noLeidos:mensajes.filter(m=>!m.leido).length, respondidos:mensajes.filter(m=>m.respondido).length, campanas:campanas.length, llamadas:llamadas.length, conversion: mensajes.filter(m=>m.segmento==='recurrente').length });
 });
 
-app.listen(PORT, ()=>console.log(`=== KLIDO ULTRA GOLD PARCHEADO ${PORT} === AVANZA Mafe2002@ SIN PERDER NADA ===`));
+// PLANES
+app.post('/api/planes/cambiar', auth, checkRole(['jefe']), (req,res)=>{
+  let agencias=read('agencias.json'); agencias=agencias.map(a=> a.id===req.user.agenciaId? {...a, plan:req.body.plan, planNombre:PLANES[req.body.plan].nombre} : a); write('agencias.json',agencias);
+  let usuarios=read('usuarios.json'); usuarios=usuarios.map(u=> u.agenciaId===req.user.agenciaId? {...u, plan:req.body.plan} : u); write('usuarios.json',usuarios);
+  res.json({ok:true, mensaje:`Cambiado a ${PLANES[req.body.plan].nombre}`});
+});
+
+// TRABAJADORES
+app.get('/api/trabajadores', auth, checkRole(['jefe']), (req,res)=>{ let u=read('usuarios.json'); res.json(u.filter(x=>x.agenciaId===req.user.agenciaId)); });
+app.post('/api/trabajadores', auth, checkRole(['jefe']), async (req,res)=>{
+  let usuarios=read('usuarios.json'); const hash=await bcrypt.hash(req.body.password,10);
+  usuarios.push({id:Date.now().toString(), email:req.body.email.toLowerCase(), password:hash, nombre:req.body.nombre, rol:'trabajador', agenciaId:req.user.agenciaId, plan:read('agencias.json').find(a=>a.id===req.user.agenciaId).plan});
+  write('usuarios.json',usuarios); res.json({ok:true});
+});
+app.delete('/api/trabajadores/:id', auth, checkRole(['jefe']), (req,res)=>{ let u=read('usuarios.json'); u=u.filter(x=>x.id!==req.params.id); write('usuarios.json',u); res.json({ok:true}); });
+
+// LLAMADAS GOLD
+app.post('/api/call', auth, (req,res)=>{
+  let llamadas=read('llamadas.json'); const agencia=read('agencias.json').find(a=>a.id===req.user.agenciaId);
+  if(agencia.plan!=='gold') return res.status(403).json({error:'Solo plan Gold tiene llamadas directas'});
+  llamadas.push({id:Date.now().toString(), agenciaId:req.user.agenciaId, numero:req.body.numero, por:req.user.id, fecha:new Date()});
+  write('llamadas.json',llamadas);
+  res.json({ok:true, tel:`tel:${req.body.numero}`});
+});
+
+// WEBHOOKS
+app.post('/api/webhook', (req,res)=>{ let m=read('mensajes.json'); const body=req.body; const numero=body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.from || body.from || 'desconocido'; const texto=body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.text?.body || body.text || JSON.stringify(body).slice(0,200); m.push({id:Date.now().toString(), agenciaId: body.agenciaId || agencias[0]?.id, numero, texto, leido:false, respondido:false, segmento:'nuevo', timestamp:new Date(), raw:body}); write('mensajes.json',m); res.sendStatus(200); });
+
+// DUEÑAS KLIDO AVANZA
+function checkAdmin(req,res,next){ if(req.headers['x-admin-key']!==ADMIN_KEY) return res.status(401).json({error:'No autorizado dueña'}); next(); }
+app.get('/api/admin/metricas', checkAdmin, (req,res)=>{
+  const agencias=read('agencias.json'); const usuarios=read('usuarios.json'); const campanas=read('campanas.json');
+  res.json({ totalAgencias:agencias.length, activas:agencias.filter(a=>a.estado!=='bloqueado').length, porPlan:{basico:agencias.filter(a=>a.plan==='basico').length, premium:agencias.filter(a=>a.plan==='premium').length, gold:agencias.filter(a=>a.plan==='gold').length}, ingresos:agencias.reduce((s,a)=>s+(a.anual||0),0), agencias:agencias.map(a=>({id:a.id,nombre:a.nombre,plan:a.plan,anual:a.anual,estado:a.estado,estadoPago:a.estadoPago,trabajadores:usuarios.filter(u=>u.agenciaId===a.id).length,campanas:campanas.filter(c=>c.agenciaId===a.id).length, ultimaConexion:a.ultimaConexion})) });
+});
+app.post('/api/admin/toggle', checkAdmin, (req,res)=>{ let agencias=read('agencias.json'); agencias=agencias.map(a=> a.id===req.body.id? {...a, estado:req.body.estado==='pagado'?'activo':'bloqueado', estadoPago:req.body.estado, pagado:req.body.estado==='pagado'} : a); write('agencias.json',agencias); res.json({ok:true}); });
+
+app.get('/health',(req,res)=>res.json({ok:true, modo:'KLIDO REAL PRODUCTION', smtp:!!transporter, smtp_user: SMTP_USER, agencias:read('agencias.json').length}));
+
+// FRONTEND FALLBACK - mantiene tu diseño
+app.get('/admin.html',(req,res)=> res.sendFile(path.join(PUBLIC_DIR,'admin.html'),{ root: '.' }, (e)=>{ if(e) res.sendFile(path.join(PUBLIC_DIR,'index.html')) }));
+app.get('/crm.html',(req,res)=> res.sendFile(path.join(PUBLIC_DIR,'crm.html'),{ root: '.' }, (e)=>{ if(e) res.sendFile(path.join(PUBLIC_DIR,'index.html')) }));
+app.get('*',(req,res)=>{
+  if(req.path.startsWith('/api/')) return res.status(404).json({error:'api'});
+  const idx=path.join(PUBLIC_DIR,'index.html'); if(fs.existsSync(idx)) return res.sendFile(idx);
+  return res.send('KLIDO REAL ACTIVO');
+});
+app.listen(PORT, ()=>console.log('KLIDO REAL PROD '+PORT+' GOLD Avanza Mafe2002@ SMTP:'+SMTP_USER));
