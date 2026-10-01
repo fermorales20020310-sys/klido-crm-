@@ -1,36 +1,56 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO AVANZA CONSULTING</title><link rel="icon" href="logo.png">
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO AVANZA CONSULTING</title>
+<link rel="icon" href="logo.png">
 <style>
-:root{--bg:#0a1120;--sidebar:#0f1a2e;--panel:#131f3a;--card:#15244a;--border:#1f345e;--blue:#3a75ff;--text:#dbe7ff;--muted:#7a8ab0;--gold:#f59e0b;--gold2:#fbbf24}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui;display:flex;height:100vh;overflow:hidden}
-.side{width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:14px}
-.logo{display:flex;align-items:center;gap:12px;margin-bottom:18px}.logo img{width:68px;height:68px;border-radius:14px;background:#fff;padding:4px;object-fit:contain}.logo b{font-size:14px;line-height:1.1}.logo span{font-size:10px;color:var(--muted);display:block}
-.menu label{font-size:9px;color:var(--muted);letter-spacing:1px;margin:14px 0 6px;display:block}.menu button{width:100%;display:flex;gap:9px;padding:11px 10px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;text-align:left}.menu button.active{background:var(--blue);color:#fff}
-.main{flex:1;display:flex}
-.inbox{width:300px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column}
+:root{--bg:#0a1120;--sidebar:#0f1a2e;--panel:#131f3a;--card:#14244d;--border:#1f345e;--blue:#3a75ff;--text:#dbe7ff;--muted:#7a8ab0;--gold:#f59e0b;--gold2:#fbbf24;--green:#3dd68c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,system-ui;display:flex;height:100vh;overflow:hidden}
+.side{width:250px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px}
+.logo{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.logo img{width:80px;height:80px;border-radius:16px;background:#fff;padding:5px;object-fit:contain;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.logo b{font-size:14px;line-height:1.1;letter-spacing:.3px}
+.logo span{font-size:10px;color:var(--muted);display:block;margin-top:2px}
+.menu label{font-size:9px;color:var(--muted);letter-spacing:1.2px;margin:18px 0 8px;display:block}
+.menu button{width:100%;display:flex;gap:10px;padding:12px 12px;border-radius:12px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;text-align:left;transition:.2s}
+.menu button.active{background:var(--blue);color:#fff;box-shadow:0 2px 10px rgba(58,117,255,.3)}
+.menu button:hover{background:var(--panel);color:var(--text)}
+.main{flex:1;display:flex;overflow:hidden}
+.inbox{width:320px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column}
 .chat{flex:1;background:#0d1932;display:flex;flex-direction:column}
-.profile{width:300px;background:var(--panel);border-left:1px solid var(--border);padding:16px}
-.search{margin:10px 12px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:#fff;font-size:12px}
-.conv{padding:10px 12px;border-bottom:1px solid rgba(31,52,94,.5);cursor:pointer;display:flex;gap:10px}.conv.active{background:#162645;border-left:3px solid var(--gold)}
-.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px}
-
-/* PLANES VERTICALES */
-.planesPage{flex:1;background:var(--bg);padding:22px 24px;overflow:auto}
-.planesPage h2{margin:0 0 18px;font-size:20px;font-weight:900}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;max-width:980px}
-.cardPlan{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;min-height:340px}
-.cardPlan.goldActive{border-color:var(--gold);box-shadow:0 0 0 1px rgba(245,158,11,.4)}
-.cardPlan h3{margin:0 0 6px;font-size:15px}.cardPlan .price{font-size:15px;font-weight:700;line-height:1.4;color:var(--text)}.cardPlan .price b{font-size:13px;color:var(--muted)}.cardPlan ul{margin:14px 0 0;padding:0;list-style:none;font-size:12px;line-height:1.7;color:var(--muted)}.cardPlan .spacer{flex:1}
-.cardPlan .btnUp{margin-top:16px;width:fit-content;padding:8px 16px;border-radius:10px;border:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:800;cursor:pointer;font-size:12px}
-.cardPlan .btnChange{margin-top:16px;width:fit-content;padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px}
-
-.kpi{background:#162645;border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px}
-button.ghost{padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:30}.modal.open{display:flex}.box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;width:460px;max-height:90vh;overflow:auto}
-input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:#fff;margin:6px 0;font-size:12px}
-</style></head><body>
+.profile{width:310px;background:var(--panel);border-left:1px solid var(--border);padding:18px;overflow:auto}
+.search{margin:12px;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:#fff;font-size:12px}
+.conv{padding:12px 14px;border-bottom:1px solid rgba(31,52,94,.4);cursor:pointer;display:flex;gap:12px;align-items:center}
+.conv.active{background:#162a52;border-left:3px solid var(--gold)}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}
+.planesPage{flex:1;background:var(--bg);padding:28px;overflow:auto}
+.planesPage h2{margin:0 0 22px;font-size:22px;font-weight:900;letter-spacing:.3px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;max-width:1100px}
+.cardPlan{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:26px;display:flex;flex-direction:column;min-height:460px;position:relative}
+.cardPlan.goldActive{border-color:var(--gold);box-shadow:0 0 0 1px rgba(245,158,11,.3), 0 8px 30px rgba(245,158,11,.15)}
+.cardPlan h3{margin:0 0 10px;font-size:16px;font-weight:800}
+.cardPlan .price{font-size:14px;font-weight:700;line-height:1.5}
+.cardPlan .price small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.cardPlan ul{margin:20px 0 0;padding:0;list-style:none;font-size:12.5px;line-height:2;color:#9fb2d8}
+.cardPlan ul li{padding-left:2px}
+.cardPlan .spacer{flex:1}
+.btnUp{margin-top:20px;width:100%;padding:12px;border-radius:12px;border:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:900;cursor:pointer;font-size:13px}
+.btnChange{margin-top:20px;width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text);font-weight:700;cursor:pointer;font-size:13px;transition:.2s}
+.btnChange:hover{background:var(--panel);border-color:var(--blue)}
+.kpi{background:#162a52;border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:14px}
+.ghost{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.open{display:flex}
+.box{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:22px;width:480px;max-height:90vh;overflow:auto}
+input,select,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:#fff;margin:7px 0;font-size:12.5px}
+</style>
+</head>
+<body>
 <div class="side">
-<div class="logo"><img src="logo.png"><div><b>KLIDO<br>AVANZA CONSULTING</b><span>CRM Pro</span></div></div>
+<div class="logo"><img src="logo.png"><div><b>KLIDO<br>AVANZA<br>CONSULTING</b><span>CRM PRO 2026</span></div></div>
 <div class="menu">
 <label>MENU</label>
 <button data-v="bandeja" onclick="go('bandeja')">📥 Bandeja de mensajes</button>
@@ -41,104 +61,150 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 <button class="active" data-v="planes" onclick="go('planes')">💳 Planes</button>
 <label>SUPPORT</label>
 <button data-v="config" onclick="go('config')">⚙️ Configuración</button>
-<button onclick="helpWA()">💬 Ayuda</button>
-<button onclick="logout()" style="margin-top:8px;color:#fca5a5">🚪 Salir</button>
+<button onclick="helpWA()">💬 Ayuda WhatsApp</button>
+<button onclick="logout()" style="margin-top:10px;color:#fca5a5">🚪 Salir</button>
 </div>
 <div style="margin-top:auto;font-size:10px;color:var(--muted)" id="uInfo"></div>
 </div>
 
 <div class="main" id="mainPlanes">
 <div class="planesPage">
-<h2>Planes</h2>
+<h2>Planes KLIDO Avanza Consulting - Anual</h2>
 <div class="grid3">
 <div class="cardPlan" id="cBasico">
 <h3>Básico</h3>
-<div class="price">$800k/año $80k trim<br>Sin IA</div>
-<ul><li>• 1 envío masivo a la vez</li><li>• 2 usuarios</li><li>• Inbox ilimitado</li><li>• Sin IA automática</li></ul>
+<div class="price">$800.000 / año<small>+ $80.000 mantenimiento cada 3 meses</small><small style="color:#ff8a8a">Sin IA</small></div>
+<ul>
+<li>✓ 1 envío masivo a la vez</li>
+<li>✓ 2 usuarios incluidos</li>
+<li>✓ Inbox ilimitado</li>
+<li>✓ Soporte estándar</li>
+<li style="color:#5a6a8a">✕ Sin IA automática</li>
+</ul>
 <div class="spacer"></div>
-<button class="btnChange" onclick="actualizarPlan('Básico $800k')">Actualizar</button>
+<button class="btnChange" onclick="actualizarPlan('Básico $800k/año')">Actualizar</button>
 </div>
+
 <div class="cardPlan" id="cPremium">
-<h3>Premium + IA</h3>
-<div class="price">$1.4M/año $95k trim<br>Con IA</div>
-<ul><li>• 5 envíos simultáneos</li><li>• 5 usuarios incluidos</li><li>• IA incluida</li><li>• Soporte prioritario</li></ul>
+<h3>Premium + IA ★</h3>
+<div class="price">$1.400.000 / año<small>+ $95.000 mant. cada 3 meses</small><small style="color:#7affb2">Con IA incluida</small></div>
+<ul>
+<li>✓ 5 envíos simultáneos</li>
+<li>✓ 5 usuarios incluidos</li>
+<li>✓ IA incluida para respuestas</li>
+<li>✓ Soporte prioritario</li>
+<li>✓ Métricas avanzadas</li>
+</ul>
 <div class="spacer"></div>
-<button class="btnChange" onclick="actualizarPlan('Premium + IA $1.4M')">Actualizar</button>
+<button class="btnChange" onclick="actualizarPlan('Premium + IA $1.4M/año')">Actualizar</button>
 </div>
+
 <div class="cardPlan goldActive" id="cGold">
-<h3>Gold + IA + Llamadas</h3>
-<div class="price">$2.4M/año $120k trim<br>IA + Llamada directa</div>
-<ul><li>• Envíos ilimitados</li><li>• Usuarios ilimitados</li><li>• IA + Pánico humano</li><li>• 📞 Llamada directa incluida</li></ul>
+<h3>Gold + IA + Llamadas 📞</h3>
+<div class="price">$2.400.000 / año<small>+ $120.000 mant. cada 3 meses</small><small style="color:var(--gold2)">IA + Llamada directa</small></div>
+<ul>
+<li>✓ Envíos ilimitados</li>
+<li>✓ Usuarios ilimitados</li>
+<li>✓ IA + Pánico humano</li>
+<li>✓ 📞 Llamada directa incluida</li>
+<li>✓ Onboarding VIP</li>
+</ul>
 <div class="spacer"></div>
-<button class="btnUp" onclick="actualizarPlan('Gold + IA + Llamadas $2.4M')">Gold</button>
+<button class="btnUp" onclick="actualizarPlan('Gold + IA + Llamadas $2.4M/año - QUIERO GOLD')">Actualizar a Gold</button>
 </div>
 </div>
+<div style="font-size:11px;color:var(--muted);margin-top:20px;max-width:900px;line-height:1.6">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API Oficial Meta y soporte. Factura electrónica. Cumplimiento Ley 1581 de protección de datos. Puedes cambiar de plan cuando quieras.</div>
 </div>
 </div>
 
 <div class="main" id="mainInbox" style="display:none">
-<div class="inbox"><div style="padding:14px;border-bottom:1px solid var(--border)"><b>Inbox</b> <span id="count" style="font-size:11px;color:var(--muted)"></span></div><input class="search" id="search" placeholder="Buscar..." oninput="render()"><div id="convList" style="overflow:auto;flex:1"></div></div>
-<div class="chat"><div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel)" id="chatTop"><b>Selecciona un chat</b></div><div style="flex:1;overflow:auto;padding:16px" id="msgs"></div></div>
-<div class="profile" id="prof2"><b>Customer Profile</b><div id="profContent" style="margin-top:12px;font-size:12px;color:var(--muted)">Selecciona un chat para clasificar: nuevo / intermitente / cliente fijo, notas y calendario.</div></div>
+<div class="inbox">
+<div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><b>Inbox</b><span id="count" style="font-size:11px;color:var(--muted)">0 chats</span></div>
+<input class="search" id="search" placeholder="Buscar por número o mensaje..." oninput="render()">
+<div id="convList" style="overflow:auto;flex:1"></div>
+</div>
+<div class="chat">
+<div style="padding:14px 18px;border-bottom:1px solid var(--border);background:var(--panel);display:flex;justify-content:space-between;align-items:center" id="chatTop"><div><b>Selecciona un chat</b><div style="font-size:11px;color:var(--muted)">Elige a la izquierda para ver historial</div></div></div>
+<div style="flex:1;overflow:auto;padding:18px" id="msgs"><div style="color:var(--muted);text-align:center;margin-top:100px;font-size:13px">Selecciona un chat para ver historial, clasificar como nuevo / intermitente / cliente fijo, notas y calendario.</div></div>
+<div style="padding:12px;border-top:1px solid var(--border);display:none" id="inputBar"></div>
+</div>
+<div class="profile" id="prof2">
+<b>Customer Profile</b>
+<div id="profContent" style="margin-top:14px;font-size:12px;color:var(--muted)">Selecciona un chat para clasificar cliente, agregar notas y programar seguimiento en calendario.</div>
+</div>
 </div>
 
-<div class="main" id="mainOther" style="display:none;padding:22px;overflow:auto"></div>
+<div class="main" id="mainOther" style="display:none;padding:28px;overflow:auto"></div>
 
-<div class="modal" id="mTrab"><div class="box"><h3>Grupo de trabajo</h3><div id="trabList"></div><input id="tN" placeholder="Nombre"><input id="tE" placeholder="Correo"><input id="tP" type="password" placeholder="Contraseña"><button class="ghost" style="width:100%;background:var(--blue);color:#fff" onclick="addT()">Añadir</button><button class="ghost" style="width:100%;margin-top:8px" onclick="closeM()">Cerrar</button></div></div>
-<div class="modal" id="mCamp"><div class="box"><h3>Campañas</h3><select id="tpl"></select><input type="file" id="xls" accept=".xlsx,.xls"><button style="width:100%;padding:10px;border-radius:10px;border:0;background:var(--blue);color:#fff" onclick="upXls()">Subir Excel</button><div id="xlsRes" style="font-size:12px;margin-top:8px"></div><div id="campHist" style="font-size:11px;margin-top:10px;max-height:200px;overflow:auto"></div><button class="ghost" style="width:100%;margin-top:8px" onclick="closeM()">Cerrar</button></div></div>
+<div class="modal" id="mTrab"><div class="box"><h3>Grupo de trabajo</h3><p style="font-size:11px;color:var(--muted)">Crea usuarios para tu equipo</p><div id="trabList" style="max-height:200px;overflow:auto;margin:10px 0"></div><input id="tN" placeholder="Nombre completo"><input id="tE" placeholder="Correo del trabajador"><input id="tP" type="password" placeholder="Contraseña"><button class="ghost" style="width:100%;background:var(--blue);color:#fff;border:0;margin-top:6px;padding:12px" onclick="addT()">Añadir trabajador</button><button class="ghost" style="width:100%;margin-top:10px" onclick="closeM()">Cerrar</button></div></div>
+
+<div class="modal" id="mCamp"><div class="box"><h3>Campañas - Excel + Plantillas Meta</h3><p style="font-size:11px;color:var(--muted)">Sube tu Excel con números y usa plantilla aprobada por Meta</p><select id="tpl"></select><input type="file" id="xls" accept=".xlsx,.xls"><button style="width:100%;padding:12px;border-radius:12px;border:0;background:var(--blue);color:#fff;font-weight:700;margin-top:6px" onclick="upXls()">Subir Excel y enviar</button><div id="xlsRes" style="font-size:12px;margin-top:10px;color:var(--green)"></div><div id="campHist" style="font-size:11px;margin-top:14px;max-height:220px;overflow:auto;border-top:1px solid var(--border);padding-top:10px"></div><button class="ghost" style="width:100%;margin-top:10px" onclick="closeM()">Cerrar</button></div></div>
 
 <script>
-const token=localStorage.getItem('token'); const user=JSON.parse(localStorage.getItem('user')||'{}');
+const token=localStorage.getItem('token');
+const user=JSON.parse(localStorage.getItem('user')||'{}');
 if(!token) location.href='/';
-document.getElementById('uInfo').textContent=user.nombre+' - '+user.rol;
+document.getElementById('uInfo').textContent=(user.nombre||user.email)+' - '+(user.rol||'jefe');
 let msgs=[]; let sel=null;
 const H=()=>({Authorization:'Bearer '+token});
+
 function go(v){
  document.querySelectorAll('.menu button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
- document.getElementById('mainPlanes').style.display='none'; document.getElementById('mainInbox').style.display='none'; document.getElementById('mainOther').style.display='none';
+ document.getElementById('mainPlanes').style.display='none';
+ document.getElementById('mainInbox').style.display='none';
+ document.getElementById('mainOther').style.display='none';
  if(v==='planes') document.getElementById('mainPlanes').style.display='flex';
  else if(v==='bandeja'){document.getElementById('mainInbox').style.display='flex'; load();}
  else if(v==='campanas'){document.getElementById('mCamp').classList.add('open'); loadCamp();}
  else if(v==='grupo'){document.getElementById('mTrab').classList.add('open'); loadTrab();}
  else if(v==='metricas'||v==='calendario'||v==='config'){document.getElementById('mainOther').style.display='flex'; showOther(v);}
 }
+
 function actualizarPlan(plan){
- // BOTON ACTUALIZAR -> TU WPP
- const msg=encodeURIComponent(`Hola Avanza Consulting, soy ${user.email} (${user.nombre}) y quiero ACTUALIZAR mi plan a ${plan}. Mi agencia es ${user.agenciaId||''}. ¿Me envías link de pago y factura?`);
- window.open(`https://wa.me/573001112233?text=${msg}`,'_blank');
+ const numeroWPP='573001112233'; // CAMBIA AQUI TU NUMERO REAL SI QUIERES
+ const msg=encodeURIComponent(`Hola Avanza Consulting! Soy ${user.nombre||user.email} (${user.email}) quiero ACTUALIZAR mi plan a: ${plan}. Agencia: ${user.agenciaId||'KLIDO'}. Envíame link de pago por favor.`);
+ window.open(`https://wa.me/${numeroWPP}?text=${msg}`,'_blank');
 }
+
 function showOther(t){
  const o=document.getElementById('mainOther');
- if(t==='metricas'){fetch('/api/metricas',{headers:H()}).then(r=>r.json()).then(d=>{o.innerHTML=`<div class="planesPage"><h2>Métricas</h2><div class="grid3"><div class="cardPlan"><h3>Total</h3><div class="price">${d.totalMensajes} mensajes</div></div><div class="cardPlan"><h3>No leídos</h3><div class="price">${d.noLeidos}</div></div><div class="cardPlan"><h3>Fijos</h3><div class="price">${d.conversion}</div></div></div></div>`;});}
- else if(t==='calendario'){fetch('/api/calendario',{headers:H()}).then(r=>r.json()).then(data=>{o.innerHTML=`<div class="planesPage"><h2>Calendario / Seguimiento</h2><div class="grid3">${data.map(c=>`<div class="cardPlan"><b>${c.numero}</b><br><span style="font-size:11px">${new Date(c.programado).toLocaleString()}</span><br><span style="font-size:10px;color:var(--muted)">${c.seguimiento||''}</span></div>`).join('')||'Sin seguimientos'}</div></div>`;});}
- else if(t==='config'){o.innerHTML=`<div class="planesPage"><h2>Configuración</h2><div class="grid3"><div class="cardPlan"><h3>Cómo funciona</h3><ul><li>Bandeja = API Meta oficial</li><li>Cliente: nuevo / intermitente / fijo</li><li>Notas + calendario seguimiento</li><li>Campañas Excel + plantillas</li></ul></div></div></div>`;}
+ if(t==='metricas'){fetch('/api/metricas',{headers:H()}).then(r=>r.json()).then(d=>{o.innerHTML=`<div class="planesPage"><h2>Métricas</h2><div class="grid3"><div class="cardPlan" style="min-height:140px"><h3>Total Mensajes</h3><div class="price" style="font-size:28px">${d.totalMensajes}</div></div><div class="cardPlan" style="min-height:140px"><h3>No leídos</h3><div class="price" style="font-size:28px">${d.noLeidos}</div></div><div class="cardPlan" style="min-height:140px"><h3>Clientes fijos</h3><div class="price" style="font-size:28px">${d.conversion}</div></div></div></div>`;});}
+ else if(t==='calendario'){fetch('/api/calendario',{headers:H()}).then(r=>r.json()).then(data=>{o.innerHTML=`<div class="planesPage"><h2>Calendario / Seguimiento</h2><div class="grid3">${data.map(c=>`<div class="cardPlan" style="min-height:120px;text-align:left"><b>${c.numero}</b><br><span style="font-size:11px;color:#9fb2d8">${new Date(c.programado).toLocaleString()}</span><br><span style="font-size:11px">${c.seguimiento||''}</span></div>`).join('')||'<div style="color:var(--muted)">Sin seguimientos programados</div>'}</div></div>`;});}
+ else if(t==='config'){o.innerHTML=`<div class="planesPage"><h2>Configuración</h2><div class="grid3"><div class="cardPlan" style="min-height:200px;text-align:left"><h3>Funciones activas</h3><ul><li>✓ Bandeja mensajes + No leídos</li><li>✓ Cliente nuevo / intermitente / fijo</li><li>✓ Notas + calendario seguimiento</li><li>✓ Campañas Excel + plantillas Meta</li><li>✓ Grupo de trabajo</li><li>✓ Métricas</li></ul></div></div></div>`;}
 }
+
 async function load(){const r=await fetch('/api/mensajes',{headers:H()});msgs=await r.json();document.getElementById('count').textContent=msgs.length+' chats';render();}
 function render(){
  const f=document.getElementById('search')?.value.toLowerCase()||''; const list=document.getElementById('convList'); if(!list) return; list.innerHTML='';
  msgs.filter(m=>!f||(m.numero+m.texto).toLowerCase().includes(f)).forEach(m=>{
   const el=document.createElement('div'); el.className='conv'+(sel&&sel.id===m.id?' active':'');
-  el.innerHTML=`<div class="avatar">${(m.numero||'??').slice(-2)}</div><div style="flex:1;overflow:hidden"><div style="font-size:13px;font-weight:600">${m.numero}</div><div style="font-size:11px;color:var(--muted)">${(m.texto||'').slice(0,35)} • ${m.segmento||'nuevo'}</div></div>`;
+  el.innerHTML=`<div class="avatar">${(m.numero||'??').slice(-2)}</div><div style="flex:1;overflow:hidden"><div style="font-size:13px;font-weight:700">${m.numero}</div><div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(m.texto||'').slice(0,38)} • ${m.segmento||'nuevo'}</div></div>`;
   el.onclick=()=>openC(m); list.appendChild(el);
  });
 }
 function openC(m){
  sel=m;
- document.getElementById('chatTop').innerHTML=`<b>${m.numero} - ${m.segmento||'nuevo'}</b>`;
+ document.getElementById('chatTop').innerHTML=`<div style="display:flex;gap:10px;align-items:center"><div class="avatar">${m.numero.slice(-2)}</div><div><b>${m.numero}</b><div style="font-size:10px;color:var(--muted)">${m.segmento||'nuevo'} • WhatsApp Business API Oficial</div></div></div><div>${(user.plan==='gold'||user.rol==='jefe')?`<button class="ghost" style="background:var(--gold);color:#000;font-weight:800" onclick="callNow('${m.numero}')">📞 Llamar</button>`:''}</div>`;
+ document.getElementById('msgs').innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;max-width:80%">${m.texto||'Sin mensaje'}<div style="font-size:10px;color:var(--muted);margin-top:6px">${new Date(m.timestamp||Date.now()).toLocaleString()}</div></div>`;
  document.getElementById('profContent').innerHTML=`
- <div style="text-align:center"><div class="avatar" style="width:52px;height:52px;margin:0 auto">${m.numero.slice(-2)}</div><div style="margin-top:6px;font-weight:700">${m.numero}</div></div>
- <div style="margin-top:12px"><label style="font-size:11px;color:var(--muted)">Tipo cliente</label><select onchange="seg('${m.id}',this.value)"><option value="nuevo" ${m.segmento==='nuevo'?'selected':''}>Nuevo</option><option value="intermitente" ${m.segmento==='intermitente'?'selected':''}>Intermitente</option><option value="fijo" ${m.segmento==='fijo'||m.segmento==='recurrente'?'selected':''}>Cliente fijo</option></select></div>
- <div class="kpi"><b style="font-size:12px">Notas + Calendario</b><textarea id="note" rows="3">${m.seguimiento||''}</textarea><input type="datetime-local" id="noteDate"><button class="ghost" style="width:100%;background:var(--blue);color:#fff" onclick="saveNote('${m.id}')">Guardar y agendar</button></div>
+ <div style="text-align:center"><div class="avatar" style="width:64px;height:64px;margin:0 auto;font-size:16px">${m.numero.slice(-2)}</div><div style="margin-top:8px;font-weight:800">${m.numero}</div><div style="font-size:11px;color:var(--muted)">Customer • WhatsApp</div></div>
+ <div style="margin-top:16px"><label style="font-size:11px;color:var(--muted)">Tipo cliente</label><select onchange="seg('${m.id}',this.value)"><option value="nuevo" ${m.segmento==='nuevo'?'selected':''}>Nuevo</option><option value="intermitente" ${m.segmento==='intermitente'?'selected':''}>Intermitente</option><option value="fijo" ${m.segmento==='fijo'||m.segmento==='recurrente'?'selected':''}>Cliente fijo</option><option value="irrelevante" ${m.segmento==='irrelevante'?'selected':''}>Irrelevante</option></select></div>
+ <div class="kpi"><b style="font-size:12px">Notas + Calendario</b><textarea id="note" rows="4" placeholder="Escribe seguimiento...">${m.seguimiento||''}</textarea><input type="datetime-local" id="noteDate" value="${m.programado?new Date(m.programado).toISOString().slice(0,16):''}"><button class="ghost" style="width:100%;background:var(--blue);color:#fff;border:0;margin-top:8px;padding:10px;font-weight:700" onclick="saveNote('${m.id}')">Guardar y agregar a calendario</button></div>
+ <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5">Nota actual: ${m.seguimiento||'sin notas'}<br>Programado: ${m.programado?new Date(m.programado).toLocaleString():'-'}</div>
  `;
 }
 async function seg(id,s){await fetch('/api/mensajes/segmentar',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({id,segmento:s})});load();}
-async function saveNote(id){const nota=document.getElementById('note').value;const fecha=document.getElementById('noteDate').value;await fetch('/api/mensajes/seguimiento',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({id,nota,fecha})});alert('Guardado en calendario');load();}
-async function loadTrab(){const r=await fetch('/api/trabajadores',{headers:H()});const ls=await r.json();document.getElementById('trabList').innerHTML=ls.map(t=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border);font-size:12px"><span>${t.nombre}</span><button class="ghost" onclick="delT('${t.id}')">X</button></div>`).join('');}
-async function addT(){const nombre=document.getElementById('tN').value;const email=document.getElementById('tE').value;const password=document.getElementById('tP').value;await fetch('/api/trabajadores',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({nombre,email,password})});loadTrab();}
+async function saveNote(id){const nota=document.getElementById('note').value;const fecha=document.getElementById('noteDate').value;await fetch('/api/mensajes/seguimiento',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({id,nota,fecha})});alert('Guardado en calendario ✓');load();}
+async function callNow(num){const r=await fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({numero:num})});const d=await r.json();if(d.tel) location.href=d.tel;}
+async function loadTrab(){const r=await fetch('/api/trabajadores',{headers:H()});const ls=await r.json();document.getElementById('trabList').innerHTML=ls.map(t=>`<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border);font-size:12px"><span>${t.nombre} - ${t.email}</span><button class="ghost" onclick="delT('${t.id}')">X</button></div>`).join('')||'<div style="font-size:11px;color:var(--muted)">Sin trabajadores</div>';}
+async function addT(){const nombre=document.getElementById('tN').value;const email=document.getElementById('tE').value;const password=document.getElementById('tP').value;if(!nombre||!email||!password) return alert('Completa todo');await fetch('/api/trabajadores',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({nombre,email,password})});document.getElementById('tN').value='';document.getElementById('tE').value='';document.getElementById('tP').value='';loadTrab();}
 async function delT(id){await fetch('/api/trabajadores/'+id,{method:'DELETE',headers:H()});loadTrab();}
-async function loadCamp(){const r=await fetch('/api/templates',{headers:H()});const tpl=await r.json();document.getElementById('tpl').innerHTML=tpl.map(t=>`<option value="${t.name}">${t.name}</option>`).join('');const rh=await fetch('/api/campanas/historial',{headers:H()});const h=await rh.json();document.getElementById('campHist').innerHTML=h.map(c=>`<div>${new Date(c.fecha).toLocaleString()} - ${c.total}</div>`).join('');}
-async function upXls(){const file=document.getElementById('xls').files[0];if(!file) return alert('Excel');const fd=new FormData();fd.append('excel',file);fd.append('plantilla',document.getElementById('tpl').value);const r=await fetch('/api/campanas/excel',{method:'POST',headers:H(),body:fd});const d=await r.json();document.getElementById('xlsRes').textContent=r.ok?`OK ${d.total}`:d.error;}
-function helpWA(){window.open(`https://wa.me/573001112233?text=Hola%20soy%20${user.email}`,'_blank');}
+async function loadCamp(){const r=await fetch('/api/templates',{headers:H()});const tpl=await r.json();document.getElementById('tpl').innerHTML=tpl.map(t=>`<option value="${t.name}">${t.name}</option>`).join('');const rh=await fetch('/api/campanas/historial',{headers:H()});const h=await rh.json();document.getElementById('campHist').innerHTML=h.map(c=>`<div style="padding:6px 0;border-bottom:1px solid var(--border)">${new Date(c.fecha).toLocaleString()} - ${c.total} contactos - ${c.plantilla}</div>`).join('')||'Sin campañas';}
+async function upXls(){const file=document.getElementById('xls').files[0];if(!file) return alert('Selecciona Excel');const fd=new FormData();fd.append('excel',file);fd.append('plantilla',document.getElementById('tpl').value);const r=await fetch('/api/campanas/excel',{method:'POST',headers:H(),body:fd});const d=await r.json();document.getElementById('xlsRes').textContent=r.ok?`✓ OK ${d.total} contactos cargados`:d.error||'Error'; loadCamp();}
+function helpWA(){window.open(`https://wa.me/573001112233?text=Hola%20KLIDO%20soy%20${encodeURIComponent(user.email||'')}`,'_blank');}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));}
 function logout(){localStorage.clear();location.href='/';}
-</script></body></html>
+go('planes');
+</script>
+</body>
+</html>
