@@ -1,14 +1,10 @@
 {
   "name": "klido-crm",
-  "version": "12.2",
-  "description": "Klido Avanza Consulting - CRM Multiagencia para API oficial de Meta",
-  "engines": {
-    "node": "18.x"
-  },
+  "version": "12.2.0",
+  "description": "Klido Avanza Consulting - CRM Multiagencia Empresarial Real - API Meta Oficial - Listo para Venta",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "engines": { "node": "18.x" },
+  "scripts": { "start": "node server.js" },
   "dependencies": {
     "axios": "1.7.2",
     "bcryptjs": "2.4.3",
