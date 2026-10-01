@@ -4,8 +4,12 @@
 :root{--blue:#0b1a3a;--card:#ffffff;--border:#e2e8f0;--gold:#f59e0b}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui;background:#f8fafc;height:100vh;display:flex}
 .left{width:56%;background:radial-gradient(900px 600px at 20% 10%, #1a3a8a 0%, #0b1a3a 55%, #050c1f 100%);color:#fff;padding:28px 36px;display:flex;flex-direction:column;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:14px} .brand img{width:80px!important;height:80px!important;background:#fff;border-radius:16px;padding:6px;object-fit:contain} .brand div b{font-size:32px;letter-spacing:1px;display:block;line-height:.9} .brand div span{font-size:13px;letter-spacing:3px;font-weight:700;color:#93c5fd}
-.hero h1{font-size:48px;line-height:.95;margin:24px 0 14px;font-weight:900} .hero h1 span{color:#60a5fa} .hero p{color:#cbd5e1;font-size:13px;line-height:1.6;max-width:520px} .hero p b{color:#fff}
+.brand{display:flex;align-items:center;gap:16px} 
+.brand img{width:110px!important;height:110px!important;background:#fff;border-radius:18px;padding:8px;object-fit:contain;box-shadow:0 8px 24px rgba(0,0,0,.35)} 
+.brand div b{font-size:38px;letter-spacing:1px;display:block;line-height:.9;font-weight:900} 
+.brand div span{font-size:13px;letter-spacing:3px;font-weight:800;color:#93c5fd}
+.hero h1{font-size:48px;line-height:.95;margin:24px 0 14px;font-weight:900} .hero h1 span{color:#60a5fa} .hero p{color:#cbd5e1;font-size:13px;line-height:1.6;max-width:560px} .hero p b{color:#fff}
+.highlight{margin:12px 0 8px;padding:12px 14px;border:1px solid rgba(96,165,250,.3);background:rgba(96,165,250,.12);border-radius:12px;color:#dbeafe;font-size:12px;font-weight:800;line-height:1.5;letter-spacing:.2px}
 .badge{display:inline-flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px;margin-top:12px;color:#bfdbfe}
 .bottom-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px} .bb{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px}
 .right{width:44%;background:var(--card);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
@@ -19,24 +23,27 @@ button.primary{width:100%;padding:13px;border-radius:12px;border:0;background:#0
 .codeBox{display:flex;gap:6px} .codeBox button{padding:10px 12px;border-radius:10px;border:0;background:#0b1220;color:#fff;cursor:pointer;font-size:11px;white-space:nowrap}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:20} .modal.open{display:flex} .modal .box{background:#fff;border-radius:16px;padding:20px;width:420px;max-height:90vh;overflow:auto}
 .floatWpp{position:fixed;bottom:20px;right:20px;background:#25D366;color:#fff;padding:14px 18px;border-radius:50px;font-weight:800;font-size:13px;box-shadow:0 8px 20px rgba(0,0,0,.3);text-decoration:none;z-index:99;display:flex;gap:8px;align-items:center}
-@media(max-width:900px){body{flex-direction:column;height:auto}.left,.right{width:100%}.hero h1{font-size:32px}}
+@media(max-width:900px){body{flex-direction:column;height:auto}.left,.right{width:100%}.hero h1{font-size:32px}.brand img{width:90px!important;height:90px!important}}
 </style></head><body>
 <div class="left">
 <div>
 <div class="brand"><img src="logo.png?v=111"><div><b>KLIDO</b><span>AVANZA CONSULTING</span></div></div>
 <div class="hero">
-<h1>El mejor CRM<br>que tu empresa<br><span>puede tener.</span></h1>
+<h1>Plataforma CRM para API OFICIAL<br>que tu empresa<br><span>puede tener.</span></h1>
+<div class="highlight">
+PLATAFORMA CRM PARA API OFICIAL • BANDEJA EN TIEMPO REAL • CAMPAÑAS ANTI BANEO • SEGURO LEY 1581 • CLOUD API • SOPORTE 24/7 • CONTRATO ANUAL
+</div>
 <p><b>KLIDO v111 PRO — Plataforma en Producción. API Oficial Meta (WhatsApp Business API) - No Demo.</b><br><br>
 CRM autónomo <b>máx 10 agencias</b>. Cada agencia <b>JEFE y TRABAJADORES</b> mismo plan, sin cruzar info. Solo ves lo que pagaste.<br><br>
-✓ Bandeja tiempo real: fotos, audios, archivos - online, no leídos, 🟡 amarilla campañas<br>
-✓ Segmentar, seguimiento con nota relevante, métricas equipo + calendario recordatorio auto<br>
-✓ Campañas Excel auto + antibaneo 50/5min 800ms - solo plantillas aprobadas auto-sync<br>
+✓ <b>BANDEJA EN TIEMPO REAL:</b> fotos, audios, archivos - online, no leídos, 🟡 amarilla campañas<br>
+✓ <b>CAMPAÑAS ANTI BANEO:</b> Excel auto + antibaneo 50/5min 800ms - solo plantillas aprobadas auto-sync<br>
+✓ <b>SEGURO LEY 1581:</b> Habeas Data - Cloud API oficial - datos en /data con backups<br>
 ✓ <b>NUEVO v111:</b> Activación con código pago al correo registrado + Contrato PDF anual + Onboarding 60s + White-label + IA resumen + Métricas que justifican mantenimiento trimestral<br>
-✓ Básico sin IA, Premium con IA, Gold con IA + Llamadas tel: - Soporte 24/7 3133181851</p>
+✓ Básico sin IA, Premium con IA, Gold con IA + Llamadas tel: - Soporte 24/7 3133181851 - Contrato anual + mant. trim</p>
 <div class="badge">✓ v111 PRO - MULTIAGENCIA CERTIFICADA META API OFICIAL - RAILWAY PAGO - API ACTIVA - SOLO FALTA DOMINIO + IA KEY</div>
 </div>
 </div>
-<div class="bottom-badges"><div class="bb">🔒 Seguro Ley 1581</div><div class="bb">✓ WhatsApp API Oficial</div><div class="bb">💬 Soporte 24/7: 3133181851</div><div class="bb">📄 Contrato anual + mant. trim</div></div>
+<div class="bottom-badges"><div class="bb">🔒 Seguro Ley 1581</div><div class="bb">✓ WhatsApp API Oficial - Cloud API</div><div class="bb">💬 Soporte 24/7: 3133181851</div><div class="bb">📄 Contrato anual + mant. trim</div></div>
 </div>
 
 <div class="right">
@@ -82,7 +89,7 @@ CRM autónomo <b>máx 10 agencias</b>. Cada agencia <b>JEFE y TRABAJADORES</b> m
 
 <div class="modal" id="fModal"><div class="box"><h3>Recuperar - Código a tu correo registrado</h3><input id="fEmail" placeholder="Tu correo registrado"><div class="codeBox"><input id="fCode" placeholder="Código 6 dígitos"><button onclick="reqCode('recuperacion','fEmail')">Enviar código a mi correo</button></div><input id="fNew" type="password" placeholder="Nueva contraseña"><button class="primary" onclick="doReset()">Actualizar</button><button onclick="closeM()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;cursor:pointer">Cerrar</button><div id="fMsg" class="muted"></div></div></div>
 <div class="modal" id="tModal"><div class="box"><h3>Términos KLIDO v111 PRO</h3><p style="font-size:12px;color:#475569;line-height:1.6">
-<b>Plataforma producción real - No demo.</b> API Oficial Meta. Máx 10 agencias. Pago anual + mantenimiento trimestral aparte: Básico $800k+$80k trim, Premium $1.4M+$95k, Gold $2.4M+$120k. Básico sin IA, Premium con IA resumen/sugerencia, Gold IA + llamadas. Cada agencia aislada, trabajadores heredan plan jefe, sin cruzar info, solo ves plan pagado. Bandeja tiempo real fotos/audios/archivos, no leídos, etiqueta amarilla campañas, antibaneo 50/5min 800ms, solo plantillas aprobadas auto-sync, calendario con recordatorio auto 1 día antes, métricas tiempo respuesta + sin responder >2h + tasa cierre + ranking que justifican mantenimiento, white-label $200k extra, contrato PDF anual, onboarding 60s, soporte 24/7 WPP 3133181851, Ley 1581. Empresa registrada queda en historial pendiente activación hasta pago con código.<br><br>
+<b>Plataforma producción real - No demo.</b> API Oficial Meta - Cloud API. Máx 10 agencias. Pago anual + mantenimiento trimestral aparte: Básico $800k+$80k trim, Premium $1.4M+$95k, Gold $2.4M+$120k. Básico sin IA, Premium con IA resumen/sugerencia, Gold IA + llamadas. Cada agencia aislada, trabajadores heredan plan jefe, sin cruzar info, solo ves plan pagado. Bandeja tiempo real fotos/audios/archivos, no leídos, etiqueta amarilla campañas, antibaneo 50/5min 800ms, solo plantillas aprobadas auto-sync, calendario con recordatorio auto 1 día antes, métricas tiempo respuesta + sin responder >2h + tasa cierre + ranking que justifican mantenimiento, white-label $200k extra, contrato PDF anual, onboarding 60s, soporte 24/7 WPP 3133181851, Ley 1581. Empresa registrada queda en historial pendiente activación hasta pago con código.<br><br>
 Al registrar aceptas términos.</p><button onclick="closeM()" style="width:100%;padding:10px;border-radius:10px;border:0;background:#0b1220;color:#fff">Entendido - v111 PRO</button></div></div>
 
 <a class="floatWpp" href="https://wa.me/573133181851?text=Hola%20Avanza%20quiero%20KLIDO%20v111%20PRO%20API%20Oficial" target="_blank">💬 Soporte 24/7: 3133181851</a>
