@@ -1,0 +1,29 @@
+<!DOCTYPE html><html><body style="font-family:sans-serif;padding:20px">
+<h2>🔧 Fix Avanza Consulting</h2>
+<div id="log">Cargando...</div>
+<script>
+const KEY='KLIDO_DUEÑA_2026';
+async function run(){
+  const log = document.getElementById('log');
+  log.innerHTML='Activando Avanza y Acol...<br>';
+  let r = await fetch('/api/admin/fix-acol-now',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':KEY}});
+  let d = await r.json();
+  log.innerHTML+=`Fix: ${JSON.stringify(d)}<br>`;
+  r = await fetch('/api/admin/metricas',{headers:{'x-admin-key':KEY}});
+  d = await r.json();
+  log.innerHTML+=`Agencias: ${d.agencias.length}<br>`;
+  const avanza = d.agencias.find(a=>a.nombre.toLowerCase().includes('avanza'));
+  if(!avanza){ log.innerHTML+='<b style="color:red">NO EXISTE AVANZA - se borró</b><br>Se va a recrear...'; 
+    let rr = await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:'Avanza Consulting',email:'avanzaconsultingyl@gmail.com',password:'Avanza2026*',plan:'gold'})});
+    let dd = await rr.json();
+    log.innerHTML+=`Recreada: ${JSON.stringify(dd)}<br>`;
+    r = await fetch('/api/admin/metricas',{headers:{'x-admin-key':KEY}}); d = await r.json();
+  }
+  const av = d.agencias.find(a=>a.nombre.toLowerCase().includes('avanza'));
+  log.innerHTML+=`<b>Avanza encontrada:</b> ${av.nombre} - ${av.estadoPago} - Código: ${av.codigo}<br>`;
+  let rv = await fetch('/api/public/verificar-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({codigo:av.codigo})});
+  let dv = await rv.json();
+  log.innerHTML+=`Verificación: ${JSON.stringify(dv)}<br><br><h3 style="color:green">✅ LISTO - Ya puedes ingresar con avanzaconsultingyl@gmail.com / Avanza2026*</h3><a href="/">Ir a ingresar</a>`;
+}
+run();
+</script></body></html>
