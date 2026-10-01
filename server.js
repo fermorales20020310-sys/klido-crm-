@@ -50,6 +50,13 @@ const transporter = nodemailer.createTransport({
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
 });
 
+// PLANES CON MANTENIMIENTO OBLIGATORIO
+const PLANES = {
+  basico: { anual: 800000, trim: 80000, nombre: 'Básico' },
+  premium: { anual: 1400000, trim: 95000, nombre: 'Premium' },
+  gold: { anual: 2400000, trim: 120000, nombre: 'Gold' }
+};
+
 // ============ PUBLICAS ============
 app.post('/api/public/crear-empresa', async (req,res)=>{
   const {nombre,email,password,plan} = req.body;
@@ -57,28 +64,81 @@ app.post('/api/public/crear-empresa', async (req,res)=>{
   let agencias = read('agencias.json');
   let usuarios = read('usuarios.json');
   if(usuarios.find(u=>u.email===email)) return res.status(400).json({error:'Correo ya existe'});
-  const codigo = `KLIDO-${(plan||'premium').toUpperCase()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
+
+  const planKey = (plan||'premium').toLowerCase();
+  const planData = PLANES[planKey] || PLANES.premium;
+  const codigo = `KLIDO-${planKey.toUpperCase()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
   const hash = await bcrypt.hash(password,10);
   const agenciaId = Date.now().toString();
-  const agencia = { id: agenciaId, nombre, plan: plan||'premium', codigo, pagado:false, estado:'activo', estadoPago:'pendiente', created: new Date(), ultimaConexion: null };
-  const user = { id: agenciaId+'_1', email, password:hash, nombre, rol:'jefe', agenciaId, plan: plan||'premium' };
+  const agencia = {
+    id: agenciaId,
+    nombre,
+    plan: planKey,
+    planNombre: planData.nombre,
+    anual: planData.anual,
+    mantenimiento: planData.trim, // 80k / 95k / 120k trimestral obligatorio
+    codigo,
+    pagado:false,
+    estado:'activo',
+    estadoPago:'pendiente',
+    created: new Date(),
+    ultimaConexion: null
+  };
+  const user = { id: agenciaId+'_1', email, password:hash, nombre, rol:'jefe', agenciaId, plan: planKey };
   agencias.push(agencia); usuarios.push(user);
   write('agencias.json', agencias); write('usuarios.json', usuarios);
-  try{ await transporter.sendMail({from:process.env.SMTP_USER,to:email,subject:`Código KLIDO ${plan}`,text:`Tu código: ${codigo}. Paga al WhatsApp 3133181851 y verificalo en crear empresa.`}) }catch(e){console.log('email error',e.message)}
-  res.json({codigo, mensaje:`Agencia creada. Código ${codigo} enviado a ${email}. Paga al 3133181851 para activar.`});
+
+  // Email - si falla igual devuelve código en pantalla
+  try{
+    await transporter.sendMail({
+      from:process.env.SMTP_USER,
+      to:email,
+      subject:`Código KLIDO ${planData.nombre} - $${planData.anual/1000}k/año + $${planData.trim/1000}k trim`,
+      text:`Hola ${nombre},\n\nTu agencia ${nombre} plan ${planData.nombre} creada.\nAnual: $${planData.anual.toLocaleString('es-CO')}\nMantenimiento obligatorio trimestral: $${planData.trim.toLocaleString('es-CO')}\n\nTu código: ${codigo}\n\nPaga al WhatsApp 3133181851 y verifica el código en la misma pantalla de crear empresa (solo casilla código).\n\nKLIDO AVANZA CONSULTING`
+    })
+  }catch(e){console.log('email error',e.message)}
+
+  res.json({codigo, mensaje:`Agencia ${nombre} plan ${planData.nombre} creada. Anual $${(planData.anual/1000)}k + Mant $${planData.trim/1000}k trim. Código: ${codigo}`, planInfo: planData});
 });
 
+// FIX CODIGO - AHORA SOLO 1 CASILLA, USA CORREO DE ARRIBA
 app.post('/api/public/verificar-codigo', (req,res)=>{
   const {email,codigo} = req.body;
+  if(!codigo) return res.status(400).json({error:'Código requerido - pega el código KLIDO-...'});
+
   let agencias = read('agencias.json');
-  const usuarios = read('usuarios.json');
-  const user = usuarios.find(u=>u.email===email);
-  if(!user) return res.status(404).json({error:'Correo no encontrado'});
-  const agencia = agencias.find(a=>a.id===user.agenciaId);
-  if(!agencia || agencia.codigo!==codigo) return res.status(400).json({error:'Código inválido'});
-  agencia.pagado = true; agencia.estadoPago='pagado'; agencia.estado='activo';
+  let usuarios = read('usuarios.json');
+  const codigoLimpio = codigo.toUpperCase().trim();
+
+  // Busca agencia por código directo - no necesita 2 correos
+  let agencia = agencias.find(a=>a.codigo===codigoLimpio);
+
+  // Si manda email (el de arriba), validamos que pertenezca a esa agencia
+  if(email){
+    const user = usuarios.find(u=>u.email===email.toLowerCase().trim());
+    if(user && agencia && user.agenciaId!== agencia.id){
+      return res.status(400).json({error:'El código no pertenece a ese correo admin'});
+    }
+    // Si solo mandó email y no encontramos por código, busca por usuario
+    if(!agencia && user){
+      agencia = agencias.find(a=>a.id===user.agenciaId && a.codigo===codigoLimpio);
+    }
+  }
+
+  if(!agencia) return res.status(400).json({error:'Código inválido. Debe ser formato KLIDO-PREMIUM-XXXX'});
+
+  agencia.pagado = true;
+  agencia.estadoPago='pagado';
+  agencia.estado='activo';
+  agencia.verificadoEn = new Date();
   write('agencias.json', agencias);
-  res.json({planDesbloqueado: agencia.plan});
+
+  console.log(`✅ VERIFICADA: ${agencia.nombre} - ${agencia.plan} $${agencia.anual} + Mant $${agencia.mantenimiento} trim - Código ${agencia.codigo}`);
+  res.json({
+    planDesbloqueado: agencia.plan,
+    mantenimiento: agencia.mantenimiento,
+    mensaje: `Plan ${agencia.plan} activado - Anual $${agencia.anual} + Mant trimestral obligatorio $${agencia.mantenimiento}`
+  });
 });
 
 app.post('/api/public/recuperar', async (req,res)=>{
@@ -103,8 +163,8 @@ app.post('/api/login', async (req,res)=>{
   let agencias = read('agencias.json');
   const agencia = agencias.find(a=>a.id===user.agenciaId);
   if(!agencia) return res.status(403).json({error:'Agencia no existe'});
-  if(!agencia.pagado) return res.status(403).json({error:'Agencia no pagada. Verifica código'});
-  if(agencia.estado==='bloqueado') return res.status(403).json({error:'Agencia bloqueada por falta de pago. Contacta admin'});
+  if(!agencia.pagado) return res.status(403).json({error:'Agencia no pagada. Verifica código KLIDO-... en crear empresa'});
+  if(agencia.estado==='bloqueado') return res.status(403).json({error:'Agencia bloqueada por falta de pago mantenimiento trimestral. Contacta admin'});
   agencia.ultimaConexion = new Date();
   write('agencias.json', agencias);
   const token = jwt.sign({id:user.id, agenciaId:user.agenciaId, rol:user.rol}, JWT_SECRET, {expiresIn:'7d'});
@@ -121,7 +181,6 @@ const auth = (req,res,next)=>{
 app.get('/api/mensajes', auth, (req,res)=>{
   let mensajes = read('mensajes.json');
   mensajes = mensajes.filter(m=>m.agenciaId===req.user.agenciaId);
-  // solo últimos 200 para que no se trabe interfaz
   res.json(mensajes.slice(-200));
 });
 
@@ -170,7 +229,7 @@ app.post('/api/ia/panic', auth, (req,res)=>{ res.json({ok:true, mensaje:'IA paus
 app.post('/api/webhooks/shopify', (req,res)=>{ console.log('Shopify', req.body); res.sendStatus(200) });
 app.post('/api/webhooks/woocommerce', (req,res)=>{ console.log('Woo', req.body); res.sendStatus(200) });
 
-// ============ PANEL DUEÑA - SUPERVISIÓN TOTAL - NO TOCA DATOS SENSIBLES ============
+// ============ PANEL DUEÑA - SUPERVISIÓN TOTAL - CON MANTENIMIENTO ============
 function checkAdmin(req,res,next){
   if(req.headers['x-admin-key']!== ADMIN_KEY) return res.status(401).json({error:'Clave admin inválida'});
   next();
@@ -179,28 +238,35 @@ app.get('/api/admin/metricas', checkAdmin, (req,res)=>{
   const agencias = read('agencias.json') || [];
   const usuarios = read('usuarios.json') || [];
   const mensajes = read('mensajes.json') || [];
-  let ingresosMes = 0;
+  let ingresosAnual = 0;
+  let ingresosTrim = 0;
   agencias.forEach(a=>{
-    if(a.plan==='basico') ingresosMes+=800000;
-    else if(a.plan==='premium') ingresosMes+=1400000;
-    else if(a.plan==='gold') ingresosMes+=2400000;
+    const p = PLANES[a.plan] || PLANES.premium;
+    ingresosAnual += p.anual;
+    ingresosTrim += p.trim;
   });
   const hoy = new Date().toDateString();
   res.json({
     totalAgencias: agencias.length,
     activas: agencias.filter(a=>a.estado!=='bloqueado').length,
-    ingresosMes,
-    porCobrar: agencias.filter(a=>a.estadoPago!=='pagado').length * 95000,
-    agencias: agencias.map(a=>({
-      id:a.id,
-      nombre:a.nombre,
-      plan:a.plan||'premium',
-      trabajadores: usuarios.filter(u=>u.agenciaId===a.id).length,
-      mensajesHoy: mensajes.filter(m=>m.agenciaId===a.id && new Date(m.timestamp||m.fecha).toDateString()===hoy).length,
-      ultimaConexion: a.ultimaConexion? new Date(a.ultimaConexion).toLocaleString('es-CO') : '-',
-      estadoPago: a.estadoPago || (a.pagado?'pagado':'pendiente'),
-      estado: a.estado || 'activo'
-    }))
+    ingresosMes: ingresosAnual,
+    ingresosTrimestral: ingresosTrim * agencias.length,
+    porCobrar: agencias.filter(a=>a.estadoPago!=='pagado').reduce((sum,a)=>{const p=PLANES[a.plan]||PLANES.premium; return sum + p.trim},0),
+    agencias: agencias.map(a=>{
+      const p = PLANES[a.plan] || PLANES.premium;
+      return {
+        id:a.id,
+        nombre:a.nombre,
+        plan:a.plan||'premium',
+        anual: a.anual || p.anual,
+        mantenimiento: a.mantenimiento || p.trim,
+        trabajadores: usuarios.filter(u=>u.agenciaId===a.id).length,
+        mensajesHoy: mensajes.filter(m=>m.agenciaId===a.id && new Date(m.timestamp||m.fecha).toDateString()===hoy).length,
+        ultimaConexion: a.ultimaConexion? new Date(a.ultimaConexion).toLocaleString('es-CO') : '-',
+        estadoPago: a.estadoPago || (a.pagado?'pagado':'pendiente'),
+        estado: a.estado || 'activo'
+      }
+    })
   });
 });
 app.post('/api/admin/toggle', checkAdmin, (req,res)=>{
@@ -211,6 +277,6 @@ app.post('/api/admin/toggle', checkAdmin, (req,res)=>{
   res.json({ok:true});
 });
 
-app.get('/health', (req,res)=>res.json({ok:true, DATA_DIR, agencias:read('agencias.json').length, usuarios:read('usuarios.json').length, mensajes:read('mensajes.json').length, timestamp:new Date()}));
+app.get('/health', (req,res)=>res.json({ok:true, DATA_DIR, agencias:read('agencias.json').length, usuarios:read('usuarios.json').length, mensajes:read('mensajes.json').length, timestamp:new Date(), planes:PLANES}));
 
-app.listen(PORT, ()=>console.log(`=== KLIDO CRM REAL v2 - ${new Date().toISOString()} DATA_DIR:${DATA_DIR} Agencias:${read('agencias.json').length} Usuarios:${read('usuarios.json').length} Mensajes:${read('mensajes.json').length} === Puerto ${PORT} === ADMIN KEY:${ADMIN_KEY} ===`));
+app.listen(PORT, ()=>console.log(`=== KLIDO CRM REAL v2.1 PLANES MANT 80/95/120 - ${new Date().toISOString()} DATA_DIR:${DATA_DIR} Agencias:${read('agencias.json').length} === Puerto ${PORT} ===`));
