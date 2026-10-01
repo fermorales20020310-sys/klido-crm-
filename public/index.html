@@ -8,8 +8,11 @@
 .brand img{width:110px!important;height:110px!important;background:#fff;border-radius:18px;padding:8px;object-fit:contain;box-shadow:0 8px 24px rgba(0,0,0,.35)} 
 .brand div b{font-size:38px;letter-spacing:1px;display:block;line-height:.9;font-weight:900} 
 .brand div span{font-size:13px;letter-spacing:3px;font-weight:800;color:#93c5fd}
-.hero h1{font-size:48px;line-height:.95;margin:24px 0 14px;font-weight:900} .hero h1 span{color:#60a5fa} .hero p{color:#cbd5e1;font-size:13px;line-height:1.6;max-width:560px} .hero p b{color:#fff}
-.highlight{margin:12px 0 8px;padding:12px 14px;border:1px solid rgba(96,165,250,.3);background:rgba(96,165,250,.12);border-radius:12px;color:#dbeafe;font-size:12px;font-weight:800;line-height:1.5;letter-spacing:.2px}
+.hero h1{font-size:48px;line-height:.95;margin:24px 0 14px;font-weight:900} .hero h1 span{color:#60a5fa}
+.hero h2{font-size:15px;letter-spacing:2px;color:#93c5fd;margin:6px 0 14px;font-weight:800}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.item{font-size:13px;color:#cbd5e1;line-height:1.5}
+.btnWppLeft{display:inline-flex;margin-top:18px;padding:12px 18px;background:#25D366;color:#fff;border-radius:12px;font-weight:800;font-size:13px;text-decoration:none;gap:8px;box-shadow:0 8px 20px rgba(0,0,0,.3);width:fit-content}
 .badge{display:inline-flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px;margin-top:12px;color:#bfdbfe}
 .bottom-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px} .bb{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px}
 .right{width:44%;background:var(--card);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
@@ -29,21 +32,19 @@ button.primary{width:100%;padding:13px;border-radius:12px;border:0;background:#0
 <div>
 <div class="brand"><img src="logo.png?v=111"><div><b>KLIDO</b><span>AVANZA CONSULTING</span></div></div>
 <div class="hero">
-<h1>Plataforma CRM para API OFICIAL<br>que tu empresa<br><span>puede tener.</span></h1>
-<div class="highlight">
-PLATAFORMA CRM PARA API OFICIAL • BANDEJA EN TIEMPO REAL • CAMPAÑAS ANTI BANEO • SEGURO LEY 1581 • CLOUD API • SOPORTE 24/7 • CONTRATO ANUAL
+<h1>El mejor CRM<br>que tu empresa<br><span>puede tener.</span></h1>
+<h2>CRM MULTIAGENCIA - CLOUD API</h2>
+<div class="list">
+<div class="item">✓ BANDEJA EN TIEMPO REAL</div>
+<div class="item">✓ CAMPAÑAS ANTI BANEO</div>
+<div class="item">✓ SEGURO LEY 1581: Habeas Data - Cloud API oficial - datos en /data con backups</div>
+<div class="item">✓ SOPORTE 24/7</div>
 </div>
-<p><b>KLIDO v111 PRO — Plataforma en Producción. API Oficial Meta (WhatsApp Business API) - No Demo.</b><br><br>
-CRM autónomo <b>máx 10 agencias</b>. Cada agencia <b>JEFE y TRABAJADORES</b> mismo plan, sin cruzar info. Solo ves lo que pagaste.<br><br>
-✓ <b>BANDEJA EN TIEMPO REAL:</b> fotos, audios, archivos - online, no leídos, 🟡 amarilla campañas<br>
-✓ <b>CAMPAÑAS ANTI BANEO:</b> Excel auto + antibaneo 50/5min 800ms - solo plantillas aprobadas auto-sync<br>
-✓ <b>SEGURO LEY 1581:</b> Habeas Data - Cloud API oficial - datos en /data con backups<br>
-✓ <b>NUEVO v111:</b> Activación con código pago al correo registrado + Contrato PDF anual + Onboarding 60s + White-label + IA resumen + Métricas que justifican mantenimiento trimestral<br>
-✓ Básico sin IA, Premium con IA, Gold con IA + Llamadas tel: - Soporte 24/7 3133181851 - Contrato anual + mant. trim</p>
-<div class="badge">✓ v111 PRO - MULTIAGENCIA CERTIFICADA META API OFICIAL - RAILWAY PAGO - API ACTIVA - SOLO FALTA DOMINIO + IA KEY</div>
+<a class="btnWppLeft" href="https://wa.me/573133181851?text=Hola%20Avanza%20quiero%20KLIDO%20v111%20PRO" target="_blank">💬 SOPORTE 24/7</a>
+<div class="badge">✓ v111 PRO - MULTIAGENCIA CERTIFICADA META API OFICIAL - RAILWAY PAGO - API ACTIVA</div>
 </div>
 </div>
-<div class="bottom-badges"><div class="bb">🔒 Seguro Ley 1581</div><div class="bb">✓ WhatsApp API Oficial - Cloud API</div><div class="bb">💬 Soporte 24/7: 3133181851</div><div class="bb">📄 Contrato anual + mant. trim</div></div>
+<div class="bottom-badges"><div class="bb">🔒 Seguro Ley 1581</div><div class="bb">✓ WhatsApp API Oficial</div><div class="bb">✓ Cloud API</div><div class="bb">📄 Contrato anual + mant. trim</div></div>
 </div>
 
 <div class="right">
@@ -82,7 +83,7 @@ CRM autónomo <b>máx 10 agencias</b>. Cada agencia <b>JEFE y TRABAJADORES</b> m
 <h3 style="margin:0 0 8px">Activar cuenta con código pago</h3><p style="font-size:11px;color:#64748b">Después de pagar por Nequi/Bancolombia a Avanza, te llega código <b>KLIDO-XXXX-1234</b> a tu correo registrado. Ingrésalo aquí.</p>
 <input id="aEmail" placeholder="Correo admin registrado"><input id="aCode" placeholder="Código activación KLIDO-XXXX-1234"><button class="primary" onclick="doAct()">Activar cuenta → Ingresar</button>
 <div id="aMsg" class="muted"></div>
-<div style="margin-top:10px;font-size:11px">¿No te llegó? <a href="https://wa.me/573133181851?text=Hola%20Avanza%20pague%20KLIDO%20no%20me%20llego%20codigo%20activacion" target="_blank" style="color:#25D366;font-weight:800">WPP Soporte 24/7 3133181851</a></div>
+<div style="margin-top:10px;font-size:11px">¿No te llegó? <a href="https://wa.me/573133181851?text=Hola%20Avanza%20pague%20KLIDO%20no%20me%20llego%20codigo%20activacion" target="_blank" style="color:#25D366;font-weight:800">Soporte 24/7 - Click aquí</a></div>
 </div>
 </div>
 </div>
@@ -92,7 +93,7 @@ CRM autónomo <b>máx 10 agencias</b>. Cada agencia <b>JEFE y TRABAJADORES</b> m
 <b>Plataforma producción real - No demo.</b> API Oficial Meta - Cloud API. Máx 10 agencias. Pago anual + mantenimiento trimestral aparte: Básico $800k+$80k trim, Premium $1.4M+$95k, Gold $2.4M+$120k. Básico sin IA, Premium con IA resumen/sugerencia, Gold IA + llamadas. Cada agencia aislada, trabajadores heredan plan jefe, sin cruzar info, solo ves plan pagado. Bandeja tiempo real fotos/audios/archivos, no leídos, etiqueta amarilla campañas, antibaneo 50/5min 800ms, solo plantillas aprobadas auto-sync, calendario con recordatorio auto 1 día antes, métricas tiempo respuesta + sin responder >2h + tasa cierre + ranking que justifican mantenimiento, white-label $200k extra, contrato PDF anual, onboarding 60s, soporte 24/7 WPP 3133181851, Ley 1581. Empresa registrada queda en historial pendiente activación hasta pago con código.<br><br>
 Al registrar aceptas términos.</p><button onclick="closeM()" style="width:100%;padding:10px;border-radius:10px;border:0;background:#0b1220;color:#fff">Entendido - v111 PRO</button></div></div>
 
-<a class="floatWpp" href="https://wa.me/573133181851?text=Hola%20Avanza%20quiero%20KLIDO%20v111%20PRO%20API%20Oficial" target="_blank">💬 Soporte 24/7: 3133181851</a>
+<a class="floatWpp" href="https://wa.me/573133181851?text=Hola%20Avanza%20quiero%20KLIDO%20v111%20PRO%20API%20Oficial" target="_blank">💬 SOPORTE 24/7</a>
 
 <script>
 let plan='basico';
@@ -105,7 +106,7 @@ async function reqCode(tipo, id){
  const emailEl = id==='fEmail'? document.getElementById('fEmail') : document.getElementById('rEmail');
  const email=emailEl.value.trim(); if(!email) return alert('Escribe tu correo registrado');
  const r=await fetch('/api/public/solicitar-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,tipo})});
- const d=await r.json(); alert(d.mensaje||'Código enviado a '+email+' - revisa spam - WPP '+ '3133181851');
+ const d=await r.json(); alert(d.mensaje||'Código enviado a '+email+' - revisa spam');
 }
 async function doReg(){
  const nombre=document.getElementById('rNombre').value.trim(); const email=document.getElementById('rEmail').value.trim(); const codigo=document.getElementById('rCode').value.trim(); const password=document.getElementById('rPass').value;
@@ -114,7 +115,7 @@ async function doReg(){
  if(!vr.ok){const e=await vr.json(); return alert(e.error)}
  const r=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan,codigo,aceptoTerminos:true})});
  const d=await r.json(); document.getElementById('rMsg').textContent=d.mensaje||d.error;
- if(r.ok){alert('Empresa creada! Queda en historial pendiente activación. Paga a Avanza y te llega código activación a '+email+'. Luego ve a Activar cuenta. WPP 3133181851'); tab('login'); document.getElementById('lEmail').value=email;}
+ if(r.ok){alert('Empresa creada! Queda en historial pendiente activación. Paga a Avanza y te llega código activación a '+email+'.'); tab('login'); document.getElementById('lEmail').value=email;}
 }
 async function doLogin(){
  const email=document.getElementById('lEmail').value.trim(); const password=document.getElementById('lPass').value;
