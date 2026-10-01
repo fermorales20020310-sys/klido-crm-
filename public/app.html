@@ -1,237 +1,51 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>KLIDO CRM - Panel Empresarial Real</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<script src="/socket.io/socket.io.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}
-body{background:#f5f7fb;display:flex;height:100vh;overflow:hidden}
-.side{width:250px;background:#0a1024;color:white;padding:20px;display:flex;flex-direction:column;border-right:1px solid #1e293b}
-.side-top{display:flex;align-items:center;gap:12px}
-.side-top img{width:40px;height:40px;background:white;border-radius:10px;padding:5px}
-.side-top b{font-size:15px;font-weight:900;letter-spacing:-0.5px}
-.side-top span{font-size:9px;letter-spacing:2px;opacity:0.6;display:block}
-.user-box{margin-top:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:11px;line-height:1.4;color:#94a3b8}
-.menu{margin-top:22px;display:flex;flex-direction:column;gap:4px;flex:1}
-.menu button{background:transparent;border:0;color:#7c8db0;text-align:left;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s}
-.menu button:hover{background:rgba(255,255,255,0.06);color:white}
-.menu button.active{background:#1e3a8a;color:white;box-shadow:0 4px 12px rgba(30,58,138,0.4)}
-.dot{width:8px;height:8px;border-radius:50%}.dot.red{background:#ef4444;box-shadow:0 0 6px #ef4444}.dot.yellow{background:#facc15;box-shadow:0 0 6px #facc15}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.top{height:62px;background:white;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
-.top-title{font-weight:800;color:#0f172a;font-size:14px}
-.badge-plan{background:#0f172a;color:white;border-radius:20px;padding:7px 14px;font-size:10px;font-weight:800;letter-spacing:0.5px}
-.content{flex:1;display:grid;grid-template-columns:360px 1fr;overflow:hidden}
-.chats{background:white;border-right:1px solid #e2e8f0;overflow-y:auto}
-.chat-item{padding:14px 16px;border-bottom:1px solid #f1f5fa;display:flex;gap:12px;cursor:pointer;align-items:center;transition:all 0.15s}
-.chat-item:hover{background:#f8fafc}
-.chat-item.unread{background:#eff6ff;border-left:3px solid #2563eb}
-.avatar{width:42px;height:42px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#1e3a8a;flex-shrink:0}
-.chat-meta{flex:1;overflow:hidden}
-.chat-name{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;color:#0f172a}
-.chat-preview{font-size:11.5px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-.chat-time{font-size:10px;color:#94a3b8}
-.msgs{flex:1;display:flex;flex-direction:column;background:#f8fafc;overflow:hidden}
-.msgs-list{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
-.bubble{max-width:72%;padding:12px 14px;border-radius:16px;font-size:13.5px;line-height:1.4;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
-.bubble.me{align-self:flex-end;background:#1e3a8a;color:white;border-bottom-right-radius:4px}
-.bubble.other{align-self:flex-start;background:white;border:1px solid #e2e8f0;color:#1e293b;border-bottom-left-radius:4px}
-.bubble small{font-size:10px;opacity:0.7;display:block;margin-top:4px}
-.input-area{background:white;border-top:1px solid #e2e8f0;padding:12px;display:flex;gap:10px;align-items:center}
-.input-area input[type=text]{flex:1;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:24px;padding:12px 16px;outline:none;font-size:13.5px}
-.input-area input[type=text]:focus{background:white;border-color:#1e3a8a}
-.btn-send{background:#1e3a8a;color:white;border:0;border-radius:24px;padding:11px 18px;font-weight:800;cursor:pointer;font-size:13px}
-.btn-icon{background:#f1f5f9;border:0;border-radius:50%;width:42px;height:42px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
-.panel{padding:22px;overflow-y:auto;background:#f5f7fb}
-.card{background:white;border-radius:16px;padding:18px;border:1px solid #e2e8f0;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.03)}
-.card h3{font-size:15px;font-weight:800;color:#0f172a;margin-bottom:6px}
-.card h4{font-size:13px;font-weight:700;color:#0f172a}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-.kpi{font-size:24px;font-weight:900;color:#0f172a;margin-top:4px}
-.kpi-label{font-size:11px;color:#64748b;font-weight:600;letter-spacing:0.3px}
-.hidden{display:none!important}
-.table{width:100%;border-collapse:collapse;font-size:12px}
-.table th{background:#f8fafc;padding:10px;text-align:left;font-weight:700;color:#475569;border-bottom:1px solid #e2e8f0}
-.table td{padding:10px;border-bottom:1px solid #f1f5fa}
-.status{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800}
-.status.activa{background:#dcfce7;color:#166534}
-.status.pendiente{background:#fef9c3;color:#854d0e}
-@media(max-width:900px){.content{grid-template-columns:1fr}.side{display:none}.grid2,.grid3{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<div class="side">
-  <div class="side-top"><img src="logo.png" onerror="this.src='/logo.png'"><div><b>KLIDO</b><span>AVANZA CONSULTING</span></div></div>
-  <div class="user-box" id="userInfo">Cargando...</div>
-  <div class="menu">
-    <button id="m-bandeja" class="active" onclick="show('bandeja')">💬 Bandeja <span style="display:flex;gap:5px"><span class="dot red"></span><span class="dot yellow"></span></span></button>
-    <button id="m-campana" onclick="show('campana')">📢 Campañas</button>
-    <button id="m-planes" onclick="show('planes')">💎 Planes y Beneficios</button>
-    <button id="m-metricas" onclick="show('metricas')">📊 Métricas y Estadísticas</button>
-    <button id="m-trab" onclick="show('trab')">👥 Equipo / Trabajadores</button>
-    <button id="m-admin" onclick="show('admin')" class="hidden">🏢 Todas las Agencias (SuperAdmin)</button>
-    <button id="m-config" onclick="show('config')">⚙️ Configuración y Manual</button>
-    <button onclick="window.open('https://wa.me/573133181851?text=Hola%20soporte%20KLIDO%2024/7','_blank')">🆘 Ayuda 24/7 → 3133181851</button>
-    <button onclick="localStorage.clear();location.href='/'" style="margin-top:auto;color:#f87171;background:rgba(239,68,68,0.1)">↪ Cerrar Sesión</button>
-  </div>
-</div>
-<div class="main">
-  <div class="top"><div class="top-title" id="topTitle">Bandeja de Entrada - Tiempo Real API Meta Oficial</div><div class="badge-plan" id="planBadge">CARGANDO PLAN</div></div>
-
-  <div id="view-bandeja" class="content">
-    <div class="chats" id="chatsList"><div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px">Cargando chats en tiempo real...</div></div>
-    <div class="msgs"><div class="msgs-list" id="msgsList"><div style="text-align:center;color:#94a3b8;margin-top:60px;font-size:13px">Selecciona un chat<br><br>✅ Fotos, audios, archivos<br>🔴 Punto rojo = no leído<br>🟡 Punto amarillo = campaña</div></div>
-    <div class="input-area"><button class="btn-icon" onclick="document.getElementById('fileInput').click()">📎</button><input type="file" id="fileInput" style="display:none"><input id="msgInput" type="text" placeholder="Escribe un mensaje..."><button class="btn-send" onclick="sendMsg()">Enviar</button></div></div>
-  </div>
-
-  <div id="view-campana" class="panel hidden">
-    <div class="card"><h3>📢 Campañas Masivas - Excel + Plantillas Aprobadas META</h3><p style="font-size:12px;color:#64748b;margin-top:6px;line-height:1.5">Sube tu base de datos en Excel (.xlsx) con columna <b>telefono</b>. El sistema detecta números automáticamente. Solo puedes enviar con plantillas APROBADAS por API oficial de Meta, que se sincronizan automáticamente.</p>
-      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <input id="campNombre" placeholder="Nombre campaña Ej: Promo Octubre" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px;min-width:200px">
-        <select id="plantillaSel" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px;min-width:200px"><option>Cargando plantillas aprobadas...</option></select>
-        <input type="file" id="excelFile" accept=".xlsx,.xls" style="font-size:12px">
-        <button class="btn-send" onclick="uploadCamp()">Subir Excel y Detectar Números</button>
-      </div>
-      <div id="campList" style="margin-top:18px"></div>
-    </div>
-    <div class="card"><h4>📜 Historial y Seguimiento de Campañas</h4><div id="campHistorial" style="font-size:12px;color:#475569;margin-top:10px;line-height:1.6"></div></div>
-  </div>
-
-  <div id="view-planes" class="panel hidden">
-    <div class="grid3">
-      <div class="card"><b>Básico - $800.000/año + $80.000/trim</b><ul style="font-size:12px;margin-top:10px;line-height:1.7;color:#334155"><li>3 asesores / trabajadores</li><li>API Oficial Meta</li><li>Bandeja tiempo real fotos, audios, archivos</li><li>Campañas con Excel</li><li>Soporte 24/7 3133181851</li></ul></div>
-      <div class="card" style="border-color:#2563eb;border-width:2px"><b>Premium + IA - $1.400.000/año + $95.000/trim ⭐ Más Vendido</b><ul style="font-size:12px;margin-top:10px;line-height:1.7;color:#334155"><li>10 asesores</li><li><b>IA Avanzada incluida</b> para respuestas</li><li>Plantillas automáticas META</li><li>Seguimiento e historial completo</li><li>Métricas avanzadas</li><li>Soporte prioritario 24/7</li></ul></div>
-      <div class="card" style="border-color:#0f172a;background:#0f172a;color:white"><b>Gold + IA + Llamadas - $2.400.000/año + $120.000/trim</b><ul style="font-size:12px;margin-top:10px;line-height:1.7;color:#cbd5e1"><li>Ilimitado asesores</li><li>IA + Llamadas integradas</li><li>Multiagencia total</li><li>Métricas y estadísticas pro</li><li>Segmentación avanzada</li><li>Soporte VIP 24/7</li></ul></div>
-    </div>
-    <button class="btn-send" style="margin-top:14px;padding:14px 20px" onclick="window.open('https://wa.me/573133181851?text=Quiero%20adquirir%20o%20cambiar%20de%20plan%20KLIDO%20AVANZA','_blank')">Adquirir / Cambiar Plan → WhatsApp 3133181851</button>
-  </div>
-
-  <div id="view-metricas" class="panel hidden">
-    <div class="grid3">
-      <div class="card"><div class="kpi-label">TOTAL MENSAJES</div><div class="kpi" id="kpiTotal">0</div></div>
-      <div class="card"><div class="kpi-label">NO LEÍDOS <span class="dot red" style="display:inline-block"></span></div><div class="kpi" id="kpiNoLeidos">0</div></div>
-      <div class="card"><div class="kpi-label">POR CAMPAÑA <span class="dot yellow" style="display:inline-block"></span></div><div class="kpi" id="kpiCamp">0</div></div>
-      <div class="card"><div class="kpi-label">CAMPAÑAS ENVIADAS</div><div class="kpi" id="kpiCampanas">0</div></div>
-      <div class="card"><div class="kpi-label">TRABAJADORES</div><div class="kpi" id="kpiTrab">0</div></div>
-      <div class="card" id="kpiAgenciasCard" class="hidden"><div class="kpi-label">TOTAL AGENCIAS (SUPERADMIN)</div><div class="kpi" id="kpiAgencias">0</div></div>
-    </div>
-    <div class="card"><h4>📈 Seguimiento en Tiempo Real</h4><p style="font-size:12px;color:#64748b;margin-top:6px">Todas las métricas se actualizan en tiempo real vía Socket.io. Jefe/Admin ve todo, trabajador solo ve sus estadísticas.</p></div>
-  </div>
-
-  <div id="view-trab" class="panel hidden">
-    <div class="card"><h3>👥 Gestión de Equipo - Agregar, Eliminar, Asignar Chats</h3><p style="font-size:11px;color:#64748b;margin-top:4px">Solo el Administrador o Jefe puede agregar trabajadores. El trabajador hereda el plan que pagó el jefe y no puede ver otros planes.</p>
-      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><input id="tNom" placeholder="Nombre completo" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px"><input id="tEmail" placeholder="Correo" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px"><input id="tPass" type="password" placeholder="Contraseña" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px"><button class="btn-send" onclick="addTrab()">Agregar Trabajador</button></div>
-      <div id="trabList" style="margin-top:16px"></div>
-    </div>
-  </div>
-
-  <div id="view-admin" class="panel hidden">
-    <div class="card"><h3>🏢 SuperAdmin - Todas las Agencias Registradas - Historial Permanente Sin Bloqueos</h3><p style="font-size:11px;color:#64748b">Aquí ves todas las agencias que se han registrado, con sus trabajadores, pagos y estado. Esto nunca se borra.</p><div id="adminList" style="margin-top:14px"></div></div>
-  </div>
-
-  <div id="view-config" class="panel hidden">
-    <div class="card"><h3>⚙️ Cómo Funciona KLIDO AVANZA CONSULTING - Manual Profesional</h3><div style="font-size:12.5px;line-height:1.8;color:#334155;margin-top:12px">
-      <b>1. Multiagencia Real:</b> Cada empresa tiene su espacio aislado con base de datos propia. Jefe ve métricas, trabajadores solo sus chats asignados.<br>
-      <b>2. Bandeja Entrada Tiempo Real:</b> Conectada a API oficial META vía Webhook + Socket.io. Soporta fotos, audios, archivos, ver en tiempo real, aceptar y recibir mensajes.<br>
-      <b>3. Distintivos:</b> Punto rojo = mensajes no leídos. Punto amarillo = mensajes que ingresan por campaña.<br>
-      <b>4. Campañas:</b> Subes Excel con base de datos, selecciona números automáticamente, solo usa plantillas APROBADAS por API y estas se suben automáticamente al aprobarse en API META. Seguimiento e historial completo.<br>
-      <b>5. Planes:</b> Básico 3 asesores, Premium 10 asesores + IA, Gold ilimitado + IA + Llamadas. Cada plan desbloquea solo lo que pagaste.<br>
-      <b>6. Legalidad:</b> Términos claros, mantenimiento trimestral aparte, facturación, Habeas Data Ley 1581.<br>
-      <b>7. Beneficios:</b> Seguro, confiable, WhatsApp Business API oficial, soporte 24/7, datos encriptados, historial permanente.<br>
-    </div><button class="btn-send" style="margin-top:16px" onclick="window.open('https://wa.me/573133181851?text=Quiero%20info%20configuracion%20KLIDO','_blank')">Adquirir / Cambiar Plan → WhatsApp 3133181851</button></div>
-    <div class="card"><h4>📄 Términos y Condiciones Legales Completos</h4><p style="font-size:11px;color:#64748b;margin-top:6px;line-height:1.6">CRM empresarial real, no demo ni prueba. Pago anual + mantenimiento trimestral obligatorio adicional. Código personal e intransferible. Soporte 24/7. Uso API oficial Meta. Prohibido spam. Cumplimiento Ley 1581 de 2012 Habeas Data Colombia. <a href="/terminos.html" target="_blank" style="color:#1e3a8a;font-weight:700">Ver términos completos →</a></p></div>
-  </div>
-
-</div>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>KLIDO CRM - Panel Real con Bloqueos</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><script src="/socket.io/socket.io.js"></script><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}body{background:#f5f7fb;display:flex;height:100vh;overflow:hidden}.side{width:250px;background:#0a1024;color:white;padding:20px;display:flex;flex-direction:column}.side-top{display:flex;align-items:center;gap:12px}.side-top img{width:40px;height:40px;background:white;border-radius:10px;padding:5px}.side-top b{font-size:15px;font-weight:900}.side-top span{font-size:9px;letter-spacing:2px;opacity:0.6;display:block}.user-box{margin-top:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;font-size:11px;color:#94a3b8;line-height:1.4}.menu{margin-top:22px;display:flex;flex-direction:column;gap:4px;flex:1}.menu button{background:transparent;border:0;color:#7c8db0;text-align:left;padding:12px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}.menu button.active{background:#1e3a8a;color:white}.dot{width:8px;height:8px;border-radius:50%}.dot.red{background:#ef4444}.dot.yellow{background:#facc15}.main{flex:1;display:flex;flex-direction:column;overflow:hidden}.top{height:62px;background:white;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 20px}.badge-plan{background:#0f172a;color:white;border-radius:20px;padding:7px 14px;font-size:10px;font-weight:800}.content{flex:1;display:grid;grid-template-columns:360px 1fr;overflow:hidden}.chats{background:white;border-right:1px solid #e2e8f0;overflow-y:auto}.chat-item{padding:14px 16px;border-bottom:1px solid #f1f5fa;display:flex;gap:12px;cursor:pointer}.chat-item.unread{background:#eff6ff;border-left:3px solid #2563eb}.avatar{width:42px;height:42px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#1e3a8a}.chat-meta{flex:1;overflow:hidden}.chat-name{font-size:13.5px;font-weight:700;display:flex;gap:6px}.chat-preview{font-size:11.5px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.msgs{flex:1;display:flex;flex-direction:column;background:#f8fafc}.msgs-list{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}.bubble{max-width:72%;padding:12px 14px;border-radius:16px;font-size:13.5px}.bubble.me{align-self:flex-end;background:#1e3a8a;color:white}.bubble.other{align-self:flex-start;background:white;border:1px solid #e2e8f0}.input-area{background:white;border-top:1px solid #e2e8f0;padding:12px;display:flex;gap:10px}.input-area input[type=text]{flex:1;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:24px;padding:12px 16px;outline:none}.btn-send{background:#1e3a8a;color:white;border:0;border-radius:24px;padding:11px 18px;font-weight:800;cursor:pointer}.btn-icon{background:#f1f5f9;border:0;border-radius:50%;width:42px;height:42px;cursor:pointer}.panel{padding:22px;overflow-y:auto}.card{background:white;border-radius:16px;padding:18px;border:1px solid #e2e8f0;margin-bottom:14px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}.kpi{font-size:24px;font-weight:900}.kpi-label{font-size:11px;color:#64748b}.hidden{display:none!important}.limite-bar{height:8px;background:#e2e8f0;border-radius:10px;overflow:hidden;margin-top:8px}.limite-fill{height:100%;background:linear-gradient(90deg,#2563eb,#1e3a8a);transition:width 0.4s}.bloqueado{opacity:0.4;pointer-events:none;position:relative}.bloqueado::after{content:'🔒 Bloqueado por tu plan';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#0f172a;color:white;padding:6px 12px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap}</style></head><body>
+<div class="side"><div class="side-top"><img src="logo.png"><div><b>KLIDO</b><span>AVANZA CONSULTING</span></div></div><div class="user-box" id="userInfo"></div><div class="menu"><button id="m-bandeja" class="active" onclick="show('bandeja')">💬 Bandeja <span style="display:flex;gap:5px"><span class="dot red"></span><span class="dot yellow"></span></span></button><button id="m-campana" onclick="show('campana')">📢 Campañas</button><button id="m-planes" onclick="show('planes')">💎 Planes</button><button id="m-metricas" onclick="show('metricas')">📊 Métricas</button><button id="m-trab" onclick="show('trab')">👥 Equipo</button><button id="m-admin" onclick="show('admin')" class="hidden">🏢 Agencias SuperAdmin</button><button id="m-config" onclick="show('config')">⚙️ Configuración</button><button onclick="window.open('https://wa.me/573133181851','_blank')">🆘 Ayuda 24/7</button><button onclick="localStorage.clear();location.href='/'" style="color:#f87171">↪ Salir</button></div></div>
+<div class="main"><div class="top"><div id="topTitle">Bandeja - Tiempo Real</div><div class="badge-plan" id="planBadge"></div></div>
+<div id="view-bandeja" class="content"><div class="chats" id="chatsList"></div><div class="msgs"><div class="msgs-list" id="msgsList"></div><div class="input-area"><button class="btn-icon" onclick="document.getElementById('fileInput').click()">📎</button><input type="file" id="fileInput" style="display:none"><input id="msgInput" type="text" placeholder="Escribe mensaje..."><button class="btn-send" onclick="sendMsg()">Enviar</button></div></div></div>
+<div id="view-campana" class="panel hidden"><div class="card"><h3>📢 Campañas - Excel + Plantillas Aprobadas META</h3><p style="font-size:12px;color:#64748b">Sube Excel columna telefono. Solo plantillas APROBADAS. Punto amarillo = campaña.</p><div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><input id="campNombre" placeholder="Nombre campaña" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px"><select id="plantillaSel" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px"></select><input type="file" id="excelFile" accept=".xlsx,.xls"><button class="btn-send" onclick="uploadCamp()">Subir y Detectar Números</button></div><div id="campList" style="margin-top:16px"></div></div><div class="card"><h4>Historial</h4><div id="campHistorial"></div></div></div>
+<div id="view-planes" class="panel hidden"><div class="grid3"><div class="card" id="card-basico"><b>Básico - $800k/año + $80k/trim</b><br><small>1000 conversaciones</small><br><small>3 asesores</small><br><small>❌ Sin IA</small><br><small>❌ Sin llamadas</small><div class="limite-bar"><div class="limite-fill" id="fill-basico" style="width:30%"></div></div></div><div class="card" id="card-premium"><b>Premium + IA - $1.4M/año + $95k/trim</b><br><small>5000 conversaciones</small><br><small>10 asesores</small><br><small>✅ IA Avanzada</small><br><small>❌ Sin llamadas</small></div><div class="card" id="card-gold"><b>Gold + IA + Llamadas - $2.4M/año + $120k/trim</b><br><small>Ilimitado conversaciones</small><br><small>Ilimitado asesores</small><br><small>✅ IA + Llamadas</small></div></div><div class="card" id="planUsoCard"><h4>Uso de tu plan actual</h4><div id="planUso"></div></div><button class="btn-send" onclick="window.open('https://wa.me/573133181851?text=Quiero%20cambiar%20de%20plan','_blank')">Adquirir / Cambiar Plan 3133181851</button></div>
+<div id="view-metricas" class="panel hidden"><div class="grid3"><div class="card"><div class="kpi-label">TOTAL</div><div class="kpi" id="kpiTotal">0</div><div class="limite-bar"><div class="limite-fill" id="barTotal" style="width:0%"></div></div></div><div class="card"><div class="kpi-label">NO LEÍDOS 🔴</div><div class="kpi" id="kpiNoLeidos">0</div></div><div class="card"><div class="kpi-label">CAMPAÑA 🟡</div><div class="kpi" id="kpiCamp">0</div></div><div class="card"><div class="kpi-label">CAMPAÑAS</div><div class="kpi" id="kpiCampanas">0</div></div><div class="card"><div class="kpi-label">TRABAJADORES</div><div class="kpi" id="kpiTrab">0</div><div class="limite-bar"><div class="limite-fill" id="barTrab" style="width:0%"></div></div></div><div class="card" id="cardIA"><div class="kpi-label">IA AVANZADA</div><div class="kpi" id="kpiIA">❌ Bloqueada</div></div><div class="card" id="cardLlam"><div class="kpi-label">LLAMADAS</div><div class="kpi" id="kpiLlam">❌ Bloqueada</div></div></div></div>
+<div id="view-trab" class="panel hidden"><div class="card"><h3>👥 Equipo - Límite por plan</h3><div id="trabLimiteInfo" style="font-size:11px;color:#2563eb;margin-top:6px;background:#dbeafe;padding:8px;border-radius:8px"></div><div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><input id="tNom" placeholder="Nombre" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px"><input id="tEmail" placeholder="Correo" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px"><input id="tPass" type="password" placeholder="Contraseña" style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px"><button class="btn-send" id="btnAddTrab" onclick="addTrab()">Agregar Trabajador</button></div><div id="trabList" style="margin-top:16px"></div></div></div>
+<div id="view-admin" class="panel hidden"><div class="card"><h3>🏢 SuperAdmin - Todas las Agencias</h3><div id="adminList"></div></div></div>
+<div id="view-config" class="panel hidden"><div class="card"><h3>⚙️ Configuración</h3><p style="font-size:12px;line-height:1.7;color:#334155">Bandeja tiempo real con fotos, audios, archivos. Punto rojo no leído, amarillo campaña. Campañas Excel detecta números automático, solo plantillas APROBADAS META. Planes bloqueados: Básico 1000 conv / 3 users sin IA, Premium 5000/10 con IA, Gold ilimitado con IA + llamadas. Jefe ve todo, trabajador solo lo suyo. Historial permanente.</p></div></div>
 </div>
 <script>
-const token=localStorage.getItem('klido_token');
-const user=JSON.parse(localStorage.getItem('klido_user')||'{}');
+const token=localStorage.getItem('klido_token'); const user=JSON.parse(localStorage.getItem('klido_user')||'{}');
 if(!token) location.href='/';
-document.getElementById('userInfo').innerHTML=`<b>${user.nombre}</b><br>${user.empresa}<br>Rol: ${user.rol}<br>Plan: ${(user.plan||'').toUpperCase()}`;
-document.getElementById('planBadge').innerText=(user.plan||'PLAN').toUpperCase()+' DESBLOQUEADO';
-if(user.esSuperAdmin||user.rol==='SuperAdmin'){ document.getElementById('m-admin').classList.remove('hidden'); document.getElementById('kpiAgenciasCard').classList.remove('hidden'); }
-const socket=io({auth:{token}});
-let chats=[], selectedChat=null;
-function show(v){
-  document.querySelectorAll('[id^="view-"]').forEach(e=>e.classList.add('hidden'));
-  document.getElementById('view-'+v).classList.remove('hidden');
-  document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active'));
-  document.getElementById('m-'+v)?.classList.add('active');
-  document.getElementById('topTitle').innerText=v.toUpperCase()+' - KLIDO AVANZA REAL';
-  if(v==='metricas') loadMetricas();
-  if(v==='campana'){ loadPlantillas(); loadCampanias(); }
-  if(v==='admin') loadAdmin();
-}
-async function api(path, opts={}){
-  opts.headers={...(opts.headers||{}), Authorization:'Bearer '+token};
-  const r=await fetch(path, opts);
-  const d=await r.json();
-  if(!r.ok) throw new Error(d.error||'Error');
-  return d;
-}
-async function loadChats(){
+document.getElementById('userInfo').innerHTML=`<b>${user.nombre}</b><br>${user.empresa}<br>${user.rol}<br>Plan: ${(user.plan||'').toUpperCase()}`;
+const socket=io({auth:{token}}); let chats=[], selectedChat=null;
+function show(v){ document.querySelectorAll('[id^="view-"]').forEach(e=>e.classList.add('hidden')); document.getElementById('view-'+v).classList.remove('hidden'); document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); document.getElementById('m-'+v)?.classList.add('active'); if(v==='metricas') loadMetricas(); if(v==='campana'){loadPlantillas(); loadCampanias();} if(v==='admin') loadAdmin(); if(v==='planes') loadMetricas(); }
+async function api(path, opts={}){ opts.headers={...(opts.headers||{}), Authorization:'Bearer '+token}; const r=await fetch(path, opts); const d=await r.json(); if(!r.ok) throw new Error(d.error||'Error'); return d; }
+async function verificarBloqueos(){
   try{
-    const msgs=await api('/api/mensajes');
-    const map={};
-    msgs.forEach(m=>{ const key=m.from==='yo'? m.to : m.from; if(!map[key]) map[key]=[]; map[key].push(m); });
-    chats=Object.entries(map).map(([k,v])=>({numero:k, msgs:v.sort((a,b)=>a.timestamp-b.timestamp), ultimo:v.sort((a,b)=>b.timestamp-a.timestamp)[0], noLeido:v.some(x=>!x.leido), esCampania:v.some(x=>x.campania)}));
-    renderChats();
+    const p=await api('/api/plan/permisos');
+    document.getElementById('planBadge').innerText=p.nombre.toUpperCase()+' - '+p.uso.conversaciones+'/'+(p.limites.conversaciones>999999?'∞':p.limites.conversaciones)+' CONV';
+    document.getElementById('planUso').innerHTML=`<div style="font-size:12px;margin-top:8px"><b>${p.nombre}</b> - Conversaciones ${p.uso.conversaciones}/${p.limites.conversaciones>999999?'Ilimitado':p.limites.conversaciones} (${Math.round(p.uso.conversaciones/(p.limites.conversaciones>999999?10000:p.limites.conversaciones)*100)}%)<br>Trabajadores ${p.uso.trabajadores}/${p.limites.trabajadores>900000?'Ilimitado':p.limites.trabajadores}<br>IA: ${p.puedeUsarIA?'✅ Desbloqueada':'❌ Bloqueada (solo Premium/Gold)'} | Llamadas: ${p.puedeUsarLlamadas?'✅ Desbloqueada':'❌ Bloqueada (solo Gold)'}</div><div class="limite-bar"><div class="limite-fill" style="width:${Math.min(100, p.uso.conversaciones/(p.limites.conversaciones>999999?10000:p.limites.conversaciones)*100)}%"></div></div>`;
+    document.getElementById('kpiIA').innerText=p.puedeUsarIA?'✅ Desbloqueada':'❌ Bloqueada'; document.getElementById('kpiLlam').innerText=p.puedeUsarLlamadas?'✅ Desbloqueada':'❌ Bloqueada';
+    document.getElementById('kpiTotal').innerText=p.uso.conversaciones; document.getElementById('kpiTrab').innerText=p.uso.trabajadores;
+    document.getElementById('barTotal').style.width=Math.min(100,p.uso.conversaciones/(p.limites.conversaciones>999999?10000:p.limites.conversaciones)*100)+'%';
+    document.getElementById('barTrab').style.width=Math.min(100,p.uso.trabajadores/(p.limites.trabajadores>900000?20:p.limites.trabajadores)*100)+'%';
+    document.getElementById('trabLimiteInfo').innerText=`Tu plan ${p.nombre}: ${p.uso.trabajadores}/${p.limites.trabajadores>900000?'Ilimitado':p.limites.trabajadores} trabajadores usados - ${p.uso.conversaciones}/${p.limites.conversaciones>999999?'Ilimitado':p.limites.conversaciones} conversaciones usadas. IA: ${p.puedeUsarIA?'SI':'NO'} Llamadas: ${p.puedeUsarLlamadas?'SI':'NO'}`;
+    if(!p.puedeAgregarTrabajador){ document.getElementById('btnAddTrab').innerText='⛔ Límite alcanzado'; document.getElementById('btnAddTrab').disabled=true; }
+    if(!p.puedeUsarIA){ document.getElementById('cardIA').classList.add('bloqueado'); } else { document.getElementById('cardIA').classList.remove('bloqueado'); }
+    if(!p.puedeUsarLlamadas){ document.getElementById('cardLlam').classList.add('bloqueado'); } else { document.getElementById('cardLlam').classList.remove('bloqueado'); }
+    if(!p.puedeEnviarMensaje){ document.getElementById('msgInput').placeholder=`⛔ Límite ${p.limites.conversaciones} alcanzado - Cambia a Gold 3133181851`; }
+    return p;
   }catch(e){ console.error(e); }
 }
-function renderChats(){
-  const el=document.getElementById('chatsList');
-  if(chats.length===0){ el.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px">No hay chats aún.<br>Los mensajes de API Meta aparecerán aquí en tiempo real.</div>'; return; }
-  el.innerHTML=chats.map(c=>`<div class="chat-item ${c.noLeido?'unread':''}" onclick="openChat('${c.numero}')"><div class="avatar">${c.numero.slice(-2)}</div><div class="chat-meta"><div class="chat-name">${c.numero} ${c.noLeido?'<span class="dot red"></span>':''} ${c.esCampania?'<span class="dot yellow"></span>':''}</div><div class="chat-preview">${c.ultimo?.texto||'[Media]'}</div></div><div class="chat-time">${c.ultimo? new Date(c.ultimo.timestamp).toLocaleTimeString().slice(0,5):''}</div></div>`).join('');
-}
-function openChat(num){
-  selectedChat=num;
-  const chat=chats.find(c=>c.numero===num);
-  if(!chat) return;
-  const list=document.getElementById('msgsList');
-  list.innerHTML=chat.msgs.map(m=>`<div class="bubble ${m.from==='yo'?'me':'other'}">${m.texto} ${m.tipo!=='texto'?`<br><small>[${m.tipo}]</small>`:''}<small>${new Date(m.timestamp).toLocaleString()} ${m.campania?'🟡 campaña':''}</small></div>`).join('');
-  list.scrollTop=list.scrollHeight;
-  chat.msgs.forEach(m=>{ if(!m.leido && m.from!=='yo') socket.emit('marcar_leido', m.id); });
-}
-async function sendMsg(){
-  const texto=document.getElementById('msgInput').value.trim();
-  const file=document.getElementById('fileInput').files[0];
-  if((!texto &&!file) ||!selectedChat){ alert('Selecciona un chat y escribe mensaje'); return; }
-  const fd=new FormData(); fd.append('to', selectedChat); fd.append('texto', texto); if(file) fd.append('archivo', file);
-  try{ await fetch('/api/mensajes/enviar',{method:'POST', headers:{Authorization:'Bearer '+token}, body:fd}); document.getElementById('msgInput').value=''; document.getElementById('fileInput').value=''; loadChats(); }catch(e){ alert('Error enviando'); }
-}
-async function loadPlantillas(){
-  try{ const tpls=await api('/api/plantillas'); document.getElementById('plantillaSel').innerHTML=tpls.map(t=>`<option value="${t.id}">${t.nombre} - ${t.estado} (${t.categoria})</option>`).join('')||'<option>No hay plantillas aprobadas</option>'; }catch(e){}
-}
-async function uploadCamp(){
-  const file=document.getElementById('excelFile').files[0];
-  const nombre=document.getElementById('campNombre').value;
-  const plantilla=document.getElementById('plantillaSel').value;
-  if(!file){ alert('Selecciona archivo Excel'); return; }
-  const fd=new FormData(); fd.append('excel', file); fd.append('nombre', nombre); fd.append('plantilla', plantilla);
-  try{ const r=await fetch('/api/campanias/upload',{method:'POST', headers:{Authorization:'Bearer '+token}, body:fd}); const d=await r.json(); if(!r.ok) throw new Error(d.error); alert(`✅ Excel cargado: ${d.campania.total} números detectados automáticamente`); loadCampanias(); }catch(e){ alert('Error: '+e.message); }
-}
-async function loadCampanias(){
-  try{
-    const camps=await api('/api/campanias');
-    document.getElementById('campList').innerHTML=camps.map(c=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-top:10px;display:flex;justify-content:space-between;align-items:center"><div><b>${c.nombre}</b><div style="font-size:11px;color:#64748b">${c.total} números detectados - ${c.enviados} enviados - ${new Date(c.createdAt).toLocaleDateString()}</div></div><button class="btn-send" onclick="enviarCamp('${c.id}')">Enviar con plantilla aprobada</button></div>`).join('')||'<div style="font-size:12px;color:#94a3b8">No hay campañas aún</div>';
-    document.getElementById('campHistorial').innerHTML=camps.map(c=> c.historial.map(h=> `<div>📌 ${c.nombre}: ${h.accion} - ${new Date(h.fecha).toLocaleString()}</div>`).join('')).join('')||'Sin historial aún';
-  }catch(e){}
-}
-async function enviarCamp(id){ try{ const r=await api('/api/campanias/enviar',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({campaniaId:id})}); alert(`✅ Campaña enviada: ${r.enviados} mensajes con punto amarillo`); loadChats(); loadMetricas(); }catch(e){ alert('Error: '+e.message); } }
-async function loadMetricas(){ try{ const m=await api('/api/metricas'); document.getElementById('kpiTotal').innerText=m.total; document.getElementById('kpiNoLeidos').innerText=m.noLeidos; document.getElementById('kpiCamp').innerText=m.campania; document.getElementById('kpiCampanas').innerText=m.campanias; document.getElementById('kpiTrab').innerText=m.trabajadores; document.getElementById('kpiAgencias').innerText=m.totalAgencias||0; }catch(e){} }
-async function addTrab(){ const nombre=document.getElementById('tNom').value.trim(); const email=document.getElementById('tEmail').value.trim(); const password=document.getElementById('tPass').value; if(!nombre||!email||!password){ alert('Completa datos'); return; } try{ await api('/api/trabajadores',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({nombre,email,password})}); document.getElementById('tNom').value='';document.getElementById('tEmail').value='';document.getElementById('tPass').value=''; loadTrab(); loadMetricas(); }catch(e){ alert(e.message); } }
-async function loadTrab(){ try{ const list=await api('/api/trabajadores'); document.getElementById('trabList').innerHTML=list.map(u=> `<div style="display:flex;justify-content:space-between;background:#f8fafc;padding:12px;border-radius:10px;margin-top:8px;border:1px solid #e2e8f0"><span style="font-size:12px"><b>${u.nombre}</b> - ${u.email} - ${u.rol} - Plan ${u.planDesbloqueado||u.plan} - ${u.activo?'✅ Activo':'⏳ Pendiente'}</span><button onclick="delTrab('${u.id}')" style="color:#ef4444;border:0;background:none;cursor:pointer;font-weight:700">Eliminar</button></div>`).join('')||'<div style="font-size:12px;color:#94a3b8">No hay trabajadores</div>'; }catch(e){} }
-async function delTrab(id){ if(!confirm('¿Eliminar trabajador?')) return; try{ await api('/api/trabajadores/'+id,{method:'DELETE'}); loadTrab(); }catch(e){ alert(e.message); } }
-async function loadAdmin(){ try{ const data=await api('/api/admin/agencias'); document.getElementById('adminList').innerHTML=`<div style="margin-bottom:12px;font-size:12px">Total Agencias: ${data.totalAgencias} | Total Usuarios: ${data.totalUsuarios} | Total Mensajes: ${data.totalMensajes}</div><table class="table"><tr><th>Agencia</th><th>Email</th><th>Plan</th><th>Estado</th><th>Trabajadores</th><th>Mensajes</th><th>Campañas</th><th>Fecha Registro</th></tr>${data.agencias.map(ag=>`<tr><td><b>${ag.nombre}</b><br><small>${ag.codigo}</small></td><td>${ag.email}</td><td>${ag.plan.toUpperCase()}<br><small>$${ag.anual} + $${ag.trim}/trim</small></td><td><span class="status ${ag.activo?'activa':'pendiente'}">${ag.estado}</span></td><td>${ag.totalTrabajadores}</td><td>${ag.totalMensajes}</td><td>${ag.totalCampanias}</td><td>${new Date(ag.createdAt).toLocaleDateString()}</td></tr>`).join('')}</table>`; }catch(e){ document.getElementById('adminList').innerHTML='Error: '+e.message; } }
-socket.on('nuevo_mensaje', ()=> loadChats());
-socket.on('mensaje_leido', ()=> loadChats());
-socket.on('campania_enviada', ()=> loadCampanias());
-loadChats(); loadCampanias(); loadTrab(); loadMetricas();
+async function loadChats(){ try{ const msgs=await api('/api/mensajes'); const map={}; msgs.forEach(m=>{ const key=m.from==='yo'? m.to : m.from; if(!map[key]) map[key]=[]; map[key].push(m); }); chats=Object.entries(map).map(([k,v])=>({numero:k, msgs:v.sort((a,b)=>a.timestamp-b.timestamp), ultimo:v.sort((a,b)=>b.timestamp-a.timestamp)[0], noLeido:v.some(x=>!x.leido), esCampania:v.some(x=>x.campania)})); renderChats(); }catch(e){} }
+function renderChats(){ const el=document.getElementById('chatsList'); if(chats.length===0){ el.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px">No hay chats aún<br>Tiempo real API Meta</div>'; return; } el.innerHTML=chats.map(c=>`<div class="chat-item ${c.noLeido?'unread':''}" onclick="openChat('${c.numero}')"><div class="avatar">${c.numero.slice(-2)}</div><div class="chat-meta"><div class="chat-name">${c.numero} ${c.noLeido?'<span class="dot red"></span>':''} ${c.esCampania?'<span class="dot yellow"></span>':''}</div><div class="chat-preview">${c.ultimo?.texto||'[Media]'}</div></div></div>`).join(''); }
+function openChat(num){ selectedChat=num; const chat=chats.find(c=>c.numero===num); const list=document.getElementById('msgsList'); list.innerHTML=chat.msgs.map(m=>`<div class="bubble ${m.from==='yo'?'me':'other'}">${m.texto}<small>${new Date(m.timestamp).toLocaleString()} ${m.campania?'🟡':''}</small></div>`).join(''); list.scrollTop=list.scrollHeight; }
+async function sendMsg(){ const texto=document.getElementById('msgInput').value.trim(); const file=document.getElementById('fileInput').files[0]; if((!texto&&!file)||!selectedChat) return; const fd=new FormData(); fd.append('to',selectedChat); fd.append('texto',texto); if(file) fd.append('archivo',file); try{ const r=await fetch('/api/mensajes/enviar',{method:'POST', headers:{Authorization:'Bearer '+token}, body:fd}); const d=await r.json(); if(!r.ok) { alert(d.error); await verificarBloqueos(); return; } document.getElementById('msgInput').value=''; document.getElementById('fileInput').value=''; loadChats(); verificarBloqueos(); }catch(e){ alert('Error enviando'); } }
+async function loadPlantillas(){ try{ const tpls=await api('/api/plantillas'); document.getElementById('plantillaSel').innerHTML=tpls.map(t=>`<option value="${t.id}">${t.nombre} - ${t.estado}</option>`).join(''); }catch(e){} }
+async function uploadCamp(){ const file=document.getElementById('excelFile').files[0]; const nombre=document.getElementById('campNombre').value; const plantilla=document.getElementById('plantillaSel').value; if(!file){ alert('Selecciona Excel'); return; } const fd=new FormData(); fd.append('excel',file); fd.append('nombre',nombre); fd.append('plantilla',plantilla); try{ const r=await fetch('/api/campanias/upload',{method:'POST', headers:{Authorization:'Bearer '+token}, body:fd}); const d=await r.json(); if(!r.ok) throw new Error(d.error); alert(`✅ ${d.campania.total} números detectados`); loadCampanias(); verificarBloqueos(); }catch(e){ alert('Error: '+e.message); } }
+async function loadCampanias(){ try{ const camps=await api('/api/campanias'); document.getElementById('campList').innerHTML=camps.map(c=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-top:10px;display:flex;justify-content:space-between;align-items:center"><div><b>${c.nombre}</b><div style="font-size:11px;color:#64748b">${c.total} números - ${c.enviados} enviados</div></div><button class="btn-send" onclick="enviarCamp('${c.id}')">Enviar APROBADA</button></div>`).join('')||'No hay campañas'; document.getElementById('campHistorial').innerHTML=camps.map(c=> c.historial.map(h=>`<div>📌 ${c.nombre}: ${h.accion} - ${new Date(h.fecha).toLocaleString()}</div>`).join('')).join('')||'Sin historial'; }catch(e){} }
+async function enviarCamp(id){ try{ const r=await api('/api/campanias/enviar',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({campaniaId:id})}); alert(`✅ ${r.enviados} enviados con punto amarillo`); loadChats(); verificarBloqueos(); }catch(e){ alert('⛔ '+e.message); } }
+async function loadMetricas(){ try{ const m=await api('/api/metricas'); document.getElementById('kpiTotal').innerText=m.total; document.getElementById('kpiNoLeidos').innerText=m.noLeidos; document.getElementById('kpiCamp').innerText=m.campania; document.getElementById('kpiCampanas').innerText=m.campanias; document.getElementById('kpiTrab').innerText=m.trabajadores; }catch(e){} await verificarBloqueos(); }
+async function loadTrab(){ try{ const list=await api('/api/trabajadores'); document.getElementById('trabList').innerHTML=list.map(u=> `<div style="display:flex;justify-content:space-between;background:#f8fafc;padding:12px;border-radius:10px;margin-top:8px"><span style="font-size:12px"><b>${u.nombre}</b> - ${u.email} - ${u.rol} - IA:${u.tieneIA?'✅':'❌'} Llam:${u.tieneLlamadas?'✅':'❌'}</span><button onclick="delTrab('${u.id}')" style="color:#ef4444;border:0;background:none;cursor:pointer;font-weight:700">Eliminar</button></div>`).join(''); }catch(e){} }
+async function addTrab(){ const nombre=document.getElementById('tNom').value.trim(); const email=document.getElementById('tEmail').value.trim(); const password=document.getElementById('tPass').value; if(!nombre||!email||!password){ alert('Completa'); return; } try{ await api('/api/trabajadores',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({nombre,email,password})}); document.getElementById('tNom').value='';document.getElementById('tEmail').value='';document.getElementById('tPass').value=''; loadTrab(); verificarBloqueos(); }catch(e){ alert('⛔ '+e.message); } }
+async function delTrab(id){ if(!confirm('¿Eliminar?')) return; try{ await api('/api/trabajadores/'+id,{method:'DELETE'}); loadTrab(); verificarBloqueos(); }catch(e){ alert(e.message); } }
+async function loadAdmin(){ try{ const data=await api('/api/admin/agencias'); document.getElementById('adminList').innerHTML=`<div>Total Agencias: ${data.totalAgencias} | Usuarios: ${data.totalUsuarios} | Mensajes: ${data.totalMensajes}</div><table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:12px"><tr style="background:#f8fafc"><th style="padding:8px;text-align:left">Agencia</th><th>Email</th><th>Plan</th><th>Trab</th><th>Mensajes</th></tr>${data.agencias.map(ag=>`<tr style="border-bottom:1px solid #eee"><td style="padding:8px"><b>${ag.nombre}</b><br><small>${ag.codigo}</small></td><td>${ag.email}</td><td>${ag.plan.toUpperCase()} ${ag.plan==='basico'?'1000 conv/3 users':ag.plan==='premium'?'5000/10 +IA':'∞ +IA+Llamadas'}</td><td>${ag.totalTrabajadores}</td><td>${ag.totalMensajes}</td></tr>`).join('')}</table>`; }catch(e){ document.getElementById('adminList').innerText=e.message; } }
+socket.on('nuevo_mensaje', loadChats); loadChats(); loadTrab(); verificarBloqueos();
 document.getElementById('msgInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg(); });
-</script>
-</body>
-</html>
+</script></body></html>
