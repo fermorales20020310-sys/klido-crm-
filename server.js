@@ -32,7 +32,6 @@ app.use(cors());
 app.use(express.json({limit:'20mb'}));
 app.use(express.urlencoded({extended:true}));
 
-// NO CACHE - para que veas el index nuevo siempre - FIX incognito
 app.use((req,res,next)=>{
   res.set('Cache-Control','no-store, no-cache, must-revalidate, private');
   next();
@@ -42,7 +41,6 @@ app.get('/', (req,res)=>{
   res.sendFile(path.join(__dirname,'public','index.html'));
 });
 
-// EMAIL
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT || 587,
@@ -50,7 +48,6 @@ const transporter = nodemailer.createTransport({
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
 });
 
-// PLANES CON MANTENIMIENTO OBLIGATORIO
 const PLANES = {
   basico: { anual: 800000, trim: 80000, nombre: 'Básico' },
   premium: { anual: 1400000, trim: 95000, nombre: 'Premium' },
@@ -64,81 +61,39 @@ app.post('/api/public/crear-empresa', async (req,res)=>{
   let agencias = read('agencias.json');
   let usuarios = read('usuarios.json');
   if(usuarios.find(u=>u.email===email)) return res.status(400).json({error:'Correo ya existe'});
-
   const planKey = (plan||'premium').toLowerCase();
   const planData = PLANES[planKey] || PLANES.premium;
   const codigo = `KLIDO-${planKey.toUpperCase()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
   const hash = await bcrypt.hash(password,10);
   const agenciaId = Date.now().toString();
-  const agencia = {
-    id: agenciaId,
-    nombre,
-    plan: planKey,
-    planNombre: planData.nombre,
-    anual: planData.anual,
-    mantenimiento: planData.trim, // 80k / 95k / 120k trimestral obligatorio
-    codigo,
-    pagado:false,
-    estado:'activo',
-    estadoPago:'pendiente',
-    created: new Date(),
-    ultimaConexion: null
-  };
+  const agencia = { id: agenciaId, nombre, plan: planKey, planNombre: planData.nombre, anual: planData.anual, mantenimiento: planData.trim, codigo, pagado:false, estado:'activo', estadoPago:'pendiente', created: new Date(), ultimaConexion: null };
   const user = { id: agenciaId+'_1', email, password:hash, nombre, rol:'jefe', agenciaId, plan: planKey };
   agencias.push(agencia); usuarios.push(user);
   write('agencias.json', agencias); write('usuarios.json', usuarios);
-
-  // Email - si falla igual devuelve código en pantalla
-  try{
-    await transporter.sendMail({
-      from:process.env.SMTP_USER,
-      to:email,
-      subject:`Código KLIDO ${planData.nombre} - $${planData.anual/1000}k/año + $${planData.trim/1000}k trim`,
-      text:`Hola ${nombre},\n\nTu agencia ${nombre} plan ${planData.nombre} creada.\nAnual: $${planData.anual.toLocaleString('es-CO')}\nMantenimiento obligatorio trimestral: $${planData.trim.toLocaleString('es-CO')}\n\nTu código: ${codigo}\n\nPaga al WhatsApp 3133181851 y verifica el código en la misma pantalla de crear empresa (solo casilla código).\n\nKLIDO AVANZA CONSULTING`
-    })
-  }catch(e){console.log('email error',e.message)}
-
-  res.json({codigo, mensaje:`Agencia ${nombre} plan ${planData.nombre} creada. Anual $${(planData.anual/1000)}k + Mant $${planData.trim/1000}k trim. Código: ${codigo}`, planInfo: planData});
+  try{ await transporter.sendMail({from:process.env.SMTP_USER,to:email,subject:`Código KLIDO ${planData.nombre}`,text:`Tu código: ${codigo}. Anual $${planData.anual} + Mant trim $${planData.trim}. Paga al 3133181851 y verificalo en crear empresa solo casilla código.`}) }catch(e){console.log('email error',e.message)}
+  res.json({codigo, mensaje:`Agencia ${nombre} plan ${planData.nombre} creada. Código ${codigo}`, planInfo: planData});
 });
 
-// FIX CODIGO - AHORA SOLO 1 CASILLA, USA CORREO DE ARRIBA
 app.post('/api/public/verificar-codigo', (req,res)=>{
   const {email,codigo} = req.body;
-  if(!codigo) return res.status(400).json({error:'Código requerido - pega el código KLIDO-...'});
-
+  if(!codigo) return res.status(400).json({error:'Código requerido'});
   let agencias = read('agencias.json');
   let usuarios = read('usuarios.json');
   const codigoLimpio = codigo.toUpperCase().trim();
-
-  // Busca agencia por código directo - no necesita 2 correos
   let agencia = agencias.find(a=>a.codigo===codigoLimpio);
-
-  // Si manda email (el de arriba), validamos que pertenezca a esa agencia
   if(email){
     const user = usuarios.find(u=>u.email===email.toLowerCase().trim());
     if(user && agencia && user.agenciaId!== agencia.id){
-      return res.status(400).json({error:'El código no pertenece a ese correo admin'});
+      return res.status(400).json({error:'El código no pertenece a ese correo'});
     }
-    // Si solo mandó email y no encontramos por código, busca por usuario
     if(!agencia && user){
       agencia = agencias.find(a=>a.id===user.agenciaId && a.codigo===codigoLimpio);
     }
   }
-
-  if(!agencia) return res.status(400).json({error:'Código inválido. Debe ser formato KLIDO-PREMIUM-XXXX'});
-
-  agencia.pagado = true;
-  agencia.estadoPago='pagado';
-  agencia.estado='activo';
-  agencia.verificadoEn = new Date();
+  if(!agencia) return res.status(400).json({error:'Código inválido KLIDO-...'});
+  agencia.pagado = true; agencia.estadoPago='pagado'; agencia.estado='activo'; agencia.verificadoEn = new Date();
   write('agencias.json', agencias);
-
-  console.log(`✅ VERIFICADA: ${agencia.nombre} - ${agencia.plan} $${agencia.anual} + Mant $${agencia.mantenimiento} trim - Código ${agencia.codigo}`);
-  res.json({
-    planDesbloqueado: agencia.plan,
-    mantenimiento: agencia.mantenimiento,
-    mensaje: `Plan ${agencia.plan} activado - Anual $${agencia.anual} + Mant trimestral obligatorio $${agencia.mantenimiento}`
-  });
+  res.json({planDesbloqueado: agencia.plan, mantenimiento: agencia.mantenimiento});
 });
 
 app.post('/api/public/recuperar', async (req,res)=>{
@@ -164,14 +119,13 @@ app.post('/api/login', async (req,res)=>{
   const agencia = agencias.find(a=>a.id===user.agenciaId);
   if(!agencia) return res.status(403).json({error:'Agencia no existe'});
   if(!agencia.pagado) return res.status(403).json({error:'Agencia no pagada. Verifica código KLIDO-... en crear empresa'});
-  if(agencia.estado==='bloqueado') return res.status(403).json({error:'Agencia bloqueada por falta de pago mantenimiento trimestral. Contacta admin'});
+  if(agencia.estado==='bloqueado') return res.status(403).json({error:'Agencia bloqueada por falta de pago mantenimiento. Contacta admin 3133181851'});
   agencia.ultimaConexion = new Date();
   write('agencias.json', agencias);
   const token = jwt.sign({id:user.id, agenciaId:user.agenciaId, rol:user.rol}, JWT_SECRET, {expiresIn:'7d'});
   res.json({token, user:{id:user.id, email:user.email, nombre:user.nombre, rol:user.rol, agenciaId:user.agenciaId, agencia}});
 });
 
-// ============ PROTEGIDO - SEGMENTADO POR agenciaId ============
 const auth = (req,res,next)=>{
   const h=req.headers.authorization;
   if(!h) return res.status(401).json({error:'No token'});
@@ -229,7 +183,7 @@ app.post('/api/ia/panic', auth, (req,res)=>{ res.json({ok:true, mensaje:'IA paus
 app.post('/api/webhooks/shopify', (req,res)=>{ console.log('Shopify', req.body); res.sendStatus(200) });
 app.post('/api/webhooks/woocommerce', (req,res)=>{ console.log('Woo', req.body); res.sendStatus(200) });
 
-// ============ PANEL DUEÑA - SUPERVISIÓN TOTAL - CON MANTENIMIENTO ============
+// ============ PANEL GERENTE GENERAL - SEGUIMIENTO GENERAL ============
 function checkAdmin(req,res,next){
   if(req.headers['x-admin-key']!== ADMIN_KEY) return res.status(401).json({error:'Clave admin inválida'});
   next();
@@ -250,16 +204,13 @@ app.get('/api/admin/metricas', checkAdmin, (req,res)=>{
     totalAgencias: agencias.length,
     activas: agencias.filter(a=>a.estado!=='bloqueado').length,
     ingresosMes: ingresosAnual,
-    ingresosTrimestral: ingresosTrim * agencias.length,
+    ingresosTrimestral: ingresosTrim,
     porCobrar: agencias.filter(a=>a.estadoPago!=='pagado').reduce((sum,a)=>{const p=PLANES[a.plan]||PLANES.premium; return sum + p.trim},0),
     agencias: agencias.map(a=>{
       const p = PLANES[a.plan] || PLANES.premium;
       return {
-        id:a.id,
-        nombre:a.nombre,
-        plan:a.plan||'premium',
-        anual: a.anual || p.anual,
-        mantenimiento: a.mantenimiento || p.trim,
+        id:a.id, nombre:a.nombre, plan:a.plan||'premium',
+        anual: a.anual || p.anual, mantenimiento: a.mantenimiento || p.trim,
         trabajadores: usuarios.filter(u=>u.agenciaId===a.id).length,
         mensajesHoy: mensajes.filter(m=>m.agenciaId===a.id && new Date(m.timestamp||m.fecha).toDateString()===hoy).length,
         ultimaConexion: a.ultimaConexion? new Date(a.ultimaConexion).toLocaleString('es-CO') : '-',
@@ -269,14 +220,38 @@ app.get('/api/admin/metricas', checkAdmin, (req,res)=>{
     })
   });
 });
+
+// FIX DEFINITIVO ACOL - BLOQUEO / DESBLOQUEO
 app.post('/api/admin/toggle', checkAdmin, (req,res)=>{
   const {id,estado}=req.body;
   let agencias = read('agencias.json')||[];
-  agencias = agencias.map(a=> a.id===id? {...a, estadoPago:estado, estado: estado==='pagado'?'activo':'bloqueado'} : a);
+  agencias = agencias.map(a=>{
+    if(a.id===id){
+      const esPagado = estado==='pagado';
+      return {
+       ...a,
+        estadoPago: estado,
+        estado: esPagado? 'activo' : 'bloqueado',
+        pagado: esPagado? true : false,
+        bloqueadaEn: esPagado? null : new Date(),
+        desbloqueadaEn: esPagado? new Date() : null
+      }
+    }
+    return a;
+  });
   write('agencias.json', agencias);
+  console.log(`Admin toggle ${id} -> ${estado} pagado=${estado==='pagado'}`);
   res.json({ok:true});
+});
+
+app.post('/api/admin/forzar-desbloqueo', checkAdmin, (req,res)=>{
+  const {id}=req.body;
+  let agencias = read('agencias.json')||[];
+  agencias = agencias.map(a=> a.id===id? {...a, pagado:true, estadoPago:'pagado', estado:'activo', desbloqueadaEn:new Date()} : a);
+  write('agencias.json', agencias);
+  res.json({ok:true, mensaje:'Agencia desbloqueada'});
 });
 
 app.get('/health', (req,res)=>res.json({ok:true, DATA_DIR, agencias:read('agencias.json').length, usuarios:read('usuarios.json').length, mensajes:read('mensajes.json').length, timestamp:new Date(), planes:PLANES}));
 
-app.listen(PORT, ()=>console.log(`=== KLIDO CRM REAL v2.1 PLANES MANT 80/95/120 - ${new Date().toISOString()} DATA_DIR:${DATA_DIR} Agencias:${read('agencias.json').length} === Puerto ${PORT} ===`));
+app.listen(PORT, ()=>console.log(`=== KLIDO CRM v2.2 FIX ACOL - DATA_DIR:${DATA_DIR} Agencias:${read('agencias.json').length} === Puerto ${PORT} ===`));
