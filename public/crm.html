@@ -1,143 +1,147 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO AVANZA CONSULTING</title><link rel="icon" href="logo.png">
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO</title><link rel="icon" href="logo.png">
 <style>
-:root{--bg:#0b1120;--sidebar:#0f172a;--panel:#131c33;--panel2:#162240;--panelCard:#111c36;--border:#1e2d4a;--borderBlue:#27407a;--gold:#f59e0b;--gold2:#fbbf24;--text:#e2e8f0;--muted:#7c8db0;--blue:#3b82f6;--blueBtn:#2f6bff;--green:#22c55e}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui;display:flex;height:100vh;overflow:hidden}
-.side{width:240px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:12px}
-.logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}.logo img{width:52px;height:52px;border-radius:12px;background:#fff;padding:3px;object-fit:contain}.logo b{font-size:15px;line-height:1.1}
-.goldPill{font-size:10px;padding:4px 10px;border-radius:20px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:900}
-.themeBtn{width:100%;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:12px;cursor:pointer;margin-bottom:10px}
-.menu label{font-size:10px;color:var(--muted);letter-spacing:1px;margin:14px 6px 6px;display:block}.menu button{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;text-align:left}.menu button.active{background:var(--blueBtn);color:#fff}.menu button:hover{background:var(--panel)}
+:root{--bg:#0a1120;--sidebar:#0f1a2e;--panel:#131f3a;--card:#14213f;--card2:#162645;--border:#1f345e;--blue:#2e68ff;--blueActive:#3a75ff;--text:#dbe7ff;--muted:#7a8ab0;--green:#3dd68c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,system-ui;display:flex;height:100vh;overflow:hidden}
+.side{width:200px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:12px}
+.logo{display:flex;align-items:center;gap:8px;margin-bottom:10px}.logo img{width:36px;height:36px;border-radius:10px;background:#fff;padding:3px}.logo b{font-size:14px}.planTop{font-size:9px;background:#1e3a8a;color:#7db1ff;padding:2px 7px;border-radius:10px;margin-left:6px;border:1px solid #2a4a9a}
+.theme{width:100%;padding:8px;border-radius:10px;border:1px solid var(--border);background:var(--panel);color:var(--muted);font-size:12px;margin:10px 0;cursor:pointer}
+.menu label{font-size:9px;color:var(--muted);letter-spacing:1px;margin:14px 0 6px;display:block}.menu button{width:100%;display:flex;gap:9px;padding:10px 10px;border-radius:10px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;text-align:left}.menu button.active{background:var(--blueActive);color:#fff}.menu button:hover{background:var(--panel)}
+.bottom{margin-top:auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:11px}.bottom b{font-size:12px}
 .main{flex:1;display:flex}
-.inbox{width:310px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column}
-.inbox-top{padding:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}.search{margin:10px 12px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:#fff;font-size:12px}
-.conv{padding:11px 12px;border-bottom:1px solid rgba(30,45,74,.5);cursor:pointer;display:flex;gap:10px}.conv:hover{background:var(--panel2)}.conv.active{background:var(--panel2);border-left:3px solid var(--gold)}.avatar{width:36px;height:36px;border-radius:50%;background:#1e3a8a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
-.chat{flex:1;background:#0e162d;display:flex;flex-direction:column}.chat-top{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--panel)}.msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}.bubble{max-width:70%;padding:10px 12px;border-radius:14px;font-size:13px}.bubble.in{background:var(--panel2);align-self:flex-start}.bubble.out{background:#2a4a8a;align-self:flex-end}
-.input{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--panel)}.input input{flex:1;padding:10px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:#fff}
-.profile{width:300px;background:var(--panel);border-left:1px solid var(--border);padding:14px;overflow:auto}
-.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px}
-button.gold{padding:9px 12px;border-radius:10px;border:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:800;cursor:pointer} button.ghost{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:30}.modal.open{display:flex}.box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;width:480px;max-height:90vh;overflow:auto}
-input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:#fff;margin:6px 0;font-size:13px}
+.inbox{width:300px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.chat{flex:1;background:#0d1932;display:flex;flex-direction:column}
+.profile{width:280px;background:var(--panel);border-left:1px solid var(--border);padding:16px}
 
-/* PLANES DISEÑO DE TU FOTO */
-.planes-wrap{padding:18px 22px;flex:1;overflow:auto;background:var(--bg)}
-.planes-title{font-size:18px;font-weight:800;margin:0 0 16px}
-.planes-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-.plan-card{background:var(--panelCard);border:1px solid var(--borderBlue);border-radius:16px;padding:18px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
-.plan-card h3{margin:0;font-size:16px}.plan-card .price{font-size:22px;font-weight:900;margin:8px 0}.plan-card .anual{font-size:12px;color:var(--muted)}.plan-card .mant{font-size:11px;color:var(--blue);font-weight:700;margin:6px 0 12px}
-.plan-card ul{list-style:none;padding:0;margin:0 0 14px;text-align:left;font-size:12px;line-height:1.8}.plan-card li::before{content:"✅ ";font-size:11px}.plan-card li.no::before{content:"❌ "}
-.plan-card button{width:100%;padding:10px;border-radius:10px;border:0;background:var(--blueBtn);color:#fff;font-weight:700;cursor:pointer}
-.plan-note{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.5}
+/* PLANES EXACTO A TU FOTO */
+.planesPage{flex:1;display:flex;flex-direction:column;background:var(--bg);padding:18px 20px;overflow:auto}
+.planesPage h2{margin:0 0 16px;font-size:16px;font-weight:800}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:760px}
+.cardPlan{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center}
+.cardPlan h3{margin:0;font-size:14px;display:flex;justify-content:center;align-items:center;gap:6px}.cardPlan .price{font-size:20px;font-weight:900;margin:8px 0}.cardPlan .sub{font-size:11px;color:var(--muted)}.cardPlan .mant{font-size:10px;color:#5da3ff;font-weight:700;margin:6px 0 12px}
+.cardPlan ul{list-style:none;padding:0;margin:0 0 14px;text-align:left;font-size:11px;line-height:2}.cardPlan li{display:flex;gap:6px;align-items:center}.check{width:14px;height:14px;background:#1a3d2a;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;color:var(--green);font-size:10px}.cross{width:14px;height:14px;background:#3d1a1a;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;color:#ff6b6b;font-size:10px}
+.cardPlan button{width:100%;padding:10px;border-radius:10px;border:0;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}
+.note{font-size:10px;color:var(--muted);margin-top:14px;max-width:760px;line-height:1.4}
+.search{margin:10px 12px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:#fff;font-size:12px}
+.conv{padding:10px 12px;border-bottom:1px solid rgba(31,52,94,.5);cursor:pointer;display:flex;gap:10px}.conv.active{background:var(--card2);border-left:3px solid var(--blue)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px}
+.kpi{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px}
+button.gold{padding:8px 12px;border-radius:10px;border:0;background:#f59e0b;color:#000;font-weight:800;cursor:pointer} button.ghost{padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:30}.modal.open{display:flex}.box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;width:460px;max-height:90vh;overflow:auto}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:#fff;margin:6px 0;font-size:12px}
 </style></head><body>
 <div class="side">
-<div class="logo"><img src="logo.png"><div><b>KLIDO</b><div style="font-size:10px;color:var(--muted)">AVANZA CONSULTING</div></div><span class="goldPill" id="planPill">GOLD</span></div>
-<button class="themeBtn">🌙 / ☀️ Tema</button>
-<div class="menu" id="menu">
+<div class="logo"><img src="logo.png"><b>KLIDO</b><span class="planTop" id="planTop">Básico</span></div>
+<button class="theme">🌙 / ☀️ Tema</button>
+<div class="menu">
 <label>MENU</label>
-<button class="active" data-v="bandeja" onclick="go('bandeja')">📥 Inbox / Bandeja de mensajes</button>
-<button data-v="no_leidos" onclick="go('no_leidos')">🔴 No leídos</button>
-<button data-v="campanas" onclick="go('campanas')">📢 Campaigns / Campañas</button>
-<button data-v="planes" onclick="go('planes')">💳 Planes</button>
+<button data-v="inbox" onclick="go('inbox')">📥 Inbox</button>
+<button data-v="campanas" onclick="go('campanas')">📣 Campaigns</button>
+<button class="active" data-v="planes" onclick="go('planes')">💳 Planes</button>
 <button data-v="grupo" onclick="go('grupo')" id="btnGrupo">👥 Grupo de trabajo</button>
 <button data-v="metricas" onclick="go('metricas')" id="btnMet">📊 Métricas</button>
-<button data-v="calendario" onclick="go('calendario')">📅 Calendario / Seguimiento</button>
+<button data-v="calendario" onclick="go('calendario')">📅 Calendario</button>
 <label>SUPPORT</label>
-<button data-v="config" onclick="go('config')">⚙️ Settings / Configuración</button>
-<button onclick="helpWA()">💡 Help Center / Ayuda</button>
-<button onclick="logout()" style="margin-top:10px;color:#fca5a5">🚪 Salir</button>
+<button data-v="config" onclick="go('config')">⚙️ Settings</button>
+<button onclick="helpWA()">💡 Help Center</button>
+<button onclick="logout()" style="margin-top:8px;color:#fca5a5">🚪 Salir</button>
 </div>
-<div style="margin-top:auto;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:11px"><b id="planBottom">Plan Básico</b><br><span style="color:var(--muted)">Gestiona tu suscripción</span></div>
-</div>
-
-<div class="main" id="mainInbox">
-<div class="inbox"><div class="inbox-top"><b>Inbox</b><span style="font-size:11px;color:var(--muted)" id="count">0 chats</span></div><input class="search" id="search" placeholder="Buscar conversaciones..." oninput="render()"><div id="convList" style="overflow:auto;flex:1"></div></div>
-<div class="chat"><div class="chat-top" id="chatTop"><div><div style="font-weight:700">Selecciona un chat</div><div style="font-size:11px;color:var(--muted)">Elige de la izquierda</div></div></div><div class="msgs" id="msgs"><div style="color:var(--muted);text-align:center;margin-top:100px">Selecciona un chat para ver historial completo, segmentar, programar seguimiento y llamar (Gold)</div></div><div class="input" id="inputBar" style="display:none"><input id="msgInput" placeholder="Escribe un mensaje..."><button class="gold" onclick="sendMsg()">➤</button></div></div>
-<div class="profile" id="profile"><b>Customer Profile</b><div id="profContent" style="margin-top:12px;color:var(--muted);font-size:12px">Selecciona un chat para ver perfil, notas, seguimiento y clasificación.</div></div>
+<div class="bottom"><b id="bPlan">Plan Básico</b><div style="color:var(--muted);font-size:10px">Gestiona tu suscripción</div></div>
 </div>
 
-<div class="main" id="mainPlanes" style="display:none;flex-direction:column"><div class="planes-wrap" id="planesWrap"></div><div style="width:300px;background:var(--panel);border-left:1px solid var(--border);padding:14px"><b>Customer Profile</b><div style="margin-top:14px;text-align:center"><div class="avatar" style="width:56px;height:56px;margin:0 auto;background:var(--blueBtn)">SN</div><div style="margin-top:8px;font-weight:700">-</div><div style="font-size:11px;color:var(--muted)">Customer • WhatsApp</div><div style="margin-top:16px;text-align:left;font-size:12px">Selecciona un chat<br><div style="margin-top:8px;display:flex;align-items:center;gap:6px"><span style="font-size:11px">Tag:</span><select style="width:auto"><option>nuevo</option><option>intermitente</option><option>fijo</option></select></div></div></div></div></div>
+<div class="main" id="mainPlanes">
+<div class="planesPage">
+<h2>Planes KLIDO - Anual</h2>
+<div class="grid3">
+<div class="cardPlan">
+<h3>Básico</h3><div class="price">$800.000</div><div class="sub">anual</div><div class="mant">+ $80.000 mant. c/3 meses</div>
+<ul><li><span class="check">✓</span> 1 envío masivo a la vez</li><li><span class="check">✓</span> 2 usuarios incluidos</li><li><span class="check">✓</span> Inbox ilimitado</li><li><span class="cross">✕</span> Sin IA automática</li></ul>
+<button onclick="cP('basico')">Empezar Básico</button>
+</div>
+<div class="cardPlan" style="border-color:var(--blue)">
+<h3>Premium <span style="color:#fbbf24">★</span></h3><div class="price">$1.300.000</div><div class="sub">anual</div><div class="mant">+ $95.000 mant. c/3 meses</div>
+<ul><li><span class="check">✓</span> 5 envíos simultáneos</li><li><span class="check">✓</span> 5 usuarios incluidos</li><li><span class="check">✓</span> IA incluida</li><li><span class="check">✓</span> Soporte prioritario</li></ul>
+<button onclick="cP('premium')">Empezar Premium</button>
+</div>
+<div class="cardPlan">
+<h3>Gold</h3><div class="price">$2.400.000</div><div class="sub">anual</div><div class="mant">+ $130.000 mant. c/3 meses</div>
+<ul><li><span class="check">✓</span> Envíos ilimitados</li><li><span class="check">✓</span> Usuarios ilimitados</li><li><span class="check">✓</span> IA + Pánico humano</li><li><span class="check">✓</span> 📞 Llamada directa incluida</li></ul>
+<button onclick="cP('gold')">Empezar Gold</button>
+</div>
+</div>
+<div class="note">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API y soporte. Factura electrónica. Puedes cambiar de plan en cualquier momento. Cumplimiento Ley 1581.</div>
+</div>
+<div class="profile">
+<b>Customer Profile</b>
+<div style="text-align:center;margin-top:18px"><div class="avatar" style="width:52px;height:52px;margin:0 auto">SN</div><div style="margin-top:8px">-</div><div style="font-size:11px;color:var(--muted)">Customer • WhatsApp</div></div>
+<div style="margin-top:18px;font-size:12px">Selecciona un chat<br><div style="margin-top:8px;display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:var(--muted)">Tag:</span><select id="tagSel" style="width:120px;padding:6px"><option value="nuevo">nuevo</option><option value="intermitente">intermitente</option><option value="fijo">cliente fijo</option></select></div></div>
+</div>
+</div>
 
-<div class="main" id="mainOther" style="display:none;padding:22px;overflow:auto;flex-direction:column"></div>
+<div class="main" id="mainInbox" style="display:none">
+<div class="inbox"><div style="padding:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><b>Inbox</b><span id="count" style="font-size:11px;color:var(--muted)">0 chats</span></div><input class="search" id="search" placeholder="Buscar..." oninput="render()"><div id="convList" style="overflow:auto;flex:1"></div></div>
+<div class="chat"><div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel)" id="chatTop"><b>Selecciona un chat</b><div style="font-size:11px;color:var(--muted)">Elige de la izquierda</div></div><div style="flex:1;overflow:auto;padding:16px" id="msgs"><div style="color:var(--muted);text-align:center;margin-top:80px">Selecciona un chat para ver historial, clasificar como nuevo / intermitente / cliente fijo, notas y calendario.</div></div><div style="padding:12px;border-top:1px solid var(--border);display:none" id="inputBar"><input id="msgInput" placeholder="Escribe..."></div></div>
+<div class="profile" id="prof2"><b>Customer Profile</b><div id="profContent" style="margin-top:12px;font-size:12px;color:var(--muted)">Selecciona un chat.</div></div>
+</div>
 
-<div class="modal" id="mTrab"><div class="box"><h3>Grupo de trabajo - Jefe</h3><div id="trabList"></div><input id="tN" placeholder="Nombre"><input id="tE" placeholder="Correo"><input id="tP" type="password" placeholder="Contraseña"><button class="gold" style="width:100%" onclick="addT()">Añadir trabajador</button><button class="ghost" style="width:100%;margin-top:8px" onclick="closeM()">Cerrar</button></div></div>
-<div class="modal" id="mCamp"><div class="box"><h3>Campañas - Excel + Plantillas Meta</h3><select id="tpl"></select><input type="file" id="xls" accept=".xlsx,.xls"><button class="gold" style="width:100%" onclick="upXls()">Subir Excel</button><div id="xlsRes" style="font-size:12px;margin-top:8px"></div><div id="campHist" style="margin-top:10px;font-size:12px;max-height:220px;overflow:auto"></div><button class="ghost" style="width:100%;margin-top:8px" onclick="closeM()">Cerrar</button></div></div>
+<div class="main" id="mainOther" style="display:none;padding:20px;overflow:auto"></div>
+
+<div class="modal" id="mTrab"><div class="box"><h3>Grupo de trabajo</h3><div id="trabList"></div><input id="tN" placeholder="Nombre"><input id="tE" placeholder="Correo"><input id="tP" type="password" placeholder="Contraseña"><button class="gold" style="width:100%" onclick="addT()">Añadir</button><button class="ghost" style="width:100%;margin-top:8px" onclick="closeM()">Cerrar</button></div></div>
+<div class="modal" id="mCamp"><div class="box"><h3>Campañas - Excel + Plantillas Meta auto</h3><select id="tpl"></select><input type="file" id="xls" accept=".xlsx,.xls"><button class="gold" style="width:100%" onclick="upXls()">Subir Excel</button><div id="xlsRes" style="font-size:12px;margin-top:8px"></div><div id="campHist" style="font-size:11px;margin-top:10px;max-height:200px;overflow:auto"></div><button class="ghost" style="width:100%;margin-top:8px" onclick="closeM()">Cerrar</button></div></div>
 
 <script>
 const token=localStorage.getItem('token'); const user=JSON.parse(localStorage.getItem('user')||'{}');
 if(!token) location.href='/';
-document.getElementById('planBottom').textContent='Plan '+(user.plan||'Básico').charAt(0).toUpperCase()+(user.plan||'básico').slice(1);
-document.getElementById('planPill').textContent=(user.plan||'básico').toUpperCase();
+document.getElementById('planTop').textContent=(user.plan||'básico');
+document.getElementById('bPlan').textContent='Plan '+(user.plan||'Básico');
 const isJefe=user.rol==='jefe'||user.rol==='admin';
-if(!isJefe){document.getElementById('btnGrupo').style.display='none';document.getElementById('btnMet').style.display='none';}
-let msgs=[]; let sel=null; let cur='bandeja';
+let msgs=[]; let sel=null; let cur='planes';
 const H=()=>({Authorization:'Bearer '+token});
 function go(v){
  cur=v; document.querySelectorAll('.menu button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
- document.getElementById('mainInbox').style.display='none'; document.getElementById('mainPlanes').style.display='none'; document.getElementById('mainOther').style.display='none';
- if(v==='bandeja'||v==='no_leidos'){document.getElementById('mainInbox').style.display='flex'; load();}
+ document.getElementById('mainPlanes').style.display='none'; document.getElementById('mainInbox').style.display='none'; document.getElementById('mainOther').style.display='none';
+ if(v==='planes'){document.getElementById('mainPlanes').style.display='flex';}
+ else if(v==='inbox'){document.getElementById('mainInbox').style.display='flex'; load();}
  else if(v==='campanas'){document.getElementById('mCamp').classList.add('open'); loadCamp();}
- else if(v==='planes'){document.getElementById('mainPlanes').style.display='flex'; renderPlanes();}
  else if(v==='grupo'){document.getElementById('mTrab').classList.add('open'); loadTrab();}
  else if(v==='metricas'||v==='calendario'||v==='config'){document.getElementById('mainOther').style.display='flex'; showOther(v);}
 }
-function renderPlanes(){
- const wrap=document.getElementById('planesWrap');
- wrap.innerHTML=`<h2 class="planes-title">Planes KLIDO - Anual</h2>
- <div class="planes-grid">
-  <div class="plan-card"><h3>Básico</h3><div class="price">$800.000</div><div class="anual">anual</div><div class="mant">+ $80.000 mant. c/3 meses</div>
-   <ul><li>1 envío masivo a la vez</li><li>2 usuarios incluidos</li><li>Inbox ilimitado</li><li class="no">Sin IA automática</li></ul>
-   <button onclick="cP('basico')">Empezar Básico</button></div>
-  <div class="plan-card" style="border-color:var(--blueBtn)"><h3>Premium ⭐</h3><div class="price">$1.300.000</div><div class="anual">anual</div><div class="mant">+ $95.000 mant. c/3 meses</div>
-   <ul><li>5 envíos simultáneos</li><li>5 usuarios incluidos</li><li>IA incluida</li><li>Soporte prioritario</li></ul>
-   <button onclick="cP('premium')">Empezar Premium</button></div>
-  <div class="plan-card"><h3>Gold</h3><div class="price">$2.400.000</div><div class="anual">anual</div><div class="mant">+ $130.000 mant. c/3 meses</div>
-   <ul><li>Envíos ilimitados</li><li>Usuarios ilimitados</li><li>IA + Pánico humano</li><li>📞 Llamada directa incluida</li></ul>
-   <button onclick="cP('gold')">Empezar Gold</button></div>
- </div>
- <div class="plan-note">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API y soporte. Factura electrónica. Puedes cambiar de plan en cualquier momento. Cumplimiento Ley 1581.</div>`;
-}
 function showOther(t){
  const o=document.getElementById('mainOther');
- if(t==='metricas'){fetch('/api/metricas',{headers:H()}).then(r=>r.json()).then(d=>{o.innerHTML=`<div class="planes-wrap"><h2 class="planes-title">Métricas KLIDO</h2><div class="planes-grid"><div class="plan-card"><h3>Total</h3><div class="price">${d.totalMensajes}</div><div class="anual">mensajes</div></div><div class="plan-card"><h3>No leídos</h3><div class="price">${d.noLeidos}</div><div class="anual">chats</div></div><div class="plan-card"><h3>Recurrentes</h3><div class="price">${d.conversion}</div><div class="anual">clientes fijos</div></div></div></div>`;});}
- else if(t==='calendario'){fetch('/api/calendario',{headers:H()}).then(r=>r.json()).then(data=>{o.innerHTML=`<div class="planes-wrap"><h2 class="planes-title">Calendario / Seguimiento</h2><div class="planes-grid">${data.map(c=>`<div class="plan-card" style="text-align:left"><b>${c.numero}</b><br><span style="font-size:12px">${new Date(c.programado).toLocaleString()}</span><br><span style="font-size:11px;color:var(--muted)">${c.seguimiento||''}</span></div>`).join('')||'<div class="plan-note">Sin seguimientos</div>'}</div></div>`;});}
- else if(t==='config'){o.innerHTML=`<div class="planes-wrap"><h2 class="planes-title">Settings / Configuración</h2><div class="planes-grid"><div class="plan-card" style="text-align:left"><h3>¿Cómo funciona?</h3><ul><li>Bandeja = API Meta oficial</li><li>No leídos = 🔴 por leer</li><li>Campañas = Excel + plantillas</li><li>Cliente = nuevo / intermitente / fijo</li><li>Notas + calendario seguimiento</li><li>Gold = llamada directa tel:</li></ul></div><div class="plan-card" style="text-align:left"><h3>Soporte</h3><div class="mant">Avanza Consulting</div><div style="font-size:12px;color:var(--muted)">WhatsApp directo, factura electrónica, Ley 1581. Planes anual + trim.</div></div></div></div>`;}
+ if(t==='metricas'){fetch('/api/metricas',{headers:H()}).then(r=>r.json()).then(d=>{o.innerHTML=`<div class="planesPage"><h2>Métricas</h2><div class="grid3"><div class="cardPlan"><h3>Total</h3><div class="price">${d.totalMensajes}</div></div><div class="cardPlan"><h3>No leídos</h3><div class="price">${d.noLeidos}</div></div><div class="cardPlan"><h3>Fijos</h3><div class="price">${d.conversion}</div></div></div></div>`;});}
+ else if(t==='calendario'){fetch('/api/calendario',{headers:H()}).then(r=>r.json()).then(data=>{o.innerHTML=`<div class="planesPage"><h2>Calendario / Seguimiento</h2><div class="grid3">${data.map(c=>`<div class="cardPlan" style="text-align:left"><b>${c.numero}</b><br><span style="font-size:11px">${new Date(c.programado).toLocaleString()}</span><br><span style="font-size:10px;color:var(--muted)">${c.seguimiento||''}</span></div>`).join('')||'Sin datos'}</div></div>`;});}
+ else if(t==='config'){o.innerHTML=`<div class="planesPage"><h2>Settings / Configuración</h2><div class="grid3"><div class="cardPlan" style="text-align:left"><ul><li><span class="check">✓</span> Bandeja mensajes + No leídos</li><li><span class="check">✓</span> Cliente nuevo / intermitente / fijo</li><li><span class="check">✓</span> Notas + calendario seguimiento</li><li><span class="check">✓</span> Campañas Excel + plantillas Meta</li></ul></div></div></div>`;}
 }
-async function load(){const q=cur==='no_leidos'?'?tipo=no_leidos':'';const r=await fetch(`/api/mensajes${q}`,{headers:H()});msgs=await r.json();document.getElementById('count').textContent=msgs.length+' chats';render();}
+async function load(){const r=await fetch('/api/mensajes',{headers:H()});msgs=await r.json();document.getElementById('count').textContent=msgs.length+' chats';render();}
 function render(){
  const f=document.getElementById('search')?.value.toLowerCase()||''; const list=document.getElementById('convList'); if(!list) return; list.innerHTML='';
  msgs.filter(m=>!f||(m.numero+m.texto).toLowerCase().includes(f)).forEach(m=>{
   const el=document.createElement('div'); el.className='conv'+(sel&&sel.id===m.id?' active':'');
-  el.innerHTML=`<div class="avatar">${(m.numero||'??').slice(-2)}</div><div style="flex:1;overflow:hidden"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>${m.numero||'Desconocido'}</span><span style="font-size:10px;color:var(--muted)">${new Date(m.timestamp||Date.now()).toLocaleTimeString()}</span></div><div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(m.texto||'').slice(0,40)} • ${m.segmento||'nuevo'}</div></div>`;
+  el.innerHTML=`<div class="avatar">${(m.numero||'??').slice(-2)}</div><div style="flex:1;overflow:hidden"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>${m.numero}</span><span style="font-size:10px;color:var(--muted)">${new Date(m.timestamp||Date.now()).toLocaleTimeString()}</span></div><div style="font-size:11px;color:var(--muted)">${(m.texto||'').slice(0,35)} • ${m.segmento||'nuevo'}</div></div>`;
   el.onclick=()=>openC(m); list.appendChild(el);
  });
 }
 function openC(m){
  sel=m;
- document.getElementById('chatTop').innerHTML=`<div><div style="font-weight:700;display:flex;gap:8px;align-items:center"><div class="avatar" style="width:28px;height:28px;background:var(--blueBtn)">SN</div>${m.numero} - ${m.segmento||'nuevo'}</div><div style="font-size:11px;color:var(--muted)">WhatsApp Business API</div></div><div>${user.plan==='gold'?`<button class="gold" onclick="callNow('${m.numero}')">📞 Llamar</button>`:''}</div>`;
- document.getElementById('msgs').innerHTML=`<div class="bubble in">${m.texto||'Hola, estoy interesado'}</div>`;
- document.getElementById('inputBar').style.display='flex';
+ document.getElementById('chatTop').innerHTML=`<div style="display:flex;gap:8px;align-items:center"><div class="avatar" style="width:28px;height:28px">SN</div><div><b>${m.numero}</b><div style="font-size:10px;color:var(--muted)">WhatsApp Business API</div></div></div><div>${user.plan==='gold'?`<button class="gold" onclick="callNow('${m.numero}')">📞 Llamar</button>`:''}</div>`;
  document.getElementById('profContent').innerHTML=`
- <div style="text-align:center"><div class="avatar" style="width:56px;height:56px;margin:0 auto;background:var(--blueBtn)">SN</div><div style="font-weight:700;margin-top:6px">${m.numero}</div><div style="font-size:11px;color:var(--muted)">Customer • WhatsApp</div></div>
- <div style="margin-top:14px"><label style="font-size:11px;color:var(--muted)">Tag / Tipo cliente</label>
- <select id="tipoCli" onchange="seg('${m.id}',this.value)"><option value="nuevo" ${m.segmento==='nuevo'?'selected':''}>nuevo</option><option value="intermitente" ${m.segmento==='intermitente'?'selected':''}>intermitente</option><option value="fijo" ${m.segmento==='fijo'||m.segmento==='recurrente'?'selected':''}>cliente fijo</option><option value="irrelevante" ${m.segmento==='irrelevante'?'selected':''}>irrelevante</option></select></div>
- <div class="kpi"><b>Notas del cliente</b><textarea id="note" rows="3" placeholder="Nota + seguimiento">${m.seguimiento||''}</textarea><input type="datetime-local" id="noteDate"><button class="gold" style="width:100%;margin-top:6px" onclick="saveNote('${m.id}')">Guardar y agendar</button></div>
- <div class="kpi" style="font-size:11px">Actual: ${m.seguimiento||'sin notas'}<br>Prog: ${m.programado?new Date(m.programado).toLocaleString():'-'}</div>
+ <div style="text-align:center"><div class="avatar" style="width:52px;height:52px;margin:0 auto">${m.numero.slice(-2)}</div><div style="margin-top:6px;font-weight:700">${m.numero}</div><div style="font-size:11px;color:var(--muted)">Customer • WhatsApp</div></div>
+ <div style="margin-top:12px"><label style="font-size:11px;color:var(--muted)">Tipo cliente</label><select onchange="seg('${m.id}',this.value)"><option value="nuevo" ${m.segmento==='nuevo'?'selected':''}>nuevo</option><option value="intermitente" ${m.segmento==='intermitente'?'selected':''}>intermitente</option><option value="fijo" ${m.segmento==='fijo'||m.segmento==='recurrente'?'selected':''}>cliente fijo</option><option value="irrelevante" ${m.segmento==='irrelevante'?'selected':''}>irrelevante</option></select></div>
+ <div class="kpi"><b style="font-size:12px">Notas del cliente</b><textarea id="note" rows="3" placeholder="Nota para seguimiento">${m.seguimiento||''}</textarea><input type="datetime-local" id="noteDate"><button class="gold" style="width:100%;margin-top:6px" onclick="saveNote('${m.id}')">Guardar y agregar a calendario</button></div>
+ <div style="font-size:10px;color:var(--muted);margin-top:8px">Actual: ${m.seguimiento||'sin notas'}<br>Prog: ${m.programado?new Date(m.programado).toLocaleString():'-'}</div>
  `;
- render();
 }
 async function seg(id,s){await fetch('/api/mensajes/segmentar',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({id,segmento:s})});load();}
 async function saveNote(id){const nota=document.getElementById('note').value;const fecha=document.getElementById('noteDate').value;await fetch('/api/mensajes/seguimiento',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({id,nota,fecha})});alert('Guardado en calendario');load();}
 async function callNow(num){const r=await fetch('/api/call',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({numero:num})});const d=await r.json();if(d.tel) location.href=d.tel;}
-async function loadTrab(){const r=await fetch('/api/trabajadores',{headers:H()});const ls=await r.json();document.getElementById('trabList').innerHTML=ls.map(t=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border);font-size:12px"><span>${t.nombre} - ${t.email}</span><button class="ghost" onclick="delT('${t.id}')">Eliminar</button></div>`).join('');}
+async function loadTrab(){const r=await fetch('/api/trabajadores',{headers:H()});const ls=await r.json();document.getElementById('trabList').innerHTML=ls.map(t=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border);font-size:12px"><span>${t.nombre}</span><button class="ghost" onclick="delT('${t.id}')">X</button></div>`).join('');}
 async function addT(){const nombre=document.getElementById('tN').value;const email=document.getElementById('tE').value;const password=document.getElementById('tP').value;await fetch('/api/trabajadores',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({nombre,email,password})});loadTrab();}
 async function delT(id){await fetch('/api/trabajadores/'+id,{method:'DELETE',headers:H()});loadTrab();}
-async function loadCamp(){const r=await fetch('/api/templates',{headers:H()});const tpl=await r.json();document.getElementById('tpl').innerHTML=tpl.map(t=>`<option value="${t.name}">${t.name} - ${t.status}</option>`).join('');const rh=await fetch('/api/campanas/historial',{headers:H()});const h=await rh.json();document.getElementById('campHist').innerHTML=h.map(c=>`<div style="padding:6px;border-bottom:1px solid var(--border)">${new Date(c.fecha).toLocaleString()} - ${c.total} nums - ${c.plantilla}</div>`).join('');}
-async function upXls(){const file=document.getElementById('xls').files[0];if(!file) return alert('Excel');const fd=new FormData();fd.append('excel',file);fd.append('plantilla',document.getElementById('tpl').value);const r=await fetch('/api/campanas/excel',{method:'POST',headers:H(),body:fd});const d=await r.json();document.getElementById('xlsRes').textContent=r.ok?`OK ${d.total} números` : d.error;}
+async function loadCamp(){const r=await fetch('/api/templates',{headers:H()});const tpl=await r.json();document.getElementById('tpl').innerHTML=tpl.map(t=>`<option value="${t.name}">${t.name}</option>`).join('');const rh=await fetch('/api/campanas/historial',{headers:H()});const h=await rh.json();document.getElementById('campHist').innerHTML=h.map(c=>`<div>${new Date(c.fecha).toLocaleString()} - ${c.total} - ${c.plantilla}</div>`).join('');}
+async function upXls(){const file=document.getElementById('xls').files[0];if(!file) return alert('Excel');const fd=new FormData();fd.append('excel',file);fd.append('plantilla',document.getElementById('tpl').value);const r=await fetch('/api/campanas/excel',{method:'POST',headers:H(),body:fd});const d=await r.json();document.getElementById('xlsRes').textContent=r.ok?`OK ${d.total}`:d.error;}
 async function cP(p){await fetch('/api/planes/cambiar',{method:'POST',headers:{'Content-Type':'application/json',...H()},body:JSON.stringify({plan:p})});alert('Plan cambiado a '+p);location.reload();}
 function helpWA(){window.open('https://wa.me/573001112233?text=Hola%20KLIDO%20soy%20'+encodeURIComponent(user.email),'_blank');}
 function closeM(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));}
 function logout(){localStorage.clear();location.href='/';}
-function sendMsg(){const txt=document.getElementById('msgInput').value;if(!txt||!sel) return;document.getElementById('msgs').innerHTML+=`<div class="bubble out">${txt}</div>`;document.getElementById('msgInput').value='';}
-load();
+go('planes');
 </script></body></html>
