@@ -2,57 +2,63 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO Campañas v117 UNIVERSAL</title>
+<title>KLIDO Campañas v118 AUTOSELECT</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<style>:root{--azulO:#0b1220;--azulC:#38bdf8}*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial}body{background:#0b1220;color:#fff;padding:18px}.card{background:#1e293b;padding:18px;border-radius:14px;margin:12px 0;border:1px solid #334155}h2,h3{color:var(--azulC)}input,select,textarea{width:100%;padding:11px;margin:6px 0;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff}button{padding:10px 16px;border-radius:9px;border:0;background:linear-gradient(90deg,var(--azulC),#60a5fa);font-weight:900;cursor:pointer}</style>
+<style>:root{--azulO:#0b1220;--azulC:#38bdf8}*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial}body{background:#0b1220;color:#fff;padding:18px}.card{background:#1e293b;padding:18px;border-radius:14px;margin:12px 0;border:1px solid #334155}h3{color:var(--azulC);margin-bottom:8px}input,select,textarea{width:100%;padding:11px;margin:6px 0;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff}button{padding:12px 18px;border-radius:9px;border:0;background:linear-gradient(90deg,var(--azulC),#60a5fa);font-weight:900;cursor:pointer}.ok{background:#22c55e;color:#fff;padding:3px 8px;border-radius:20px;font-size:11px}</style>
 </head>
 <body>
-<h2>KLIDO v117 UNIVERSAL - Cualquier plantilla aprobada</h2>
-<p style="color:#94a3b8;font-size:12px">Escribe el nombre exacto de META Business (ej: acol_invitacion_congreso) - Toma nombre del Excel automático - No necesitas modificar código nunca más</p>
+<h2>KLIDO v118 - Plantillas APROBADAS automático + Excel</h2>
 
-<div class="card"><h3>1. Excel Congreso (Nombre + Teléfono)</h3><input type="file" id="excelFile" accept=".xlsx,.xls,.csv"><button onclick="procesarExcel()">Procesar Excel</button><div id="previewExcel"></div><div id="numerosInfo"></div></div>
+<div class="card"><h3>1. Excel (Nombre + Teléfono)</h3><input type="file" id="excelFile"><button onclick="procesarExcel()">Procesar Excel Congreso</button><div id="previewExcel" style="max-height:300px;overflow:auto"></div><div id="numerosInfo"></div></div>
 
-<div class="card"><h3>2. Plantilla - Escribe cualquier nombre aprobado</h3>
-<label>Nombre EXACTO plantilla META (minúsculas, sin espacios)</label>
-<input id="inputPlantilla" placeholder="acol_invitacion_congreso" value="acol_invitacion_congreso" list="listaPlantillas">
-<datalist id="listaPlantillas"><option value="acol_invitacion_congreso"><option value="hello_world"><option value="bienvenida_klido"></datalist>
-<textarea id="plantillaVars" placeholder="Variables opcionales separadas por coma. Ej: Carlos, KLIDO. Si lo dejas vacío usa nombre del Excel"></textarea>
-<small style="color:#94a3b8">Tip: Para acol_invitacion_congreso deja vacío y toma nombre del Excel. Para otras con 2 vars escribe: Carlos, Congreso</small>
-</div>
+<div class="card"><h3>2. Plantillas APROBADAS META (auto)</h3><button onclick="cargarPlantillas()">🔄 Cargar plantillas aprobadas de META</button><div id="plantillasList"></div><select id="selectPlantilla"><option value="">-- Selecciona plantilla APROBADA --</option></select><textarea id="plantillaVars" placeholder="Deja vacío: toma nombre del Excel automático. Si tu plantilla tiene 2 vars escribe: Carlos, Bogotá"></textarea></div>
 
-<div class="card"><h3>3. Enviar</h3><input id="nombreCamp" placeholder="Nombre campaña"><button id="btnEnviar" onclick="enviarCampana()">📢 Enviar a números Excel - Plantilla automática</button><div id="estadoEnvio"></div></div>
+<div class="card"><h3>3. Enviar a números seleccionados</h3><input id="nombreCamp" placeholder="Congreso ACOL Octubre" value="Congreso ACOL"><button id="btnEnviar" onclick="enviarCampana()">📢 Enviar plantilla seleccionada a Excel</button><div id="estadoEnvio"></div></div>
 
 <div class="card"><h3>Historial</h3><div id="historialCamp"></div></div>
 
 <script>
 const token=localStorage.getItem('klido_token'); if(!token) location.href='/index.html';
-let numerosDetectados=[]; let contactosExcel=[];
+let numerosDetectados=[]; let contactosExcel=[]; let plantillasAprobadas=[];
 async function api(p,m='GET',b=null){ const o={method:m,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}; if(b) o.body=JSON.stringify(b); const r=await fetch(p,o); return r.json(); }
 function procesarExcel(){
   const file=document.getElementById('excelFile').files[0]; if(!file) return alert('Excel');
-  const reader=new FileReader();
-  reader.onload=function(e){
+  const reader=new FileReader(); reader.onload=function(e){
     const data=new Uint8Array(e.target.result); const wb=XLSX.read(data,{type:'array'}); const sheet=wb.Sheets[wb.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
     const header=rows[0].map(h=>String(h||'').trim().toLowerCase());
     let idxTel=header.findIndex(h=>h.includes('telefono')||h.includes('teléfono')||h.includes('phone')); let idxNom=header.findIndex(h=>h.includes('nombre')||h.includes('name'));
-    if(idxTel===-1){ let best={col:-1,c:0}; for(let c=0;c<header.length;c++){ let cnt=0; for(let r=1;r<Math.min(20,rows.length);r++){ let v=String(rows[r][c]||'').replace(/\D/g,''); if(v.length>=10) cnt++; } if(cnt>best.c) best={col:c,c:cnt}; } idxTel=best.col; }
-    numerosDetectados=[]; contactosExcel=[]; const vistos=new Set(); let html='<table><tr><th>Nombre</th><th>Tel</th></tr>';
-    for(let i=1;i<rows.length;i++){ let raw=rows[i][idxTel]; if(!raw) continue; let tel=String(raw).replace(/\D/g,''); if(tel.startsWith('0')) tel=tel.substring(1); if(tel.length===10) tel='57'+tel; if(tel.length!==12) continue; if(vistos.has(tel)) continue; vistos.add(tel); let nombre=idxNom!==-1?String(rows[i][idxNom]||'Cliente').trim():'Cliente'; numerosDetectados.push(tel); contactosExcel.push({nombre,phone:tel}); if(i<30) html+=`<tr><td>${nombre}</td><td>${tel}</td></tr>`; }
-    html+='</table>'; document.getElementById('previewExcel').innerHTML=html; document.getElementById('numerosInfo').innerHTML=`<b style="color:#22c55e">${numerosDetectados.length} números - Nombre auto para plantilla</b>`;
+    if(idxTel===-1){ let best={col:-1,c:0}; for(let c=0;c<header.length;c++){ let cnt=0; for(let r=1;r<Math.min(30,rows.length);r++){ let v=String(rows[r][c]||'').replace(/\D/g,''); if(v.length>=10) cnt++; } if(cnt>best.c) best={col:c,c:cnt}; } idxTel=best.col; }
+    numerosDetectados=[]; contactosExcel=[]; const vistos=new Set(); let html='<table><tr><th>Nombre</th><th>Tel 57</th></tr>';
+    for(let i=1;i<rows.length;i++){ let raw=rows[i][idxTel]; if(!raw) continue; let tel=String(raw).replace(/\D/g,''); if(tel.startsWith('0')) tel=tel.substring(1); if(tel.length===10) tel='57'+tel; if(tel.length!==12) continue; if(vistos.has(tel)) continue; vistos.add(tel); let nombre=idxNom!==-1?String(rows[i][idxNom]||'Cliente').trim():'Cliente'; if(!nombre) nombre='Cliente'; numerosDetectados.push(tel); contactosExcel.push({nombre,phone:tel}); if(i<40) html+=`<tr><td>${nombre}</td><td>${tel}</td></tr>`; }
+    html+='</table>'; document.getElementById('previewExcel').innerHTML=html; document.getElementById('numerosInfo').innerHTML=`<b style="color:#22c55e">${numerosDetectados.length} números listos para ${document.getElementById('selectPlantilla').value||'plantilla seleccionada'}</b>`;
   }; reader.readAsArrayBuffer(file);
 }
+async function cargarPlantillas(){
+  document.getElementById('plantillasList').innerHTML='Cargando de META Business...';
+  const res=await api('/api/meta/plantillas');
+  if(!res.ok){ document.getElementById('plantillasList').innerHTML=`<span style="color:#ef4444">No pude leer de META: ${res.error}. Revisa que tu token tenga whatsapp_business_management. Usando fallback acol_invitacion_congreso</span>`;
+    const sel=document.getElementById('selectPlantilla'); sel.innerHTML='<option value="acol_invitacion_congreso">acol_invitacion_congreso - APROBADA (fallback)</option>'; return;
+  }
+  plantillasAprobadas=res.plantillas; let html=`<p><span class=ok>${res.plantillas.length} aprobadas</span> WABA ${res.wabaId||''}</p>`; const sel=document.getElementById('selectPlantilla'); sel.innerHTML='<option value="">-- Selecciona plantilla APROBADA --</option>';
+  res.plantillas.forEach(p=>{
+    const vars=(p.components?.find(c=>c.type==='BODY')?.example?.body_text?.[0]?.length||0);
+    html+=`<div style="padding:8px;background:#0f172a;margin:5px;border-radius:6px"><b>${p.name}</b> - ${p.status} - ${p.language} - ${vars} var - ID ${p.id}</div>`;
+    sel.innerHTML+=`<option value="${p.name}" ${p.name==='acol_invitacion_congreso'?'selected':''}>${p.name} - ${p.language} - ${vars} vars - ${p.status}</option>`;
+  });
+  document.getElementById('plantillasList').innerHTML=html;
+}
 async function enviarCampana(){
-  if(numerosDetectados.length===0) return alert('Sube Excel');
-  const plantilla=document.getElementById('inputPlantilla').value.trim().toLowerCase(); if(!plantilla) return alert('Escribe nombre plantilla aprobada');
+  if(numerosDetectados.length===0) return alert('Sube Excel primero');
+  const plantilla=document.getElementById('selectPlantilla').value; if(!plantilla) return alert('Selecciona plantilla aprobada de la lista');
   const plantillaVars=document.getElementById('plantillaVars').value.trim();
-  const nombre=document.getElementById('nombreCamp').value||plantilla+' '+new Date().toLocaleString();
-  document.getElementById('btnEnviar').disabled=true; document.getElementById('estadoEnvio').innerText='Enviando universal...';
+  const nombre=document.getElementById('nombreCamp').value||plantilla;
+  document.getElementById('btnEnviar').disabled=true; document.getElementById('estadoEnvio').innerText='Enviando...';
   const res=await api('/api/campanas','POST',{nombre,plantilla,plantillaVars,lista:numerosDetectados,contactos:contactosExcel});
-  document.getElementById('estadoEnvio').innerHTML=res.ok?`<span style="color:#22c55e">Guardada ${numerosDetectados.length} - Enviando ${plantilla} - Revisa Railway log 200</span>`:`Error ${res.error}`;
+  document.getElementById('estadoEnvio').innerHTML=res.ok?`<span style="color:#22c55e">✅ Campaña ${plantilla} guardada - ${numerosDetectados.length} nums - Revisa Railway log: debe salir -> 200</span>`:`❌ ${res.error}`;
   document.getElementById('btnEnviar').disabled=false; cargarHistorial();
 }
 async function cargarHistorial(){ const hist=await api('/api/campanas'); const box=document.getElementById('historialCamp'); box.innerHTML=''; hist.slice().reverse().forEach(c=>{ box.innerHTML+=`<div style="padding:8px;background:#0f172a;margin:5px;border-radius:6px"><b>${c.nombre}</b> - ${c.plantilla} - ${c.enviados||0}/${c.numeros||0} - ${c.estado}</div>`; }); }
-cargarHistorial();
+cargarPlantillas(); cargarHistorial();
 </script>
 </body>
 </html>
