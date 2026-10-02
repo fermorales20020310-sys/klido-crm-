@@ -23,11 +23,12 @@ const PLANES={
 };
 const normalizaPlan=(p)=>{const s=String(p||'basico').toLowerCase();if(s.includes('gold'))return 'gold';if(s.includes('premium'))return 'premium';return 'basico';};
 const getPlan=(p)=>PLANES[normalizaPlan(p)]||PLANES.basico;
+// FIX DOMINIO VERIFICADO KLIDO
+const RESEND_FROM_FIXED = process.env.RESEND_FROM || 'KLIDO <soporte@klidoapp.com.co>';
 // MIGRACION ACOL + PLAN FIX - FORZADO BASICO SI ES ACOL
 try{
   const db=read();let ch=false;
   db.agencias.forEach(a=>{
-    // FIX ACOL SIEMPRE BASICO como pagó
     if(a.nombre&&a.nombre.toLowerCase().includes('acol')){
       if(a.plan!=='basico'){a.plan='basico';ch=true;}
       if(a.waPhoneId!==ACOL_WA_ID){a.waPhoneId=ACOL_WA_ID;a.waBusinessId=ACOL_WA_ID;ch=true;}
@@ -36,7 +37,6 @@ try{
     if(a.plan!==pn){a.plan=pn;ch=true;}
     db.usuarios.filter(u=>u.agenciaId===a.id).forEach(u=>{if(u.plan!==a.plan){u.plan=a.plan;ch=true;}});
   });
-  // LIMPIEZA AUTOMATICA mensaje.txt vieja al iniciar server
   const antes=db.mensajes.length;
   db.mensajes=db.mensajes.filter(m=>!(m.texto||'').includes('mensaje.txt') &&!(String(m.mediaUrl||'').includes('mensaje.txt')));
   if(db.mensajes.length!==antes){ch=true; console.log('[LIMPIEZA] borrados mensaje.txt:',antes-db.mensajes.length)}
@@ -49,7 +49,7 @@ app.use('/uploads',express.static(UP_DIR));app.use(express.static(path.join(__di
 const auth=(req,res,next)=>{try{req.user=jwt.verify((req.headers.authorization||'').replace('Bearer ',''),JWT);next();}catch{res.status(401).json({error:'no token'})}};
 let transporter=null;const useResend=!!process.env.RESEND_API_KEY;
 if(nodemailer&&process.env.SMTP_USER&&process.env.SMTP_PASS){const pc=String(process.env.SMTP_PASS).replace(/\s/g,'');transporter=nodemailer.createTransport({host:process.env.SMTP_HOST||'smtp.gmail.com',port:parseInt(process.env.SMTP_PORT||'587'),secure:false,auth:{user:process.env.SMTP_USER,pass:pc},tls:{rejectUnauthorized:false}});}
-console.log('[KLIDO v112.3]',{RESEND:useResend,SMTP:!!transporter,ACOL:ACOL_WA_ID});
+console.log('[KLIDO v112.4]',{RESEND:useResend,FROM:RESEND_FROM_FIXED,SMTP:!!transporter,ACOL:ACOL_WA_ID});
 
 app.post('/api/public/solicitar-codigo',async(req,res)=>{
   const {email,tipo}=req.body;if(!email)return res.status(400).json({error:'Falta correo'});
@@ -57,7 +57,7 @@ app.post('/api/public/solicitar-codigo',async(req,res)=>{
   db.codigos=db.codigos.filter(c=>!(c.email.toLowerCase()===email.toLowerCase()&&c.tipo===tipo));
   db.codigos.push({email:email.toLowerCase(),codigo,tipo,expira:new Date(Date.now()+15*60000)});write(db);
   console.log(`[CODIGO] ${tipo} ${email} ${codigo}`);
-  if(useResend){try{const r=await fetchFn('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:process.env.RESEND_FROM||'onboarding@resend.dev',to:email,subject:`KLIDO - Código ${tipo}`,html:`<div style="font-family:Inter;background:#f8fafc;padding:24px"><div style="background:#0b1a3a;color:#fff;padding:16px;border-radius:12px"><b>KLIDO</b> - Avanza Consulting</div><h2>Código de seguridad</h2><p style="font-size:32px;letter-spacing:6px;font-weight:900">${codigo}</p><p>Expira 15min. Solo plan pagado será desbloqueado. Soporte https://wa.me/${WPP}</p></div>`})});const j=await r.json();if(r.ok)return res.json({ok:true,mensaje:`Código enviado a ${email} - Revisa spam`});}catch(e){console.log(e.message)}}
+  if(useResend){try{const r=await fetchFn('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:RESEND_FROM_FIXED,to:email,subject:`KLIDO - Código ${tipo}`,html:`<div style="font-family:Inter;background:#f8fafc;padding:24px"><div style="background:#0b1a3a;color:#fff;padding:16px;border-radius:12px"><b>KLIDO</b> - Avanza Consulting</div><h2>Código de seguridad</h2><p style="font-size:32px;letter-spacing:6px;font-weight:900">${codigo}</p><p>Expira 15min. Solo plan pagado será desbloqueado. Soporte https://wa.me/${WPP}</p></div>`})});const j=await r.json();if(!r.ok){console.log('[RESEND ERROR]',j); }else{return res.json({ok:true,mensaje:`Código enviado a ${email} - Revisa spam`});}}catch(e){console.log(e.message)}}
   if(!transporter)return res.status(500).json({error:'Correo no configurado'});
   try{await transporter.sendMail({from:`KLIDO <${process.env.SMTP_USER}>`,to:email,subject:`KLIDO Código ${tipo}`,html:`<h2>${codigo}</h2>`});return res.json({ok:true,mensaje:`Código enviado a ${email}`});}catch(e){return res.status(500).json({error:e.message});}
 });
@@ -82,7 +82,7 @@ app.post('/api/admin/activar',auth,async(req,res)=>{
   if(ag.nombre.toLowerCase().includes('acol')){ag.waPhoneId=ACOL_WA_ID;ag.waBusinessId=ACOL_WA_ID; ag.plan='basico';}
   db.codigosActivacion=db.codigosActivacion||[];db.codigosActivacion.push({agenciaId:ag.id,email:ag.email,codigo:codigoAct,creado:new Date(),plan:ag.plan});write(db);
   const html=`<div style="font-family:Inter;padding:24px"><h2 style="color:#0b1a3a">KLIDO - Código de desbloqueo plan ${ag.plan.toUpperCase()}</h2><p>Agencia <b>${ag.nombre}</b> activada.</p><p>Solo podrás acceder a <b>${ag.plan.toUpperCase()}</b> que pagaste. Código:</p><p style="font-size:28px;font-weight:900;letter-spacing:4px">${codigoAct}</p><p>Ingresa en /activar-cuenta - Soporte https://wa.me/${WPP}</p><p style="font-size:11px">Ley 1581 Habeas Data - Contrato anual + mant trimestral</p></div>`;
-  if(useResend){try{await fetchFn('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:process.env.RESEND_FROM||'onboarding@resend.dev',to:ag.email,subject:`KLIDO Activado ${ag.plan.toUpperCase()} - Código ${codigoAct}`,html})});}catch{}}
+  if(useResend){try{await fetchFn('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:RESEND_FROM_FIXED,to:ag.email,subject:`KLIDO Activado ${ag.plan.toUpperCase()} - Código ${codigoAct}`,html})});}catch{}}
   if(transporter){try{await transporter.sendMail({from:process.env.SMTP_USER,to:ag.email,subject:`KLIDO Activado ${codigoAct}`,html});}catch{}}
   res.json({ok:true,codigo:codigoAct,mensaje:`Activado ${ag.email} - Código enviado a ${ag.email} solo plan ${ag.plan}`});
 });
@@ -105,7 +105,6 @@ app.post('/api/mensajes/asignar',auth,(req,res)=>{if(req.user.rol!=='jefe'&&req.
 app.get('/api/kanban',auth,(req,res)=>{const db=read();const msgs=db.mensajes.filter(m=>m.agenciaId===req.user.agenciaId);const kanban={nuevo:[],negociacion:[],cotizado:[],ganado:[],perdido:[]};msgs.forEach(m=>{const etapa=m.kanban||'nuevo';if(kanban[etapa])kanban[etapa].push(m);else kanban.nuevo.push(m);});res.json(kanban);});
 app.post('/api/kanban/mover',auth,(req,res)=>{const db=read();const m=db.mensajes.find(x=>x.id==req.body.id&&x.agenciaId===req.user.agenciaId);if(!m)return res.status(404).json({error:'no mensaje'});const etapas=['nuevo','negociacion','cotizado','ganado','perdido'];if(!etapas.includes(req.body.etapa))return res.status(400).json({error:'etapa inválida'});m.kanban=req.body.etapa;m.leido=true;write(db);res.json({ok:true,kanban:m.kanban});});
 
-// ====== NUEVO FIX: MENSAJES TEXTO REAL ======
 app.post('/api/mensajes/enviar', auth, (req,res)=>{
   const {numero, texto} = req.body;
   if(!numero ||!texto) return res.status(400).json({error:'Falta numero o texto'});
@@ -114,7 +113,7 @@ app.post('/api/mensajes/enviar', auth, (req,res)=>{
     id: Date.now().toString(),
     agenciaId: req.user.agenciaId,
     numero, nombre: numero,
-    texto: String(texto), // TEXTO REAL
+    texto: String(texto),
     timestamp: new Date(),
     leido: true,
     direccion: 'outbound',
@@ -150,14 +149,12 @@ app.post('/api/mensajes/borrar/:id', auth, (req,res)=>{
   res.json({ok:true});
 });
 
-// UPLOAD MULTIMEDIA - audios, fotos, videos, archivos - SOLO ARCHIVOS REALES
 const up=multer({dest:UP_DIR});
 app.post('/api/mensajes/media',auth,up.single('file'),(req,res)=>{
   const db=read();
   const tipo=req.body.tipo||'archivo';
   const numero=req.body.numero;
   if(!req.file) return res.status(400).json({error:'no file'});
-  // si es mensaje.txt y tipo texto, rechazar - usar /enviar
   if(req.file.originalname==='mensaje.txt' && tipo==='texto'){
     try{fs.unlinkSync(req.file.path)}catch{}
     return res.status(400).json({error:'Usa /api/mensajes/enviar para texto'});
@@ -224,4 +221,4 @@ if(msg.image){texto='[foto]';mediaUrl=msg.image?.id||'';mediaType='foto';}if(msg
   db.mensajes.push({id:Date.now().toString(),numero:msg.from,nombre:contact?.profile?.name||msg.from,texto,mediaUrl:mediaUrl||null,mediaType,timestamp:new Date(),segmento:'nuevo',leido:false,agenciaId,origen:'inbox',waId:waId||'',kanban:'nuevo'});if(db.mensajes.length>15000)db.mensajes=db.mensajes.slice(-15000);write(db);console.log(`[WEBHOOK] ${agenciaId} ${msg.from} ${texto}`);}}catch(e){console.log(e.message);}res.sendStatus(200);});
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(PORT,'0.0.0.0',()=>console.log(`KLIDO v112.4 PRO - ${PORT} - ACOL BASICO FIX - MENSAJES COMO MENSAJES - LIMPIEZA mensaje.txt OK`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`KLIDO v112.5 PRO - DOMINIO KLIDOAPP VERIFICADO - ${PORT} - FROM ${RESEND_FROM_FIXED}`));
