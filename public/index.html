@@ -1,574 +1,159 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KLIDO - CRM Multiagencia Cloud API</title>
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { margin: 0; padding: 0; display: flex; min-height: 100vh; background-color: #f3f4f6; }
-
-    /* PANEL IZQUIERDO (HERO OBSCURO) */
-    .left-panel {
-      width: 50%;
-      background: linear-gradient(180deg, #020917 0%, #081226 100%);
-      color: #ffffff;
-      padding: 40px 50px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .brand-header {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    /* LOGO MÁS GRANDE */
-    .brand-logo {
-      width: 85px;
-      height: 85px;
-      border-radius: 16px;
-      object-fit: cover;
-      background: #ffffff;
-      padding: 3px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-
-    /* TITULO KLIDO MÁS GRANDE */
-    .brand-title h1 {
-      margin: 0;
-      font-size: 36px;
-      font-weight: 900;
-      letter-spacing: 1.5px;
-      color: #ffffff;
-      line-height: 1;
-    }
-
-    .brand-title span {
-      font-size: 12px;
-      letter-spacing: 2px;
-      color: #94a3b8;
-      font-weight: 700;
-      display: block;
-      margin-top: 5px;
-    }
-
-    .hero-content {
-      margin: 30px 0;
-    }
-
-    .main-heading {
-      font-size: 44px;
-      font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 12px;
-    }
-
-    .main-heading span {
-      color: #3b82f6;
-    }
-
-    .sub-heading {
-      color: #3b82f6;
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 1px;
-      margin-bottom: 25px;
-      text-transform: uppercase;
-    }
-
-    .feature-list {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 25px 0;
-    }
-
-    .feature-list li {
-      margin-bottom: 14px;
-      font-size: 13.5px;
-      font-weight: 600;
-      color: #cbd5e1;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .tags-container {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .tag {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 15px;
-      padding: 6px 14px;
-      font-size: 11px;
-      color: #cbd5e1;
-    }
-
-    /* PANEL DERECHO */
-    .right-panel {
-      width: 50%;
-      background-color: #ffffff;
-      padding: 40px 60px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      position: relative;
-    }
-
-    .tab-container {
-      display: flex;
-      background-color: #e5e7eb;
-      border-radius: 8px;
-      padding: 3px;
-      margin-bottom: 25px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      text-align: center;
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      font-weight: 600;
-      color: #4b5563;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      background-color: #030712;
-      color: #ffffff;
-    }
-
-    .form-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin: 0 0 4px 0;
-      color: #111827;
-    }
-
-    .form-subtitle {
-      font-size: 11px;
-      color: #9ca3af;
-      margin-bottom: 20px;
-      line-height: 1.3;
-    }
-
-    .input-field {
-      width: 100%;
-      padding: 12px 16px;
-      background-color: #f3f4f6;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      font-size: 13px;
-      outline: none;
-    }
-
-    .input-field:focus {
-      border-color: #9ca3af;
-    }
-
-    .section-label {
-      font-size: 12px;
-      font-weight: 700;
-      margin: 15px 0 10px 0;
-      color: #111827;
-    }
-
-    /* TARJETAS DE PLANES */
-    .plans-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .plan-card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 12px 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .plan-card.selected {
-      border: 2px solid #030712;
-      background: #ffffff;
-    }
-
-    .plan-name {
-      font-size: 11px;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 4px;
-    }
-
-    .plan-price {
-      font-size: 11px;
-      font-weight: 800;
-      color: #111827;
-    }
-
-    .plan-subprice {
-      font-size: 10px;
-      color: #6b7280;
-      margin-bottom: 6px;
-    }
-
-    .plan-features {
-      font-size: 9px;
-      color: #9ca3af;
-      line-height: 1.2;
-    }
-
-    .code-container {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
-    }
-
-    .btn-send-code {
-      background-color: #030712;
-      color: #ffffff;
-      border: none;
-      padding: 0 16px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: opacity 0.2s;
-    }
-
-    .btn-send-code:hover {
-      opacity: 0.9;
-    }
-
-    .btn-send-code:disabled {
-      background-color: #6b7280;
-      cursor: not-allowed;
-    }
-
-    .spam-notice {
-      font-size: 10px;
-      color: #9ca3af;
-      margin-bottom: 12px;
-      line-height: 1.2;
-    }
-
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 20px;
-      font-size: 11px;
-      color: #4b5563;
-    }
-
-    .btn-submit {
-      width: 100%;
-      background-color: #030712;
-      color: #ffffff;
-      border: none;
-      padding: 14px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    /* BOTÓN FLOTANTE SOLO CON ICONO DE WHATSAPP */
-    .floating-wpp-icon {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background-color: #25d366;
-      color: #ffffff;
-      border: none;
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-      z-index: 999;
-      transition: transform 0.2s;
-    }
-
-    .floating-wpp-icon:hover {
-      transform: scale(1.1);
-    }
-
-    .floating-wpp-icon svg {
-      width: 34px;
-      height: 34px;
-      fill: #ffffff;
-    }
-
-    .hidden { display: none !important; }
-
-    @media (max-width: 900px) {
-      body { flex-direction: column; }
-      .left-panel, .right-panel { width: 100%; padding: 30px 20px; }
-    }
+    *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+    body{margin:0;padding:0;display:flex;min-height:100vh;background:#f3f4f6}
+    .left-panel{width:50%;background:linear-gradient(180deg,#020917 0%,#081226 100%);color:#fff;padding:40px 50px;display:flex;flex-direction:column;justify-content:space-between}
+    .brand-header{display:flex;align-items:center;gap:18px}
+    .brand-logo{width:85px;height:85px;border-radius:16px;object-fit:cover;background:#fff;padding:3px;box-shadow:0 4px 15px rgba(0,0,0,0.3)}
+    .brand-title h1{margin:0;font-size:36px;font-weight:900;letter-spacing:1.5px;color:#fff;line-height:1}
+    .brand-title span{font-size:12px;letter-spacing:2px;color:#94a3b8;font-weight:700;display:block;margin-top:5px}
+    .hero-content{margin:30px 0}
+    .main-heading{font-size:44px;font-weight:800;line-height:1.1;margin-bottom:12px}
+    .main-heading span{color:#3b82f6}
+    .sub-heading{color:#3b82f6;font-weight:700;font-size:14px;letter-spacing:1px;margin-bottom:25px;text-transform:uppercase}
+    .feature-list{list-style:none;padding:0;margin:0 0 25px 0}
+    .feature-list li{margin-bottom:14px;font-size:13.5px;font-weight:600;color:#cbd5e1;display:flex;align-items:center;gap:8px}
+    .tags-container{display:flex;gap:8px;flex-wrap:wrap}
+    .tag{background:rgba(255,255,255,.08);border-radius:15px;padding:6px 14px;font-size:11px;color:#cbd5e1}
+    .right-panel{width:50%;background:#fff;padding:40px 60px;display:flex;flex-direction:column;justify-content:center;position:relative}
+    .tab-container{display:flex;background:#e5e7eb;border-radius:8px;padding:3px;margin-bottom:25px}
+    .tab-btn{flex:1;padding:10px;text-align:center;border:none;background:transparent;font-size:13px;font-weight:600;color:#4b5563;cursor:pointer;border-radius:6px;transition:.2s}
+    .tab-btn.active{background:#030712;color:#fff}
+    .form-title{font-size:18px;font-weight:700;margin:0 0 4px 0;color:#111827}
+    .form-subtitle{font-size:11px;color:#9ca3af;margin-bottom:20px;line-height:1.3}
+    .input-field{width:100%;padding:12px 16px;background:#f3f4f6;border:1px solid transparent;border-radius:8px;margin-bottom:12px;font-size:13px;outline:none}
+    .input-field:focus{border-color:#9ca3af}
+    .section-label{font-size:12px;font-weight:700;margin:15px 0 10px 0;color:#111827}
+    .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px}
+    .plan-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:.2s}
+    .plan-card.selected{border:2px solid #030712;background:#fff}
+    .plan-name{font-size:11px;font-weight:700;color:#111827;margin-bottom:4px}
+    .plan-price{font-size:11px;font-weight:800;color:#111827}
+    .plan-subprice{font-size:10px;color:#6b7280;margin-bottom:6px}
+    .plan-features{font-size:9px;color:#9ca3af;line-height:1.2}
+    .code-container{display:flex;gap:8px;margin-bottom:15px}
+    .btn-send-code{background:#030712;color:#fff;border:none;padding:0 16px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+    .btn-send-code:disabled{background:#6b7280;cursor:not-allowed}
+    .spam-notice{font-size:10px;color:#9ca3af;margin-bottom:12px;line-height:1.2}
+    .checkbox-container{display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:11px;color:#4b5563}
+    .btn-submit{width:100%;background:#030712;color:#fff;border:none;padding:14px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer}
+    .floating-wpp-icon{position:fixed;bottom:24px;right:24px;background:#25d366;color:#fff;border:none;width:58px;height:58px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:999;transition:transform .2s}
+    .floating-wpp-icon:hover{transform:scale(1.1)}
+    .floating-wpp-icon svg{width:34px;height:34px;fill:#fff}
+    .hidden{display:none!important}
+    @media(max-width:900px){body{flex-direction:column}.left-panel,.right-panel{width:100%;padding:30px 20px}}
   </style>
 </head>
 <body>
-
-  <!-- PANEL IZQUIERDO -->
   <div class="left-panel">
     <div>
       <div class="brand-header">
         <img src="/logo.png" alt="KLIDO Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/85/020917/ffffff?text=KLIDO'">
-        <div class="brand-title">
-          <h1>KLIDO</h1>
-          <span>AVANZA CONSULTING</span>
-        </div>
+        <div class="brand-title"><h1>KLIDO</h1><span>AVANZA CONSULTING</span></div>
       </div>
-
       <div class="hero-content">
-        <div class="main-heading">
-          El mejor CRM<br>
-          que tu empresa<br>
-          <span>puede tener.</span>
-        </div>
+        <div class="main-heading">El mejor CRM<br>que tu empresa<br><span>puede tener.</span></div>
         <div class="sub-heading">CRM MULTIAGENCIA - CLOUD API</div>
-
         <ul class="feature-list">
-          <li>✓ BANDEJA EN TIEMPO REAL</li>
-          <li>✓ KANBAN</li>
-          <li>✓ CAMPAÑAS ANTI BANEO</li>
+          <li>✓ BANDEJA EN TIEMPO REAL</li><li>✓ KANBAN</li><li>✓ CAMPAÑAS ANTI BANEO</li>
           <li>✓ SEGURO LEY 1581: Habeas Data - Cloud API oficial - datos en /data con backups</li>
         </ul>
       </div>
     </div>
-
     <div class="tags-container">
-      <div class="tag">🔒 Seguro Ley 1581</div>
-      <div class="tag">✓ WhatsApp API Oficial</div>
-      <div class="tag">✓ Cloud API</div>
-      <div class="tag">📄 Contrato anual + mant. trim</div>
-      <div class="tag">✓ Kanban + Media</div>
+      <div class="tag">🔒 Seguro Ley 1581</div><div class="tag">✓ WhatsApp API Oficial</div><div class="tag">✓ Cloud API</div>
     </div>
   </div>
 
-  <!-- PANEL DERECHO -->
   <div class="right-panel">
     <div class="tab-container">
       <button id="tabBtnIngresar" class="tab-btn active" onclick="seleccionarTab('ingresar')">Ingresar</button>
       <button id="tabBtnRegistrar" class="tab-btn" onclick="seleccionarTab('registrar')">Registrar empresa</button>
     </div>
 
-    <!-- PESTAÑA: INICIAR SESIÓN -->
     <div id="sectionIngresar">
       <div class="form-title">Ingresar al CRM</div>
-      <div class="form-subtitle">Ingresa tus credenciales autorizadas de agencia o agente para acceder al panel.</div>
-
+      <div class="form-subtitle">Ingresa tus credenciales autorizadas.</div>
       <form id="formLogin" onsubmit="procesarLogin(event)">
-        <input type="email" id="loginEmail" class="input-field" placeholder="fermorales20020310@gmail.com" required>
+        <input type="email" id="loginEmail" class="input-field" placeholder="correo de empresa" required>
         <input type="password" id="loginPassword" class="input-field" placeholder="•••••••••" required>
-        
-        <button type="submit" class="btn-submit" style="margin-top: 10px;">Ingresar a KLIDO →</button>
+        <button type="submit" class="btn-submit" style="margin-top:10px;">Ingresar a KLIDO →</button>
       </form>
     </div>
 
-    <!-- PESTAÑA: REGISTRAR EMPRESA -->
     <div id="sectionRegistrar" class="hidden">
-      <div class="form-title">Registrar empresa - v112</div>
-      <div class="form-subtitle">
-        Máx 10 agencias. Solo podrás usar el plan que pagues. Código de desbloqueo llega SOLO a tu correo.
-      </div>
-
+      <div class="form-title">Registrar empresa - v112.6</div>
+      <div class="form-subtitle">Máx 10 agencias. Código llega SOLO a tu correo verificado con Resend.</div>
       <form id="formRegistro" onsubmit="procesarRegistro(event)">
-        <input type="text" id="regEmpresa" class="input-field" placeholder="Avanza consulting" required>
-        <input type="email" id="regEmail" class="input-field" placeholder="avanzaconsultingyl@gmail.com" required>
-        <input type="password" id="regPassword" class="input-field" placeholder="•••••••••" required>
-
+        <input type="text" id="regEmpresa" class="input-field" placeholder="Nombre empresa" required>
+        <input type="email" id="regEmail" class="input-field" placeholder="correo empresa" required>
+        <input type="password" id="regPassword" class="input-field" placeholder="Contraseña" required>
         <div class="section-label">Elegir el plan que pagaste</div>
-
         <div class="plans-grid">
-          <div class="plan-card" onclick="seleccionarPlan('basico', this)">
-            <div class="plan-name">Básico</div>
-            <div class="plan-price">$800k/año +</div>
-            <div class="plan-subprice">$80k/trim</div>
-            <div class="plan-features">Sin IA<br>2 usuarios<br>1k contactos</div>
-          </div>
-
-          <div class="plan-card" onclick="seleccionarPlan('premium', this)">
-            <div class="plan-name">Premium + IA</div>
-            <div class="plan-price">$1.4M/año +</div>
-            <div class="plan-subprice">$95k/trim</div>
-            <div class="plan-features">Con IA<br>5 usuarios<br>10k contactos</div>
-          </div>
-
-          <div class="plan-card selected" id="defaultPlanCard" onclick="seleccionarPlan('gold', this)">
-            <div class="plan-name">Gold + IA + Llamadas</div>
-            <div class="plan-price">$2.4M/año +</div>
-            <div class="plan-subprice">$120k/trim</div>
-            <div class="plan-features">IA - Llamadas<br>Ilimitado<br>White label</div>
-          </div>
+          <div class="plan-card" onclick="seleccionarPlan('basico',this)"><div class="plan-name">Básico</div><div class="plan-price">$800k/año +</div><div class="plan-subprice">$80k/trim</div><div class="plan-features">Sin IA<br>2 usuarios<br>1k contactos</div></div>
+          <div class="plan-card" onclick="seleccionarPlan('premium',this)"><div class="plan-name">Premium + IA</div><div class="plan-price">$1.4M/año +</div><div class="plan-subprice">$95k/trim</div><div class="plan-features">Con IA<br>5 usuarios<br>10k contactos</div></div>
+          <div class="plan-card selected" onclick="seleccionarPlan('gold',this)"><div class="plan-name">Gold + IA + Llamadas</div><div class="plan-price">$2.4M/año +</div><div class="plan-subprice">$120k/trim</div><div class="plan-features">IA - Llamadas<br>Ilimitado<br>White label</div></div>
         </div>
-
         <input type="hidden" id="planSeleccionado" value="gold">
-
         <div class="code-container">
-          <input type="text" id="regCodigo" class="input-field" placeholder="Código 6 dígitos" style="margin-bottom: 0;" required>
+          <input type="text" id="regCodigo" class="input-field" placeholder="Código 6 dígitos" style="margin-bottom:0;" required>
           <button type="button" id="btnEnviarCodigo" class="btn-send-code" onclick="enviarCodigo()">Enviar código a mi correo</button>
         </div>
-
-        <div class="spam-notice">
-          Revisa spam. Queda pendiente para que Gerencia active y te envíe código de desbloqueo SOLO a tu correo.
-        </div>
-
-        <div class="checkbox-container">
-          <input type="checkbox" id="regTerminos" required checked>
-          <label for="regTerminos">Acepto Términos Ley 1581 y mant. trimestral</label>
-        </div>
-
+        <div class="spam-notice" id="msgCode"></div>
+        <div class="checkbox-container"><input type="checkbox" id="regTerminos" required checked><label for="regTerminos">Acepto Términos Ley 1581 y mant. trimestral</label></div>
         <button type="submit" class="btn-submit">Registrar empresa →</button>
       </form>
     </div>
 
-    <!-- BOTÓN FLOTANTE SOLO CON ICONO DE WHATSAPP -->
-    <button class="floating-wpp-icon" onclick="abrirSoporte()" title="Contactar por WhatsApp">
-      <svg viewBox="0 0 24 24">
-        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-      </svg>
-    </button>
+    <button class="floating-wpp-icon" onclick="abrirSoporte()" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg></button>
   </div>
 
-  <script>
-    const WPP_NUM = "573133181851";
-
-    function abrirSoporte() {
-      const msg = encodeURIComponent("Hola, necesito soporte con KLIDO CRM.");
-      window.open(`https://wa.me/${WPP_NUM}?text=${msg}`, '_blank');
-    }
-
-    function seleccionarTab(tab) {
-      const secIngresar = document.getElementById('sectionIngresar');
-      const secRegistrar = document.getElementById('sectionRegistrar');
-      const btnIngresar = document.getElementById('tabBtnIngresar');
-      const btnRegistrar = document.getElementById('tabBtnRegistrar');
-
-      if (tab === 'ingresar') {
-        secIngresar.classList.remove('hidden');
-        secRegistrar.classList.add('hidden');
-        btnIngresar.classList.add('active');
-        btnRegistrar.classList.remove('active');
-      } else {
-        secRegistrar.classList.remove('hidden');
-        secIngresar.classList.add('hidden');
-        btnRegistrar.classList.add('active');
-        btnIngresar.classList.remove('active');
-      }
-    }
-
-    function seleccionarPlan(plan, element) {
-      document.querySelectorAll('.plan-card').forEach(el => el.classList.remove('selected'));
-      element.classList.add('selected');
-      document.getElementById('planSeleccionado').value = plan;
-    }
-
-    async function enviarCodigo() {
-      const email = document.getElementById('regEmail').value;
-      const btn = document.getElementById('btnEnviarCodigo');
-
-      if (!email) {
-        alert('Ingresa tu correo electrónico primero.');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerText = 'Enviando...';
-
-      try {
-        const res = await fetch('/api/public/solicitar-codigo', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ email, tipo: 'registro' })
-        });
-        
-        const data = await res.json();
-        if (res.ok) {
-          alert(data.mensaje || 'Código de verificación enviado a tu correo.');
-        } else {
-          alert(data.error || 'No se pudo enviar el código.');
-        }
-      } catch (err) {
-        alert('Error al conectar con el servidor para enviar el código.');
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'Enviar código a mi correo';
-      }
-    }
-
-    async function procesarLogin(e) {
-      e.preventDefault();
-      const payload = {
-        email: document.getElementById('loginEmail').value,
-        password: document.getElementById('loginPassword').value
-      };
-
-      try {
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('klido_token', data.token);
-          localStorage.setItem('klido_user', JSON.stringify(data.user));
-          window.location.href = '/crm.html';
-        } else {
-          alert(data.error || 'Credenciales inválidas.');
-        }
-      } catch (err) {
-        alert('Error conectando con el servidor de autenticación.');
-      }
-    }
-
-    async function procesarRegistro(e) {
-      e.preventDefault();
-      const payload = {
-        nombre: document.getElementById('regEmpresa').value,
-        email: document.getElementById('regEmail').value,
-        password: document.getElementById('regPassword').value,
-        plan: document.getElementById('planSeleccionado').value,
-        codigo: document.getElementById('regCodigo').value,
-        aceptoTerminos: document.getElementById('regTerminos').checked
-      };
-
-      try {
-        const res = await fetch('/api/public/crear-empresa', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok) {
-          alert('Empresa registrada con éxito. Queda pendiente por aprobación de gerencia.');
-          seleccionarTab('ingresar');
-        } else {
-          alert(data.error || 'Error al procesar el registro.');
-        }
-      } catch (err) {
-        alert('Error conectando con el servidor.');
-      }
-    }
-  </script>
+<script>
+  const WPP_NUM="573133181851";
+  function abrirSoporte(){window.open(`https://wa.me/${WPP_NUM}?text=${encodeURIComponent("Hola, necesito soporte con KLIDO CRM.")}`,'_blank');}
+  function seleccionarTab(tab){
+    document.getElementById('sectionIngresar').classList.toggle('hidden',tab!=='ingresar');
+    document.getElementById('sectionRegistrar').classList.toggle('hidden',tab!=='registrar');
+    document.getElementById('tabBtnIngresar').classList.toggle('active',tab==='ingresar');
+    document.getElementById('tabBtnRegistrar').classList.toggle('active',tab==='registrar');
+  }
+  function seleccionarPlan(plan,el){
+    document.querySelectorAll('.plan-card').forEach(e=>e.classList.remove('selected'));
+    el.classList.add('selected');document.getElementById('planSeleccionado').value=plan;
+  }
+  async function enviarCodigo(){
+    const email=document.getElementById('regEmail').value.trim();
+    const btn=document.getElementById('btnEnviarCodigo');
+    const msg=document.getElementById('msgCode');
+    if(!email){alert('Escribe tu correo');return;}
+    btn.disabled=true;btn.innerText='Enviando...';msg.innerText='Enviando desde soporte@klidoapp.com.co...';
+    try{
+      const res=await fetch('/api/public/solicitar-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,tipo:'registro'})});
+      const data=await res.json();
+      console.log('RESPUESTA SERVER:',data);
+      if(res.ok){msg.innerText=data.mensaje+' - Revisa SPAM';alert('✅ '+data.mensaje);}
+      else{msg.innerText='❌ '+ (data.error||'Error');alert('❌ '+(data.error||'Error')+' - Revisa logs Railway');}
+    }catch(e){msg.innerText='Error conexión';alert('Error conexión server');}
+    finally{btn.disabled=false;btn.innerText='Enviar código a mi correo';}
+  }
+  async function procesarLogin(e){
+    e.preventDefault();
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('loginEmail').value,password:document.getElementById('loginPassword').value})});
+    const d=await r.json();
+    if(r.ok){localStorage.setItem('token',d.token);localStorage.setItem('user',JSON.stringify(d.user));location.href='/crm.html';}
+    else alert(d.error);
+  }
+  async function procesarRegistro(e){
+    e.preventDefault();
+    const payload={nombre:document.getElementById('regEmpresa').value,email:document.getElementById('regEmail').value,password:document.getElementById('regPassword').value,plan:document.getElementById('planSeleccionado').value,codigo:document.getElementById('regCodigo').value,aceptoTerminos:true};
+    const r=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(r.ok){alert('Registrada! Pendiente Gerencia');seleccionarTab('ingresar');}else alert(d.error);
+  }
+</script>
 </body>
 </html>
