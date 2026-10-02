@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KLIDO - CRM Multiagencia Cloud API v112</title>
+  <title>KLIDO - CRM Multiagencia Cloud API</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body { margin: 0; padding: 0; display: flex; min-height: 100vh; background-color: #f3f4f6; }
@@ -22,32 +22,37 @@
     .brand-header {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 18px;
     }
 
+    /* LOGO MÁS GRANDE */
     .brand-logo {
-      width: 65px;
-      height: 65px;
-      border-radius: 12px;
+      width: 85px;
+      height: 85px;
+      border-radius: 16px;
       object-fit: cover;
       background: #ffffff;
-      padding: 2px;
+      padding: 3px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
+    /* TITULO KLIDO MÁS GRANDE */
     .brand-title h1 {
       margin: 0;
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 1px;
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
       color: #ffffff;
+      line-height: 1;
     }
 
     .brand-title span {
-      font-size: 11px;
-      letter-spacing: 1.5px;
+      font-size: 12px;
+      letter-spacing: 2px;
       color: #94a3b8;
       font-weight: 700;
       display: block;
+      margin-top: 5px;
     }
 
     .hero-content {
@@ -55,7 +60,7 @@
     }
 
     .main-heading {
-      font-size: 42px;
+      font-size: 44px;
       font-weight: 800;
       line-height: 1.1;
       margin-bottom: 12px;
@@ -68,7 +73,7 @@
     .sub-heading {
       color: #3b82f6;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 14px;
       letter-spacing: 1px;
       margin-bottom: 25px;
       text-transform: uppercase;
@@ -81,8 +86,8 @@
     }
 
     .feature-list li {
-      margin-bottom: 12px;
-      font-size: 13px;
+      margin-bottom: 14px;
+      font-size: 13.5px;
       font-weight: 600;
       color: #cbd5e1;
       display: flex;
@@ -90,18 +95,31 @@
       gap: 8px;
     }
 
-    .btn-soporte {
-      background-color: #22c55e;
+    /* BOTÓN SOLO CON LOGO DE WHATSAPP */
+    .btn-wpp-icon {
+      background-color: #25d366;
       color: #ffffff;
       border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 13px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
       cursor: pointer;
-      display: inline-block;
-      width: fit-content;
-      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .btn-wpp-icon:hover {
+      transform: scale(1.08);
+      background-color: #20ba5a;
+    }
+
+    .btn-wpp-icon svg {
+      width: 30px;
+      height: 30px;
+      fill: #ffffff;
     }
 
     .certified-badge {
@@ -112,7 +130,7 @@
       font-size: 11px;
       color: #94a3b8;
       display: inline-block;
-      margin-top: 20px;
+      margin-top: 25px;
     }
 
     .tags-container {
@@ -129,7 +147,7 @@
       color: #cbd5e1;
     }
 
-    /* PANEL DERECHO (FORMULARIO) */
+    /* PANEL DERECHO */
     .right-panel {
       width: 50%;
       background-color: #ffffff;
@@ -251,7 +269,6 @@
       line-height: 1.2;
     }
 
-    /* CONTENEDOR CÓDIGO DE VERIFICACIÓN */
     .code-container {
       display: flex;
       gap: 8px;
@@ -298,28 +315,38 @@
       cursor: pointer;
     }
 
-    /* BOTÓN FLOTANTE SOPORTE */
-    .floating-soporte {
+    /* BOTÓN FLOTANTE SOLO CON ICONO DE WHATSAPP */
+    .floating-wpp-icon {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #22c55e;
+      bottom: 24px;
+      right: 24px;
+      background-color: #25d366;
       color: #ffffff;
       border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 13px;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
       z-index: 999;
+      transition: transform 0.2s;
     }
 
-    .hidden {
-      display: none !important;
+    .floating-wpp-icon:hover {
+      transform: scale(1.1);
     }
 
-    /* RESPONSIVO */
+    .floating-wpp-icon svg {
+      width: 34px;
+      height: 34px;
+      fill: #ffffff;
+    }
+
+    .hidden { display: none !important; }
+
     @media (max-width: 900px) {
       body { flex-direction: column; }
       .left-panel, .right-panel { width: 100%; padding: 30px 20px; }
@@ -328,11 +355,11 @@
 </head>
 <body>
 
-  <!-- PANEL IZQUIERDO: SECCIÓN INFORMATIVA Y BRANDING -->
+  <!-- PANEL IZQUIERDO -->
   <div class="left-panel">
     <div>
       <div class="brand-header">
-        <img src="/logo.png" alt="KLIDO Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/65/020917/ffffff?text=KLIDO'">
+        <img src="/logo.png" alt="KLIDO Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/85/020917/ffffff?text=KLIDO'">
         <div class="brand-title">
           <h1>KLIDO</h1>
           <span>AVANZA CONSULTING</span>
@@ -345,18 +372,21 @@
           que tu empresa<br>
           <span>puede tener.</span>
         </div>
-        <div class="sub-heading">CRM MULTIAGENCIA - CLOUD API v112</div>
+        <div class="sub-heading">CRM MULTIAGENCIA - CLOUD API</div>
 
         <ul class="feature-list">
-          <li>✓ BANDEJA EN TIEMPO REAL + AUDIOS/FOTOS/VIDEOS</li>
-          <li>✓ KANBAN: Nuevo → Negociación → Cotizado → Ganado/Perdido</li>
-          <li>✓ CAMPAÑAS ANTI BANEO BLOQUES 50/5min + ETIQUETA AMARILLA</li>
+          <li>✓ BANDEJA EN TIEMPO REAL</li>
+          <li>✓ KANBAN</li>
+          <li>✓ CAMPAÑAS ANTI BANEO</li>
           <li>✓ SEGURO LEY 1581: Habeas Data - Cloud API oficial - datos en /data con backups</li>
-          <li>✓ SOLO PLAN PAGADO - CÓDIGO DESBLOQUEO AL CORREO</li>
-          <li>✓ SOPORTE 24/7 - WPP 3133181851</li>
         </ul>
 
-        <button class="btn-soporte" onclick="abrirSoporte()">SOPORTE 24/7</button>
+        <!-- BOTÓN CON SOLO LOGO DE WHATSAPP -->
+        <button class="btn-wpp-icon" onclick="abrirSoporte()" title="Contactar por WhatsApp">
+          <svg viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+          </svg>
+        </button>
 
         <div>
           <div class="certified-badge">
@@ -375,29 +405,28 @@
     </div>
   </div>
 
-  <!-- PANEL DERECHO: ACCESO Y REGISTRO -->
+  <!-- PANEL DERECHO -->
   <div class="right-panel">
-    <!-- NAVEGACIÓN PESTAÑAS -->
     <div class="tab-container">
-      <button id="tabBtnIngresar" class="tab-btn" onclick="seleccionarTab('ingresar')">Ingresar</button>
-      <button id="tabBtnRegistrar" class="tab-btn active" onclick="seleccionarTab('registrar')">Registrar empresa</button>
+      <button id="tabBtnIngresar" class="tab-btn active" onclick="seleccionarTab('ingresar')">Ingresar</button>
+      <button id="tabBtnRegistrar" class="tab-btn" onclick="seleccionarTab('registrar')">Registrar empresa</button>
     </div>
 
-    <!-- PESTAÑA 1: INICIAR SESIÓN -->
-    <div id="sectionIngresar" class="hidden">
+    <!-- PESTAÑA: INICIAR SESIÓN -->
+    <div id="sectionIngresar">
       <div class="form-title">Ingresar al CRM</div>
       <div class="form-subtitle">Ingresa tus credenciales autorizadas de agencia o agente para acceder al panel.</div>
 
       <form id="formLogin" onsubmit="procesarLogin(event)">
-        <input type="email" id="loginEmail" class="input-field" placeholder="correo@tuempresa.com" required>
+        <input type="email" id="loginEmail" class="input-field" placeholder="fermorales20020310@gmail.com" required>
         <input type="password" id="loginPassword" class="input-field" placeholder="•••••••••" required>
         
         <button type="submit" class="btn-submit" style="margin-top: 10px;">Ingresar a KLIDO →</button>
       </form>
     </div>
 
-    <!-- PESTAÑA 2: REGISTRAR EMPRESA -->
-    <div id="sectionRegistrar">
+    <!-- PESTAÑA: REGISTRAR EMPRESA -->
+    <div id="sectionRegistrar" class="hidden">
       <div class="form-title">Registrar empresa - v112</div>
       <div class="form-subtitle">
         Máx 10 agencias. Solo podrás usar el plan que pagues. Código de desbloqueo llega SOLO a tu correo.
@@ -410,7 +439,6 @@
 
         <div class="section-label">Elegir el plan que pagaste</div>
 
-        <!-- SELECCIÓN DE PLANES -->
         <div class="plans-grid">
           <div class="plan-card" onclick="seleccionarPlan('basico', this)">
             <div class="plan-name">Básico</div>
@@ -436,7 +464,6 @@
 
         <input type="hidden" id="planSeleccionado" value="gold">
 
-        <!-- CÓDIGO Y CONFIRMACIÓN -->
         <div class="code-container">
           <input type="text" id="regCodigo" class="input-field" placeholder="Código 6 dígitos" style="margin-bottom: 0;" required>
           <button type="button" class="btn-send-code" onclick="enviarCodigo()">Enviar código a mi correo</button>
@@ -455,8 +482,12 @@
       </form>
     </div>
 
-    <!-- BOTÓN FLOTANTE SOPORTE -->
-    <button class="floating-soporte" onclick="abrirSoporte()">SOPORTE 24/7</button>
+    <!-- BOTÓN FLOTANTE SOLO CON ICONO DE WHATSAPP -->
+    <button class="floating-wpp-icon" onclick="abrirSoporte()" title="Contactar por WhatsApp">
+      <svg viewBox="0 0 24 24">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+      </svg>
+    </button>
   </div>
 
   <script>
