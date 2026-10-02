@@ -1,71 +1,200 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Campañas v112 - Klido CRM PRO - Anti-Baneo</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-:root{--dark:#0A1931;--dark2:#102542;--blue:#3B82F6;--blueLight:#60A5FA;--bg:#070F22;--green:#22C55E;--yellow:#FFC93C}
-*{box-sizing:border-box;font-family:'Inter',system-ui}body{margin:0;background:var(--bg);color:#fff}
-.sidebar{width:280px;background:var(--dark);padding:18px;position:fixed;top:0;bottom:0;left:0;border-right:1px solid #1A335F;display:flex;flex-direction:column;justify-content:space-between}
-.main{margin-left:280px;padding:28px;min-height:100vh}
-.card{background:var(--dark2);border-radius:18px;padding:20px;margin:12px 0;border:1px solid #1A335F}
-.btn{background:linear-gradient(90deg,var(--blue),var(--blueLight));border:none;padding:12px 18px;border-radius:12px;color:#fff;font-weight:800;cursor:pointer}
-.input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #1A335F;margin:8px 0;background:#E8F0FF;color:#0A1931}
-table{width:100%;border-collapse:collapse}th,td{padding:10px;text-align:left;border-bottom:1px solid #1A335F;font-size:13px}
-.badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800}
-.floatWpp{position:fixed;bottom:20px;right:20px;background:#25D366;color:#fff;padding:12px 16px;border-radius:50px;font-weight:800;font-size:12px;box-shadow:0 8px 20px rgba(0,0,0,.3);text-decoration:none;z-index:99}
-@media(max-width:900px){.sidebar{position:relative;width:100%}.main{margin-left:0}}
-</style></head><body>
-<div class="sidebar"><div><div style="display:flex;align-items:center;gap:10px;margin-bottom:20px"><img src="logo.png?v=112" style="height:32px;width:80px;background:#fff;border-radius:8px;padding:4px" onerror="this.style.display='none'"/><b>KLIDO CRM<br><span style="font-size:10px;letter-spacing:2px;color:#60A5FA">AVANZA v112</span></b></div>
-<button class="btn" style="background:transparent;width:100%;text-align:left;border:1px solid #1A335F" onclick="location.href='/crm.html?v=112'">💬 Volver al CRM - Kanban</button>
-<button class="btn" style="width:100%;margin-top:8px" onclick="loadTemplates()">🔄 Sync Plantillas Aprobadas META</button>
-<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,.05);border-radius:12px;font-size:11px;color:#9FB3D1">v112 - Solo plan pagado<br>Pago anual + mant trim aparte<br>Básico $800k+$80k<br>Premium $1.4M+$95k<br>Gold $2.4M+$120k<br>ACOL WA 1338474282683914</div>
-<a class="btn" style="background:#25D366;display:block;text-align:center;text-decoration:none;margin-top:12px" href="https://wa.me/573133181851?text=Soporte%20Campanas%20KLIDO%20v112%20PRO" target="_blank">🆘 Ayuda WPP 3133181851</a>
-</div><button class="btn" style="background:#1F2937;width:100%" onclick="localStorage.clear();location.href='/index.html?v=112'">↪ Salir</button></div>
-<div class="main">
-<h1 style="margin:0 0 8px">📢 Campañas Masivas API Oficial - v112 PRO Anti-Baneo</h1><p style="color:#9FB3D1">Sube Excel, detectamos teléfonos automáticamente (10 dígitos → 57) y enviamos solo plantilla APROBADA con antibaneo 50/5min - etiqueta amarilla 🟡 - Solo plan pagado</p>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-<div class="card"><h3>1. Subir Excel</h3><p style="font-size:12px;color:#9FB3D1">Columna con Teléfono, Nombre opcional. Anti-baneo 50 cada 5 min + 800ms entre mensajes.</p><input type="file" id="excelFile" class="input" accept=".xlsx,.xls,.csv"/><button class="btn" onclick="uploadExcel()" style="width:100%">📤 Subir y Detectar Números Auto</button><div id="excelRes" style="margin-top:12px;font-size:13px"></div></div>
-<div class="card"><h3>2. Plantilla APROBADA (Auto-sync META v112)</h3><p style="font-size:12px;color:#9FB3D1">Solo plantillas APROBADAS por Meta. Se suben solas al ser aprobadas. Endpoint /api/templates</p><select id="tplSel" class="input"></select><div id="tplPreview" style="font-size:12px;color:#9FB3D1;margin-top:8px"></div><button class="btn" style="width:100%;background:var(--green);margin-top:12px" onclick="sendCamp()">🚀 Enviar Campaña Antibaneo 50/5min - 🟡</button><div id="sendRes" style="margin-top:12px"></div></div>
-</div>
-<div class="card"><h3>📊 Historial de Campañas - Seguimiento y monitoreo + Kanban</h3><button class="btn" style="padding:8px 12px;background:transparent;border:1px solid #1A335F" onclick="loadCampanas()">↻ Actualizar historial</button><div style="overflow:auto;margin-top:12px"><table><thead><tr><th>ID</th><th>Nombre</th><th>Plantilla</th><th>Total</th><th>Enviados</th><th>Estado</th><th>Fecha</th><th>Logs</th></tr></thead><tbody id="campTable"></tbody></table></div></div>
-<div class="card"><h3>🛡️ ¿Cómo es antibaneo v112?</h3><ul style="font-size:13px;color:#9FB3D1;line-height:1.7"><li>50 contactos cada 5 minutos (anti-baneo)</li><li>800ms entre mensajes para no ser marcado spam</li><li>Historial por bloque y contacto con logs /api/campanas/:id/logs</li><li>Contactos quedan con <span class="badge" style="background:var(--yellow);color:#000">🟡 Campaña</span> en inbox + Kanban Nuevo</li><li>Solo plan pagado desbloqueado con código al correo</li><li>Botón pagos → WPP 3133181851 anual + mant trim</li></ul></div>
-</div>
-<a class="floatWpp" href="https://wa.me/573133181851?text=Soporte%20Campanas%20KLIDO%20v112" target="_blank">💬 Soporte 24/7 3133181851</a>
-<script>
-let token=localStorage.getItem('token'); if(!token) location.href='/index.html?v=112';
-let contactos_cache_ids=[]; let contactos_cache_numeros=[];
-async function api(path,opt={}){opt.headers=opt.headers||{};opt.headers['Authorization']='Bearer '+token;if(!opt.headers['Content-Type']&&!(opt.body instanceof FormData))opt.headers['Content-Type']='application/json';return fetch(path,opt)}
-async function loadTemplates(){
-  const r=await api('/api/templates'); const tpl=await r.json();
-  if(Array.isArray(tpl)&&tpl.length){
-    document.getElementById('tplSel').innerHTML=tpl.map(t=>`<option value="${t.name||t.nombre}">${t.name||t.nombre} - ${t.status||'APPROVED'}</option>`).join('');
-    document.getElementById('tplPreview').innerText=`${tpl.length} plantillas APROBADAS - Auto-sync META activo v112 - ACOL ${tpl[0]?.waId||'1338474282683914'}`;
-  } else document.getElementById('tplSel').innerHTML='<option>No hay aprobadas, haz sync</option>';
-}
-async function uploadExcel(){
-  const f=document.getElementById('excelFile').files[0]; if(!f) return alert('Selecciona Excel');
-  const fd=new FormData(); fd.append('file',f); fd.append('excel',f);
-  document.getElementById('excelRes').innerText='Procesando Excel v112... 10 dígitos -> 57 auto...';
-  let r=await fetch('/api/campanas/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
-  if(!r.ok){ r=await fetch('/api/campanas/excel',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd}); }
-  const j=await r.json();
-  if(j.ok||j.total){
-    contactos_cache_ids=j.contactos_ids||j.numeros||[]; contactos_cache_numeros=j.numeros||j.contactos_ids||[];
-    const total=j.detectados||j.total||contactos_cache_ids.length;
-    document.getElementById('excelRes').innerHTML=`✅ Detectados <b>${total}</b> números - Anti-baneo 50/5min<br>IDs listos: ${total}<br><small>Quedan con 🟡 amarilla + Kanban Nuevo</small>`;
-    if(j.campanaId) window._campanaId=j.campanaId;
-  } else document.getElementById('excelRes').innerText='Error: '+(j.error||'no se pudo leer');
-}
-async function sendCamp(){
-  const plantilla=document.getElementById('tplSel').value; if(!plantilla) return alert('Elige plantilla APROBADA');
-  if(contactos_cache_ids.length==0 &&!window._campanaId) return alert('Primero sube Excel');
-  document.getElementById('sendRes').innerText='Iniciando antibaneo v112 50/5min 800ms...';
-  let r; if(window._campanaId){ r=await api('/api/campanas/enviar',{method:'POST',body:JSON.stringify({plantilla, campanaId: window._campanaId, template: plantilla})}); } else { r=await api('/api/campanas/enviar',{method:'POST',body:JSON.stringify({plantilla, contactos_ids: contactos_cache_ids, template: plantilla})}); }
-  const j=await r.json(); if(j.ok){ document.getElementById('sendRes').innerHTML=`✅ Campaña ${j.campana?.id||window._campanaId} iniciada<br>${j.estado}<br>🟡 Etiqueta amarilla + Kanban`; loadCampanas(); } else document.getElementById('sendRes').innerText='Error: '+(j.error||'no se pudo');
-}
-async function loadCampanas(){
-  let r=await api('/api/campanas'); if(!r.ok) r=await api('/api/campanas/historial');
-  const data=await r.json(); const arr=Array.isArray(data)?data:(data.campanas||[]);
-  document.getElementById('campTable').innerHTML=arr.map(c=>`<tr><td>${c.id.substring(0,8)}</td><td>${c.nombre||c.por||'Campaña'}</td><td>${c.plantilla||'-'}</td><td>${c.total||0}</td><td>${c.enviados||0}/${c.total||0}</td><td><span class="badge" style="background:${c.estado==='completado'?'var(--green)':'var(--blue)'}">${c.estado||'pendiente'}</span></td><td>${new Date(c.fecha||c.created_at).toLocaleString()}</td><td><button class="btn" style="padding:6px 10px" onclick="viewLogs('${c.id}')">Ver</button></td></tr>`).join('')||'<tr><td colspan=8>Sin campañas</td></tr>';
-}
-async function viewLogs(id){let r=await api(`/api/campanas/${id}/logs`); const logs=await r.json(); const arr=Array.isArray(logs)?logs:[]; alert(`Logs ${id} v112:\n`+arr.slice(0,30).map(l=>`${l.telefono||l.numero} - ${l.estado}`).join('\n')||'Anti-baneo 50/5min - 🟡 en inbox');}
-loadTemplates(); loadCampanas();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KLIDO CRM - Módulo de Campañas Masivas</title>
+  <style>
+    :root { --primary: #0b1a3a; --bg: #f8fafc; --card-bg: #ffffff; --border: #cbd5e1; --accent: #25d366; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+    .container { max-width: 900px; margin: 0 auto; background: var(--card-bg); border-radius: 10px; padding: 30px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    h1 { color: var(--primary); font-size: 24px; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
+    .step-box { background: #f1f5f9; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+    .step-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #475569; }
+    input[type="file"], select, input[type="text"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; background: white; margin-bottom: 12px; }
+    .btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #162a52; }
+    .btn-wpp { background: var(--accent); color: white; }
+    .btn-wpp:hover { background: #1eb856; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .preview-box { background: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+    .progress-bar-container { width: 100%; background: #e2e8f0; height: 16px; border-radius: 8px; overflow: hidden; margin-top: 15px; display: none; }
+    .progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.3s; }
+    .status-text { font-size: 13px; color: #64748b; margin-top: 6px; text-align: center; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🚀 Módulo de Campañas Masivas (WhatsApp API)</h1>
+    <p style="color: #64748b; font-size: 14px;">Envío masivo seguro mediante plantillas homologadas por Meta para evitar bloqueos.</p>
+
+    <!-- PASO 1: CARGA Y MAPEO DE EXCEL -->
+    <div class="step-box">
+      <div class="step-title"><span>1.</span> Cargar Base de Datos (Excel)</div>
+      <label>Selecciona el archivo (.xlsx o .xls)</label>
+      <input type="file" id="excelFile" accept=".xlsx, .xls" onchange="procesarExcel()">
+      
+      <div id="mapeoCampos" class="grid-2" style="display: none;">
+        <div>
+          <label>Columna del Teléfono (Obligatorio)</label>
+          <select id="colTelefono"></select>
+        </div>
+        <div>
+          <label>Columna del Nombre (Opcional)</label>
+          <select id="colNombre"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 2: SELECCIÓN DE PLANTILLA Y VARIABLES -->
+    <div class="step-box">
+      <div class="step-title"><span>2.</span> Configurar Plantilla WhatsApp</div>
+      <label>Seleccionar Plantilla Homologada</label>
+      <select id="selectPlantilla" onchange="actualizarVistaPrevia()">
+        <option value="">-- Selecciona una plantilla --</option>
+        <option value="plantilla_promocional">Promoción General (Hola {{1}}, oferta especial)</option>
+        <option value="plantilla_recordatorio">Recordatorio de Cita (Hola {{1}}, tu cita es el {{2}})</option>
+        <option value="plantilla_bienvenida">Bienvenida Cliente (Hola {{1}}, bienvenido a KLIDO)</option>
+      </select>
+
+      <div id="variablesBox"></div>
+
+      <label style="margin-top: 10px;">Vista Previa del Mensaje</label>
+      <div class="preview-box" id="vistaPrevia">Selecciona una plantilla para ver el formato.</div>
+    </div>
+
+    <!-- PASO 3: CONFIRMACIÓN Y ENVÍO -->
+    <div class="step-box">
+      <div class="step-title"><span>3.</span> Ejecución de la Campaña</div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <strong>Total Destinatarios detectados:</strong> <span id="cantDestinatarios">0</span>
+        </div>
+        <button class="btn btn-wpp" onclick="iniciarCampana()">Iniciar Envío Masivo</button>
+      </div>
+
+      <div class="progress-bar-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="status-text" id="statusText"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const token = localStorage.getItem('klido_token');
+    if (!token) window.location.href = '/index.html';
+
+    let datosExcel = [];
+    let columnasExcel = [];
+
+    function procesarExcel() {
+      const fileInput = document.getElementById('excelFile');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheet];
+        
+        datosExcel = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        if (datosExcel.length < 2) return alert('El archivo Excel está vacío o no contiene encabezados.');
+
+        columnasExcel = datosExcel[0];
+        const selectTel = document.getElementById('colTelefono');
+        const selectNom = document.getElementById('colNombre');
+
+        selectTel.innerHTML = '<option value="">-- Selecciona Columna --</option>';
+        selectNom.innerHTML = '<option value="">-- Selecciona Columna --</option>';
+
+        columnasExcel.forEach((col, idx) => {
+          selectTel.innerHTML += `<option value="${idx}">${col}</option>`;
+          selectNom.innerHTML += `<option value="${idx}">${col}</option>`;
+        });
+
+        // Intentar auto-selección inteligente por nombre de columna
+        columnasExcel.forEach((col, idx) => {
+          const colLower = String(col).toLowerCase();
+          if (colLower.includes('tel') || colLower.includes('cel') || colLower.includes('movil') || colLower.includes('phone')) {
+            selectTel.value = idx;
+          }
+          if (colLower.includes('nom') || colLower.includes('cliente') || colLower.includes('name')) {
+            selectNom.value = idx;
+          }
+        });
+
+        document.getElementById('mapeoCampos').style.display = 'grid';
+        document.getElementById('cantDestinatarios').innerText = datosExcel.length - 1;
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function actualizarVistaPrevia() {
+      const plantilla = document.getElementById('selectPlantilla').value;
+      const box = document.getElementById('vistaPrevia');
+
+      const ejemplos = {
+        'plantilla_promocional': 'Hola [Nombre], aprovecha nuestra oferta exclusiva del mes en KLIDO CRM.',
+        'plantilla_recordatorio': 'Hola [Nombre], recordatorio de tu cita programada.',
+        'plantilla_bienvenida': 'Hola [Nombre], gracias por elegirnos. Tu cuenta ya está activa.'
+      };
+
+      box.innerText = ejemplos[plantilla] || 'Selecciona una plantilla para ver el formato.';
+    }
+
+    async function iniciarCampana() {
+      const colTelIdx = document.getElementById('colTelefono').value;
+      const plantilla = document.getElementById('selectPlantilla').value;
+
+      if (colTelIdx === "") return alert('Por favor selecciona la columna que contiene los números de teléfono.');
+      if (!plantilla) return alert('Por favor selecciona una plantilla de WhatsApp.');
+
+      const registros = datosExcel.slice(1).map(row => ({
+        telefono: String(row[colTelIdx] || '').replace(/[^0-9]/g, ''),
+        nombre: document.getElementById('colNombre').value !== "" ? row[document.getElementById('colNombre').value] : ''
+      })).filter(item => item.telefono.length >= 7);
+
+      if (registros.length === 0) return alert('No se encontraron números válidos en la columna seleccionada.');
+
+      if (!confirm(`¿Estás seguro de enviar esta campaña a ${registros.length} contactos?`)) return;
+
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+      const statusText = document.getElementById('statusText');
+
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+      statusText.innerText = 'Iniciando lote de envíos...';
+
+      try {
+        const res = await fetch('/api/campanas/enviar-masivo', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            plantilla,
+            contactos: registros
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          progressBar.style.width = '100%';
+          statusText.innerText = `✅ Campaña finalizada con éxito. Procesados: ${registros.length} destinatarios.`;
+        } else {
+          statusText.innerText = `❌ Error al enviar la campaña: ${data.error || 'Error del servidor'}`;
+        }
+      } catch (err) {
+        statusText.innerText = '❌ Error de conexión al procesar el envío masivo.';
+      }
+    }
+  </script>
+</body>
+</html>
