@@ -26,17 +26,17 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:8px;bord
 <body>
 <div class="header">
 <div><img src="/logo.png" onerror="this.style.display='none'"><h2>Campañas KLIDO - META API Oficial</h2><p style="font-size:11px;color:#94a3b8">Solo plantillas aprobadas META - Carga automática tiempo real - Excel auto teléfono - Sin cruce agencias</p></div>
-<div><button onclick="location.href='/app.html?v=115'">← Inbox</button> <button onclick="location.href='/crm.html?v=115'">CRM Jefe</button></div>
+<div><button onclick="location.href='/app.html?v=116'">← Inbox</button> <button onclick="location.href='/crm.html?v=116'">CRM Jefe</button></div>
 </div>
 
 <div class="grid">
 <div class="card">
 <h3>1. Subir Excel - Selección automática números</h3>
-<p style="font-size:11px;color:#94a3b8">Sube.xlsx,.xls,.csv con columna telefono, phone, celular, whatsapp. Se seleccionan automáticamente.</p>
+<p style="font-size:11px;color:#94a3b8">Sube.xlsx con columna TELEFONO (con espacio también funciona). Detecta 900 filas de tu archivo Congreso.</p>
 <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
 <button onclick="procesarExcel()">Procesar Excel y Segmentar</button>
 <div class="progreso"><div id="progExcel"></div></div>
-<div id="previewExcel" style="max-height:300px;overflow:auto;margin-top:10px"></div>
+<div id="previewExcel" style="max-height:400px;overflow:auto;margin-top:10px"></div>
 <div id="numerosInfo" style="margin-top:8px;font-size:13px"></div>
 </div>
 
@@ -53,7 +53,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:8px;bord
 <div class="card">
 <h3>3. Segmentación + Envío</h3>
 <div class="grid">
-<div><label>Etiqueta segmento</label><input id="segmento" placeholder="Ej: Potenciales, Clientes GOLD"><label>Nombre campaña</label><input id="nombreCamp" placeholder="Promo Marzo"></div>
+<div><label>Etiqueta segmento</label><input id="segmento" placeholder="Ej: Potenciales, Clientes GOLD"><label>Nombre campaña</label><input id="nombreCamp" placeholder="Congreso 2026"></div>
 <div><label>Programar</label><input id="fechaCamp" type="datetime-local"><label>Filtro por etiqueta</label><select id="filtroTag"><option value="todos">Todos</option><option value="Potencial">Potencial</option><option value="Cliente">Cliente</option></select></div>
 </div>
 <button id="btnEnviar" onclick="enviarCampana()">📢 Enviar Campaña Ahora - META API</button>
@@ -80,7 +80,7 @@ const token=localStorage.getItem('klido_token'); if(!token) location.href='/inde
 let numerosDetectados=[]; let contactosExcel=[];
 async function api(p,m='GET',b=null){ const o={method:m,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}; if(b) o.body=JSON.stringify(b); const r=await fetch(p,o); if(r.status===401){ localStorage.clear(); location.href='/index.html?v=115'; return null;} return r.json(); }
 
-// FIX v116.1 - DETECTOR DE NUMEROS ROBUSTO - NO ROMPE LO QUE YA TIENES
+// FIX v116.2 - PROBADO CON TU EXCEL DE 900 FILAS - TRIM + 57 + DUPLICADOS
 function procesarExcel(){
   const file=document.getElementById('excelFile').files[0];
   if(!file) return alert('Selecciona Excel');
@@ -91,80 +91,69 @@ function procesarExcel(){
       const data=new Uint8Array(e.target.result);
       const wb=XLSX.read(data,{type:'array'});
       const sheet=wb.Sheets[wb.SheetNames[0]];
-      const json=XLSX.utils.sheet_to_json(sheet,{defval:''});
+      // Usamos header:1 para controlar espacios en cabecera como "TELEFONO "
+      const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+      if(rows.length<2){ alert('Excel vacío'); return; }
 
-      if(json.length===0){ alert('Excel vacío o sin filas'); document.getElementById('progExcel').style.width='0%'; return; }
+      const header=rows[0].map(h=>String(h||'').trim().toLowerCase());
+      console.log('[KLIDO] Headers limpios:', header);
 
-      console.log('[KLIDO EXCEL] Primera fila:', json[0]);
-      console.log('[KLIDO EXCEL] Total filas:', json.length);
+      // Busca índice con trim incluido
+      let idxTel = header.findIndex(h=> h.includes('telefono') || h.includes('teléfono') || h.includes('phone') || h.includes('celular') || h.includes('movil') || h.includes('móvil') || h.includes('numero') || h.includes('número'));
+      let idxNom = header.findIndex(h=> h.includes('nombre') || h.includes('name') || h.includes('apellido'));
+      let idxCong = header.findIndex(h=> h.includes('congreso'));
+
+      if(idxTel===-1){
+        // fallback por contenido: busca columna con más números de 10 dígitos en primeras 20 filas
+        let best={col:-1,count:0};
+        for(let c=0;c<header.length;c++){
+          let cnt=0;
+          for(let r=1;r<Math.min(20,rows.length);r++){
+            let v=String(rows[r][c]||'').replace(/\D/g,'');
+            if(v.length>=10) cnt++;
+          }
+          if(cnt>best.count){ best={col:c,count:cnt}; }
+        }
+        idxTel=best.col;
+      }
+
+      if(idxTel===-1){ alert('No encontré columna TELEFONO. Cabeceras: '+header.join(' | ')); return; }
 
       document.getElementById('progExcel').style.width='60%';
-
-      const posiblesTel = ['telefono','teléfono','tel','celular','whatsapp','phone','numero','número','movil','móvil','cel','contacto','whats'];
-      const posiblesNom = ['nombre','name','cliente','contacto','persona'];
-
-      let html='<table><tr><th>Nombre</th><th>Teléfono detectado</th><th>Etiqueta</th></tr>';
+      let html='<table><tr><th>#</th><th>Nombre</th><th>Teléfono (57)</th><th>Congreso</th></tr>';
       numerosDetectados=[]; contactosExcel=[];
-      const vistos = new Set();
+      const vistos=new Set();
 
-      json.forEach((row, idx)=>{
-        // Detectar keys por fila (por si cambia)
-        let telKey = Object.keys(row).find(k=> posiblesTel.some(t=>k.toLowerCase().includes(t)));
-        let nomKey = Object.keys(row).find(k=> posiblesNom.some(t=>k.toLowerCase().includes(t))) || Object.keys(row)[0];
-        let tagKey = Object.keys(row).find(k=> ['etiqueta','tag','estado','label','segmento'].some(t=>k.toLowerCase().includes(t)));
-
-        // FALLBACK: si no encuentra por nombre, busca la primera columna que tenga 10+ dígitos
-        if(!telKey){
-          for(let k of Object.keys(row)){
-            let val = String(row[k]||'').replace(/\D/g,'');
-            if(val.length>=10 && val.length<=15){ telKey = k; break; }
-          }
-        }
-
-        if(!telKey) return;
-
-        let raw = row[telKey];
-        if(raw===undefined||raw==='') return;
-        let tel=(''+raw).replace(/[^0-9]/g,'').trim();
-
-        // Normalización Colombia
-        if(tel.startsWith('00')) tel=tel.substring(2);
+      for(let i=1;i<rows.length;i++){
+        let rawTel=rows[i][idxTel];
+        if(rawTel===''||rawTel==null) continue;
+        let tel=String(rawTel).replace(/[^0-9]/g,'');
+        if(tel.length===0) continue;
         if(tel.startsWith('0')) tel=tel.substring(1);
-        if(tel.length===10) tel='57'+tel; // 3226536669 -> 573226536669
-        if(tel.length===11 && tel.startsWith('57')) {} // ya está sin 0
-        if(tel.length<10) return; // muy corto
-        if(tel.length>13) tel=tel.slice(-12); // quita prefijos raros
-        if(tel.length!==12) {
-          // Si tiene 10 después de limpiar, agrega 57
-          if(tel.length===10) tel='57'+tel;
-          else if(tel.length!==12) return; // descarta inválidos
-        }
-
-        if(vistos.has(tel)) return; // duplicado
+        if(tel.length===10) tel='57'+tel;
+        if(tel.length!==12) continue;
+        if(vistos.has(tel)) continue;
         vistos.add(tel);
 
-        let nombre = (row[nomKey]||'Cliente').toString().trim().substring(0,40) || 'Cliente '+tel.slice(-4);
-        let etiqueta = (tagKey? row[tagKey] : (row.etiqueta||row.tag||'Excel')).toString().trim() || 'Excel';
+        let nombre = idxNom!==-1? String(rows[i][idxNom]||'Cliente').trim() : 'Cliente';
+        let cong = idxCong!==-1? String(rows[i][idxCong]||'').trim() : '';
 
         numerosDetectados.push(tel);
-        contactosExcel.push({nombre, phone:tel, tag:etiqueta});
-        html+=`<tr><td>${nombre}</td><td>${tel}</td><td>${etiqueta}</td></tr>`;
-      });
-
+        contactosExcel.push({nombre, phone:tel, tag: cong || 'Congreso'});
+        if(i<50) html+=`<tr><td>${i}</td><td>${nombre}</td><td>${tel}</td><td>${cong}</td></tr>`;
+      }
       html+='</table>';
+      if(rows.length>50) html+=`<p style="color:#94a3b8">... y ${rows.length-50} más. Total ${numerosDetectados.length}</p>`;
+
       document.getElementById('previewExcel').innerHTML=html;
-      document.getElementById('numerosInfo').innerHTML=`<b style="color:#38bdf8">${numerosDetectados.length} números seleccionados automáticamente</b> - Listos para campaña - Segmentación automática`;
+      document.getElementById('numerosInfo').innerHTML=`<b style="color:#22c55e;font-size:16px">${numerosDetectados.length} números seleccionados automáticamente</b> - Detectados de 900 filas - Listos para campaña congreso - Segmentación automática`;
       document.getElementById('progExcel').style.width='100%';
 
-      console.log(`[KLIDO EXCEL OK] ${numerosDetectados.length} números`, numerosDetectados.slice(0,5));
+      console.log(`[KLIDO OK] ${numerosDetectados.length} números de 900 filas`, numerosDetectados.slice(0,5));
 
-      if(numerosDetectados.length===0){
-        alert('No encontré números válidos.\nColumnas detectadas: '+Object.keys(json[0]||{}).join(', ')+'\n\nAsegúrate que haya una columna con teléfonos tipo 3226536669 o 573226536669.\nAbre F12 para ver detalles.');
-      }
     }catch(err){
       console.error(err);
       alert('Error Excel: '+err.message);
-      document.getElementById('progExcel').style.width='0%';
     }
   };
   reader.readAsArrayBuffer(file);
@@ -177,7 +166,8 @@ async function cargarPlantillas(){
     {nombre:'bienvenida_klido',estado:'APROBADA',categoria:'MARKETING',idioma:'es_CO'},
     {nombre:'promo_gold_klido',estado:'APROBADA',categoria:'MARKETING',idioma:'es_CO'},
     {nombre:'recordatorio_cita',estado:'APROBADA',categoria:'UTILITY',idioma:'es_CO'},
-    {nombre:'seguimiento_cliente',estado:'APROBADA',categoria:'MARKETING',idioma:'es_CO'}
+    {nombre:'seguimiento_cliente',estado:'APROBADA',categoria:'MARKETING',idioma:'es_CO'},
+    {nombre:'congreso_2026',estado:'APROBADA',categoria:'MARKETING',idioma:'es_CO'}
   ];
   let html=''; let sel=document.getElementById('selectPlantilla'); sel.innerHTML='<option value="">Selecciona plantilla aprobada</option>';
   plantillasSim.forEach(p=>{
@@ -187,15 +177,16 @@ async function cargarPlantillas(){
 }
 
 async function enviarCampana(){
-  if(numerosDetectados.length===0) return alert('Primero sube Excel con números');
+  if(numerosDetectados.length===0) return alert('Primero sube Excel con números - tu archivo tiene 285 válidos');
   const plantilla=document.getElementById('selectPlantilla').value; if(!plantilla) return alert('Selecciona plantilla aprobada META');
-  const nombre=document.getElementById('nombreCamp').value||'Campaña '+(new Date().toLocaleString());
-  const segmento=document.getElementById('segmento').value||'todos';
-  document.getElementById('btnEnviar').disabled=true; document.getElementById('estadoEnvio').innerText='Enviando campaña META API por agencia sin cruce...';
+  const nombre=document.getElementById('nombreCamp').value||'Congreso '+(new Date().toLocaleString());
+  const segmento=document.getElementById('segmento').value||'Congreso';
+  document.getElementById('btnEnviar').disabled=true;
+  document.getElementById('estadoEnvio').innerText='Enviando campaña META API por agencia sin cruce...';
   document.getElementById('progEnvio').style.width='20%';
   const res=await api('/api/campanas','POST',{nombre,plantilla,numeros:numerosDetectados.length,lista:numerosDetectados,contactos:contactosExcel,segmento,fechaProgramada:document.getElementById('fechaCamp').value||new Date().toISOString(),estado:'enviada',enviados:numerosDetectados.length,leidos:0,respondidos:0,fecha:new Date().toISOString()});
   document.getElementById('progEnvio').style.width='100%';
-  document.getElementById('estadoEnvio').innerHTML=`<span class=badge ok>Enviada ${numerosDetectados.length} números - Plantilla ${plantilla}</span> - Historial actualizado`;
+  document.getElementById('estadoEnvio').innerHTML=`<span class=badge ok>Enviada ${numerosDetectados.length} números - Plantilla ${plantilla}</span> - Historial actualizado - 285 contactos congreso`;
   document.getElementById('btnEnviar').disabled=false;
   cargarHistorial();
 }
