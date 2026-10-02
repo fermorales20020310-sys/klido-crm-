@@ -1,113 +1,183 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO v112.3 - ACOL BASICO - Bandeja responde FIX</title>
-<link rel="icon" href="logo.png"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-<style>
-:root{--osc:#0b1a3a;--borde:#1A335F;--claro:#3B82F6;--fondo:#EAF4FF;--card:#F0F7FF}
-*{box-sizing:border-box;font-family:Inter,system-ui;margin:0;padding:0}
-body{display:flex;height:100vh;background:var(--fondo);color:#0F172A}
-.sidebar{width:300px;background:var(--osc);padding:14px;display:flex;flex-direction:column;gap:8px;overflow:auto;border-right:1px solid var(--borde)}
-.logoBox{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border:1px solid var(--borde);border-radius:18px;padding:12px}
-.logoBox img{width:62px;height:62px;background:#fff;border-radius:14px;padding:6px;object-fit:contain}
-.planTag{padding:8px;background:#102542;border:1px solid var(--borde);border-radius:20px;color:#60A5FA;font-size:10px;font-weight:800;text-align:center}
-.nav{padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;text-align:left}
-.nav.active{background:#fff;color:var(--osc);font-weight:800}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.top{padding:10px 16px;background:#fff;border-bottom:1px solid #CBD9F0;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800}
-.content{flex:1;display:flex;overflow:hidden}
-.listPane{width:360px;background:#fff;border-right:1px solid #CBD9F0;display:flex;flex-direction:column}
-.chatPane{flex:1;display:flex;flex-direction:column;background:#dbeafe;position:relative}
-.chatItem{padding:12px 14px;border-bottom:1px solid #eef2ff;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
-.chatItem.active{background:var(--osc);color:#fff}
-.chatItem.unread{border-left:3px solid var(--claro);background:#eff6ff}
-.c-last{font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
-.msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px;padding-bottom:100px}
-.msg{max-width:72%;padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.35;background:#fff;align-self:flex-start;box-shadow:0 2px 6px rgba(0,0,0,.06);white-space:pre-wrap}
-.msg.me{background:var(--osc);color:#fff;align-self:flex-end}
-.inputArea{position:absolute;bottom:0;left:0;right:0;padding:10px;background:#fff;border-top:1px solid #CBD9F0;display:flex;gap:6px;align-items:center;z-index:5}
-.input{padding:11px 14px;border-radius:20px;border:1px solid #CBD9F0;width:100%;outline:none;font-size:13px}
-.btn{padding:10px 14px;border-radius:20px;border:0;background:var(--osc);color:#fff;font-weight:800;cursor:pointer}
-.support{position:fixed;right:18px;bottom:88px;background:#25D366;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:99;box-shadow:0 6px 16px rgba(0,0,0,.25)}
-.support svg{width:28px;height:28px;fill:#fff}
-.badge{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:800;background:#eef2ff;color:#0b1a3a}
-</style></head><body>
-<div class="sidebar">
-<div class="logoBox"><img src="logo.png?v=112"><div><b style="color:#fff;font-size:22px;line-height:.9">KLIDO</b><div style="font-size:10px;color:#93c5fd;letter-spacing:2px;font-weight:800">AVANZA CONSULTING</div></div></div>
-<div class="planTag" id="planTag">BASICO - SIN IA - ACOL</div>
-<div id="agInfo" style="color:#94a3b8;font-size:11px;padding:6px"></div>
-<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
-<button class="nav active">📩 Bandeja <span id="cTotal" class="badge" style="float:right">0</span></button>
-<button class="nav" onclick="location.href='/crm.html?view=kanban&v=112'">📊 Kanban</button>
-<button class="nav" onclick="location.href='/campanas.html?v=112'">📢 Campañas</button>
-<button class="nav" onclick="location.href='/crm.html?view=equipo&v=112'">👥 Equipo</button>
-<button class="nav" onclick="location.href='/crm.html?view=calendario&v=112'">📅 Calendario</button>
-<button class="nav" onclick="location.href='/crm.html?view=metricas&v=112'">📈 Métricas</button>
-<button class="nav" onclick="location.href='/crm.html?view=planes&v=112'">💎 Planes & Pagos</button>
-<button class="nav" onclick="location.href='/crm.html?view=config&v=112'">⚙️ Config</button>
-<button class="nav" onclick="localStorage.clear();location.href='/index.html?v=112'" style="margin-top:auto;color:#f87171">⎋ Salir</button>
-</div>
-</div>
-<div class="main">
-<div class="top"><div>KLIDO v112.3 - Bandeja responde - ACOL BASICO - Ley 1581</div><button class="btn" style="background:#fff;color:#0b1a3a;border:1px solid #CBD9F0;padding:6px 10px;font-size:11px" onclick="cargar()">🔄 Actualizar</button></div>
-<div class="content" id="content"></div>
-</div>
-<a class="support" href="https://wa.me/573133181851?text=Soporte%20KLIDO%20v112.3" target="_blank"><svg viewBox="0 0 24 24"><path d="M19.05 4.94A9.91 9.91 0 0 0 12.04 2C6.58 2 2.15 6.43 2.15 11.9c0 1.75.46 3.45 1.32 4.95L2.05 22l5.26-1.38a9.9 9.9 0 0 0 4.73 1.2h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.65-1.03-5.14-2.9-7-1.87-1.87-4.36-2.9-7-2.9zm-7.01 16.6h-.01a8.26 8.26 0 0 1-4.21-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.55 3.7-8.25 8.26-8.25 2.21 0 4.28.86 5.84 2.42a8.21 8.21 0 0 1 2.41 5.83c0 4.55-3.7 8.25-8.25 8.25zm4.53-6.17c-.25-.12-1.47-.73-1.7-.81-.23-.09-.39-.12-.56.12-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.08s.89 2.41 1.01 2.58c.12.17 1.75 2.67 4.24 3.75.59.26 1.05.41 1.41.52.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.23-.17-.48-.29z"/></svg></a>
-<audio id="ding" src="message.mp3" preload="auto"></audio>
-<script>
-let token=localStorage.getItem('token'); let user=JSON.parse(localStorage.getItem('user')||'{}');
-if(!token) location.href='/index.html?v=112';
-document.getElementById('agInfo').innerHTML=`<b style="color:#fff">${user.nombre||'ACOL'}</b><br>${user.email||''}<br>WA: ${user.waPhoneId||'1338474282683914'} - ACOL BASICO`;
-let all=[], sel=null;
-function api(p,o={}){o.headers=o.headers||{};o.headers['Authorization']='Bearer '+token;if(o.body&&!(o.body instanceof FormData))o.headers['Content-Type']='application/json';return fetch(p,o)}
-async function cargar(){const r=await api('/api/mensajes'); all=await r.json(); document.getElementById('cTotal').textContent=all.length; render(); }
-function render(){
-const c=document.getElementById('content');
-c.innerHTML=`<div class="listPane"><div style="padding:8px;border-bottom:1px solid #e2e8f0;display:flex;gap:6px"><input id="q" class="input" placeholder="Buscar número..." oninput="renderList()"><button class="btn" style="padding:8px 10px;font-size:11px;background:#fff;color:#0b1a3a;border:1px solid #CBD9F0" onclick="renderList()">Todos</button></div><div id="list" style="flex:1;overflow:auto"></div></div>
-<div class="chatPane"><div id="head" style="padding:12px;background:#fff;border-bottom:1px solid #CBD9F0;font-weight:800;font-size:12px">${sel?sel:'Selecciona un chat para ver fotos/audios/videos'}</div><div id="msgs" class="msgs"><div style="color:#64748b;text-align:center;margin-top:40px;font-size:11px">Tus mensajes se verán como mensajes. Los archivos que te envíen se ven aquí.</div></div>
-<div class="inputArea"><input id="file" type="file" style="display:none"><button class="btn" style="background:#fff;color:#0b1a3a;border:1px solid #CBD9F0" onclick="document.getElementById('file').click()">📎</button><select id="tipo" style="padding:9px;border-radius:12px;border:1px solid #CBD9F0;font-size:11px"><option value="texto">Texto</option><option value="foto">Foto</option><option value="audio">Audio</option><option value="video">Video</option><option value="archivo">Archivo</option></select><input id="txt" class="input" placeholder="Escribe mensaje para contestar..."><button class="btn" onclick="enviar()">Enviar</button></div></div>`;
-renderList(); if(sel) abrir(sel);
-}
-function renderList(){
-const q=document.getElementById('q')?.value?.toLowerCase()||''; let map={};
-all.filter(m=>!q||(m.numero||'').includes(q)).forEach(m=>{if(!map[m.numero]) map[m.numero]=[]; map[m.numero].push(m);});
-let chats=Object.keys(map).map(num=>{const arr=map[num].sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp)); return {num, last:arr[arr.length-1], count:arr.length, unread:arr.filter(x=>!x.leido).length, arr}}).sort((a,b)=>new Date(b.last.timestamp)-new Date(a.last.timestamp));
-document.getElementById('list').innerHTML=chats.map(ch=>`<div class="chatItem ${sel===ch.num?'active':''} ${ch.unread?'unread':''}" onclick="sel='${ch.num}';renderList();abrir('${ch.num}')"><div><div style="font-weight:800;font-size:12px">${ch.num}</div><div class="c-last">${(ch.last.texto|| (ch.last.mediaUrl?'📎 '+(ch.last.mediaType||'archivo') : ''))||''}</div><div style="font-size:9px;color:#94a3b8">${new Date(ch.last.timestamp).toLocaleString()}</div></div><div><span class="badge">${ch.count}</span>${ch.unread?`<div style="background:#ef4444;color:#fff;font-size:9px;padding:2px 6px;border-radius:10px;margin-top:4px;text-align:center">${ch.unread}</div>`:''}</div></div>`).join('')||'<div style="padding:20px;color:#94a3b8;font-size:11px">Sin chats</div>';
-}
-function abrir(num){
-const arr=all.filter(m=>m.numero===num).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
-document.getElementById('head').innerHTML=num+' - '+arr.length+' mensajes';
-document.getElementById('msgs').innerHTML=arr.map(m=>{
-let texto = m.texto||'';
-if(texto.includes('mensaje.txt')) texto = ''; // limpia basura vieja
-let media='';
-if(m.mediaUrl){
-const url=m.mediaUrl;
-if(m.mediaType==='foto' || url.match(/\.(jpg|jpeg|png|webp)$/i)) media=`<img src="${url}" style="max-width:260px;border-radius:12px;margin-top:8px;cursor:pointer" onclick="window.open('${url}','_blank')">`;
-else if(m.mediaType==='audio' || url.match(/\.(mp3|ogg|m4a|wav|opus)$/i)) media=`<audio controls src="${url}" style="width:240px;margin-top:8px"></audio>`;
-else if(m.mediaType==='video' || url.match(/\.(mp4|webm|mov)$/i)) media=`<video controls src="${url}" style="max-width:260px;border-radius:12px;margin-top:8px"></video>`;
-else media=`<div style="margin-top:8px"><a href="${url}" target="_blank" style="color:#2563eb;font-weight:800;text-decoration:underline">📎 Ver archivo</a></div>`;
-}
-return `<div class="msg ${m.direccion==='outbound'?'me':''}"><div style="font-size:9px;opacity:.6;margin-bottom:2px">${new Date(m.timestamp).toLocaleTimeString()} ${m.kanban?'• '+m.kanban:''}</div>${texto?`<div>${texto}</div>`:''}${media}</div>`;
-}).join('');
-const el=document.getElementById('msgs'); el.scrollTop=el.scrollHeight;
-}
-async function enviar(){
-const txt=document.getElementById('txt').value.trim();
-const fileInput=document.getElementById('file');
-const file=fileInput.files[0];
-if(!sel) return alert('Selecciona chat');
-if(file){
-// archivo real -> media
-const fd=new FormData();
-fd.append('file',file);
-fd.append('numero',sel);
-fd.append('tipo',document.getElementById('tipo').value);
-await api('/api/mensajes/media',{method:'POST',body:fd});
-}else{
-if(!txt) return;
-// texto real -> enviar como mensaje, NO como archivo
-await api('/api/mensajes/enviar',{method:'POST',body:JSON.stringify({numero:sel,texto:txt})});
-}
-document.getElementById('txt').value=''; fileInput.value='';
-await cargar(); abrir(sel);
-}
-cargar(); setInterval(cargar,6000);
-</script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>KLIDO Panel CRM</title>
+  <style>
+    :root { --sidebar-w: 240px; --primary: #0b1a3a; --bg: #f1f5f9; }
+    body { font-family: sans-serif; margin:0; display:flex; height: 100vh; background: var(--bg); }
+    aside { width: var(--sidebar-w); background: var(--primary); color: white; padding: 20px; display:flex; flex-direction:column; justify-content:space-between; }
+    main { flex: 1; padding: 20px; overflow-y: auto; }
+    .menu-item { padding: 12px; color: #cbd5e1; cursor: pointer; border-radius: 6px; margin-bottom: 6px; }
+    .menu-item.active, .menu-item:hover { background: rgba(255,255,255,0.1); color: white; }
+    .inbox-container { display: flex; height: calc(100vh - 80px); background: white; border-radius: 8px; border: 1px solid #cbd5e1; }
+    .chat-list { width: 320px; border-right: 1px solid #cbd5e1; overflow-y: auto; }
+    .chat-item { padding: 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; position: relative; }
+    .chat-item:hover { background: #f8fafc; }
+    .badge-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; position: absolute; right: 15px; top: 18px; }
+    .badge-red { background: #ef4444; }
+    .badge-yellow { background: #f59e0b; }
+    .chat-view { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .messages-box { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+    .msg { max-width: 60%; padding: 10px 14px; border-radius: 12px; font-size: 14px; }
+    .msg.inbound { background: #f1f5f9; align-self: flex-start; }
+    .msg.outbound { background: #0b1a3a; color: white; align-self: flex-end; }
+    .chat-input { padding: 15px; border-top: 1px solid #cbd5e1; display: flex; gap: 10px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <aside>
+    <div>
+      <h2 style="margin: 0 0 20px 0;">KLIDO CRM</h2>
+      <div class="menu-item active" onclick="verModulo('inbox')">📥 Bandeja Inbox</div>
+      <div class="menu-item" onclick="verModulo('campanas')">🚀 Campañas Excel</div>
+      <div class="menu-item" onclick="verModulo('metricas')">📊 Métricas / Equipo</div>
+      <div class="menu-item" onclick="verModulo('calendario')">📅 Calendario</div>
+      <div id="btnGerente" class="menu-item hidden" onclick="verModulo('gerente')">👑 Panel Gerencia</div>
+    </div>
+    <div>
+      <div id="userInfo" style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;"></div>
+      <button onclick="cerrarSesion()" style="width:100%; padding:8px; background:#ef4444; color:white; border:none; border-radius:4px; cursor:pointer;">Cerrar Sesión</button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- MODULO INBOX -->
+    <section id="modInbox" class="inbox-container">
+      <div class="chat-list" id="listaChats"></div>
+      <div class="chat-view">
+        <div id="headerChat" style="padding: 15px; border-bottom: 1px solid #cbd5e1; font-weight: bold;">Selecciona un chat</div>
+        <div class="messages-box" id="boxMensajes"></div>
+        <div class="chat-input">
+          <input type="text" id="txtMensaje" placeholder="Escribe un mensaje..." style="flex:1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px;">
+          <button onclick="enviarMensaje()" style="padding: 10px 20px; background: #0b1a3a; color: white; border: none; border-radius: 4px; cursor: pointer;">Enviar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULO CAMPAÑAS -->
+    <section id="modCampanas" class="hidden" style="background: white; padding: 30px; border-radius: 8px;">
+      <h2>Envío Masivo de Campañas</h2>
+      <p>Sube tu archivo Excel con números telefónicos para seleccionar automáticamente y enviar plantillas homologadas.</p>
+      <input type="file" id="fileExcel" accept=".xlsx, .xls">
+      <button onclick="subirExcel()" style="padding: 10px 20px; background: #0b1a3a; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">Cargar y Enviar</button>
+    </section>
+
+    <!-- MODULO GERENCIA GENERAL -->
+    <section id="modGerente" class="hidden" style="background: white; padding: 30px; border-radius: 8px;">
+      <h2>Panel Gerencia Avanza Consulting</h2>
+      <div id="tablaAgencias"></div>
+    </section>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('klido_user') || '{}');
+    const token = localStorage.getItem('klido_token');
+    let chatActivo = null;
+
+    if (!token) window.location.href = '/index.html';
+
+    document.getElementById('userInfo').innerText = `${user.nombre} (${user.rol})\nPlan: ${user.plan.toUpperCase()}`;
+    if (user.rol === 'super') document.getElementById('btnGerente').classList.remove('hidden');
+
+    function verModulo(mod) {
+      document.getElementById('modInbox').classList.add('hidden');
+      document.getElementById('modCampanas').classList.add('hidden');
+      document.getElementById('modGerente').classList.add('hidden');
+
+      if(mod === 'inbox') document.getElementById('modInbox').classList.remove('hidden');
+      if(mod === 'campanas') document.getElementById('modCampanas').classList.remove('hidden');
+      if(mod === 'gerente') {
+        document.getElementById('modGerente').classList.remove('hidden');
+        cargarAgenciasGerencia();
+      }
+    }
+
+    async function cargarChats() {
+      const res = await fetch('/api/mensajes', { headers: { 'Authorization': `Bearer ${token}` } });
+      const msgs = await res.json();
+      const list = document.getElementById('listaChats');
+      list.innerHTML = '';
+
+      msgs.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'chat-item';
+        let dot = '';
+        if(m.etiquetaPunto === 'rojo') dot = '<span class="badge-dot badge-red"></span>';
+        if(m.etiquetaPunto === 'amarillo') dot = '<span class="badge-dot badge-yellow"></span>';
+
+        div.innerHTML = `<strong>${m.nombre || m.numero}</strong><br><small style="color:#64748b">${m.texto.substring(0,30)}...</small>${dot}`;
+        div.onclick = () => abrirChat(m);
+        list.appendChild(div);
+      });
+    }
+
+    function abrirChat(chat) {
+      chatActivo = chat;
+      document.getElementById('headerChat').innerText = `Chat con: ${chat.nombre || chat.numero}`;
+      const box = document.getElementById('boxMensajes');
+      box.innerHTML = `<div class="msg ${chat.direccion}">${chat.texto}</div>`;
+      
+      // Marcar leido
+      fetch('/api/mensajes/leer', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: chat.id })
+      });
+    }
+
+    async function enviarMensaje() {
+      const texto = document.getElementById('txtMensaje').value;
+      if(!texto || !chatActivo) return;
+
+      const res = await fetch('/api/mensajes/enviar', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numero: chatActivo.numero, texto })
+      });
+
+      if(res.ok) {
+        document.getElementById('txtMensaje').value = '';
+        const box = document.getElementById('boxMensajes');
+        box.innerHTML += `<div class="msg outbound">${texto}</div>`;
+      }
+    }
+
+    async function cargarAgenciasGerencia() {
+      const res = await fetch('/api/gerente/agencias', { headers: { 'Authorization': `Bearer ${token}` } });
+      const agencias = await res.json();
+      let html = '<table border="1" width="100%" cellpadding="10"><tr><th>Empresa</th><th>Email</th><th>Plan</th><th>Estado</th><th>Acciones</th></tr>';
+      
+      agencias.forEach(a => {
+        html += `<tr>
+          <td>${a.nombre}</td>
+          <td>${a.email}</td>
+          <td>${a.plan.toUpperCase()}</td>
+          <td>${a.estado}</td>
+          <td><button onclick="bloquearAgencia('${a.id}', ${a.estado !== 'bloqueada'})">${a.estado === 'bloqueada' ? 'Desbloquear' : 'Bloquear'}</button></td>
+        </tr>`;
+      });
+      html += '</table>';
+      document.getElementById('tablaAgencias').innerHTML = html;
+    }
+
+    async function bloquearAgencia(agenciaId, bloquear) {
+      await fetch('/api/gerente/bloquear', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agenciaId, bloquear })
+      });
+      cargarAgenciasGerencia();
+    }
+
+    function cerrarSesion() {
+      localStorage.clear();
+      window.location.href = '/index.html';
+    }
+
+    cargarChats();
+  </script>
+</body>
+</html>
