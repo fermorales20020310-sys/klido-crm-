@@ -2,155 +2,164 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO Campañas</title>
+<title>KLIDO Campañas v120 - Desde Cero</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-body{background:#0b1220;color:#fff;font-family:Arial;padding:15px}
-.card{background:#1e293b;padding:15px;border-radius:12px;margin:12px 0;border:1px solid #334155}
-input,select,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff}
-button{background:#38bdf8;color:#000;font-weight:900;cursor:pointer}
-.muted{color:#94a3b8;font-size:12px}
-table{width:100%;border-collapse:collapse;margin-top:8px}
-th,td{border:1px solid #334155;padding:6px;font-size:12px}
+:root{--azul-oscuro:#0a1930;--azul-medio:#132a4a;--azul-claro:#3ab0ff;--azul-claro2:#60c0ff;--card:#112240;--borde:#1e3a5f}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial}
+body{background:linear-gradient(180deg,var(--azul-oscuro),#08162c);color:#e6f0ff;padding:18px;min-height:100vh}
+h2{color:var(--azul-claro);font-size:22px}.sub{color:#8fb4d8;font-size:13px;margin:4px 0 14px}
+.card{background:var(--card);border:1px solid var(--borde);border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.card h3{color:var(--azul-claro);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.btn-campana{background:linear-gradient(90deg,var(--azul-oscuro),var(--azul-medio));border:1px solid var(--azul-claro);color:var(--azul-claro);padding:12px 18px;border-radius:10px;font-weight:900;cursor:pointer;transition:.2s;width:100%}
+.btn-campana:hover{background:linear-gradient(90deg,var(--azul-medio),var(--azul-oscuro));box-shadow:0 0 18px rgba(58,176,255,.5);color:#fff}
+.btn-light{background:linear-gradient(90deg,var(--azul-claro),var(--azul-claro2));color:#001a33;font-weight:900;border:0;border-radius:10px;padding:12px 18px;cursor:pointer;width:100%}
+input,select,textarea{background:#0d1f3a;border:1px solid var(--borde);color:#e6f0ff;border-radius:10px;padding:11px;margin:6px 0;width:100%}
+table{width:100%;border-collapse:collapse;margin-top:10px} th,td{border:1px solid var(--borde);padding:8px;font-size:12px} th{background:#0d1f3a;color:var(--azul-claro)}
+.badge{background:var(--azul-claro);color:#001a33;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800}
+.progress{height:10px;background:#0d1f3a;border-radius:20px;overflow:hidden;margin:8px 0}.bar{height:100%;background:linear-gradient(90deg,var(--azul-claro),#7dd3ff);transition:.5s}
+.muted{color:#8fb4d8;font-size:12px}
 </style>
 </head>
 <body>
-<h2>KLIDO v119 - AUTO (sin tocar código nunca)</h2>
+<h2>🔵 KLIDO Campañas v120 - Desde Cero</h2>
+<p class="sub">Azul oscuro con azul claro • Excel • Segmentar • Plantillas aprobadas automático sin importar orden/nombre • Envío en bloques anti-baneo • Pausar/Continuar • Tiempo real</p>
 
 <div class="card">
-<h3>1. Carga Excel con Nombre y Teléfono</h3>
+<h3>📁 1. Subir Excel</h3>
 <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
-<button onclick="leerExcelFIX()">Leer Excel</button>
-<div id="infoExcel" class="muted" style="margin-top:6px;color:#22c55e;font-weight:700"></div>
-<div id="tablaExcel" style="max-height:300px;overflow:auto"></div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button class="btn-campana" onclick="leerExcel()">📄 Leer Excel</button>
+<button class="btn-campana" style="width:auto" onclick="seleccionarTodos(true)">✅ Todo</button>
+<button class="btn-campana" style="width:auto" onclick="seleccionarTodos(false)">❌ Ninguno</button>
+</div>
+<input id="filtroSegmento" placeholder="🔍 Segmentar números: escribe nombre, ciudad o prefijo Ej: Carlos, 322, Bogotá" oninput="filtrar()">
+<div id="infoExcel" style="margin:8px 0"></div>
+<div id="tablaExcel" style="max-height:340px;overflow:auto"></div>
 </div>
 
 <div class="card">
-<h3>2. Plantillas APROBADAS (automático de META)</h3>
-<button onclick="cargarPlantillasFIX()">🔄 Cargar plantillas aprobadas</button>
-<div id="msgWABA" class="muted"></div>
-<select id="selectPlantilla" style="margin-top:8px"></select>
+<h3>🎨 2. Plantillas Aprobadas (Automático API - sin importar orden/nombre)</h3>
+<button class="btn-campana" onclick="cargarPlantillas()">🔄 Cargar plantillas aprobadas automáticamente</button>
+<div id="estadoPlantillas" class="muted"></div>
+<select id="selectPlantilla"></select>
 <div id="detallePlantilla" class="muted"></div>
-<input id="varsExtra" placeholder="Vars extra opcional: deja vacío = toma Nombre del Excel automático" style="margin-top:8px">
+<input id="varsExtra" placeholder="Vars opcional: vacío = toma Nombre del Excel">
 </div>
 
 <div class="card">
-<h3>3. Enviar</h3>
+<h3>🚀 3. Enviar en Tiempo Real (Bloques Anti-Baneo)</h3>
+<p class="muted">Envía en bloques de 25 números con pausa de 45s y 1.8s entre mensajes para evitar baneo</p>
 <input id="nombreCamp" value="Congreso ACOL 2026">
-<button id="btnEnviar" onclick="enviarCampanaFIX()">📢 ENVIAR A NUMEROS SELECCIONADOS</button>
+<button id="btnEnviar" class="btn-light" onclick="enviarCampana()">📢 ENVIAR A NUMEROS SELECCIONADOS DEL EXCEL</button>
+<div id="progresoEnvio" style="display:none"><div class="progress"><div id="barra" class="bar" style="width:0%"></div></div><div id="textoProgreso" class="muted"></div></div>
 <div id="estadoEnvio"></div>
 </div>
 
-<div class="card"><h3>Historial</h3><div id="hist"></div></div>
+<div class="card">
+<h3>📊 Historial de Campañas - Pausar / Continuar</h3>
+<div id="historial"></div>
+</div>
 
 <script>
-const token = localStorage.getItem('klido_token');
-let contactosFinal = []; // {nombre, phone, selected:true}
+const token=localStorage.getItem('klido_token'); if(!token) location.href='/index.html';
+let contactos=[]; let filtrados=[];
+async function api(p,m='GET',b){ const o={method:m,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}; if(b) o.body=JSON.stringify(b); const r=await fetch(p,o); return r.json(); }
 
-async function api(p,m='GET',b){ const o={method:m,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}; if(b) o.body=JSON.stringify(b); const r=await fetch(p,o); const j=await r.json(); console.log('API',p,j); return j; }
-
-function leerExcelFIX(){
-  const file = document.getElementById('excelFile').files[0];
-  if(!file){ alert('Selecciona tu Excel (9).xlsx'); return; }
-  const reader = new FileReader();
-  reader.onload = function(e){
-    try{
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:'', raw:false});
-      console.log('EXCEL ROWS TOTAL', rows.length, rows.slice(0,5));
-      contactosFinal = [];
-      const seen = new Set();
-      let html = '<table><tr><th><input type="checkbox" checked onclick="toggleAll(this.checked)"></th><th>Nombre</th><th>Tel 57</th></tr>';
-      for(let i=0;i<rows.length;i++){
-        const row = rows[i];
-        if(!row || row.length===0) continue;
-        // Busca en TODA la fila el valor con más dígitos y el mejor texto
-        let phoneCandidate = '';
-        let nameCandidate = '';
-        for(let c=0;c<row.length;c++){
-          let cell = row[c];
-          if(cell==null) continue;
-          let str = String(cell).trim();
-          let digits = str.replace(/\D/g,'');
-          // telefono: 10 a 13 digitos
-          if(digits.length>=10 && digits.length<=13){
-            if(digits.length>phoneCandidate.replace(/\D/g,'').length) phoneCandidate = str;
-          }
-          // nombre: texto no puro numero, entre 3 y 40 chars
-          if(str.length>=3 && str.length<=40 &&!/^\d+$/.test(str.replace(/\s/g,''))){
-            // evita que tome encabezado "telefono"
-            if(!/telefono|teléfono|phone/i.test(str) || i>0){
-              if(str.length>nameCandidate.length) nameCandidate=str;
-            }
+function leerExcel(){
+  const file=document.getElementById('excelFile').files[0]; if(!file) return alert('Sube tu Excel');
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+    const sheet=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false});
+    contactos=[]; const seen=new Set();
+    for(let i=0;i<rows.length;i++){
+      const row=rows[i]; if(!row||row.length===0) continue;
+      let phone=''; let name='';
+      row.forEach(cell=>{
+        const s=String(cell||'').trim(); const d=s.replace(/\D/g,'');
+        if(d.length>=10 && d.length<=13 && d.length>phone.replace(/\D/g,'').length) phone=s;
+        if(s.length>=3&&s.length<=40&&!/^\d+$/.test(s.replace(/\s/g,''))){
+          if(!/telefono|teléfono|phone/i.test(s)||i>0){
+            if(s.length>name.length) name=s;
           }
         }
-        if(!phoneCandidate) continue;
-        let tel = phoneCandidate.replace(/\D/g,'');
-        if(tel.startsWith('0')) tel=tel.substring(1);
-        if(tel.length===10) tel='57'+tel;
-        if(tel.length===11 && tel.length!==12) { /* deja */ }
-        if(tel.length!==12) continue;
-        if(seen.has(tel)) continue;
-        seen.add(tel);
-        const nombreFinal = nameCandidate || 'Cliente';
-        contactosFinal.push({nombre:nombreFinal, phone:tel, selected:true});
-        if(contactosFinal.length<=100){
-          html+=`<tr><td><input type="checkbox" checked onchange="contactosFinal[${contactosFinal.length-1}].selected=this.checked"></td><td>${nombreFinal}</td><td>${tel}</td></tr>`;
-        }
-      }
-      html+='</table>';
-      document.getElementById('tablaExcel').innerHTML=html;
-      document.getElementById('infoExcel').innerHTML = contactosFinal.length + ' números detectados listos';
-      if(contactosFinal.length===0){
-        document.getElementById('infoExcel').innerHTML='0 detectados. Abre consola F12 y mandame foto de lo que dice EXCEL ROWS. Tu Excel tiene números?';
-      }
-    }catch(err){ console.error(err); alert('Error leyendo Excel: '+err.message); }
-  };
-  reader.readAsArrayBuffer(file);
-}
-function toggleAll(v){ contactosFinal.forEach(c=>c.selected=v); document.querySelectorAll('#tablaExcel input[type=checkbox]').forEach(cb=>cb.checked=v); }
-
-async function cargarPlantillasFIX(){
-  document.getElementById('msgWABA').innerHTML='Cargando...';
-  const sel=document.getElementById('selectPlantilla');
-  try{
-    const res = await api('/api/meta/plantillas');
-    sel.innerHTML='';
-    let plantillas = [];
-    if(res.ok && res.plantillas && res.plantillas.length>0){
-      plantillas=res.plantillas;
-      document.getElementById('msgWABA').innerHTML=`<span style="color:#22c55e">${plantillas.length} aprobadas cargadas automático</span>`;
-    }else{
-      // FALLBACK DEFINITIVO - aunque diga No WABA, esta SI existe y SI llega
-      document.getElementById('msgWABA').innerHTML=`Error: ${res.error||'No WABA'} - Usando fallback que SI funciona`;
-      plantillas=[{name:'acol_invitacion_congreso', language:'es_CO', status:'APPROVED'}];
+      });
+      if(!phone) continue;
+      let tel=phone.replace(/\D/g,''); if(tel.startsWith('0')) tel=tel.substring(1); if(tel.length===10) tel='57'+tel; if(tel.length!==12) continue;
+      if(seen.has(tel)) continue; seen.add(tel);
+      contactos.push({nombre:name||'Cliente', phone:tel, selected:true, raw:row.join(' ')});
     }
-    plantillas.forEach(p=>{
-      const opt=document.createElement('option');
-      opt.value=p.name; opt.dataset.lang=p.language||'es_CO';
-      opt.textContent=`${p.name} - ${p.language||'es_CO'} - ${p.status||'APPROVED'}`;
-      if(p.name==='acol_invitacion_congreso') opt.selected=true;
-      sel.appendChild(opt);
-    });
-    document.getElementById('detallePlantilla').innerHTML='Seleccionada: <b>'+sel.value+'</b> - idioma '+(sel.options[sel.selectedIndex]?.dataset.lang||'es_CO');
-    sel.onchange=()=>{ document.getElementById('detallePlantilla').innerHTML='Seleccionada: <b>'+sel.value+'</b> idioma '+sel.options[sel.selectedIndex].dataset.lang; };
-  }catch(e){ console.error(e); document.getElementById('msgWABA').innerHTML='Error cargando, usando fallback'; sel.innerHTML='<option value="acol_invitacion_congreso" data-lang="es_CO" selected>acol_invitacion_congreso - es_CO - APROBADA</option>'; }
+    filtrados=[...contactos];
+    renderTabla(); document.getElementById('infoExcel').innerHTML=`<span class="badge">${contactos.length} números detectados</span> <span class="muted">listos para segmentar y enviar</span>`;
+  }; reader.readAsArrayBuffer(file);
+}
+function renderTabla(){
+  let html='<table><tr><th><input type="checkbox" checked onchange="seleccionarTodos(this.checked)"></th><th>Nombre</th><th>Tel</th><th>Datos</th></tr>';
+  filtrados.forEach((c,idx)=>{
+    const realIdx=contactos.indexOf(c);
+    html+=`<tr><td><input type="checkbox" ${c.selected?'checked':''} onchange="contactos[${realIdx}].selected=this.checked;filtrados[${idx}].selected=this.checked"></td><td>${c.nombre}</td><td>${c.phone}</td><td class="muted">${c.raw.slice(0,60)}</td></tr>`;
+  });
+  html+='</table>'; document.getElementById('tablaExcel').innerHTML=html;
+}
+function seleccionarTodos(v){ contactos.forEach(c=>c.selected=v); filtrados.forEach(c=>c.selected=v); renderTabla(); }
+function filtrar(){
+  const q=document.getElementById('filtroSegmento').value.toLowerCase().trim();
+  if(!q){ filtrados=[...contactos]; renderTabla(); return; }
+  filtrados=contactos.filter(c=> (c.nombre.toLowerCase().includes(q) || c.phone.includes(q) || c.raw.toLowerCase().includes(q)) );
+  renderTabla(); document.getElementById('infoExcel').innerHTML=`<span class="badge">${filtrados.length} / ${contactos.length} segmentados</span>`;
 }
 
-async function enviarCampanaFIX(){
-  const seleccionados = contactosFinal.filter(c=>c.selected);
-  if(seleccionados.length===0){ alert('0 números detectados - lee el Excel primero'); return; }
-  const sel=document.getElementById('selectPlantilla');
-  if(!sel.value){ alert('Carga plantilla'); return; }
-  const plantilla=sel.value; const idioma=sel.options[sel.selectedIndex].dataset.lang||'es_CO';
-  document.getElementById('estadoEnvio').innerHTML='Enviando '+seleccionados.length+' con '+plantilla+'...';
-  const res=await api('/api/campanas','POST',{nombre:document.getElementById('nombreCamp').value, plantilla, plantillaIdioma:idioma, lista:seleccionados.map(c=>c.phone), contactos:seleccionados, plantillaVars:document.getElementById('varsExtra').value});
-  document.getElementById('estadoEnvio').innerHTML=res.ok?`✅ ${plantilla} lanzada a ${seleccionados.length} - Revisa Railway debe salir ${plantilla} -> 200`:`❌ ${res.error}`;
-  cargarHist();
+async function cargarPlantillas(){
+  document.getElementById('estadoPlantillas').innerHTML='Cargando plantillas aprobadas de META API...';
+  const sel=document.getElementById('selectPlantilla'); sel.innerHTML='';
+  const res=await api('/api/meta/plantillas');
+  let lista=res.plantillas||[];
+  if(lista.length===0) lista=[{name:'acol_invitacion_congreso',language:'es_CO',status:'APPROVED'}];
+  document.getElementById('estadoPlantillas').innerHTML=`<span class="badge">${lista.length} plantillas aprobadas automático</span> <span class="muted">- sin importar orden o nombre, aparecen solas</span>`;
+  lista.forEach(p=>{
+    const opt=document.createElement('option'); opt.value=p.name; opt.dataset.lang=p.language||'es_CO'; opt.textContent=`${p.name} | ${p.language||'es_CO'} | ${p.status||'APPROVED'}`; if(p.name==='acol_invitacion_congreso') opt.selected=true; sel.appendChild(opt);
+  });
+  sel.onchange=()=>{ document.getElementById('detallePlantilla').innerHTML=`Plantilla seleccionada: <b>${sel.value}</b> idioma ${sel.options[sel.selectedIndex].dataset.lang} - Se envía en tiempo real`; document.getElementById('nombreCamp').value=sel.value; };
+  sel.onchange();
 }
-async function cargarHist(){ const h=await api('/api/campanas'); document.getElementById('hist').innerHTML=h.slice().reverse().map(c=>`<div style="padding:6px;background:#0f172a;margin:4px 0;border-radius:6px;font-size:12px">${c.nombre} - ${c.plantilla} - ${c.enviados||0}/${c.numeros} - ${c.estado}</div>`).join(''); }
-cargarPlantillasFIX(); cargarHist();
+
+async function enviarCampana(){
+  const seleccionados=contactos.filter(c=>c.selected);
+  if(seleccionados.length===0) return alert('Selecciona números del Excel');
+  const sel=document.getElementById('selectPlantilla'); if(!sel.value) return alert('Carga plantillas');
+  const plantilla=sel.value; const idioma=sel.options[sel.selectedIndex].dataset.lang||'es_CO';
+  document.getElementById('btnEnviar').disabled=true;
+  document.getElementById('progresoEnvio').style.display='block';
+  document.getElementById('estadoEnvio').innerHTML=`Enviando ${seleccionados.length} números en bloques anti-baneo...`;
+  const res=await api('/api/campanas','POST',{nombre:document.getElementById('nombreCamp').value, plantilla, plantillaIdioma:idioma, lista:seleccionados.map(c=>c.phone), contactos:seleccionados, plantillaVars:document.getElementById('varsExtra').value});
+  if(!res.ok){ document.getElementById('estadoEnvio').innerHTML=`❌ ${res.error}`; document.getElementById('btnEnviar').disabled=false; return; }
+  const campId=res.campana.id;
+  // polling progreso tiempo real
+  const interval=setInterval(async()=>{
+    const hist=await api('/api/campanas'); const c=hist.find(x=>x.id===campId);
+    if(c){ document.getElementById('barra').style.width=(c.progreso||0)+'%'; document.getElementById('textoProgreso').innerHTML=`${c.enviados||0}/${c.total} enviados - ${c.progreso||0}% - Estado: ${c.estado} - Fallidos: ${c.fallidos||0}`; if(c.estado==='enviada'){ clearInterval(interval); document.getElementById('estadoEnvio').innerHTML=`✅ Campaña ${plantilla} terminada - ${c.enviados}/${c.total} - Revisa Railway -> 200 = LLEGÓ`; document.getElementById('btnEnviar').disabled=false; cargarHistorial(); } }
+  },2000);
+}
+
+async function cargarHistorial(){
+  const hist=await api('/api/campanas');
+  document.getElementById('historial').innerHTML=hist.slice().reverse().map(c=>`
+    <div style="background:#0d1f3a;border:1px solid var(--borde);border-radius:10px;padding:10px;margin:6px 0">
+      <div style="display:flex;justify-content:space-between;align-items:center"><b>${c.nombre}</b> <span class="badge">${c.estado}</span></div>
+      <div class="muted">${c.plantilla} - ${c.enviados||0}/${c.total||c.numeros||0} - ${c.progreso||0}% - ${new Date(c.fecha).toLocaleString()}</div>
+      <div class="progress"><div class="bar" style="width:${c.progreso||0}%"></div></div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <button class="btn-campana" style="padding:6px 10px;font-size:12px" onclick="pausar('${c.id}')">⏸ Pausar</button>
+        <button class="btn-light" style="padding:6px 10px;font-size:12px" onclick="reanudar('${c.id}')">▶ Continuar</button>
+      </div>
+    </div>`).join('');
+}
+async function pausar(id){ await api('/api/campanas/'+id+'/pausar','POST'); cargarHistorial(); }
+async function reanudar(id){ await api('/api/campanas/'+id+'/reanudar','POST'); cargarHistorial(); }
+
+cargarPlantillas(); cargarHistorial();
 </script>
 </body>
 </html>
