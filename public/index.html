@@ -3,105 +3,139 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KLIDO Avanza Consulting - CRM Multiagencia META API Oficial</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
-body{min-height:100vh;display:flex;background:#0a1020}
-.left{width:52%;background:radial-gradient(120% at 10% 10%, #0d1a3a 0%, #0a1938 30%, #0c2d7a 70%, #000 100%);color:white;padding:32px 44px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-.left::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,.4) 0%, rgba(12,45,122,.2) 50%, rgba(12,45,122,.9) 100%)}
+body{min-height:100vh;display:flex;background:#0a1020;overflow-x:hidden}
+.left{width:52%;background:radial-gradient(120% at 10% 10%, #0d1a3a 0%, #0a1938 30%, #0c2d7a 70%, #050a1a 100%);color:white;padding:28px 44px;display:flex;flex-direction:column;justify-content:space-between;position:relative;min-height:100vh}
+.left::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(12,45,122,.15) 50%, rgba(5,10,26,.85) 100%)}
 .left>*{position:relative;z-index:1}
-.brand{display:flex;gap:14px;align-items:center}
-.logo-box{width:72px;height:72px;background:transparent;border-radius:16px;display:grid;place-items:center}
-.logo-box img{width:100%;height:100%;object-fit:contain;background:transparent;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
-.hero{margin-top:36px}
-.hero h2{font-size:54px;line-height:.95;font-weight:800;letter-spacing:-1px}
-.hero h2 b{color:#6ea8ff}
-.hero p{margin-top:18px;font-size:14.8px;line-height:1.55;opacity:.92;max-width:540px}
-.badge{margin-top:18px;background:rgba(110,168,255,.15);border:1px solid rgba(110,168,255,.35);border-radius:24px;padding:9px 16px;font-size:11px;font-weight:800;letter-spacing:.5px;color:#8ab4ff;display:inline-flex}
-.pills{margin-top:auto;display:flex;gap:10px;flex-wrap:wrap;padding-top:24px}
-.pill{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);backdrop-filter:blur(8px);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600}
-.right{width:48%;background:#f7f8fb;display:flex;align-items:center;justify-content:center;padding:22px}
-.card{width:100%;max-width:540px;background:white;border-radius:20px;box-shadow:0 20px 80px rgba(0,0,0,.18);padding:20px}
-.tabs{display:flex;background:#eef2ff;border-radius:12px;padding:4px;gap:4px;margin-bottom:16px}
-.tab{flex:1;padding:11px;border-radius:9px;font-size:13px;font-weight:800;text-align:center;cursor:pointer;border:none}
-.tab.active{background:#0f172a;color:white;box-shadow:0 4px 12px rgba(0,0,0,.18)}
-.input{width:100%;padding:12px 14px;border-radius:11px;border:1.5px solid #e2e8f0;font-size:13.5px;margin-bottom:10px;background:#fcfdff;outline:none}
-.input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
-.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0}
-.plan{border:1.5px solid #e2e8f0;border-radius:12px;padding:11px 8px;text-align:center;cursor:pointer;transition:.2s}
-.plan.selected{border-color:#2563eb;background:#f0f6ff;transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.15)}
-.plan.n{font-size:11px;font-weight:800}.plan.p{font-size:12.5px;font-weight:800;margin:4px 0}.plan.e{font-size:10px;color:#64748b;line-height:1.25}
-.check{display:flex;gap:8px;font-size:11px;color:#475569;margin:12px 0;line-height:1.3}
-.btn{width:100%;padding:13px;border-radius:11px;border:none;background:#1e3a8a;color:white;font-weight:800;font-size:13.5px;cursor:pointer}
-.btn:hover{background:#2348b0}
-.alert{padding:10px;border-radius:8px;font-size:12px;margin-bottom:10px;display:none}.alert.ok{display:block;background:#dcfce7;color:#166534;border:1px solid #bbf7d0}.alert.err{display:block;background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
-.links{text-align:center;display:flex;flex-direction:column;gap:7px;margin-top:10px}.links a{font-size:12px;color:#2563eb;font-weight:700;text-decoration:none}
-.legal{margin-top:14px;font-size:9.5px;color:#94a3b8;line-height:1.35;text-align:center}
-.wa-float{position:fixed;bottom:18px;right:18px;background:#25D366;color:white;border-radius:50px;padding:12px 18px;font-weight:800;font-size:13px;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:999;display:flex;gap:8px;align-items:center}
-@media(max-width:900px){body{flex-direction:column}.left,.right{width:100%}.hero h2{font-size:38px}}
+.brand{display:flex;gap:14px;align-items:center;align-self:flex-start}
+.logo-box{width:64px;height:64px;background:transparent!important;border-radius:14px;display:grid;place-items:center;overflow:hidden;flex-shrink:0}
+.logo-box img{width:100%;height:100%;object-fit:contain;background:transparent!important;display:block;filter:none}
+.brand h1{font-size:30px;font-weight:800;letter-spacing:.3px;line-height:1}
+.brand h1 span{font-size:10.5px;letter-spacing:2.8px;opacity:.75;font-weight:500;display:block;margin-top:2px}
+.hero{display:flex;flex-direction:column;justify-content:center;flex:1;padding:30px 0}
+.hero h2{font-size:52px;line-height:.96;font-weight:800;letter-spacing:-1.2px;text-align:left}
+.hero h2 b{color:#6ea8ff;display:block}
+.hero p{margin-top:16px;font-size:14.5px;line-height:1.6;opacity:.92;max-width:520px;text-align:left}
+.hero p strong{color:#fff}
+.badge{margin-top:20px;background:rgba(110,168,255,.12);border:1px solid rgba(110,168,255,.28);border-radius:100px;padding:8px 14px;font-size:10.5px;font-weight:700;letter-spacing:.4px;color:#8ab4ff;display:inline-flex;align-self:flex-start}
+.pills{display:flex;gap:8px;flex-wrap:wrap;padding-top:18px;align-self:flex-start}
+.pill{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);backdrop-filter:blur(8px);padding:7px 12px;border-radius:100px;font-size:11px;font-weight:600;white-space:nowrap}
+.right{width:48%;background:#f6f7fb;display:flex;align-items:center;justify-content:center;padding:24px;min-height:100vh}
+.card{width:100%;max-width:520px;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.18), 0 1px 0 rgba(0,0,0,.05);padding:20px;border:1px solid #eef2f7}
+.tabs{display:flex;background:#eef2ff;border-radius:12px;padding:4px;gap:4px;margin-bottom:18px}
+.tab{flex:1;padding:11px 6px;border-radius:9px;font-size:12.5px;font-weight:800;text-align:center;cursor:pointer;border:none;transition:.2s;color:#64748b;background:transparent}
+.tab.active{background:#0f172a;color:#fff;box-shadow:0 4px 12px rgba(15,23,42,.18)}
+.input{width:100%;padding:12px 14px;border-radius:11px;border:1.5px solid #e2e8f0;font-size:13.5px;margin-bottom:10px;background:#fcfdff;outline:none;transition:.2s}
+.input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12);background:#fff}
+.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.plan{border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:.2s;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:150px}
+.plan.selected{border-color:#2563eb;background:#f0f6ff;transform:translateY(-1px);box-shadow:0 8px 20px rgba(37,99,235,.15)}
+.plan .n{font-size:10.5px;font-weight:800;color:#0f172a}.plan .p{font-size:12px;font-weight:800;margin:5px 0;color:#0f172a}.plan .e{font-size:9.5px;color:#64748b;line-height:1.3;text-align:center}
+.plan .e a{display:inline-block;margin-top:6px}
+.check{display:flex;gap:8px;font-size:11px;color:#475569;margin:12px 0;line-height:1.35;align-items:flex-start;text-align:left}
+.check input{margin-top:2px;flex-shrink:0}
+.btn{width:100%;padding:13px;border-radius:11px;border:none;background:#1e3a8a;color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;transition:.2s;letter-spacing:.2px}
+.btn:hover{background:#2348b0;transform:translateY(-1px)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.alert{padding:10px 12px;border-radius:10px;font-size:12px;margin-bottom:12px;display:none;line-height:1.4}.alert.ok{display:block;background:#dcfce7;color:#166534;border:1px solid #bbf7d0}.alert.err{display:block;background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.links{text-align:center;display:flex;flex-direction:column;gap:8px;margin-top:12px}.links a{font-size:11.5px;color:#2563eb;font-weight:700;text-decoration:none}.links a:hover{text-decoration:underline}
+.legal{margin-top:14px;font-size:9px;color:#94a3b8;line-height:1.4;text-align:center;border-top:1px solid #f1f5f9;padding-top:12px}
+.wa-float{position:fixed;bottom:18px;right:18px;background:#25D366;color:#fff;border-radius:100px;padding:12px 18px;font-weight:800;font-size:12.5px;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.28);z-index:999;display:flex;gap:8px;align-items:center;transition:.2s}.wa-float:hover{transform:translateY(-2px)}
+@media(max-width:960px){body{flex-direction:column}.left,.right{width:100%;min-height:auto}.left{padding:24px 20px;min-height:520px}.hero h2{font-size:36px}.plans{grid-template-columns:1fr}.right{padding:16px}.card{max-width:100%}}
 </style>
 </head>
 <body>
 <div class="left">
-<div>
-<div class="brand"><div class="logo-box"><img src="/logo.png" alt="KLIDO"></div><h1 style="font-size:32px;font-weight:800">KLIDO <span style="font-size:11px;letter-spacing:3px;opacity:.75;font-weight:500">AVANZA CONSULTING</span></h1></div>
-<div class="hero"><h2>El mejor CRM<br>que tu empresa<br><b>puede tener.</b></h2><p><strong>Klido Avanza Consulting — CRM empresarial multiagencia para API oficial de Meta (WhatsApp Business API).</strong> Gestiona todas tus agencias, números, equipos, campañas y ventas desde un solo lugar. 100% autónomo, sin demos.</p><div class="badge">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL • WEBHOOK KLIDO123</div></div>
-</div>
-<div class="pills"><div class="pill">✓ Seguro y confiable</div><div class="pill">✓ WhatsApp Business API</div><div class="pill">✓ Soporte Avanza Consulting</div><div class="pill">✓ Ley 1581 Colombia</div></div>
-</div>
-<div class="right"><div class="card">
-<div class="tabs"><button class="tab active" id="tL" onclick="tab('login')">Ingresar</button><button class="tab" id="tR" onclick="tab('reg')">Crear empresa</button></div>
-
-<div id="vLogin">
-<div id="aLogin" class="alert"></div>
-<input id="lEmail" class="input" placeholder="Correo administrador" type="email">
-<input id="lPass" class="input" placeholder="Contraseña" type="password">
-<div class="check"><input type="checkbox" id="lTerms"><label for="lTerms">Acepto <a href="#" onclick="openLegal();return false">Términos, Contrato, Habeas Data Ley 1581</a></label></div>
-<button class="btn" onclick="doLogin()">Ingresar a KLIDO</button>
-<div class="links"><a href="#" onclick="tab('reg');return false">¿No tienes cuenta? Crear agencia</a><a href="#" onclick="tab('forgot');return false">¿Olvidaste tu contraseña? Restablecer con código Gmail</a><a href="#" onclick="openConfig();return false">⚙️ ¿Qué hace Klido? Beneficios y configuración</a><a href="https://wa.me/573133181851?text=Hola%20quiero%20comprar%20KLIDO%20CRM" target="_blank">💬 Comprar plan por WhatsApp 3133181851</a></div>
-<div class="legal">Plataforma 100% funcional, rápida y eficaz - No demo - Multi-agencia sin cruce información - Cada agencia con WA Phone ID propio - Datos organizados Railway/Postgres - Legalidad completa Colombia - Soporte 3133181851 - Webhook verificado klido123 - Mensajes y campañas en tiempo real</div>
+  <div class="brand">
+    <div class="logo-box"><img src="/logo.png" alt="KLIDO" onerror="this.style.display='none'"></div>
+    <h1>KLIDO <span>AVANZA CONSULTING</span></h1>
+  </div>
+  <div class="hero">
+    <h2>El mejor CRM<br>que tu empresa<br><b>puede tener.</b></h2>
+    <p><strong>Klido Avanza Consulting — CRM empresarial multiagencia para API oficial de Meta (WhatsApp Business API).</strong> Gestiona todas tus agencias, números, equipos, campañas y ventas desde un solo lugar. 100% autónomo, sin demos.</p>
+    <div class="badge">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL • WEBHOOK KLIDO123 • PHONE_ID {{PHONE_NUMBER_ID}}</div>
+  </div>
+  <div class="pills">
+    <div class="pill">✓ Seguro y confiable</div>
+    <div class="pill">✓ WhatsApp Business API</div>
+    <div class="pill">✓ Soporte Avanza Consulting</div>
+    <div class="pill">✓ Ley 1581 Colombia</div>
+  </div>
 </div>
 
-<div id="vReg" style="display:none">
-<div id="aReg" class="alert"></div>
-<input id="rNombre" class="input" placeholder="Nombre agencia / empresa">
-<input id="rEmail" class="input" placeholder="Correo administrador" type="email">
-<input id="rPass" class="input" placeholder="Crear contraseña admin" type="password">
-<div style="font-size:11px;font-weight:800;margin:10px 0 6px">Selecciona tu plan - Anual + Mantenimiento trimestral aparte - Botón WPP para comprar</div>
-<div class="plans">
-<div class="plan selected" data-plan="basico" onclick="selPlan(this)"><div class="n">Básico</div><div class="p">$800.000/año</div><div class="e">+ $80.000/trim mant.<br>3 asesores<br>API Meta<br><br><a href="https://wa.me/573133181851?text=Quiero%20plan%20BASICO%20KLIDO%20$800k" target="_blank" style="background:#25D366;color:white;padding:4px 8px;border-radius:6px;font-size:9px;text-decoration:none">Comprar WPP</a></div></div>
-<div class="plan" data-plan="premium" onclick="selPlan(this)"><div class="n">Premium + IA</div><div class="p">$1.400.000/año</div><div class="e">+ $95.000/trim mant.<br>10 asesores<br>IA incluida<br><br><a href="https://wa.me/573133181851?text=Quiero%20plan%20PREMIUM%20KLIDO%20$1.4M" target="_blank" style="background:#25D366;color:white;padding:4px 8px;border-radius:6px;font-size:9px;text-decoration:none">Comprar WPP</a></div></div>
-<div class="plan" data-plan="gold" onclick="selPlan(this)"><div class="n">Gold + IA + Llamadas</div><div class="p">$2.400.000/año</div><div class="e">+ $120.000/trim mant.<br>Ilimitado<br>IA+Llamadas<br><br><a href="https://wa.me/573133181851?text=Quiero%20plan%20GOLD%20KLIDO%20$2.4M" target="_blank" style="background:#25D366;color:white;padding:4px 8px;border-radius:6px;font-size:9px;text-decoration:none">Comprar WPP</a></div></div>
-</div>
-<div id="codeBox" style="display:none"><input id="rCodigo" class="input" placeholder="Código 6 dígitos enviado a tu Gmail"><button class="btn" style="background:#0f172a" onclick="verifCodigo()">Verificar código y crear empresa</button></div>
-<div class="check"><input type="checkbox" id="rTerms" checked><label>Acepto Términos y entiendo que mantenimiento trimestral es adicional. Legalidad Colombia.</label></div>
-<button id="btnCrear" class="btn" onclick="crearEmpresa()">Crear empresa y generar código →</button>
-<div class="links"><a href="#" onclick="tab('login');return false">¿Ya tienes cuenta? Ingresar</a></div>
+<div class="right">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" id="tL" onclick="tab('login')">Ingresar</button>
+      <button class="tab" id="tR" onclick="tab('reg')">Crear empresa</button>
+    </div>
+
+    <div id="vLogin">
+      <div id="aLogin" class="alert"></div>
+      <input id="lEmail" class="input" placeholder="Correo administrador" type="email" autocomplete="email">
+      <input id="lPass" class="input" placeholder="Contraseña" type="password" autocomplete="current-password">
+      <div class="check"><input type="checkbox" id="lTerms"><label for="lTerms">Acepto <a href="#" onclick="openLegal();return false">Términos, Contrato, Habeas Data Ley 1581</a></label></div>
+      <button class="btn" onclick="doLogin()">Ingresar a KLIDO</button>
+      <div class="links">
+        <a href="#" onclick="tab('reg');return false">¿No tienes cuenta? Crear agencia</a>
+        <a href="#" onclick="tab('forgot');return false">¿Olvidaste tu contraseña? Restablecer con código Gmail</a>
+        <a href="#" onclick="openConfig();return false">⚙️ ¿Qué hace Klido? Beneficios y configuración</a>
+        <a href="https://wa.me/573133181851?text=Hola%20quiero%20comprar%20KLIDO%20CRM" target="_blank">💬 Comprar plan por WhatsApp 3133181851</a>
+      </div>
+      <div class="legal">Plataforma 100% funcional, rápida y eficaz - No demo - Multi-agencia sin cruce información - Cada agencia con WA Phone ID propio - Datos organizados Railway/Postgres - Legalidad completa Colombia - Soporte 3133181851 - Webhook verificado klido123 - Mensajes y campañas en tiempo real - ADMIN_KEY KLIDO_DUEÑA_2026</div>
+    </div>
+
+    <div id="vReg" style="display:none">
+      <div id="aReg" class="alert"></div>
+      <input id="rNombre" class="input" placeholder="Nombre agencia / empresa" autocomplete="organization">
+      <input id="rEmail" class="input" placeholder="Correo administrador" type="email" autocomplete="email">
+      <input id="rPass" class="input" placeholder="Crear contraseña admin" type="password" autocomplete="new-password">
+      <div style="font-size:11px;font-weight:800;margin:10px 0 6px;color:#0f172a">Selecciona tu plan - Anual + Mantenimiento trimestral aparte - Botón WPP para comprar</div>
+      <div class="plans">
+        <div class="plan selected" data-plan="basico" onclick="selPlan(this)"><div class="n">Básico</div><div class="p">$800.000/año</div><div class="e">+ $80.000/trim mant.<br>3 asesores<br>API Meta<br><a href="https://wa.me/573133181851?text=Quiero%20plan%20BASICO%20KLIDO%20$800k" target="_blank" style="background:#25D366;color:white;padding:5px 8px;border-radius:6px;font-size:9px;text-decoration:none;font-weight:800">Comprar WPP</a></div></div>
+        <div class="plan" data-plan="premium" onclick="selPlan(this)"><div class="n">Premium + IA</div><div class="p">$1.400.000/año</div><div class="e">+ $95.000/trim mant.<br>10 asesores<br>IA incluida<br><a href="https://wa.me/573133181851?text=Quiero%20plan%20PREMIUM%20KLIDO%20$1.4M" target="_blank" style="background:#25D366;color:white;padding:5px 8px;border-radius:6px;font-size:9px;text-decoration:none;font-weight:800">Comprar WPP</a></div></div>
+        <div class="plan" data-plan="gold" onclick="selPlan(this)"><div class="n">Gold + IA + Llamadas</div><div class="p">$2.400.000/año</div><div class="e">+ $120.000/trim mant.<br>Ilimitado<br>IA+Llamadas<br><a href="https://wa.me/573133181851?text=Quiero%20plan%20GOLD%20KLIDO%20$2.4M" target="_blank" style="background:#25D366;color:white;padding:5px 8px;border-radius:6px;font-size:9px;text-decoration:none;font-weight:800">Comprar WPP</a></div></div>
+      </div>
+      <div id="codeBox" style="display:none"><input id="rCodigo" class="input" placeholder="Código 6 dígitos enviado a tu Gmail"><button class="btn" style="background:#0f172a" onclick="verifCodigo()">Verificar código y crear empresa</button></div>
+      <div class="check"><input type="checkbox" id="rTerms" checked><label for="rTerms">Acepto Términos y entiendo que mantenimiento trimestral es adicional. Legalidad Colombia Ley 1581.</label></div>
+      <button id="btnCrear" class="btn" onclick="crearEmpresa()">Crear empresa y generar código →</button>
+      <div class="links"><a href="#" onclick="tab('login');return false">¿Ya tienes cuenta? Ingresar</a></div>
+    </div>
+
+    <div id="vForgot" style="display:none">
+      <div id="aForgot" class="alert"></div>
+      <input id="fEmail" class="input" placeholder="Tu correo registrado" type="email">
+      <div id="fBox" style="display:none"><input id="fCode" class="input" placeholder="Código 6 dígitos"><input id="fNew" class="input" placeholder="Nueva contraseña" type="password"><button class="btn" onclick="confirmForgot()">Cambiar contraseña</button></div>
+      <button id="btnForgot" class="btn" onclick="sendForgot()">Enviar código a mi Gmail</button>
+      <div class="links"><a href="#" onclick="tab('login');return false">Volver a login</a></div>
+    </div>
+
+  </div>
 </div>
 
-<div id="vForgot" style="display:none">
-<div id="aForgot" class="alert"></div>
-<input id="fEmail" class="input" placeholder="Tu correo registrado" type="email">
-<div id="fBox" style="display:none"><input id="fCode" class="input" placeholder="Código 6 dígitos"><input id="fNew" class="input" placeholder="Nueva contraseña" type="password"><button class="btn" onclick="confirmForgot()">Cambiar contraseña</button></div>
-<button id="btnForgot" class="btn" onclick="sendForgot()">Enviar código a mi Gmail</button>
-<div class="links"><a href="#" onclick="tab('login');return false">Volver a login</a></div>
-</div>
-
-</div></div>
-<a class="wa-float" href="https://wa.me/573133181851?text=Hola%20soporte%20KLIDO" target="_blank">💬 Soporte 3133181851</a>
+<a class="wa-float" href="https://wa.me/573133181851?text=Hola%20soporte%20KLIDO%20ADMIN_KEY%20KLIDO_DUEÑA_2026" target="_blank">💬 Soporte 3133181851</a>
 
 <script>
 let planSel='basico';
 function selPlan(el){document.querySelectorAll('.plan').forEach(p=>p.classList.remove('selected'));el.classList.add('selected');planSel=el.dataset.plan}
-function tab(t){document.getElementById('vLogin').style.display=t==='login'?'block':'none';document.getElementById('vReg').style.display=t==='reg'?'block':'none';document.getElementById('vForgot').style.display=t==='forgot'?'block':'none';document.getElementById('tL').classList.toggle('active',t==='login');document.getElementById('tR').classList.toggle('active',t==='reg')}
-function show(id,msg,ok){const e=document.getElementById(id);e.textContent=msg;e.className='alert '+(ok?'ok':'err');e.style.display='block';setTimeout(()=>e.style.display='none',7000)}
+function tab(t){
+  document.getElementById('vLogin').style.display=t==='login'?'block':'none';
+  document.getElementById('vReg').style.display=t==='reg'?'block':'none';
+  document.getElementById('vForgot').style.display=t==='forgot'?'block':'none';
+  document.getElementById('tL').classList.toggle('active',t==='login');
+  document.getElementById('tR').classList.toggle('active',t==='reg');
+}
+function show(id,msg,ok){const e=document.getElementById(id);e.textContent=msg;e.className='alert '+(ok?'ok':'err');e.style.display='block';setTimeout(()=>{e.style.display='none'},7000)}
 async function doLogin(){const email=lEmail.value.trim(),password=lPass.value.trim();if(!lTerms.checked)return show('aLogin','Debes aceptar Términos Ley 1581',false);if(!email||!password)return show('aLogin','Completa datos',false);const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok)return show('aLogin',j.error||'Error',false);localStorage.setItem('klido_token',j.token);localStorage.setItem('klido_rol',j.rol);localStorage.setItem('klido_agencia',j.agenciaId);location.href='/dashboard.html'}
 async function crearEmpresa(){const nombre=rNombre.value.trim(),email=rEmail.value.trim(),password=rPass.value.trim();if(!nombre||!email||!password)return show('aReg','Completa todo',false);btnCrear.textContent='Enviando código a tu Gmail...';btnCrear.disabled=true;const r=await fetch('/api/public/solicitar-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,nombre,plan:planSel})});const j=await r.json();if(!r.ok){show('aReg',j.error,false);btnCrear.textContent='Crear empresa y generar código →';btnCrear.disabled=false;return}show('aReg','Código enviado a '+email+' revisa Gmail y SPAM - llega a tu correo, no al admin','ok');codeBox.style.display='block';btnCrear.style.display='none'}
-async function verifCodigo(){const nombre=rNombre.value.trim(),email=rEmail.value.trim(),password=rPass.value.trim(),codigo=rCodigo.value.trim();const r=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,codigo,plan:planSel,terminos:true})});const j=await r.json();if(!r.ok)return show('aReg',j.error,false);show('aReg','Empresa creada! Ya puedes ingresar con tu plan '+planSel.toUpperCase(),'ok');setTimeout(()=>tab('login'),2000)}
-async function sendForgot(){const email=fEmail.value.trim();if(!email)return show('aForgot','Ingresa correo',false);btnForgot.textContent='Enviando...';const r=await fetch('/api/public/recuperar-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});const j=await r.json();if(!r.ok)return show('aForgot',j.error,false);show('aForgot','Código enviado a tu Gmail (revisa spam)','ok');fBox.style.display='block';btnForgot.style.display='none'}
-async function confirmForgot(){const email=fEmail.value.trim(),codigo=fCode.value.trim(),nueva=fNew.value.trim();const r=await fetch('/api/public/restablecer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo,nueva})});const j=await r.json();if(!r.ok)return show('aForgot',j.error,false);show('aForgot','Contraseña cambiada!','ok');setTimeout(()=>tab('login'),1500)}
-function openLegal(){alert('LEGALIDAD COLOMBIA - KLIDO AVANZA CONSULTING\n\nLey 1581 de 2012 Habeas Data, Decreto 1377 de 2013, Ley 1266 de 2008.\n\n- Datos alojados en Colombia (Railway/Postgres)\n- Cada agencia aislada, sin cruce información\n- Contrato de tratamiento de datos, autorización expresa\n- Cifrado AES-256, backups diarios\n- Soporte 3133181851\n- Cumplimiento SIC\n\nToda la operación es 100% legal y funcional.')}
-function openConfig(){alert('¿QUÉ HACE KLIDO? TODO AUTÓNOMO:\n\n1. Bandeja mensajes tiempo real webhook Meta klido123\n2. No leídos punto rojo, contestados por campaña etiqueta amarilla\n3. Segmentar clientes automático\n4. Calendario seguimiento + alertas\n5. Campañas Excel - segmenta teléfonos automático sin importar formato (+57)\n6. Historial campañas + seguimiento\n7. Plantillas API se suben solas automático (no manual)\n8. Envío a número seleccionado Excel, pausar/continuar\n9. Campañas Gmail masivas con Resend + tracking + historial\n10. Panel JEFE: métricas, equipo, agregar/quitar trabajadores, asignar chats, calendario\n11. Panel TRABAJADOR: ve solo sus chats, métricas propias, calendario\n12. Multiagencia autónomo, códigos a correos inscritos\n13. Planes con botón WPP 3133181851\n\nBeneficios: vende más, organiza equipo, cumple Ley 1581, sin perder chats, todo en tiempo real.')}
+async function verifCodigo(){const nombre=rNombre.value.trim(),email=rEmail.value.trim(),password=rPass.value.trim(),codigo=rCodigo.value.trim();if(!codigo)return show('aReg','Ingresa código',false);const r=await fetch('/api/public/crear-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,codigo,plan:planSel,terminos:true})});const j=await r.json();if(!r.ok)return show('aReg',j.error,false);show('aReg','Empresa creada! Plan '+planSel.toUpperCase()+' - Ya puedes ingresar','ok');setTimeout(()=>tab('login'),2000)}
+async function sendForgot(){const email=fEmail.value.trim();if(!email)return show('aForgot','Ingresa correo',false);btnForgot.textContent='Enviando...';btnForgot.disabled=true;const r=await fetch('/api/public/recuperar-codigo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});const j=await r.json();btnForgot.disabled=false;btnForgot.textContent='Enviar código a mi Gmail';if(!r.ok)return show('aForgot',j.error,false);show('aForgot','Código enviado a tu Gmail (revisa spam)','ok');fBox.style.display='block';btnForgot.style.display='none'}
+async function confirmForgot(){const email=fEmail.value.trim(),codigo=fCode.value.trim(),nueva=fNew.value.trim();if(!codigo||!nueva)return show('aForgot','Completa código y nueva contraseña',false);const r=await fetch('/api/public/restablecer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo,nueva})});const j=await r.json();if(!r.ok)return show('aForgot',j.error,false);show('aForgot','Contraseña cambiada! Ingresa ahora','ok');setTimeout(()=>tab('login'),1500)}
+function openLegal(){alert('LEGALIDAD COLOMBIA - KLIDO AVANZA CONSULTING\n\nLey 1581 de 2012 Habeas Data, Decreto 1377 de 2013, Ley 1266 de 2008.\n\n- Datos alojados en Colombia (Railway/Postgres) DATA_DIR: '+ (localStorage.getItem('data_dir')||'data') +'\n- Cada agencia aislada, sin cruce información\n- Contrato tratamiento datos, autorización expresa\n- Cifrado AES-256, backups diarios\n- Soporte 3133181851\n- Cumplimiento SIC\n- ADMIN_KEY: KLIDO_DUEÑA_2026 - META_VERIFY_TOKEN: klido123')}
+function openConfig(){alert('¿QUÉ HACE KLIDO? TODO AUTÓNOMO:\n\n1. Bandeja mensajes tiempo real webhook Meta klido123 - PHONE_NUMBER_ID: 1338474282683914\n2. No leídos punto rojo, contestados por campaña etiqueta amarilla\n3. Segmentar clientes automático\n4. Calendario seguimiento + alertas\n5. Campañas Excel - segmenta teléfonos automático sin importar formato +57\n6. Historial campañas + seguimiento\n7. Plantillas API se suben solas automático (no manual)\n8. Envío a número seleccionado Excel, pausar/continuar\n9. Campañas Gmail masivas con Resend + tracking + historial\n10. Panel JEFE: métricas, equipo, agregar/quitar trabajadores, asignar chats, calendario\n11. Panel TRABAJADOR: ve solo sus chats, métricas propias, calendario\n12. Multiagencia autónomo, códigos a correos inscritos, sin cruce\n13. Planes con botón WPP 3133181851\n\nBeneficios: vende más, organiza equipo, cumple Ley 1581, sin perder chats, todo en tiempo real.')}
 </script>
 </body>
 </html>
