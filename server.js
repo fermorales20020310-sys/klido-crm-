@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
-
 const app = express();
 const PORT = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'klido_v115_final_2026_gerencia';
@@ -11,66 +10,28 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const SUPER_ADMIN_EMAIL = 'admin@klido.com';
 const SUPER_ADMIN_PASS = 'Mafe2002@';
 const VERIFY_TOKEN = 'klido123';
-const ENV_TOKEN = process.env.WHATSAPP_TOKEN || process.env.META_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN || '';
-const ENV_PHONE_ID = process.env.WA_PHONE_ID || process.env.PHONE_ID || process.env.PHONE_NUMBER_ID || '1338474282683914';
-
-let fetchFn = global.fetch;
-if (!fetchFn) { try { fetchFn = require('node-fetch'); } catch(e) {} }
-
-console.log(`[KLIDO v116.7 FIX ENV] VERIFY=${VERIFY_TOKEN} ENV_TOKEN_LEN=${ENV_TOKEN.length} ENV_PHONE=${ENV_PHONE_ID} PORT=${PORT}`);
-
-app.get('/webhook', (req, res) => {
-  const mode = req.query['hub.mode']; const token = req.query['hub.verify_token']; const challenge = req.query['hub.challenge'];
-  console.log(`[WEBHOOK GET] mode=${mode} token=${token}`);
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) return res.status(200).send(challenge);
-  return res.sendStatus(403);
-});
+const ENV_TOKEN = process.env.WHATSAPP_TOKEN || process.env.META_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN || process.env.TOKEN || '';
+const ENV_PHONE_ID = process.env.WA_PHONE_ID || process.env.PHONE_ID || process.env.PHONE_NUMBER_ID || process.env.WA_PHONE_NUMBER_ID || '1338474282683914';
+let fetchFn = global.fetch; if (!fetchFn) { try { fetchFn = require('node-fetch'); } catch(e) {} }
+console.log(`[KLIDO v116.8 ALINEADO EXCEL+PLANTILLA] VERIFY=${VERIFY_TOKEN} ENV_TOKEN_LEN=${ENV_TOKEN.length} ENV_PHONE=${ENV_PHONE_ID} PORT=${PORT}`);
+app.get('/webhook', (req, res) => { const mode = req.query['hub.mode']; const token = req.query['hub.verify_token']; const challenge = req.query['hub.challenge']; console.log(`[WEBHOOK GET] mode=${mode} token=${token}`); if (mode === 'subscribe' && token === VERIFY_TOKEN) return res.status(200).send(challenge); return res.sendStatus(403); });
 app.post('/webhook', express.json({limit:'15mb'}), (req, res) => {
   try {
-    const value = req.body.entry?.[0]?.changes?.[0]?.value;
-    const phoneId = value?.metadata?.phone_number_id; const messages = value?.messages; const contacts = value?.contacts;
+    const value = req.body.entry?.[0]?.changes?.[0]?.value; const phoneId = value?.metadata?.phone_number_id; const messages = value?.messages; const contacts = value?.contacts;
     if (phoneId && messages) {
-      const DATA_DIR = path.join(__dirname,'data'); const EMPRESAS_FILE = path.join(DATA_DIR,'empresas.json'); const MENSAJES_DIR = path.join(DATA_DIR,'mensajes');
-      if (!fs.existsSync(MENSAJES_DIR)) fs.mkdirSync(MENSAJES_DIR,{recursive:true});
-      let emps=[]; try{ emps=JSON.parse(fs.readFileSync(EMPRESAS_FILE,'utf8')); }catch{}
-      const idx=emps.findIndex(e=>e.waPhoneId===phoneId || e.waPhoneId===ENV_PHONE_ID);
-      if(idx!==-1){
-        const emp=emps[idx]; if(!emp.contactos) emp.contactos=[];
-        const file=path.join(MENSAJES_DIR, `${emp.id}.json`); let msgs=[]; if(fs.existsSync(file)) try{ msgs=JSON.parse(fs.readFileSync(file,'utf8')); }catch{}
-        messages.forEach(m=>{ const from=m.from; const name=contacts?.[0]?.profile?.name||'Cliente '+from.slice(-4); if(!emp.contactos.find(c=>c.phone===from)){ emp.contactos.push({id:from,nombre:name,phone:from,tag:'Nuevo',fecha:new Date().toISOString()}); } msgs.push({id:m.id,contactoId:from,from,texto:m.text?.body||`[${m.type}]`,de:'cliente',fecha:new Date().toISOString()}); });
-        fs.writeFileSync(file, JSON.stringify(msgs.slice(-3000),null,2)); fs.writeFileSync(EMPRESAS_FILE, JSON.stringify(emps,null,2));
-        console.log(`[INBOX OK] ${emp.nombre} mensaje de ${messages[0].from}`);
-      }
-    }
-    res.sendStatus(200);
+      const DATA_DIR = path.join(__dirname,'data'); const EMPRESAS_FILE = path.join(DATA_DIR,'empresas.json'); const MENSAJES_DIR = path.join(DATA_DIR,'mensajes'); if (!fs.existsSync(MENSAJES_DIR)) fs.mkdirSync(MENSAJES_DIR,{recursive:true});
+      let emps=[]; try{ emps=JSON.parse(fs.readFileSync(EMPRESAS_FILE,'utf8')); }catch{}; const idx=emps.findIndex(e=>e.waPhoneId===phoneId || e.waPhoneId===ENV_PHONE_ID);
+      if(idx!==-1){ const emp=emps[idx]; if(!emp.contactos) emp.contactos=[]; const file=path.join(MENSAJES_DIR, `${emp.id}.json`); let msgs=[]; if(fs.existsSync(file)) try{ msgs=JSON.parse(fs.readFileSync(file,'utf8')); }catch{}; messages.forEach(m=>{ const from=m.from; const name=contacts?.[0]?.profile?.name||'Cliente '+from.slice(-4); if(!emp.contactos.find(c=>c.phone===from)){ emp.contactos.push({id:from,nombre:name,phone:from,tag:'Nuevo',fecha:new Date().toISOString()}); } msgs.push({id:m.id,contactoId:from,from,texto:m.text?.body||`[${m.type}]`,de:'cliente',fecha:new Date().toISOString()}); }); fs.writeFileSync(file, JSON.stringify(msgs.slice(-3000),null,2)); fs.writeFileSync(EMPRESAS_FILE, JSON.stringify(emps,null,2)); console.log(`[INBOX OK] ${emp.nombre} mensaje de ${messages[0].from}`); }
+    } res.sendStatus(200);
   } catch(e){ console.error(e); res.sendStatus(200); }
 });
-
 app.use(express.json({limit:'15mb'})); app.use(express.urlencoded({extended:true})); app.use((req,res,next)=>{ res.header('Access-Control-Allow-Origin','*'); res.header('Access-Control-Allow-Headers','*'); res.header('Access-Control-Allow-Methods','*'); if(req.method==='OPTIONS') return res.sendStatus(200); next(); }); app.use(express.static(path.join(__dirname,'public')));
-const DATA_DIR = path.join(__dirname,'data'); const EMPRESAS_FILE = path.join(DATA_DIR,'empresas.json'); const MENSAJES_DIR = path.join(DATA_DIR,'mensajes');
-if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR,{recursive:true}); if(!fs.existsSync(MENSAJES_DIR)) fs.mkdirSync(MENSAJES_DIR,{recursive:true}); if(!fs.existsSync(EMPRESAS_FILE)) fs.writeFileSync(EMPRESAS_FILE,'[]');
-
-function obtenerEmpresas(){
-  try{
-    let emps=JSON.parse(fs.readFileSync(EMPRESAS_FILE,'utf8'));
-    emps=emps.map(e=>{
-      if(!e.contactos) e.contactos=[];
-      if(!e.campanas) e.campanas=[];
-      if(!e.citas) e.citas=[];
-      if(!e.equipo) e.equipo=[];
-      if(!e.waPhoneId) e.waPhoneId=ENV_PHONE_ID;
-      if(!e.waToken) e.waToken=ENV_TOKEN;
-      return e;
-    });
-    return emps;
-  }catch{ return []; }
-}
+const DATA_DIR = path.join(__dirname,'data'); const EMPRESAS_FILE = path.join(DATA_DIR,'empresas.json'); const MENSAJES_DIR = path.join(DATA_DIR,'mensajes'); if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR,{recursive:true}); if(!fs.existsSync(MENSAJES_DIR)) fs.mkdirSync(MENSAJES_DIR,{recursive:true}); if(!fs.existsSync(EMPRESAS_FILE)) fs.writeFileSync(EMPRESAS_FILE,'[]');
+function obtenerEmpresas(){ try{ let emps=JSON.parse(fs.readFileSync(EMPRESAS_FILE,'utf8')); emps=emps.map(e=>{ if(!e.contactos) e.contactos=[]; if(!e.campanas) e.campanas=[]; if(!e.citas) e.citas=[]; if(!e.equipo) e.equipo=[]; if(!e.waPhoneId) e.waPhoneId=ENV_PHONE_ID; if(!e.waToken) e.waToken=ENV_TOKEN; return e; }); return emps; }catch{ return []; } }
 function guardarEmpresas(l){ fs.writeFileSync(EMPRESAS_FILE, JSON.stringify(l,null,2)); }
-
 const codigosRegistro = new Map(); const codigosReset = new Map();
 function auth(req,res,next){ const t=(req.headers.authorization||'').replace('Bearer ','').trim()||req.query.token||''; if(!t) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(t,JWT_SECRET); next(); }catch{ return res.status(401).json({error:'Token vencido'}); } }
 async function enviarResend(to,subject,html){ if(!RESEND_API_KEY) return {id:'mock'}; const r=await fetchFn('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:RESEND_FROM,to:to.toLowerCase(),subject,html})}); const j=await r.json(); if(!r.ok) throw new Error(j.message); return j; }
-
 app.post('/api/public/solicitar-codigo', async (req,res)=>{ const {email}=req.body; const codigo=Math.floor(100000+Math.random()*900000).toString(); codigosRegistro.set(email.toLowerCase(),{codigo,expira:Date.now()+10*60*1000}); try{ await enviarResend(email.toLowerCase(),`KLIDO ${codigo}`,`<h2>${codigo}</h2>`); res.json({ok:true}); }catch(e){ res.json({ok:true,mensaje:`${codigo}`}); } });
 app.post('/api/public/crear-empresa',(req,res)=>{ const {nombre,email,password,plan,codigo,terminos}=req.body; if(!terminos) return res.status(400).json({error:'Acepta'}); const reg=codigosRegistro.get(email.toLowerCase()); if(!reg||reg.codigo!==codigo) return res.status(400).json({error:'Código'}); let emps=obtenerEmpresas(); if(emps.length>=10) return res.status(400).json({error:'Limite'}); if(emps.find(e=>e.email===email.toLowerCase())) return res.status(400).json({error:'Ya existe'}); const nueva={id:'emp_'+Date.now(),nombre,email:email.toLowerCase(),password,plan,estado:'activa',pagado:true,waPhoneId:ENV_PHONE_ID||'',waToken:ENV_TOKEN||'',consumo:{mensajes:0,usuarios:2},equipo:[{id:'jefe_'+Date.now(),nombre,email:email.toLowerCase(),rol:'jefe',password}],contactos:[],campanas:[],citas:[],fechaRegistro:new Date().toISOString()}; emps.push(nueva); guardarEmpresas(emps); codigosRegistro.delete(email.toLowerCase()); res.status(201).json({ok:true}); });
 app.post('/api/public/forgot-password', async (req,res)=>{ const {email}=req.body; const codigo=Math.floor(100000+Math.random()*900000).toString(); codigosReset.set(email.toLowerCase(),{codigo,expira:Date.now()+10*60*1000}); try{ await enviarResend(email.toLowerCase(),`Reset ${codigo}`,`<h2>${codigo}</h2>`); res.json({ok:true}); }catch(e){ res.status(500).json({error:e.message}); } });
@@ -81,54 +42,32 @@ app.get('/api/admin/agencias',auth,(req,res)=>{ if(req.user.rol!=='super') retur
 app.post('/api/admin/bloquear',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.body.agenciaId); if(i!==-1){ emps[i].estado=req.body.estado; emps[i].pagado=req.body.pagado; guardarEmpresas(emps); } res.json({ok:true}); });
 app.post('/api/admin/activar',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.body.agenciaId); if(i!==-1){ emps[i].estado='activa'; emps[i].pagado=true; guardarEmpresas(emps); } res.json({ok:true}); });
 app.post('/api/gerente/desbloquear/:id',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.params.id); if(i!==-1){ emps[i].estado='activa'; emps[i].pagado=true; guardarEmpresas(emps); } res.json({ok:true}); });
-
-app.post('/api/mensajes',auth, async (req,res)=>{
-  try{
-    const {contactoId,texto}=req.body; let emps=obtenerEmpresas(); const idx=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(idx===-1) return res.status(404).json({error:'No empresa'});
-    const emp=emps[idx];
-    const phoneIdToUse = emp.waPhoneId || ENV_PHONE_ID;
-    const tokenToUse = emp.waToken || ENV_TOKEN;
-    console.log(`[ENVIO INTENTO] ${emp.nombre} -> ${contactoId} PhoneID=${phoneIdToUse} TokenLen=${tokenToUse.length}`);
-    if(!tokenToUse) return res.status(400).json({error:'No hay token'});
-    const toClean=contactoId.replace(/\D/g,''); const url=`https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
-    const r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:toClean,type:'text',text:{body:texto}})});
-    const j=await r.json(); console.log('[META RESPONSE]', r.status, JSON.stringify(j));
-    if(!r.ok) return res.status(400).json({error:j.error?.message, meta:j});
-    const file=path.join(MENSAJES_DIR, `${emp.id}.json`); let msgs=[]; if(fs.existsSync(file)) try{msgs=JSON.parse(fs.readFileSync(file,'utf8'))}catch{}; msgs.push({id:'msg_'+Date.now(),contactoId:toClean,texto,de:'yo',fecha:new Date().toISOString()}); fs.writeFileSync(file, JSON.stringify(msgs.slice(-3000),null,2));
-    res.json({ok:true, meta:j});
-  }catch(e){ console.error(e); res.status(500).json({error:e.message}); }
-});
-
+app.post('/api/mensajes',auth, async (req,res)=>{ try{ const {contactoId,texto}=req.body; let emps=obtenerEmpresas(); const idx=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(idx===-1) return res.status(404).json({error:'No empresa'}); const emp=emps[idx]; const phoneIdToUse = emp.waPhoneId || ENV_PHONE_ID; const tokenToUse = emp.waToken || ENV_TOKEN; console.log(`[ENVIO INTENTO] ${emp.nombre} -> ${contactoId} PhoneID=${phoneIdToUse} TokenLen=${tokenToUse.length}`); if(!tokenToUse) return res.status(400).json({error:'No hay token'}); const toClean=contactoId.replace(/\D/g,''); const url=`https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`; const r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:toClean,type:'text',text:{body:texto}})}); const j=await r.json(); console.log('[META RESPONSE]', r.status, JSON.stringify(j)); if(!r.ok) return res.status(400).json({error:j.error?.message, meta:j}); const file=path.join(MENSAJES_DIR, `${emp.id}.json`); let msgs=[]; if(fs.existsSync(file)) try{msgs=JSON.parse(fs.readFileSync(file,'utf8'))}catch{}; msgs.push({id:'msg_'+Date.now(),contactoId:toClean,texto,de:'yo',fecha:new Date().toISOString()}); fs.writeFileSync(file, JSON.stringify(msgs.slice(-3000),null,2)); res.json({ok:true, meta:j}); }catch(e){ console.error(e); res.status(500).json({error:e.message}); } });
 app.get('/api/mensajes',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); const file=path.join(MENSAJES_DIR, `${emp?.id}.json`); if(!fs.existsSync(file)) return res.json([]); try{ res.json(JSON.parse(fs.readFileSync(file,'utf8'))); }catch{ res.json([]); } });
 app.get('/api/contactos',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); res.json(emp?.contactos||[]); });
 app.post('/api/contactos',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].contactos) emps[i].contactos=[]; emps[i].contactos.push({id:Date.now().toString(),...req.body}); guardarEmpresas(emps); } res.json({ok:true}); });
-
-app.get('/api/campanas',auth,(req,res)=>{
-  const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id);
-  if(!emp) return res.json([]); if(!emp.campanas) emp.campanas=[]; res.json(emp.campanas);
-});
-
+app.get('/api/campanas',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); if(!emp) return res.json([]); if(!emp.campanas) emp.campanas=[]; res.json(emp.campanas); });
 app.post('/api/campanas',auth, async (req,res)=>{
   try{
-    let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id);
-    if(i===-1) return res.status(404).json({error:'Empresa no encontrada'});
+    let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i===-1) return res.status(404).json({error:'No empresa'});
     if(!emps[i].campanas) emps[i].campanas=[];
-    const { nombre, plantilla, numeros, lista, contactos, segmento, plantillaVars } = req.body;
-    console.log(`[CAMPANA INTENTO] ${emps[i].nombre} plantilla=${plantilla} nums=${lista?.length||numeros}`);
-    if(!lista || lista.length===0) return res.status(400).json({error:'Lista vacía'});
-    const nueva = { id:'camp_'+Date.now(), nombre: nombre||'Campaña '+new Date().toLocaleString(), plantilla: plantilla||'hello_world', plantillaVars: plantillaVars||'', segmento: segmento||'todos', numeros: lista.length, lista, contactos: contactos||[], fecha: new Date().toISOString(), estado: 'enviando', enviados: 0, leidos:0, respondidos:0 };
+    const { nombre, plantilla, lista, plantillaVars } = req.body;
+    const listaNumeros = lista || req.body.numeros || [];
+    console.log(`[CAMPANA INTENTO] ${emps[i].nombre} -> ${nombre} plantilla=${plantilla} nums=${listaNumeros.length} vars=${plantillaVars||'-'}`);
+    if(!listaNumeros || listaNumeros.length===0) return res.status(400).json({error:'Lista vacía - sube Excel primero'});
+    const nueva = { id:'camp_'+Date.now(), nombre: nombre||'Campaña '+new Date().toLocaleString(), plantilla: plantilla||'hello_world', plantillaVars: plantillaVars||'', numeros: listaNumeros.length, lista: listaNumeros, fecha: new Date().toISOString(), estado: 'enviando', enviados: 0 };
     emps[i].campanas.push(nueva); guardarEmpresas(emps);
-    console.log(`[CAMPANA GUARDADA] ${nueva.nombre} ${lista.length} nums`);
+    console.log(`[CAMPANA GUARDADA] ${nueva.nombre} ${listaNumeros.length} nums - Iniciando envío background`);
     res.json({ok:true, campana:nueva});
+    // ENVIO REAL BACKGROUND - A NUMEROS DEL EXCEL CON PLANTILLA
     setTimeout(async ()=>{
       try{
         let emps2=obtenerEmpresas(); const emp=emps2.find(e=>e.id===emps[i].id) || emps2[i];
-        const phoneIdToUse = emp.waPhoneId || ENV_PHONE_ID;
-        const tokenToUse = emp.waToken || ENV_TOKEN;
-        console.log(`[CAMPANA ENVIO START] PhoneID=${phoneIdToUse} TokenLen=${tokenToUse?.length} Plantilla=${plantilla}`);
-        if(!tokenToUse ||!phoneIdToUse){ console.log('[CAMPANA] Falta token o phoneId'); return; }
-        let enviados=0;
-        for(const raw of lista){
+        const phoneIdToUse = emp.waPhoneId || ENV_PHONE_ID; const tokenToUse = emp.waToken || ENV_TOKEN;
+        console.log(`[CAMPANA ENVIO START] Empresa=${emp.nombre} PhoneID=${phoneIdToUse} TokenLen=${tokenToUse?.length} Plantilla=${plantilla} Total=${listaNumeros.length}`);
+        if(!tokenToUse ||!phoneIdToUse){ console.log('[CAMPANA] ERROR Falta token o phoneId'); return; }
+        let enviados=0, fallidos=0;
+        for(const raw of listaNumeros){
           const toClean=String(raw).replace(/\D/g,''); if(toClean.length<10) continue;
           try{
             const url=`https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
@@ -136,19 +75,17 @@ app.post('/api/campanas',auth, async (req,res)=>{
             if(plantillaVars && plantillaVars.trim()!==''){ const parts=plantillaVars.split(',').map(s=>s.trim()).filter(Boolean); if(parts.length>0) body.template.components=[{ type:'body', parameters: parts.map(t=>({type:'text', text:t})) }]; }
             const r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
             const j=await r.json();
-            console.log(`[CAMPANA] ${toClean} -> ${r.status} ${JSON.stringify(j).slice(0,500)}`);
-            if(r.ok) enviados++;
-            await new Promise(x=>setTimeout(x, 1200));
-          }catch(err){ console.error('[CAMPANA ERR]', err.message); }
+            console.log(`[CAMPANA] ${toClean} -> ${r.status} ${JSON.stringify(j).slice(0,600)}`);
+            if(r.ok) enviados++; else fallidos++;
+            await new Promise(x=>setTimeout(x, 1300));
+          }catch(err){ console.error('[CAMPANA ERR]', toClean, err.message); fallidos++; }
         }
-        let emps3=obtenerEmpresas(); const idx=emps3.findIndex(e=>e.id===emp.id);
-        if(idx!==-1){ const cIdx=emps3[idx].campanas.findIndex(c=>c.id===nueva.id); if(cIdx!==-1){ emps3[idx].campanas[cIdx].enviados=enviados; emps3[idx].campanas[cIdx].estado='enviada'; guardarEmpresas(emps3); } }
-        console.log(`[CAMPANA FINAL] ${enviados}/${lista.length} enviados`);
+        let emps3=obtenerEmpresas(); const idx=emps3.findIndex(e=>e.id===emp.id); if(idx!==-1){ const cIdx=emps3[idx].campanas.findIndex(c=>c.id===nueva.id); if(cIdx!==-1){ emps3[idx].campanas[cIdx].enviados=enviados; emps3[idx].campanas[cIdx].fallidos=fallidos; emps3[idx].campanas[cIdx].estado='enviada'; guardarEmpresas(emps3); } }
+        console.log(`[CAMPANA FINAL] ${emp.nombre} ${enviados}/${listaNumeros.length} enviados, ${fallidos} fallidos`);
       }catch(e){ console.error('[CAMPANA BG ERROR]', e); }
-    }, 1500);
+    }, 1000);
   }catch(e){ console.error('[CAMPANA ERROR]', e); res.status(500).json({error:e.message}); }
 });
-
 app.get('/api/equipo',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); res.json(emp?.equipo||[]); });
 app.post('/api/equipo',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].equipo) emps[i].equipo=[]; emps[i].equipo.push({id:'user_'+Date.now(),...req.body}); guardarEmpresas(emps); } res.json({ok:true}); });
 app.delete('/api/equipo/:uid',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].equipo) emps[i].equipo=[]; emps[i].equipo=emps[i].equipo.filter(u=>u.id!==req.params.uid); guardarEmpresas(emps); } res.json({ok:true}); });
@@ -156,4 +93,4 @@ app.get('/api/citas',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=e
 app.post('/api/citas',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].citas) emps[i].citas=[]; emps[i].citas.push({id:Date.now(),...req.body}); guardarEmpresas(emps); } res.json({ok:true}); });
 app.post('/api/config/meta',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); const {waPhoneId,waToken}=req.body; if(i!==-1){ if(waPhoneId) emps[i].waPhoneId=waPhoneId; if(waToken) emps[i].waToken=waToken; guardarEmpresas(emps); console.log(`[META GUARDADO] ${emps[i].nombre} Phone ${emps[i].waPhoneId} Len ${emps[i].waToken?.length||0}`); } res.json({ok:true}); });
 app.get('*',(req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(PORT,()=>console.log(`KLIDO v116.7 FIX ENV + ENVIO REAL PORT ${PORT} LISTO`));
+app.listen(PORT,()=>console.log(`KLIDO v116.8 ALINEADO EXCEL+PLANTILLA PORT ${PORT} LISTO - Envia plantilla a numeros Excel`));
