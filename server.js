@@ -13,7 +13,7 @@ const VERIFY_TOKEN = 'klido123';
 const ENV_TOKEN = process.env.WHATSAPP_TOKEN || process.env.META_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN || process.env.TOKEN || '';
 const ENV_PHONE_ID = process.env.WA_PHONE_ID || process.env.PHONE_ID || process.env.PHONE_NUMBER_ID || process.env.WA_PHONE_NUMBER_ID || '1338474282683914';
 let fetchFn = global.fetch; if (!fetchFn) { try { fetchFn = require('node-fetch'); } catch(e) {} }
-console.log(`[KLIDO v116.9 CONGRESO ACOL] VERIFY=${VERIFY_TOKEN} ENV_TOKEN_LEN=${ENV_TOKEN.length} ENV_PHONE=${ENV_PHONE_ID} PORT=${PORT}`);
+console.log(`[KLIDO v117 UNIVERSAL] VERIFY=${VERIFY_TOKEN} ENV_TOKEN_LEN=${ENV_TOKEN.length} ENV_PHONE=${ENV_PHONE_ID} PORT=${PORT}`);
 app.get('/webhook', (req, res) => { const mode = req.query['hub.mode']; const token = req.query['hub.verify_token']; const challenge = req.query['hub.challenge']; if (mode === 'subscribe' && token === VERIFY_TOKEN) return res.status(200).send(challenge); return res.sendStatus(403); });
 app.post('/webhook', express.json({limit:'15mb'}), (req, res) => {
   try {
@@ -47,6 +47,8 @@ app.get('/api/mensajes',auth,(req,res)=>{ const emps=obtenerEmpresas(); const em
 app.get('/api/contactos',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); res.json(emp?.contactos||[]); });
 app.post('/api/contactos',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].contactos) emps[i].contactos=[]; emps[i].contactos.push({id:Date.now().toString(),...req.body}); guardarEmpresas(emps); } res.json({ok:true}); });
 app.get('/api/campanas',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); if(!emp) return res.json([]); if(!emp.campanas) emp.campanas=[]; res.json(emp.campanas); });
+
+// UNIVERSAL: ENVIA CUALQUIER PLANTILLA APROBADA AUTOMATICO
 app.post('/api/campanas',auth, async (req,res)=>{
   try{
     let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i===-1) return res.status(404).json({error:'No empresa'});
@@ -54,46 +56,52 @@ app.post('/api/campanas',auth, async (req,res)=>{
     const { nombre, plantilla, lista, plantillaVars, contactos } = req.body;
     let listaNumeros = lista || req.body.numeros || [];
     let contactosLista = contactos || [];
-    // Normaliza: si lista trae objetos {phone, nombre}
     let listaNormalizada = listaNumeros.map(item=>{
-      if(typeof item === 'object' && item!== null){ return { phone: String(item.phone||item.telefono||item.numero||'').replace(/\D/g,''), nombre: item.nombre||item.name||item.cliente||'' }; }
+      if(typeof item === 'object' && item!== null){ return { phone: String(item.phone||item.telefono||item.numero||item||'').replace(/\D/g,''), nombre: item.nombre||item.name||'' }; }
       return { phone: String(item).replace(/\D/g,''), nombre: '' };
     }).filter(x=>x.phone.length>=10);
-    console.log(`[CAMPANA INTENTO] ${emps[i].nombre} -> ${nombre} plantilla=${plantilla} nums=${listaNormalizada.length} vars=${plantillaVars||'-'} contactosLen=${contactosLista.length}`);
-    if(listaNormalizada.length===0) return res.status(400).json({error:'Lista vacía - sube Excel primero'});
-    const nueva = { id:'camp_'+Date.now(), nombre: nombre||'Campaña '+new Date().toLocaleString(), plantilla: plantilla||'acol_invitacion_congreso', plantillaVars: plantillaVars||'', numeros: listaNormalizada.length, lista: listaNormalizada.map(x=>x.phone), contactos: contactosLista, fecha: new Date().toISOString(), estado: 'enviando', enviados: 0 };
+    if(listaNormalizada.length===0) return res.status(400).json({error:'Lista vacía'});
+    const plantillaFinal = (plantilla||'').trim().replace(/\s+/g,'').toLowerCase();
+    if(!plantillaFinal) return res.status(400).json({error:'Escribe nombre de plantilla aprobada'});
+    const nueva = { id:'camp_'+Date.now(), nombre: nombre||plantillaFinal+' '+new Date().toLocaleString(), plantilla: plantillaFinal, plantillaVars: plantillaVars||'', numeros: listaNormalizada.length, lista: listaNormalizada.map(x=>x.phone), fecha: new Date().toISOString(), estado: 'enviando', enviados: 0 };
     emps[i].campanas.push(nueva); guardarEmpresas(emps);
-    console.log(`[CAMPANA GUARDADA] ${nueva.nombre} ${listaNormalizada.length} nums - Iniciando envío ACOL`);
+    console.log(`[CAMPANA UNIVERSAL] ${emps[i].nombre} -> ${nombre} plantilla=${plantillaFinal} nums=${listaNormalizada.length}`);
     res.json({ok:true, campana:nueva});
     setTimeout(async ()=>{
       try{
         let emps2=obtenerEmpresas(); const emp=emps2.find(e=>e.id===emps[i].id) || emps2[i];
         const phoneIdToUse = emp.waPhoneId || ENV_PHONE_ID; const tokenToUse = emp.waToken || ENV_TOKEN;
-        console.log(`[CAMPANA ENVIO START] ${emp.nombre} PhoneID=${phoneIdToUse} TokenLen=${tokenToUse?.length} Plantilla=${plantilla} Total=${listaNormalizada.length}`);
-        if(!tokenToUse ||!phoneIdToUse){ console.log('[CAMPANA] ERROR Falta token o phoneId'); return; }
+        console.log(`[CAMPANA ENVIO START] ${emp.nombre} PhoneID=${phoneIdToUse} Plantilla=${plantillaFinal} Total=${listaNormalizada.length}`);
+        if(!tokenToUse ||!phoneIdToUse) return;
         let enviados=0, fallidos=0;
         for(const entry of listaNormalizada){
           const toClean=entry.phone;
-          let nombreCliente = entry.nombre || (plantillaVars||'').trim() || 'cliente';
-          if(contactosLista.length>0){ const c = contactosLista.find(cc=> String(cc.phone||cc.telefono||'').replace(/\D/g,'')===toClean); if(c && c.nombre) nombreCliente = c.nombre; }
+          let vars = [];
+          if(entry.nombre) vars=[entry.nombre];
+          if(contactosLista.length>0){ const c=contactosLista.find(cc=> String(cc.phone||'').replace(/\D/g,'')===toClean); if(c && c.nombre) vars=[c.nombre]; }
+          if(plantillaVars && plantillaVars.trim()!==''){ vars = plantillaVars.split(',').map(s=>s.trim()).filter(Boolean); }
           try{
             const url=`https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
-            let body={ messaging_product:'whatsapp', to: toClean, type: 'template', template: { name: plantilla, language: { code: 'es_CO' }, components: [{ type:'body', parameters: [{type:'text', text: nombreCliente }] }] } };
-            let r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+            let bodyBase = { messaging_product:'whatsapp', to: toClean, type: 'template', template: { name: plantillaFinal, language: { code: 'es_CO' } } };
+            if(vars.length>0){ bodyBase.template.components=[{ type:'body', parameters: vars.map(t=>({type:'text', text:t})) }]; }
+            let r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify(bodyBase)});
             let j=await r.json();
-            if(!r.ok && j.error && j.error.code===132001){ // retry con es
-              body.template.language.code='es'; r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify(body)}); j=await r.json();
+            if(!r.ok){
+              // retry idiomas comunes
+              for(const lang of ['es','en_US','en']){
+                bodyBase.template.language.code=lang; r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify(bodyBase)}); j=await r.json(); if(r.ok) break;
+              }
             }
-            console.log(`[CAMPANA ACOL] ${toClean} (${nombreCliente}) -> ${r.status} ${JSON.stringify(j).slice(0,800)}`);
+            console.log(`[CAMPANA UNIVERSAL] ${toClean} vars=[${vars.join(',')}] -> ${r.status} ${JSON.stringify(j).slice(0,800)}`);
             if(r.ok) enviados++; else fallidos++;
-            await new Promise(x=>setTimeout(x, 1400));
-          }catch(err){ console.error('[CAMPANA ERR]', toClean, err.message); fallidos++; }
+            await new Promise(x=>setTimeout(x, 1200));
+          }catch(err){ fallidos++; }
         }
         let emps3=obtenerEmpresas(); const idx=emps3.findIndex(e=>e.id===emp.id); if(idx!==-1){ const cIdx=emps3[idx].campanas.findIndex(c=>c.id===nueva.id); if(cIdx!==-1){ emps3[idx].campanas[cIdx].enviados=enviados; emps3[idx].campanas[cIdx].fallidos=fallidos; emps3[idx].campanas[cIdx].estado='enviada'; guardarEmpresas(emps3); } }
-        console.log(`[CAMPANA FINAL ACOL] ${emp.nombre} ${enviados}/${listaNormalizada.length} enviados, ${fallidos} fallidos`);
+        console.log(`[CAMPANA FINAL UNIVERSAL] ${emp.nombre} ${enviados}/${listaNormalizada.length} enviados`);
       }catch(e){ console.error('[CAMPANA BG ERROR]', e); }
-    }, 1000);
-  }catch(e){ console.error('[CAMPANA ERROR]', e); res.status(500).json({error:e.message}); }
+    }, 800);
+  }catch(e){ res.status(500).json({error:e.message}); }
 });
 app.get('/api/equipo',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); res.json(emp?.equipo||[]); });
 app.post('/api/equipo',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].equipo) emps[i].equipo=[]; emps[i].equipo.push({id:'user_'+Date.now(),...req.body}); guardarEmpresas(emps); } res.json({ok:true}); });
@@ -102,4 +110,4 @@ app.get('/api/citas',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=e
 app.post('/api/citas',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].citas) emps[i].citas=[]; emps[i].citas.push({id:Date.now(),...req.body}); guardarEmpresas(emps); } res.json({ok:true}); });
 app.post('/api/config/meta',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); const {waPhoneId,waToken}=req.body; if(i!==-1){ if(waPhoneId) emps[i].waPhoneId=waPhoneId; if(waToken) emps[i].waToken=waToken; guardarEmpresas(emps); } res.json({ok:true}); });
 app.get('*',(req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(PORT,()=>console.log(`KLIDO v116.9 CONGRESO ACOL PORT ${PORT} LISTO - Envia acol_invitacion_congreso a Excel`));
+app.listen(PORT,()=>console.log(`KLIDO v117 UNIVERSAL PORT ${PORT} LISTO - Cualquier plantilla aprobada automatica`));
