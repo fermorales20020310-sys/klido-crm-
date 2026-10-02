@@ -80,35 +80,98 @@ const token=localStorage.getItem('klido_token'); if(!token) location.href='/inde
 let numerosDetectados=[]; let contactosExcel=[];
 async function api(p,m='GET',b=null){ const o={method:m,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}; if(b) o.body=JSON.stringify(b); const r=await fetch(p,o); if(r.status===401){ localStorage.clear(); location.href='/index.html?v=115'; return null;} return r.json(); }
 
+// FIX v116.1 - DETECTOR DE NUMEROS ROBUSTO - NO ROMPE LO QUE YA TIENES
 function procesarExcel(){
-  const file=document.getElementById('excelFile').files[0]; if(!file) return alert('Selecciona Excel');
+  const file=document.getElementById('excelFile').files[0];
+  if(!file) return alert('Selecciona Excel');
   document.getElementById('progExcel').style.width='30%';
   const reader=new FileReader();
   reader.onload=function(e){
     try{
-      const data=new Uint8Array(e.target.result); const wb=XLSX.read(data,{type:'array'});
-      const sheet=wb.Sheets[wb.SheetNames[0]]; const json=XLSX.utils.sheet_to_json(sheet,{defval:''});
-      document.getElementById('progExcel').style.width='70%';
+      const data=new Uint8Array(e.target.result);
+      const wb=XLSX.read(data,{type:'array'});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const json=XLSX.utils.sheet_to_json(sheet,{defval:''});
+
+      if(json.length===0){ alert('Excel vacío o sin filas'); document.getElementById('progExcel').style.width='0%'; return; }
+
+      console.log('[KLIDO EXCEL] Primera fila:', json[0]);
+      console.log('[KLIDO EXCEL] Total filas:', json.length);
+
+      document.getElementById('progExcel').style.width='60%';
+
+      const posiblesTel = ['telefono','teléfono','tel','celular','whatsapp','phone','numero','número','movil','móvil','cel','contacto','whats'];
+      const posiblesNom = ['nombre','name','cliente','contacto','persona'];
+
       let html='<table><tr><th>Nombre</th><th>Teléfono detectado</th><th>Etiqueta</th></tr>';
       numerosDetectados=[]; contactosExcel=[];
-      json.forEach(row=>{
-        const keys=Object.keys(row).map(k=>k.toLowerCase());
-        let telKey=Object.keys(row).find(k=>['telefono','phone','celular','whatsapp','numero','tel','movil'].some(t=>k.toLowerCase().includes(t)));
-        let nomKey=Object.keys(row).find(k=>['nombre','name','cliente'].some(t=>k.toLowerCase().includes(t)))||Object.keys(row)[0];
+      const vistos = new Set();
+
+      json.forEach((row, idx)=>{
+        // Detectar keys por fila (por si cambia)
+        let telKey = Object.keys(row).find(k=> posiblesTel.some(t=>k.toLowerCase().includes(t)));
+        let nomKey = Object.keys(row).find(k=> posiblesNom.some(t=>k.toLowerCase().includes(t))) || Object.keys(row)[0];
+        let tagKey = Object.keys(row).find(k=> ['etiqueta','tag','estado','label','segmento'].some(t=>k.toLowerCase().includes(t)));
+
+        // FALLBACK: si no encuentra por nombre, busca la primera columna que tenga 10+ dígitos
+        if(!telKey){
+          for(let k of Object.keys(row)){
+            let val = String(row[k]||'').replace(/\D/g,'');
+            if(val.length>=10 && val.length<=15){ telKey = k; break; }
+          }
+        }
+
         if(!telKey) return;
-        let tel=(''+row[telKey]).replace(/[^0-9]/g,''); if(tel.length>=10){ if(!tel.startsWith('57')&&tel.length===10) tel='57'+tel; numerosDetectados.push(tel); contactosExcel.push({nombre:row[nomKey]||'Cliente',phone:tel,tag:row.etiqueta||row.tag||'Excel'}); html+=`<tr><td>${row[nomKey]||''}</td><td>${tel}</td><td>${row.etiqueta||'Excel'}</td></tr>`; }
+
+        let raw = row[telKey];
+        if(raw===undefined||raw==='') return;
+        let tel=(''+raw).replace(/[^0-9]/g,'').trim();
+
+        // Normalización Colombia
+        if(tel.startsWith('00')) tel=tel.substring(2);
+        if(tel.startsWith('0')) tel=tel.substring(1);
+        if(tel.length===10) tel='57'+tel; // 3226536669 -> 573226536669
+        if(tel.length===11 && tel.startsWith('57')) {} // ya está sin 0
+        if(tel.length<10) return; // muy corto
+        if(tel.length>13) tel=tel.slice(-12); // quita prefijos raros
+        if(tel.length!==12) {
+          // Si tiene 10 después de limpiar, agrega 57
+          if(tel.length===10) tel='57'+tel;
+          else if(tel.length!==12) return; // descarta inválidos
+        }
+
+        if(vistos.has(tel)) return; // duplicado
+        vistos.add(tel);
+
+        let nombre = (row[nomKey]||'Cliente').toString().trim().substring(0,40) || 'Cliente '+tel.slice(-4);
+        let etiqueta = (tagKey? row[tagKey] : (row.etiqueta||row.tag||'Excel')).toString().trim() || 'Excel';
+
+        numerosDetectados.push(tel);
+        contactosExcel.push({nombre, phone:tel, tag:etiqueta});
+        html+=`<tr><td>${nombre}</td><td>${tel}</td><td>${etiqueta}</td></tr>`;
       });
-      html+='</table>'; document.getElementById('previewExcel').innerHTML=html;
-      document.getElementById('numerosInfo').innerHTML=`<b>${numerosDetectados.length} números seleccionados automáticamente</b> - Listos para campaña - Segmentación automática`;
+
+      html+='</table>';
+      document.getElementById('previewExcel').innerHTML=html;
+      document.getElementById('numerosInfo').innerHTML=`<b style="color:#38bdf8">${numerosDetectados.length} números seleccionados automáticamente</b> - Listos para campaña - Segmentación automática`;
       document.getElementById('progExcel').style.width='100%';
-    }catch(err){ alert('Error Excel: '+err.message); }
+
+      console.log(`[KLIDO EXCEL OK] ${numerosDetectados.length} números`, numerosDetectados.slice(0,5));
+
+      if(numerosDetectados.length===0){
+        alert('No encontré números válidos.\nColumnas detectadas: '+Object.keys(json[0]||{}).join(', ')+'\n\nAsegúrate que haya una columna con teléfonos tipo 3226536669 o 573226536669.\nAbre F12 para ver detalles.');
+      }
+    }catch(err){
+      console.error(err);
+      alert('Error Excel: '+err.message);
+      document.getElementById('progExcel').style.width='0%';
+    }
   };
   reader.readAsArrayBuffer(file);
 }
 
 async function cargarPlantillas(){
   document.getElementById('plantillasList').innerHTML='Cargando plantillas META tiempo real...';
-  // Simulación real META API por agencia - cada agencia tiene waPhoneId y token propio
   const me=await api('/api/me');
   const plantillasSim=[
     {nombre:'bienvenida_klido',estado:'APROBADA',categoria:'MARKETING',idioma:'es_CO'},
@@ -116,7 +179,7 @@ async function cargarPlantillas(){
     {nombre:'recordatorio_cita',estado:'APROBADA',categoria:'UTILITY',idioma:'es_CO'},
     {nombre:'seguimiento_cliente',estado:'APROBADA',categoria:'MARKETING',idioma:'es_CO'}
   ];
-  let html=''; let sel=document.getElementById('selectPlantilla'); sel.innerHTML='';
+  let html=''; let sel=document.getElementById('selectPlantilla'); sel.innerHTML='<option value="">Selecciona plantilla aprobada</option>';
   plantillasSim.forEach(p=>{
     if(p.estado==='APROBADA'){ html+=`<div class=card style="margin:6px 0;padding:10px"><b>${p.nombre}</b> <span class=badge ok>${p.estado}</span> ${p.categoria} ${p.idioma} - META Phone ${me?.waPhoneId||'No config'}</div>`; sel.innerHTML+=`<option value="${p.nombre}">${p.nombre} - ${p.estado}</option>`; }
   });
@@ -130,8 +193,7 @@ async function enviarCampana(){
   const segmento=document.getElementById('segmento').value||'todos';
   document.getElementById('btnEnviar').disabled=true; document.getElementById('estadoEnvio').innerText='Enviando campaña META API por agencia sin cruce...';
   document.getElementById('progEnvio').style.width='20%';
-  // Guardar campaña por agencia
-  const res=await api('/api/campanas','POST',{nombre,plantilla,numeros:numerosDetectados.length,lista:numerosDetectados,contactos:contactosExcel,segmento,fechaProgramada:document.getElementById('fechaCamp').value||new Date().toISOString(),estado:'enviada',enviados:numerosDetectados.length,leidos:0,respondidos:0});
+  const res=await api('/api/campanas','POST',{nombre,plantilla,numeros:numerosDetectados.length,lista:numerosDetectados,contactos:contactosExcel,segmento,fechaProgramada:document.getElementById('fechaCamp').value||new Date().toISOString(),estado:'enviada',enviados:numerosDetectados.length,leidos:0,respondidos:0,fecha:new Date().toISOString()});
   document.getElementById('progEnvio').style.width='100%';
   document.getElementById('estadoEnvio').innerHTML=`<span class=badge ok>Enviada ${numerosDetectados.length} números - Plantilla ${plantilla}</span> - Historial actualizado`;
   document.getElementById('btnEnviar').disabled=false;
@@ -142,7 +204,7 @@ async function cargarHistorial(){
   const hist=await api('/api/campanas'); if(!hist) return;
   const box=document.getElementById('historialCamp'); box.innerHTML=''; const tabla=document.getElementById('tablaSeg'); tabla.innerHTML='';
   hist.slice().reverse().forEach(c=>{
-    box.innerHTML+=`<div class=card><b>${c.nombre}</b> - ${c.plantilla} <span class=badge ok>${c.estado}</span><br>${c.numeros||0} números - Segmento ${c.segmento||'todos'}<br><small>${c.fecha}</small></div>`;
+    box.innerHTML+=`<div class=card><b>${c.nombre}</b> - ${c.plantilla} <span class=badge ok>${c.estado}</span><br>${c.numeros||0} números - Segmento ${c.segmento||'todos'}<br><small>${c.fecha||''}</small></div>`;
     tabla.innerHTML+=`<tr><td>${c.nombre}</td><td>${c.enviados||c.numeros||0}</td><td>${c.leidos||0}</td><td>${c.respondidos||0}</td><td><span class=badge ok>${c.estado}</span></td></tr>`;
   });
 }
