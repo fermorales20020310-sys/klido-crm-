@@ -1,22 +1,22 @@
 {
-  "name": "klido-avanza-crm",
-  "version": "112.0.0",
-  "description": "KLIDO v112 PRO - CRM Multiagencia Cloud API Oficial Meta - Kanban Nuevo->Ganado/Perdido + Inbox audios/fotos/videos/archivos + Calendario + Campañas anti-baneo bloques 50 + Solo plantillas aprobadas META auto-sync + Código desbloqueo plan por correo solo plan pagado + Pagos WPP 3133181851 anual+mant trim + Panel Jefe/Trabajador/Gerente + ACOL WA 1338474282683914 + RESEND+SMTP + Ley 1581 + Backups /data - Producción 100% funcional",
+  "name": "klido-crm-multiagencia",
+  "version": "12.0.0",
+  "description": "CRM Multiagencia Klido - Avanza Consulting",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "engines": {
-    "node": "20.x"
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "multer": "^1.4.5-lts.1",
-    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
-    "xlsx": "^0.18.5",
-    "nodemailer": "^6.9.15"
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.13",
+    "pg": "^8.11.5",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
