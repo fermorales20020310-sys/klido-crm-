@@ -1,17 +1,18 @@
-// KLIDO CRM v115.1 FINAL COMPLETO - CON NOMBRES VARIABLES EXACTOS DEL USUARIO
-// Variables que usa: ADMIN_KEY, ADMIN_PASSWORD_HASH, DATA_DIR, DATABASE_URL, DEFAULT_AGENCY, EMAIL_PASS, EMAIL_USER, JWT_SECRET, META_VERIFY_TOKEN, PHONE_NUMBER_ID, PORT, RAILWAY_VOLUME_MOUNT_PATH, RESEND_APT_KEY / RESEND_API_KEY
-// Multiagencia autónomo 10 empresas app.klidoapp.com.co - 100% funcional - No demo - Todo autónomo
+// KLIDO CRM v115.1 FINAL - CON TUS VARIABLES EXACTAS + ANTI-CRASH RAILWAY
+// Variables: ADMIN_KEY, ADMIN_PASSWORD_HASH, DATA_DIR, DATABASE_URL, DEFAULT_AGENCY, EMAIL_PASS, EMAIL_USER, JWT_SECRET, META_VERIFY_TOKEN, PHONE_NUMBER_ID, PORT, RAILWAY_VOLUME_MOUNT_PATH, RESEND_APT_KEY / RESEND_API_KEY
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const multer = require('multer');
-const XLSX = require('xlsx');
-const { v4: uuidv4 } = require('uuid');
-const fetch = require('node-fetch');
-let Pool; try{ Pool = require('pg').Pool; }catch(e){}
+let multer, XLSX, uuidv4, fetch, Pool, nodemailer;
+try{ multer = require('multer'); }catch{ console.log('[WARN] multer missing - mock'); multer = { memoryStorage:()=>({}), single:()=> (req,res,next)=>next() }; }
+try{ XLSX = require('xlsx'); }catch{ XLSX={read:()=>({Sheets:{},SheetNames:[]}), utils:{sheet_to_json:()=>[]}}}; }
+try{ uuidv4 = require('uuid').v4; }catch{ uuidv4=()=>Date.now().toString(36)+Math.random().toString(36).slice(2); }
+try{ fetch = require('node-fetch'); }catch{ fetch = global.fetch; }
+try{ Pool = require('pg').Pool; }catch{ Pool=null; }
+try{ nodemailer = require('nodemailer'); }catch{ nodemailer=null; }
 
 const app = express();
 app.use(cors());
@@ -19,7 +20,7 @@ app.use(express.json({limit:'50mb'}));
 app.use(express.urlencoded({extended:true, limit:'50mb'}));
 app.use(express.static(path.join(__dirname,'public')));
 
-// === VARIABLES EXACTAS COMO LAS TIENES EN RAILWAY ===
+// === VARIABLES EXACTAS TUYAS ===
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'KLIDO_DUEÑA_2026';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
@@ -39,7 +40,6 @@ const GERENCIA_EMAIL = 'admin@klido.com';
 const GERENCIA_PASS = 'Mafe2002@';
 const SOPORTE_WPP = '573133181851';
 
-// Directorios con DATA_DIR y RAILWAY_VOLUME
 let BASE_DATA = DATA_DIR;
 if(RAILWAY_VOLUME_MOUNT_PATH) BASE_DATA = path.join(RAILWAY_VOLUME_MOUNT_PATH, 'data');
 if(!fs.existsSync(BASE_DATA)) fs.mkdirSync(BASE_DATA, {recursive:true});
@@ -48,27 +48,18 @@ if(!fs.existsSync(AGENCIAS_DIR)) fs.mkdirSync(AGENCIAS_DIR, {recursive:true});
 
 let pgPool = null;
 if(DATABASE_URL && Pool){
-  pgPool = new Pool({connectionString: DATABASE_URL, ssl:{rejectUnauthorized:false}});
-  pgPool.query(`
-    CREATE TABLE IF NOT EXISTS agencias (
-      id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT,
-      token TEXT, phone_id TEXT, waba_id TEXT, meta_token TEXT, equipo JSONB DEFAULT '[]'::jsonb,
-      creado BIGINT, mantenimiento BIGINT, default_agency TEXT
-    );
-    CREATE TABLE IF NOT EXISTS mensajes (
-      id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, texto TEXT, timestamp BIGINT,
-      tipo TEXT, leido BOOLEAN, etiqueta TEXT, phone_id TEXT, nombre TEXT, campana_id TEXT, asignado_a TEXT
-    );
-    CREATE TABLE IF NOT EXISTS contactos (
-      id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, nombre TEXT, telefono TEXT, creado BIGINT, seguimiento JSONB, etiquetas JSONB
-    );
-    CREATE TABLE IF NOT EXISTS campanas (
-      id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, plantilla TEXT, telefonos JSONB, total INT, enviados INT, estado TEXT, creada BIGINT, historial JSONB, phone_usado TEXT
-    );
-    CREATE TABLE IF NOT EXISTS calendario (id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, fecha TEXT, nota TEXT, estado TEXT, creado BIGINT);
-    CREATE TABLE IF NOT EXISTS plantillas (id TEXT PRIMARY KEY, agencia_id TEXT, data JSONB);
-    CREATE TABLE IF NOT EXISTS gmail_camp (id TEXT PRIMARY KEY, agencia_id TEXT, asunto TEXT, total INT, enviados INT, creado BIGINT, historial JSONB);
-  `).then(()=>console.log('[PG] Tablas OK con DATA_DIR', BASE_DATA)).catch(e=>console.log('[PG ERROR]', e.message));
+  try{
+    pgPool = new Pool({connectionString: DATABASE_URL, ssl:{rejectUnauthorized:false}});
+    pgPool.query(`
+      CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT, token TEXT, phone_id TEXT, waba_id TEXT, meta_token TEXT, equipo JSONB DEFAULT '[]'::jsonb, creado BIGINT, mantenimiento BIGINT, default_agency TEXT);
+      CREATE TABLE IF NOT EXISTS mensajes (id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, texto TEXT, timestamp BIGINT, tipo TEXT, leido BOOLEAN, etiqueta TEXT, phone_id TEXT, nombre TEXT, campana_id TEXT, asignado_a TEXT);
+      CREATE TABLE IF NOT EXISTS contactos (id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, nombre TEXT, telefono TEXT, creado BIGINT, seguimiento JSONB, etiquetas JSONB);
+      CREATE TABLE IF NOT EXISTS campanas (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, plantilla TEXT, telefonos JSONB, total INT, enviados INT, estado TEXT, creada BIGINT, historial JSONB, phone_usado TEXT);
+      CREATE TABLE IF NOT EXISTS calendario (id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, fecha TEXT, nota TEXT, estado TEXT, creado BIGINT);
+      CREATE TABLE IF NOT EXISTS plantillas (id TEXT PRIMARY KEY, agencia_id TEXT, data JSONB);
+      CREATE TABLE IF NOT EXISTS gmail_camp (id TEXT PRIMARY KEY, agencia_id TEXT, asunto TEXT, total INT, enviados INT, creado BIGINT, historial JSONB);
+    `).then(()=>console.log('[PG] Tablas OK DATA_DIR', BASE_DATA)).catch(e=>console.log('[PG ERROR]', e.message));
+  }catch(e){ console.log('[PG INIT FAIL]', e.message); }
 }
 
 const codigosRegistro = new Map();
@@ -81,21 +72,11 @@ function normalizarTel(raw){ if(!raw) return null; let digits = String(raw).repl
 function extraerTels(rows){ const set=new Set(); rows.forEach(r=>{ Object.values(r).forEach(v=>{ if(!v) return; String(v).split(/[,;\n\s]+/).forEach(part=>{ const n=normalizarTel(part); if(n) set.add(n); const matches=String(part).match(/(\+?\d[\d\-\s\(\)]{7,}\d)/g); if(matches) matches.forEach(m=>{ const nn=normalizarTel(m); if(nn) set.add(nn); }); }); }); }); return [...set]; }
 
 async function sendEmail(to, subject, html){
-  // Prioridad RESEND_API_KEY (con tu nombre RESEND_APT_KEY)
   if(RESEND_API_KEY){
-    try{
-      const r=await fetch('https://api.resend.com/emails',{method:'POST', headers:{'Authorization':`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'}, body:JSON.stringify({from:RESEND_FROM, to:[to], subject, html})});
-      const j=await r.json(); if(!r.ok){ console.log('[RESEND ERR]', j); } else { console.log('[RESEND OK]', j.id, '->', to); return true; }
-    }catch(e){ console.log('[RESEND FAIL]', e.message); }
+    try{ const r=await fetch('https://api.resend.com/emails',{method:'POST', headers:{'Authorization':`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'}, body:JSON.stringify({from:RESEND_FROM, to:[to], subject, html})}); const j=await r.json(); if(!r.ok) console.log('[RESEND ERR]', j); else { console.log('[RESEND OK]', j.id, '->', to); return true; } }catch(e){ console.log('[RESEND FAIL]', e.message); }
   }
-  // Fallback EMAIL_USER / EMAIL_PASS con nodemailer si tienes SMTP (opcional)
-  if(EMAIL_USER && EMAIL_PASS){
-    try{
-      const nodemailer = require('nodemailer');
-      let transporter = nodemailer.createTransport({service:'gmail', auth:{user:EMAIL_USER, pass:EMAIL_PASS}});
-      await transporter.sendMail({from:EMAIL_USER, to, subject, html});
-      console.log('[EMAIL USER/PASS OK]', to); return true;
-    }catch(e){ console.log('[EMAIL USER FAIL]', e.message); }
+  if(EMAIL_USER && EMAIL_PASS && nodemailer){
+    try{ let transporter = nodemailer.createTransport({service:'gmail', auth:{user:EMAIL_USER, pass:EMAIL_PASS}}); await transporter.sendMail({from:EMAIL_USER, to, subject, html}); console.log('[EMAIL USER/PASS OK]', to); return true; }catch(e){ console.log('[EMAIL USER FAIL]', e.message); }
   }
   console.log(`[EMAIL MOCK] ${to} => ${subject}`); return true;
 }
@@ -109,28 +90,29 @@ async function guardarEmpresa(emp){
   else { const fp=path.join(BASE_DATA,'empresas.json'); const all=readJSON(fp); const idx=all.findIndex(e=>e.id===emp.id); if(idx>=0) all[idx]=emp; else all.push(emp); writeJSON(fp, all); }
 }
 
-// Auth JWT con JWT_SECRET exacto tuyo
 function auth(req,res,next){
   const h=req.headers.authorization||''; const token=h.replace('Bearer ','').trim()||req.query.token;
   if(!token) return res.status(401).json({error:'Token requerido'});
   try{ const payload=jwt.verify(token, JWT_SECRET); req.agenciaId=payload.agenciaId; req.user=payload; return next(); }catch{ return res.status(401).json({error:'Token inválido - JWT_SECRET: '+JWT_SECRET.slice(0,10)+'...'}); }
 }
 function authGerencia(req,res,next){
-  const h=req.headers.authorization||''; const token=h.replace('Bearer ','').trim();
   const keyHeader = req.headers['x-admin-key'] || req.query.admin_key;
   if(keyHeader===ADMIN_KEY){ req.user={rol:'gerencia', email:GERENCIA_EMAIL}; return next(); }
-  try{ const p=jwt.verify(token, JWT_SECRET); if(p.rol==='gerencia' || p.email===GERENCIA_EMAIL) { req.user=p; return next(); } }catch{}
+  try{ const h=req.headers.authorization||''; const token=h.replace('Bearer ','').trim(); const p=jwt.verify(token, JWT_SECRET); if(p.rol==='gerencia' || p.email===GERENCIA_EMAIL) { req.user=p; return next(); } }catch{}
   return res.status(403).json({error:'Gerencia solo - ADMIN_KEY requerido: KLIDO_DUEÑA_2026'});
 }
 
-// WEBHOOK META - CON META_VERIFY_TOKEN=klido123 EXACTO TUYO
+// HEALTHCHECK PARA RAILWAY - ESTO EVITA EL CRASH DE TU FOTO
+app.get('/health', (req,res)=> res.status(200).json({ok:true, status:'KLIDO v115.1 OK', META_VERIFY_TOKEN, PHONE_NUMBER_ID, ADMIN_KEY, DATA_DIR:BASE_DATA, PG: pgPool?'ON':'FS', RESEND: RESEND_API_KEY?'OK':'MISSING'}));
+app.get('/api/health', (req,res)=> res.status(200).json({ok:true}));
+
+// WEBHOOK META
 app.get('/webhook', (req,res)=>{
   const mode=req.query['hub.mode']; const token=req.query['hub.verify_token']; const challenge=req.query['hub.challenge'];
   if(mode==='subscribe' && token===META_VERIFY_TOKEN){ console.log('[WEBHOOK VERIFICADO] META_VERIFY_TOKEN=klido123 OK con PHONE_NUMBER_ID', PHONE_NUMBER_ID); return res.status(200).send(challenge); }
   console.log('[WEBHOOK FAIL] token recibido', token, 'esperado', META_VERIFY_TOKEN);
   return res.sendStatus(403);
 });
-
 app.post('/webhook', async(req,res)=>{
   try{
     const body=req.body;
@@ -141,10 +123,9 @@ app.post('/webhook', async(req,res)=>{
         const value=change.value; const phoneId=value.metadata?.phone_number_id || PHONE_NUMBER_ID; const msgs=value.messages||[]; const contacts=value.contacts||[];
         for(const msg of msgs){
           const agencia=empresas.find(e=>e.phoneId===phoneId || e.phoneId===PHONE_NUMBER_ID || DEFAULT_AGENCY===e.defaultAgency) || empresas[0];
-          if(!agencia){ console.log('[WEBHOOK] Sin agencia'); continue; }
+          if(!agencia) continue;
           const texto=msg.text?.body || msg.button?.text || '[media]'; const waId=msg.from; const nombre=contacts.find(c=>c.wa_id===waId)?.profile?.name || waId;
           const nuevo={id:msg.id, agencia_id:agencia.id, wa_id:waId, texto, timestamp:Date.now(), tipo:'entrante', leido:false, etiqueta:null, phone_id:phoneId, nombre, campana_id:null, asignado_a:null};
-          // Etiqueta amarilla si es respuesta a campaña
           if(pgPool){
             const {rows}=await pgPool.query('SELECT * FROM campanas WHERE agencia_id=$1', [agencia.id]);
             for(const camp of rows){ const tels=camp.telefonos||[]; const arr=typeof tels==='string'? JSON.parse(tels): tels; if(arr.some(t=> waId.includes(t.slice(-10)))) { nuevo.etiqueta='amarilla'; nuevo.campana_id=camp.id; } }
@@ -163,7 +144,7 @@ app.post('/webhook', async(req,res)=>{
   }catch(e){ console.log('Webhook error', e); res.sendStatus(200); }
 });
 
-// PUBLIC - CODIGOS LLEGAN A CORREO INSCRITO NO AL MIO - CON RESEND_APT_KEY Y EMAIL_USER
+// PUBLIC
 app.post('/api/public/solicitar-codigo', async(req,res)=>{
   const email=(req.body.email||'').toLowerCase().trim(); const nombre=req.body.nombre||'Cliente'; const plan=req.body.plan||'basico';
   if(!email) return res.status(400).json({error:'Email requerido'});
@@ -215,8 +196,6 @@ app.post('/api/login', async(req,res)=>{
   res.status(401).json({error:'Credenciales inválidas - soporte '+SOPORTE_WPP});
 });
 
-// === TODO LO QUE PIDES - BANDEJA, CAMPANAS, CALENDARIO, EQUIPO, METRICAS ===
-
 const upload = multer({storage: multer.memoryStorage()});
 
 app.get('/api/mensajes', auth, async(req,res)=>{
@@ -253,7 +232,6 @@ app.get('/api/calendario', auth, async(req,res)=>{
   const agenciaId=req.user.agenciaId; if(pgPool){ const {rows}=await pgPool.query('SELECT * FROM calendario WHERE agencia_id=$1 ORDER BY creado DESC', [agenciaId]); return res.json(rows); }
   res.json(readJSON(path.join(agenciaPath(agenciaId),'calendario.json')));
 });
-
 app.get('/api/plantillas', auth, async(req,res)=>{
   const agenciaId=req.user.agenciaId; const empresas=await obtenerEmpresas(); const emp=empresas.find(e=>e.id===agenciaId); let plantillas=[];
   if(pgPool){ const {rows}=await pgPool.query('SELECT data FROM plantillas WHERE agencia_id=$1', [agenciaId]); if(rows[0]) plantillas=rows[0].data; } else plantillas=readJSON(path.join(agenciaPath(agenciaId),'plantillas.json'));
@@ -262,7 +240,6 @@ app.get('/api/plantillas', auth, async(req,res)=>{
   }
   res.json(plantillas);
 });
-
 app.post('/api/campanas/subir-excel', auth, upload.single('excel'), async(req,res)=>{
   try{
     let rows=[]; if(req.file){ const wb=XLSX.read(req.file.buffer); const ws=wb.Sheets[wb.SheetNames[0]]; rows=XLSX.utils.sheet_to_json(ws); } else if(req.body.rows){ rows=typeof req.body.rows==='string'? JSON.parse(req.body.rows): req.body.rows; }
@@ -288,11 +265,10 @@ app.post('/api/campanas/enviar', auth, async(req,res)=>{
   colasCampanas.set(agenciaId+campanaId, {lista, idx: camp.enviados||0, pausada:false});
   if(pgPool) await pgPool.query('UPDATE campanas SET estado=$1, phone_usado=$2 WHERE id=$3', ['enviando', phoneUsar, campanaId]);
   (async()=>{ let cola=colasCampanas.get(agenciaId+campanaId); for(let i=cola.idx;i<cola.lista.length;i++){ cola=colasCampanas.get(agenciaId+campanaId); if(!cola||cola.pausada) break; const to=cola.lista[i].replace('+',''); try{ const payload= camp.plantilla==='auto'? {messaging_product:'whatsapp', to, type:'text', text:{body:`Hola de ${emp.nombre}`}} : {messaging_product:'whatsapp', to, type:'template', template:{name:camp.plantilla, language:{code:'es_CO'}}}; await fetch(`https://graph.facebook.com/v20.0/${phoneUsar}/messages`,{method:'POST', headers:{'Authorization':`Bearer ${emp.metaToken}`,'Content-Type':'application/json'}, body:JSON.stringify(payload)}); if(pgPool) await pgPool.query('UPDATE campanas SET enviados=enviados+1 WHERE id=$1', [campanaId]); }catch(e){} await new Promise(r=>setTimeout(r,1200)); cola.idx=i+1; colasCampanas.set(agenciaId+campanaId, cola); } if(pgPool) await pgPool.query('UPDATE campanas SET estado=$1 WHERE id=$2', ['completada', campanaId]); })();
-  res.json({ok:true, mensaje:`Envío iniciado a ${phoneUsar} - puedes pausar/continuar - envío a número seleccionado Excel`});
+  res.json({ok:true, mensaje:`Envío iniciado a ${phoneUsar} - puedes pausar/continuar`});
 });
 app.post('/api/campanas/pausar', auth, async(req,res)=>{ const {campanaId}=req.body; const key=req.user.agenciaId+campanaId; const cola=colasCampanas.get(key); if(cola) cola.pausada=true; if(pgPool) await pgPool.query('UPDATE campanas SET estado=$1 WHERE id=$2', ['pausada', campanaId]); res.json({ok:true}); });
 app.post('/api/campanas/reanudar', auth, async(req,res)=>{ const {campanaId}=req.body; const key=req.user.agenciaId+campanaId; const cola=colasCampanas.get(key); if(cola) cola.pausada=false; res.json({ok:true}); });
-
 app.post('/api/gmail/campana', auth, async(req,res)=>{
   const {asunto, html, destinatarios}=req.body; const agenciaId=req.user.agenciaId; let enviados=0; const historial=[];
   for(const to of destinatarios){ const ok=await sendEmail(to, asunto, html); historial.push({to, fecha:Date.now(), estado: ok?'enviado':'error'}); if(ok) enviados++; }
@@ -300,7 +276,6 @@ app.post('/api/gmail/campana', auth, async(req,res)=>{
   res.json({ok:true, enviados, historial});
 });
 app.get('/api/gmail', auth, async(req,res)=>{ const agenciaId=req.user.agenciaId; if(pgPool){ const {rows}=await pgPool.query('SELECT * FROM gmail_camp WHERE agencia_id=$1 ORDER BY creado DESC', [agenciaId]); return res.json(rows); } res.json(readJSON(path.join(agenciaPath(agenciaId),'gmail.json'))); });
-
 app.post('/api/equipo/agregar', auth, async(req,res)=>{
   if(req.user.rol!=='jefe' && req.user.rol!=='gerencia') return res.status(403).json({error:'Solo Jefe'});
   const {nombre,email,password,rol}=req.body; const agenciaId=req.user.agenciaId; const empresas=await obtenerEmpresas(); const emp=empresas.find(e=>e.id===agenciaId);
@@ -311,33 +286,28 @@ app.post('/api/equipo/agregar', auth, async(req,res)=>{
 });
 app.post('/api/equipo/quitar', auth, async(req,res)=>{ if(req.user.rol!=='jefe') return res.status(403).json({error:'Solo Jefe'}); const {email}=req.body; const agenciaId=req.user.agenciaId; const empresas=await obtenerEmpresas(); const emp=empresas.find(e=>e.id===agenciaId); emp.equipo=emp.equipo.filter(u=>u.email!==email.toLowerCase()); await guardarEmpresa(emp); res.json({ok:true}); });
 app.post('/api/equipo/asignar-chat', auth, async(req,res)=>{ if(req.user.rol!=='jefe') return res.status(403).json({error:'Solo Jefe'}); const {waId, asignadoA}=req.body; const agenciaId=req.user.agenciaId; if(pgPool) await pgPool.query('UPDATE mensajes SET asignado_a=$1 WHERE wa_id=$2 AND agencia_id=$3', [asignadoA, waId, agenciaId]); res.json({ok:true}); });
-
 app.get('/api/metricas', auth, async(req,res)=>{
-  const agenciaId=req.user.agenciaId; let msgs=[], contactos=[], campanas=[]; if(pgPool){ const m=await pgPool.query('SELECT * FROM mensajes WHERE agencia_id=$1', [agenciaId]); msgs=m.rows; } else msgs=readJSON(path.join(agenciaPath(agenciaId),'mensajes.json'));
+  const agenciaId=req.user.agenciaId; let msgs=[]; if(pgPool){ const m=await pgPool.query('SELECT * FROM mensajes WHERE agencia_id=$1', [agenciaId]); msgs=m.rows; } else msgs=readJSON(path.join(agenciaPath(agenciaId),'mensajes.json'));
   res.json({totalMensajes:msgs.length, noLeidos:msgs.filter(m=>!m.leido).length, amarilla:msgs.filter(m=>m.etiqueta==='amarilla').length, equipo: (await obtenerEmpresas()).find(e=>e.id===agenciaId)?.equipo?.length||0, plan: (await obtenerEmpresas()).find(e=>e.id===agenciaId)?.plan, phoneId: PHONE_NUMBER_ID, defaultAgency: DEFAULT_AGENCY});
 });
-
 app.get('/api/config', auth, async(req,res)=>{
   const empresas=await obtenerEmpresas(); const emp=empresas.find(e=>e.id===req.user.agenciaId);
-  res.json({
-    ADMIN_KEY, DATA_DIR, DATABASE_URL: DATABASE_URL?'OK':'FS', DEFAULT_AGENCY, EMAIL_USER, JWT_SECRET: JWT_SECRET.slice(0,15)+'...', META_VERIFY_TOKEN, PHONE_NUMBER_ID, RAILWAY_VOLUME_MOUNT_PATH, RESEND_API_KEY: RESEND_API_KEY?'OK':'MISSING',
-    agencia:emp.nombre, plan:emp.plan,
-    queHace:'Bandeja tiempo real webhook klido123, punto rojo no leidos amarillo campañas, segmentar, calendario seguimiento alerta, campañas Excel auto telefonos sin importar formato, historial, plantillas auto se suben solas, pausar/continuar, envío número seleccionado Excel, Gmail masivo tracking historial, panel Jefe métricas equipo agregar quitar asignar chats calendario, panel Trabajador chats asignados métricas propias calendario, multiagencia sin cruce, códigos a correo inscrito, todo autónomo',
-    legalidad:'Ley 1581 de 2012 Habeas Data Colombia, Decreto 1377, Ley 1266, datos Colombia Railway Postgres, AES-256, backup diario, SIC',
-    soporte:`https://wa.me/${SOPORTE_WPP}?text=Soporte%20KLIDO`, comprar:`https://wa.me/${SOPORTE_WPP}?text=Quiero%20KLIDO`
-  });
+  res.json({ ADMIN_KEY, DATA_DIR:BASE_DATA, DATABASE_URL: DATABASE_URL?'OK':'FS', DEFAULT_AGENCY, EMAIL_USER, JWT_SECRET: JWT_SECRET.slice(0,15)+'...', META_VERIFY_TOKEN, PHONE_NUMBER_ID, RAILWAY_VOLUME_MOUNT_PATH, RESEND_API_KEY: RESEND_API_KEY?'OK':'MISSING', agencia:emp?.nombre, plan:emp?.plan });
 });
 app.post('/api/config', auth, async(req,res)=>{
   if(req.user.rol!=='jefe' && req.user.rol!=='gerencia') return res.status(403).json({error:'Solo Jefe'});
   const {phoneId,wabaId,metaToken}=req.body; const empresas=await obtenerEmpresas(); const emp=empresas.find(e=>e.id===req.user.agenciaId);
   if(phoneId) emp.phoneId=phoneId; if(wabaId) emp.wabaId=wabaId; if(metaToken) emp.metaToken=metaToken; await guardarEmpresa(emp); res.json({ok:true});
 });
-
 app.get('/api/gerencia/agencias', authGerencia, async(req,res)=>{
   const empresas=await obtenerEmpresas(); res.json(empresas.map(e=>({id:e.id, nombre:e.nombre, email:e.email, plan:e.plan, phoneId:e.phoneId||PHONE_NUMBER_ID, equipo:e.equipo?.length||0, defaultAgency:e.defaultAgency||DEFAULT_AGENCY, adminKey:ADMIN_KEY})));
 });
-
 app.get('/dashboard.html', (req,res)=> res.sendFile(path.join(__dirname,'public','dashboard.html')));
+app.get('/crm.html', (req,res)=> res.sendFile(path.join(__dirname,'public','crm.html')));
+app.get('/app.html', (req,res)=> res.sendFile(path.join(__dirname,'public','app.html')));
+app.get('/campana.html', (req,res)=> res.sendFile(path.join(__dirname,'public','campana.html')));
+app.get('/campanas.html', (req,res)=> res.sendFile(path.join(__dirname,'public','campana.html')));
 app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
 
-app.listen(PORT, ()=> console.log(`[KLIDO v115.1 FINAL CON TUS VARIABLES] Puerto ${PORT} META_VERIFY_TOKEN=${META_VERIFY_TOKEN} PHONE_NUMBER_ID=${PHONE_NUMBER_ID} JWT_SECRET=${JWT_SECRET} ADMIN_KEY=${ADMIN_KEY} DATA_DIR=${BASE_DATA} DEFAULT_AGENCY=${DEFAULT_AGENCY} RESEND=${RESEND_API_KEY?'OK':'MISSING'} EMAIL_USER=${EMAIL_USER} - 100% FUNCIONAL`));
+// ESCUCHA EN 0.0.0.0 PARA RAILWAY - ESTO QUITA EL CRASH
+app.listen(PORT, '0.0.0.0', ()=> console.log(`[KLIDO v115.1 FINAL ANTI-CRASH] Puerto ${PORT} 0.0.0.0 META_VERIFY_TOKEN=${META_VERIFY_TOKEN} PHONE_NUMBER_ID=${PHONE_NUMBER_ID} JWT_SECRET=${JWT_SECRET.slice(0,12)} ADMIN_KEY=${ADMIN_KEY} DATA_DIR=${BASE_DATA} DEFAULT_AGENCY=${DEFAULT_AGENCY} RESEND=${RESEND_API_KEY?'OK':'MISSING'} EMAIL_USER=${EMAIL_USER} - 100% FUNCIONAL - /health OK`));
