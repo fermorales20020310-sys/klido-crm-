@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO v112 - Avanza Consulting | CRM Oficial Meta PRO + Kanban</title><link rel="icon" href="logo.png">
 <style>
-:root{--blue:#0b1a3a;--card:#ffffff;--border:#e2e8f0;--gold:#f59e0b}
+:root{--blue:#0b1a3a;--card:#ffffff;--border:#e2e8f0}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui;background:#f8fafc;height:100vh;display:flex}
-.left{width:56%;background:radial-gradient(900px 600px at 20% 10%, #1a3a8a 0%, #0b1a3a 55%, #050c1f 100%);color:#fff;padding:28px 36px;display:flex;flex-direction:column;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:16px} 
-.brand img{width:110px!important;height:110px!important;background:#fff;border-radius:18px;padding:8px;object-fit:contain;box-shadow:0 8px 24px rgba(0,0,0,.35)} 
-.brand div b{font-size:38px;letter-spacing:1px;display:block;line-height:.9;font-weight:900} 
-.brand div span{font-size:13px;letter-spacing:3px;font-weight:800;color:#93c5fd}
-.hero h1{font-size:48px;line-height:.95;margin:24px 0 14px;font-weight:900} .hero h1 span{color:#60a5fa}
-.hero h2{font-size:15px;letter-spacing:2px;color:#93c5fd;margin:6px 0 14px;font-weight:800}
-.list{display:flex;flex-direction:column;gap:10px;margin-top:4px}
-.item{font-size:13px;color:#cbd5e1;line-height:1.5}
-.btnWppLeft{display:inline-flex;margin-top:18px;padding:12px 18px;background:#25D366;color:#fff;border-radius:12px;font-weight:800;font-size:13px;text-decoration:none;gap:8px;align-items:center;box-shadow:0 8px 20px rgba(0,0,0,.3);width:fit-content}
-.badge{display:inline-flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px;margin-top:12px;color:#bfdbfe;align-items:center;gap:6px}
-.bottom-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px} .bb{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px}
+.left{width:56%;background:radial-gradient(900px 600px at 20% 10%, #1a3a8a 0%, #0b1a3a 55%, #050c1f 100%);color:#fff;padding:32px 40px;display:flex;flex-direction:column;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:18px} 
+.brand img{width:115px!important;height:115px!important;background:#fff;border-radius:20px;padding:8px;object-fit:contain;box-shadow:0 8px 24px rgba(0,0,0,.35)} 
+.brand div b{font-size:62px!important;letter-spacing:1px;display:block;line-height:.9;font-weight:900} 
+.brand div span{font-size:10px!important;letter-spacing:3.5px;font-weight:800;color:#93c5fd;display:block;margin-top:5px}
+.hero h1{font-size:50px;line-height:.95;margin:28px 0 14px;font-weight:900} .hero h1 span{color:#60a5fa}
+.hero h2{font-size:14px;letter-spacing:2.5px;color:#93c5fd;margin:6px 0 22px;font-weight:800}
+.list{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+.item{font-size:14px;color:#cbd5e1;line-height:1.5;font-weight:600}
+.item-wpp{display:flex;align-items:center;gap:12px;font-size:14px;color:#cbd5e1;font-weight:600}
+.btnWppIcon{width:40px;height:40px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 12px rgba(37,211,102,.4);transition:.2s}
+.btnWppIcon:hover{transform:scale(1.1)}
+.badge{display:inline-flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);padding:9px 16px;border-radius:20px;font-size:11px;margin-top:16px;color:#bfdbfe}
+.bottom-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px} .bb{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:11px}
 .right{width:44%;background:var(--card);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
 .card{width:100%;max-width:460px}
 .tabs{display:flex;background:#eef2ff;border-radius:12px;padding:4px;margin-bottom:16px} .tab{flex:1;padding:10px;border-radius:10px;text-align:center;font-size:13px;cursor:pointer;color:#64748b;font-weight:700} .tab.active{background:#0b1220;color:#fff}
@@ -26,35 +28,36 @@ button.primary{width:100%;padding:13px;border-radius:12px;border:0;background:#0
 .codeBox{display:flex;gap:6px} .codeBox button{padding:10px 12px;border-radius:10px;border:0;background:#0b1220;color:#fff;cursor:pointer;font-size:11px;white-space:nowrap}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:20} .modal.open{display:flex} .modal .box{background:#fff;border-radius:16px;padding:20px;width:440px;max-height:90vh;overflow:auto}
 .floatWpp{position:fixed;bottom:20px;right:20px;background:#25D366;color:#fff;padding:12px 18px;border-radius:50px;font-weight:800;font-size:13px;box-shadow:0 8px 20px rgba(0,0,0,.3);text-decoration:none;z-index:99;display:flex;gap:8px;align-items:center}
-@media(max-width:900px){body{flex-direction:column;height:auto}.left,.right{width:100%}.hero h1{font-size:32px}.brand img{width:90px!important;height:90px!important}}
+@media(max-width:900px){body{flex-direction:column;height:auto}.left,.right{width:100%}.hero h1{font-size:34px}.brand img{width:90px!important;height:90px!important}.brand div b{font-size:42px!important}}
 </style></head><body>
 <div class="left">
 <div>
 <div class="brand"><img src="logo.png?v=112"><div><b>KLIDO</b><span>AVANZA CONSULTING</span></div></div>
 <div class="hero">
 <h1>El mejor CRM<br>que tu empresa<br><span>puede tener.</span></h1>
-<h2>CRM MULTIAGENCIA - CLOUD API v112</h2>
+<h2>CRM MULTIAGENCIA - CLOUD API</h2>
 <div class="list">
-<div class="item">✓ BANDEJA EN TIEMPO REAL + AUDIOS/FOTOS/VIDEOS</div>
-<div class="item">✓ KANBAN: Nuevo → Negociación → Cotizado → Ganado/Perdido</div>
-<div class="item">✓ CAMPAÑAS ANTI BANEO BLOQUES 50/5min + ETIQUETA AMARILLA</div>
+<div class="item">✓ BANDEJA EN TIEMPO REAL</div>
+<div class="item">✓ KANBAN</div>
+<div class="item">✓ CAMPAÑAS ANTI BANEO BLOQUES</div>
 <div class="item">✓ SEGURO LEY 1581: Habeas Data - Cloud API oficial - datos en /data con backups</div>
-<div class="item">✓ SOLO PLAN PAGADO - CÓDIGO DESBLOQUEO AL CORREO</div>
-<div class="item">✓ SOPORTE 24/7 - WPP 3133181851</div>
-</div>
-<a class="btnWppLeft" href="https://wa.me/573133181851?text=Hola%20Avanza%20quiero%20KLIDO%20v112%20PRO" target="_blank">SOPORTE 24/7</a>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-<div class="badge">✓ v112 PRO - MULTIAGENCIA CERTIFICADA META API OFICIAL - API ACTIVA - ACOL 1338474282683914</div>
+<div class="item-wpp">✓ SOPORTE 24/7
+  <a class="btnWppIcon" href="https://wa.me/573133181851?text=Hola%20Avanza%20quiero%20KLIDO%20v112%20PRO" target="_blank">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M19.05 4.91A9.82 9.82 0 0 0 12.03 2C6.58 2 2.15 6.44 2.15 11.9c0 1.75.46 3.45 1.32 4.95L2 22l5.3-1.39a9.83 9.83 0 0 0 4.7 1.2h.01c5.45 0 9.88-4.44 9.88-9.9a9.83 9.83 0 0 0-2.84-6.99zm-7.02 15.1h-.01a8.14 8.14 0 0 1-4.15-1.14l-.3-.18-3.15.83.84-3.07-.2-.31a8.2 8.2 0 0 1-1.26-4.34c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.24 8.24zm4.52-6.17c-.25-.12-1.47-.73-1.7-.81-.23-.08-.4-.12-.57.12s-.65.81-.8.97-.3.18-.55.06a6.9 6.9 0 0 1-2.03-1.25 7.68 7.68 0 0 1-1.42-1.76c-.15-.25-.02-.39.11-.51.11-.11.25-.3.37-.45.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.43s-.57-1.38-.78-1.89c-.21-.49-.42-.57-.43h-.49c-.17 0-.43.06-.66.31s-.86.84-.86 2.05.88 2.38 1 2.55.73 1.12 1.77 1.57c1.04.45 1.04.3 1.23.28.19-.02.61-.25.7-.49.08-.25.08-.46.06-.5s-.12-.07-.37-.19z"/></svg>
+  </a>
 </div>
 </div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px">
+<div class="badge">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL - API ACTIVA</div>
 </div>
-<div class="bottom-badges"><div class="bb">🔒 Seguro Ley 1581</div><div class="bb">✓ WhatsApp API Oficial</div><div class="bb">✓ Cloud API</div><div class="bb">📄 Contrato anual + mant. trim</div><div class="bb">✓ Kanban + Media</div></div>
+</div>
+</div>
+<div class="bottom-badges"><div class="bb">🔒 Seguro Ley 1581</div><div class="bb">✓ WhatsApp API Oficial</div><div class="bb">✓ Cloud API</div></div>
 </div>
 
 <div class="right">
 <div class="card">
 <div class="tabs"><div class="tab active" id="tLog" onclick="tab('login')">Ingresar</div><div class="tab" id="tReg" onclick="tab('reg')">Registrar empresa</div></div>
-
 <div id="loginBox">
 <input id="lEmail" placeholder="Correo administrador">
 <input id="lPass" type="password" placeholder="Contraseña">
@@ -63,7 +66,6 @@ button.primary{width:100%;padding:13px;border-radius:12px;border:0;background:#0
 <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><a style="font-size:11px;color:#475569;cursor:pointer;text-decoration:underline" onclick="openForgot()">¿Olvidaste contraseña?</a><a style="font-size:11px;color:#0b1a3a;cursor:pointer;text-decoration:underline;font-weight:800" onclick="openAct()">¿Tienes código de activación? Activa tu plan</a></div>
 <div id="lMsg" class="muted" style="margin-top:8px"></div>
 </div>
-
 <div id="regBox" style="display:none">
 <h3 style="margin:0 0 8px">Registrar empresa - v112</h3>
 <p style="font-size:11px;color:#64748b;margin:0 0 8px">Máx 10 agencias. Solo podrás usar el plan que pagues. Código de desbloqueo llega SOLO a tu correo.</p>
@@ -88,11 +90,9 @@ button.primary{width:100%;padding:13px;border-radius:12px;border:0;background:#0
 <div class="modal" id="fModal"><div class="box"><h3>Recuperar - Código a tu correo</h3><input id="fEmail" placeholder="Tu correo registrado"><div class="codeBox"><input id="fCode" placeholder="Código 6 dígitos"><button onclick="reqCode('recuperacion','fEmail')">Enviar código</button></div><input id="fNew" type="password" placeholder="Nueva contraseña"><button class="primary" onclick="doReset()">Actualizar</button><button onclick="closeM()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;cursor:pointer">Cerrar</button><div id="fMsg" class="muted"></div></div></div>
 <div class="modal" id="aModal"><div class="box"><h3>Activar Plan - Código de desbloqueo</h3><p style="font-size:11px;color:#64748b">El código llega SOLO al correo de la empresa registrada. Solo desbloquea el plan que pagaste.</p><input id="aEmail" placeholder="Correo empresa"><input id="aCode" placeholder="Código KLIDO-XXXX"><button class="primary" onclick="doActivate()">Activar plan →</button><button onclick="closeM()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:1px solid #e2e8f0;background:#fff">Cerrar</button><div id="aMsg" class="muted" style="margin-top:8px"></div></div></div>
 <div class="modal" id="tModal"><div class="box"><h3>Términos KLIDO v112 PRO</h3><p style="font-size:12px;color:#475569;line-height:1.6">
-<b>v112 Producción real.</b> API Oficial Meta - Cloud API. Máx 10 agencias. Pago anual + mant trim: Básico $800k+$80k, Premium $1.4M+$95k, Gold $2.4M+$120k. Solo accedes al plan pagado - código de desbloqueo llega solo al correo registrado. Básico sin IA, Premium IA, Gold IA+llamadas. Inbox tiempo real con audios/fotos/videos/archivos, no leídos → leídos, etiqueta amarilla campaña, Kanban arrastrable Nuevo→Ganado/Perdido, antibaneo 50/5min 800ms, solo plantillas aprobadas auto-sync, calendario con recordatorio 1 día antes, métricas + sin responder >2h + tasa cierre, white-label $200k, contrato PDF anual, onboarding 60s, soporte 24/7 WPP 3133181851, Ley 1581. ACOL WA ID 1338474282683914. <br><br>Al registrar aceptas términos.
+<b>v112 Producción real.</b> API Oficial Meta - Cloud API. Máx 10 agencias. Pago anual + mant trim: Básico $800k+$80k, Premium $1.4M+$95k, Gold $2.4M+$120k. Solo accedes al plan pagado - código de desbloqueo llega solo al correo registrado. Básico sin IA, Premium IA, Gold IA+llamadas. Inbox tiempo real con audios/fotos/videos/archivos, no leídos → leídos, etiqueta amarilla campaña, Kanban arrastrable Nuevo→Ganado/Perdido, antibaneo 50/5min 800ms, solo plantillas aprobadas auto-sync, calendario con recordatorio 1 día antes, métricas + sin responder >2h + tasa cierre, white-label $200k, contrato PDF anual, onboarding 60s, soporte 24/7, Ley 1581. ACOL WA ID 1338474282683914.
 </p><button onclick="closeM()" style="width:100%;padding:10px;border-radius:10px;border:0;background:#0b1220;color:#fff">Entendido - v112 PRO</button></div></div>
-
 <a class="floatWpp" href="https://wa.me/573133181851?text=Hola%20Avanza%20quiero%20KLIDO%20v112%20PRO%20API%20Oficial" target="_blank">SOPORTE 24/7</a>
-
 <script>
 let plan='basico';
 function pick(p){plan=p;document.querySelectorAll('.plan').forEach(e=>e.classList.remove('active'));document.querySelector(`[data-plan="${p}"]`).classList.add('active')}
