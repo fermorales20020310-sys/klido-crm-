@@ -1,84 +1,33 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Gerente KLIDO v112 - Avanza Consulting - Panel Independiente</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-<style>
-:root{--dark:#0A1931;--dark2:#102542;--blue:#3B82F6;--bg:#070F22;--green:#22C55E;--red:#ef4444;--yellow:#FFC93C}
-*{box-sizing:border-box;font-family:Inter,system-ui}body{margin:0;background:var(--bg);color:#fff}
-.sidebar{width:300px;background:var(--dark);padding:18px;position:fixed;top:0;bottom:0;left:0;border-right:1px solid #1A335F;display:flex;flex-direction:column;justify-content:space-between}
-.main{margin-left:300px;padding:24px;min-height:100vh}
-.card{background:var(--dark2);border-radius:18px;padding:18px;margin:12px 0;border:1px solid #1A335F}
-.btn{border:none;padding:10px 14px;border-radius:10px;color:#fff;font-weight:800;cursor:pointer}
-.btn-blue{background:linear-gradient(90deg,var(--blue),#60A5FA)}
-.btn-green{background:var(--green);color:#000}
-.btn-red{background:var(--red)}
-.btn-yellow{background:var(--yellow);color:#000}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:800}
-table{width:100%;border-collapse:collapse}th,td{padding:10px;text-align:left;border-bottom:1px solid #1A335F;font-size:12px}
-.input{width:100%;padding:10px;border-radius:10px;border:1px solid #1A335F;background:#E8F0FF;color:#0A1931;margin:6px 0}
-.floatWpp{position:fixed;bottom:20px;right:20px;background:#25D366;color:#fff;padding:12px 16px;border-radius:50px;font-weight:800;font-size:12px;text-decoration:none;z-index:99}
-@media(max-width:1000px){.sidebar{position:relative;width:100%}.main{margin-left:0}.grid3{grid-template-columns:1fr}}
-</style></head><body>
-<div class="sidebar"><div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><img src="logo.png?v=112" style="height:36px;background:#fff;border-radius:10px;padding:6px"><b>KLIDO v112<br><span style="font-size:10px;letter-spacing:2px;color:#60A5FA">GERENTE - AVANZA</span></b></div>
-<div style="padding:10px;background:rgba(255,255,255,.06);border-radius:12px;font-size:11px;color:#9FB3D1;margin-bottom:12px">Panel independiente Gerente<br>Link: /admin.html?v=112<br>ACOL WA: 1338474282683914<br>WPP Soporte: 3133181851<br>Solo plan pagado desbloqueado</div>
-<button class="btn btn-blue" style="width:100%" onclick="cargar()">🔄 Actualizar tiempo real</button>
-<button class="btn" style="width:100%;margin-top:8px;background:transparent;border:1px solid #1A335F" onclick="location.href='/crm.html?v=112'">📊 Ir CRM</button>
-<button class="btn" style="width:100%;margin-top:8px;background:transparent;border:1px solid #1A335F" onclick="location.href='/app.html?v=112'">💬 Ir Bandeja</button>
-<div id="notifs" style="margin-top:14px;max-height:300px;overflow:auto"></div>
-</div><button class="btn" style="width:100%;background:#1F2937" onclick="localStorage.clear();location.href='/index.html?v=112'">↪ Salir Gerencia</button></div>
-
-<div class="main">
-<h1 style="margin:0 0 6px">👑 Gerente KLIDO v112 - Métricas agencias + Planes + Bloqueo/Desbloqueo</h1><p style="color:#9FB3D1;font-size:12px">Panel independiente link /admin.html?v=112 - Ver consumo plan, seguimiento real time, código desbloqueo SOLO al correo empresa registrada - Solo plan pagado - Ley 1581</p>
-
-<div class="grid3" id="stats"></div>
-
-<div class="card"><h3>🏢 Agencias - Max 10 - Consumo plan + Bloqueo/Desbloqueo</h3>
-<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap"><input id="searchAg" class="input" placeholder="Buscar agencia, email, plan..." style="flex:1" oninput="filtrar()"><button class="btn btn-blue" onclick="corregirACOL()">🛠️ Corregir ACOL a BASICO + WA 1338474282683914</button></div>
-<div style="overflow:auto"><table><thead><tr><th>Agencia</th><th>Email</th><th>Plan</th><th>Estado</th><th>Consumo</th><th>Código Activación</th><th>WA ID</th><th>Acciones</th></tr></thead><tbody id="tablaAg"></tbody></table></div>
-</div>
-
-<div class="card"><h3>🔓 Activar empresa pendiente - Código llega SOLO al correo registrado</h3>
-<div style="display:grid;grid-template-columns:1fr auto;gap:10px"><input id="actId" class="input" placeholder="ID Agencia AG-..."><button class="btn btn-green" onclick="activar()">Activar + Enviar código al correo empresa</button></div><div id="actRes" style="font-size:11px;margin-top:8px;color:#9FB3D1"></div></div>
-
-<div class="card"><h3>📜 Historial + Seguimiento tiempo real</h3><div id="hist" style="font-size:11px;color:#9FB3D1;max-height:200px;overflow:auto"></div></div>
-</div>
-
-<a class="floatWpp" href="https://wa.me/573133181851?text=Gerente%20KLIDO%20v112" target="_blank">💬 Soporte 3133181851</a>
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GERENCIA AVANZA - KLIDO</title>
+<style>body{margin:0;background:#0b1220;color:#fff;font-family:Arial;padding:20px}.card{background:#1e293b;padding:14px;border-radius:12px;margin:8px 0;border:1px solid #334155} button{padding:8px 12px;border-radius:8px;border:0;background:#38bdf8;font-weight:800;cursor:pointer;margin:2px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px} input{padding:8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#fff}</style>
+</head>
+<body>
+<img src="/logo.png" width="110">
+<h2>GERENCIA AVANZA CONSULTING - KLIDO</h2>
+<p>admin@klido.com | Métricas agencias, movimientos, seguimiento, bloquear/desbloquear</p>
+<div class="card"><b id="resumen"></b> <button onclick="cargar()">Actualizar</button> <button onclick="logout()">Salir</button></div>
+<div id="lista" class="grid"></div>
 <script>
-let token=localStorage.getItem('token');let user=JSON.parse(localStorage.getItem('user')||'{}');if(!token)location.href='/index.html?v=112';
-if(user.rol!=='super'&&user.email!=='avanzaconsultingyl@gmail.com'&&user.email!=='admin@klido.com'){alert('Solo gerencia');location.href='/crm.html?v=112';}
-let agenciasData=[];let totalData={};
-async function api(p,opt={}){opt.headers=opt.headers||{};opt.headers['Authorization']='Bearer '+token;if(!opt.headers['Content-Type']&&!(opt.body instanceof FormData))opt.headers['Content-Type']='application/json';return fetch(p,opt)}
+const token=localStorage.getItem('klido_token'); if(!token) location.href='/index.html?v=115';
+async function api(p,m='GET',b=null){ const o={method:m,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}; if(b) o.body=JSON.stringify(b); const r=await fetch(p,o); if(r.status===401){ localStorage.clear(); location.href='/index.html'; return null;} return r.json(); }
 async function cargar(){
- const r=await api('/api/admin/agencias');const j=await r.json();agenciasData=j.agencias||[];totalData=j;
- document.getElementById('stats').innerHTML=`<div class="card" style="margin:0"><h3>Total Agencias</h3><p style="font-size:28px;font-weight:900">${j.total}/10</p><p style="font-size:11px;color:#9FB3D1">Restan ${j.restan}</p></div><div class="card" style="margin:0"><h3>Consumo Total</h3><p style="font-size:12px">Mensajes: ${agenciasData.reduce((a,b)=>a+(b.consumo?.mensajes||0),0)}<br>Usuarios: ${agenciasData.reduce((a,b)=>a+(b.consumo?.usuarios||0),0)}</p></div><div class="card" style="margin:0"><h3>WPP Soporte</h3><p style="font-size:12px">${j.wpp} - ACOL WA 1338474282683914<br><a href="https://wa.me/573133181851" target="_blank" style="color:#60A5FA">Abrir WPP</a></p></div>`;
- document.getElementById('notifs').innerHTML='<b style="font-size:11px">🔔 Notificaciones pendientes</b><div style="margin-top:8px">'+(j.notificaciones||[]).slice(0,20).map(n=>`<div style="padding:8px;background:${n.leida?'#102542':'#1e3a8a'};border-radius:10px;margin-bottom:6px;font-size:11px"><b>${n.nombre}</b><br>${n.email} - ${n.plan}<br>${new Date(n.fecha).toLocaleString()} ${!n.leida?'<span class="badge" style="background:#ef4444">NUEVA</span>':''}<br><button class="btn btn-green" style="padding:4px 8px;margin-top:4px" onclick="document.getElementById('actId').value='${n.empresaId}';activar()">Activar</button></div>`).join('')+'</div>';
- document.getElementById('hist').innerHTML=(j.historial||[]).slice(0,50).map(h=>`${new Date(h.fecha).toLocaleString()} - Agencias: ${h.agencias}`).join('<br>');
- renderTabla(agenciasData);
+  const j=await api('/api/admin/agencias'); if(!j) return;
+  document.getElementById('resumen').innerText=`Total ${j.total} / 10 Restan ${j.restan} WPP ${j.wpp}`;
+  const box=document.getElementById('lista'); box.innerHTML='';
+  j.agencias.forEach(a=>{
+    box.innerHTML+=`<div class=card><b>${a.nombre}</b><br>${a.email}<br>Plan ${a.plan} Estado ${a.estado} Pagado ${a.pagado}<br>WA Phone ${a.waPhoneId||'No config'}<br>Equipo ${a.equipo.length}/${a.consumo.usuarios}<br>Campañas ${a.campanas.length} Contactos ${a.contactos.length}<br><small>${a.fechaRegistro}</small><br><button onclick="desbloquear('${a.id}')">Desbloquear</button><button onclick="bloquear('${a.id}','bloqueada',false)" style="background:#ef4444;color:#fff">Bloquear</button><button onclick="verContrato('${a.id}')">Contrato</button><button onclick="verMetricas('${a.id}')">Métricas</button></div>`;
+  });
 }
-function renderTabla(arr){
- document.getElementById('tablaAg').innerHTML=arr.map(a=>`<tr>
-<td><b>${a.nombre}</b><br><span style="font-size:10px;color:#9FB3D1">${a.id}</span></td>
-<td>${a.email}</td>
-<td><span class="badge" style="background:${a.plan==='gold'?'#f59e0b':a.plan==='premium'?'#3B82F6':'#64748b'};color:${a.plan==='gold'?'#000':'#fff'}">${a.plan.toUpperCase()}</span><br><span style="font-size:10px">${a.mantenimiento}</span></td>
-<td><span class="badge" style="background:${a.estado==='activa'?'#22C55E':a.estado==='pendiente_gerente'?'#f59e0b':'#ef4444'}">${a.estado}</span><br>${a.pagado?'Pagado ✅':'Pendiente'}</td>
-<td>Msgs: ${a.consumo?.mensajes||0}<br>Users: ${a.consumo?.usuarios||0}<br>Contactos: ${a.consumo?.contactos||0}</td>
-<td style="font-family:monospace;font-size:10px">${a.codigoActivacion||'Pendiente'}<br><button class="btn" style="padding:3px 6px;background:#334155" onclick="navigator.clipboard.writeText('${a.codigoActivacion||''}');alert('Copiado')">Copiar</button></td>
-<td style="font-size:10px">${a.waPhoneId||'-'}</td>
-<td><div style="display:flex;flex-direction:column;gap:4px"><button class="btn btn-green" style="padding:6px" onclick="desbloquear('${a.id}')">Desbloquear</button><button class="btn btn-yellow" style="padding:6px" onclick="bloquear('${a.id}','pendiente_gerente')">Pausar</button><button class="btn btn-red" style="padding:6px" onclick="bloquear('${a.id}','bloqueada')">Bloquear</button><button class="btn btn-blue" style="padding:6px" onclick="verContrato('${a.id}')">Contrato PDF</button></div></td>
-</tr>`).join('')||'<tr><td colspan=8>Sin agencias</td></tr>';
-}
-function filtrar(){const q=document.getElementById('searchAg').value.toLowerCase();renderTabla(agenciasData.filter(a=>a.nombre.toLowerCase().includes(q)||a.email.toLowerCase().includes(q)||a.plan.toLowerCase().includes(q)));}
-async function activar(){
- const agenciaId=document.getElementById('actId').value.trim();if(!agenciaId)return alert('ID Agencia');
- document.getElementById('actRes').textContent='Activando... enviando código SOLO al correo registrado...';
- const r=await api('/api/admin/activar',{method:'POST',body:JSON.stringify({agenciaId})});const j=await r.json();
- if(r.ok){document.getElementById('actRes').innerHTML=`✅ ${j.mensaje}<br>Código <b>${j.codigo}</b> enviado a correo empresa - Solo plan pagado desbloqueado`;cargar();} else document.getElementById('actRes').textContent=j.error||'Error';
-}
-async function desbloquear(id){const r=await api('/api/gerente/desbloquear/'+id,{method:'POST'});const j=await r.json();alert(j.mensaje||j.error);cargar();}
-async function bloquear(id,estado){if(!confirm(`Cambiar ${id} a ${estado}?`))return;const r=await api('/api/admin/bloquear',{method:'POST',body:JSON.stringify({agenciaId:id,estado,pagado:estado==='activa'})});const j=await r.json();alert(j.ok?'Actualizado':'Error');cargar();}
-async function corregirACOL(){const r=await api('/api/admin/corregir-acol',{method:'POST',body:JSON.stringify({plan:'basico'})});const j=await r.json();alert(j.mensaje||j.error);cargar();}
-function verContrato(id){window.open('/api/contrato/'+id,'_blank');}
-cargar();setInterval(cargar,10000);
-</script></body></html>
+async function desbloquear(id){ await api('/api/gerente/desbloquear/'+id,'POST'); cargar(); }
+async function bloquear(id,estado,pagado){ await api('/api/admin/bloquear','POST',{agenciaId:id,estado,pagado}); cargar(); }
+function verContrato(id){ window.open('/api/contrato/'+id+'?token='+token,'_blank'); }
+async function verMetricas(id){ const j=await api('/api/debug/empresas'); const emp=j.find(e=>e.id===id); alert(JSON.stringify(emp?.metricas||{},null,2)); }
+function logout(){ localStorage.clear(); location.href='/index.html'; }
+cargar();
+</script>
+</body>
+</html>
