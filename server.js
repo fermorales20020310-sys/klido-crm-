@@ -12,12 +12,12 @@ const SUPER_ADMIN_EMAIL = 'admin@klido.com';
 const SUPER_ADMIN_PASS = 'Mafe2002@';
 const VERIFY_TOKEN = 'klido123';
 const ENV_TOKEN = process.env.WHATSAPP_TOKEN || process.env.META_TOKEN || '';
-const ENV_PHONE_ID = process.env.WA_PHONE_ID || process.env.PHONE_ID || '';
+const ENV_PHONE_ID = process.env.WA_PHONE_ID || process.env.PHONE_ID || '1338474282683914';
 
 let fetchFn = global.fetch;
 if (!fetchFn) { try { fetchFn = require('node-fetch'); } catch(e) {} }
 
-console.log(`[KLIDO v116.5 FIX PUSH] VERIFY=${VERIFY_TOKEN} ENV_TOKEN_LEN=${ENV_TOKEN.length} ENV_PHONE=${ENV_PHONE_ID||'no env'} PORT=${PORT}`);
+console.log(`[KLIDO v116.6 FIX PUSH + ENVIO] VERIFY=${VERIFY_TOKEN} ENV_TOKEN_LEN=${ENV_TOKEN.length} ENV_PHONE=${ENV_PHONE_ID} PORT=${PORT}`);
 
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode']; const token = req.query['hub.verify_token']; const challenge = req.query['hub.challenge'];
@@ -53,14 +53,13 @@ if(!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR,{recursive:true}); if(!fs.exi
 function obtenerEmpresas(){
   try{
     let emps=JSON.parse(fs.readFileSync(EMPRESAS_FILE,'utf8'));
-    // FIX CRITICO - evita el error push
     emps=emps.map(e=>{
       if(!e.contactos) e.contactos=[];
       if(!e.campanas) e.campanas=[];
       if(!e.citas) e.citas=[];
       if(!e.equipo) e.equipo=[];
-      if(!e.waPhoneId) e.waPhoneId=ENV_PHONE_ID||'';
-      if(!e.waToken) e.waToken=ENV_TOKEN||'';
+      if(!e.waPhoneId) e.waPhoneId=ENV_PHONE_ID;
+      if(!e.waToken) e.waToken=ENV_TOKEN;
       return e;
     });
     return emps;
@@ -77,7 +76,7 @@ app.post('/api/public/crear-empresa',(req,res)=>{ const {nombre,email,password,p
 app.post('/api/public/forgot-password', async (req,res)=>{ const {email}=req.body; const codigo=Math.floor(100000+Math.random()*900000).toString(); codigosReset.set(email.toLowerCase(),{codigo,expira:Date.now()+10*60*1000}); try{ await enviarResend(email.toLowerCase(),`Reset ${codigo}`,`<h2>${codigo}</h2>`); res.json({ok:true}); }catch(e){ res.status(500).json({error:e.message}); } });
 app.post('/api/public/reset-password',(req,res)=>{ const {email,codigo,nuevaPassword}=req.body; const reg=codigosReset.get(email.toLowerCase()); if(!reg||reg.codigo!==codigo) return res.status(400).json({error:'Código'}); let emps=obtenerEmpresas(); emps=emps.map(e=>{ if(e.email===email.toLowerCase()) e.password=nuevaPassword; e.equipo=e.equipo.map(u=>{ if(u.email===email.toLowerCase()) u.password=nuevaPassword; return u; }); return e; }); guardarEmpresas(emps); codigosReset.delete(email.toLowerCase()); res.json({ok:true}); });
 app.post('/api/login',(req,res)=>{ const {email,password}=req.body; const low=email.toLowerCase().trim(); if(low===SUPER_ADMIN_EMAIL.toLowerCase()&&password===SUPER_ADMIN_PASS){ const token=jwt.sign({id:'SUPER',email:SUPER_ADMIN_EMAIL,rol:'super',empresaId:'SUPER'},JWT_SECRET,{expiresIn:'7d'}); return res.json({ok:true,token,user:{id:'SUPER',nombre:'GERENCIA',email:SUPER_ADMIN_EMAIL,rol:'super'}}); } let emps=obtenerEmpresas(); for(let e of emps){ if(e.email===low&&e.password===password){ const token=jwt.sign({id:e.id,email:e.email,rol:'jefe',plan:e.plan,empresaId:e.id},JWT_SECRET,{expiresIn:'7d'}); return res.json({ok:true,token,user:{id:e.id,nombre:e.nombre,email:e.email,plan:e.plan,rol:'jefe',empresaId:e.id,empresaNombre:e.nombre}}); } const u=e.equipo.find(u=>u.email===low&&u.password===password); if(u){ const token=jwt.sign({id:u.id,email:u.email,rol:u.rol,plan:e.plan,empresaId:e.id},JWT_SECRET,{expiresIn:'7d'}); return res.json({ok:true,token,user:{id:u.id,nombre:u.nombre,email:u.email,plan:e.plan,rol:u.rol,empresaId:e.id,empresaNombre:e.nombre}}); } } return res.status(401).json({error:'Credenciales'}); });
-app.get('/api/me',auth,(req,res)=>{ if(req.user.rol==='super') return res.json({id:'SUPER',rol:'super'}); const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); res.json({id:req.user.id,empresaId:emp?.id,waPhoneId:emp?.waPhoneId,tokenLen:emp?.waToken?.length||ENV_TOKEN.length}); });
+app.get('/api/me',auth,(req,res)=>{ if(req.user.rol==='super') return res.json({id:'SUPER',rol:'super'}); const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); res.json({id:req.user.id,empresaId:emp?.id,waPhoneId:emp?.waPhoneId,tokenLen:emp?.waToken?.length||ENV_TOKEN.length, waPhoneIdEnv: ENV_PHONE_ID}); });
 app.get('/api/admin/agencias',auth,(req,res)=>{ if(req.user.rol!=='super') return res.status(403).json({error:'Solo gerencia'}); res.json({agencias:obtenerEmpresas()}); });
 app.post('/api/admin/bloquear',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.body.agenciaId); if(i!==-1){ emps[i].estado=req.body.estado; emps[i].pagado=req.body.pagado; guardarEmpresas(emps); } res.json({ok:true}); });
 app.post('/api/admin/activar',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.body.agenciaId); if(i!==-1){ emps[i].estado='activa'; emps[i].pagado=true; guardarEmpresas(emps); } res.json({ok:true}); });
@@ -87,10 +86,10 @@ app.post('/api/mensajes',auth, async (req,res)=>{
   try{
     const {contactoId,texto}=req.body; let emps=obtenerEmpresas(); const idx=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(idx===-1) return res.status(404).json({error:'No empresa'});
     const emp=emps[idx];
-    const phoneIdToUse = emp.waPhoneId || ENV_PHONE_ID || '1338474282683914';
+    const phoneIdToUse = emp.waPhoneId || ENV_PHONE_ID;
     const tokenToUse = emp.waToken || ENV_TOKEN;
     console.log(`[ENVIO INTENTO] ${emp.nombre} -> ${contactoId} PhoneID=${phoneIdToUse} TokenLen=${tokenToUse.length}`);
-    if(!tokenToUse) return res.status(400).json({error:'No hay token'});
+    if(!tokenToUse) return res.status(400).json({error:'No hay token. Ponlo en Configuración'});
     const toClean=contactoId.replace(/\D/g,''); const url=`https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
     const r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:toClean,type:'text',text:{body:texto}})});
     const j=await r.json(); console.log('[META RESPONSE]', r.status, JSON.stringify(j));
@@ -104,18 +103,90 @@ app.get('/api/mensajes',auth,(req,res)=>{ const emps=obtenerEmpresas(); const em
 app.get('/api/contactos',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); res.json(emp?.contactos||[]); });
 app.post('/api/contactos',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].contactos) emps[i].contactos=[]; emps[i].contactos.push({id:Date.now().toString(),...req.body}); guardarEmpresas(emps); } res.json({ok:true}); });
 
-// FIX PUSH - LINEA 91 QUE TE CRASHEABA
-app.get('/api/campanas',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id); if(!emp) return res.json([]); if(!emp.campanas) emp.campanas=[]; res.json(emp.campanas); });
-app.post('/api/campanas',auth,(req,res)=>{
+// CAMPAÑAS - FIX PUSH + ENVIO REAL META API
+app.get('/api/campanas',auth,(req,res)=>{
+  try{
+    const emps=obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.empresaId||e.id===req.user.id);
+    if(!emp) return res.json([]);
+    if(!emp.campanas) emp.campanas=[];
+    res.json(emp.campanas);
+  }catch(e){ res.json([]); }
+});
+
+app.post('/api/campanas',auth, async (req,res)=>{
   try{
     let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id);
     if(i===-1) return res.status(404).json({error:'Empresa no encontrada'});
-    if(!emps[i].campanas) emps[i].campanas=[]; // FIX
-    console.log(`[CAMPANA INTENTO] ${emps[i].nombre} -> ${req.body.nombre} nums=${req.body.numeros||req.body.lista?.length}`);
-    emps[i].campanas.push({id:'camp_'+Date.now(),...req.body, fecha:new Date().toISOString(), estado: req.body.estado||'guardada'});
+    if(!emps[i].campanas) emps[i].campanas=[];
+
+    const { nombre, plantilla, numeros, lista, contactos, segmento, plantillaVars, fechaProgramada } = req.body;
+    console.log(`[CAMPANA INTENTO] ${emps[i].nombre} plantilla=${plantilla} nums=${lista?.length||numeros}`);
+
+    if(!lista || lista.length===0) return res.status(400).json({error:'Lista vacía'});
+
+    const nueva = {
+      id:'camp_'+Date.now(),
+      nombre: nombre || 'Campaña '+new Date().toLocaleString(),
+      plantilla: plantilla || 'hello_world',
+      plantillaVars: plantillaVars||'',
+      segmento: segmento||'todos',
+      numeros: lista.length,
+      lista,
+      contactos: contactos||[],
+      fecha: new Date().toISOString(),
+      fechaProgramada: fechaProgramada||new Date().toISOString(),
+      estado: 'enviando',
+      enviados: 0, leidos:0, respondidos:0
+    };
+
+    emps[i].campanas.push(nueva);
     guardarEmpresas(emps);
-    console.log(`[CAMPANA GUARDADA] ${emps[i].nombre} total=${emps[i].campanas.length}`);
-    res.json({ok:true});
+    console.log(`[CAMPANA GUARDADA] ${nueva.nombre} ${lista.length} nums - Sin cruce agencias`);
+    res.json({ok:true, campana:nueva});
+
+    // ENVIO BACKGROUND REAL A META
+    setTimeout(async ()=>{
+      try{
+        let emps2=obtenerEmpresas(); const emp=emps2.find(e=>e.id===emps[i].id) || emps2[i];
+        const phoneIdToUse = emp.waPhoneId || ENV_PHONE_ID;
+        const tokenToUse = emp.waToken || ENV_TOKEN;
+        console.log(`[CAMPANA ENVIO START] PhoneID=${phoneIdToUse} TokenLen=${tokenToUse?.length} Plantilla=${plantilla} Vars=${plantillaVars||'ninguna'}`);
+
+        if(!tokenToUse ||!phoneIdToUse){ console.log('[CAMPANA] Falta token o phoneId'); return; }
+
+        let enviados=0;
+        for(const raw of lista){
+          const toClean=String(raw).replace(/\D/g,'');
+          if(toClean.length<10) continue;
+          try{
+            const url=`https://graph.facebook.com/v20.0/${phoneIdToUse}/messages`;
+            const body={
+              messaging_product:'whatsapp',
+              to: toClean,
+              type: 'template',
+              template: { name: plantilla, language: { code: 'es_CO' }, components: [] }
+            };
+            if(plantillaVars && plantillaVars.trim()!==''){
+              const parts=plantillaVars.split(',').map(s=>s.trim()).filter(Boolean);
+              if(parts.length>0) body.template.components=[{ type:'body', parameters: parts.map(t=>({type:'text', text:t})) }];
+            }
+            const r=await fetchFn(url,{method:'POST',headers:{'Authorization':`Bearer ${tokenToUse}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+            const j=await r.json();
+            console.log(`[CAMPANA] ${toClean} -> ${r.status} ${JSON.stringify(j).slice(0,400)}`);
+            if(r.ok) enviados++;
+            await new Promise(x=>setTimeout(x, 1200));
+          }catch(err){ console.error('[CAMPANA ERR]', err.message); }
+        }
+
+        let emps3=obtenerEmpresas(); const idx=emps3.findIndex(e=>e.id===emp.id);
+        if(idx!==-1){
+          const cIdx=emps3[idx].campanas.findIndex(c=>c.id===nueva.id);
+          if(cIdx!==-1){ emps3[idx].campanas[cIdx].enviados=enviados; emps3[idx].campanas[cIdx].estado='enviada'; guardarEmpresas(emps3); }
+        }
+        console.log(`[CAMPANA FINAL] ${enviados}/${lista.length} enviados a ${emp.nombre}`);
+      }catch(e){ console.error('[CAMPANA BG ERROR]', e); }
+    }, 1500);
+
   }catch(e){
     console.error('[CAMPANA ERROR]', e);
     res.status(500).json({error:e.message});
@@ -129,4 +200,4 @@ app.get('/api/citas',auth,(req,res)=>{ const emps=obtenerEmpresas(); const emp=e
 app.post('/api/citas',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); if(i!==-1){ if(!emps[i].citas) emps[i].citas=[]; emps[i].citas.push({id:Date.now(),...req.body}); guardarEmpresas(emps); } res.json({ok:true}); });
 app.post('/api/config/meta',auth,(req,res)=>{ let emps=obtenerEmpresas(); const i=emps.findIndex(e=>e.id===req.user.empresaId||e.id===req.user.id); const {waPhoneId,waToken}=req.body; if(i!==-1){ if(waPhoneId) emps[i].waPhoneId=waPhoneId; if(waToken) emps[i].waToken=waToken; guardarEmpresas(emps); console.log(`[META GUARDADO] ${emps[i].nombre} Phone ${emps[i].waPhoneId} Len ${emps[i].waToken?.length||0}`); } res.json({ok:true}); });
 app.get('*',(req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(PORT,()=>console.log(`KLIDO v116.5 FIX PUSH CAMPAÑAS PORT ${PORT} LISTO`));
+app.listen(PORT,()=>console.log(`KLIDO v116.6 FIX PUSH + ENVIO REAL PORT ${PORT} LISTO - Sin cruce agencias`));
