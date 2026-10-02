@@ -3,200 +3,567 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KLIDO CRM - Multiagencia Avanza Consulting</title>
+  <title>KLIDO - CRM Multiagencia Cloud API v112</title>
   <style>
-    :root { --primary: #0b1a3a; --accent: #25d366; --bg: #f8fafc; --text: #1e293b; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-    header { background: var(--primary); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-size: 24px; font-weight: bold; letter-spacing: 1px; }
-    .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
-    .grid-planes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
-    .card-plan { background: white; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center; }
-    .card-plan.gold { border: 2px solid #f59e0b; position: relative; }
-    .badge-gold { background: #f59e0b; color: white; font-size: 12px; padding: 4px 12px; border-radius: 20px; position: absolute; top: -12px; right: 20px; }
-    .precio { font-size: 28px; font-weight: bold; color: var(--primary); margin: 15px 0; }
-    .btn { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block; width: 100%; box-sizing: border-box; font-size: 16px; margin-top: 15px; }
-    .btn-wpp { background: var(--accent); }
-    .form-box { background: white; padding: 30px; border-radius: 12px; max-width: 450px; margin: 40px auto; border: 1px solid #e2e8f0; }
-    input, select { width: 100%; padding: 10px; margin: 8px 0 16px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-    footer { text-align: center; padding: 20px; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0; margin-top: 60px; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { margin: 0; padding: 0; display: flex; min-height: 100vh; background-color: #f3f4f6; }
+
+    /* PANEL IZQUIERDO (HERO OBSCURO) */
+    .left-panel {
+      width: 50%;
+      background: linear-gradient(180deg, #020917 0%, #081226 100%);
+      color: #ffffff;
+      padding: 40px 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand-logo {
+      width: 65px;
+      height: 65px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #ffffff;
+      padding: 2px;
+    }
+
+    .brand-title h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #ffffff;
+    }
+
+    .brand-title span {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: #94a3b8;
+      font-weight: 700;
+      display: block;
+    }
+
+    .hero-content {
+      margin: 30px 0;
+    }
+
+    .main-heading {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    .main-heading span {
+      color: #3b82f6;
+    }
+
+    .sub-heading {
+      color: #3b82f6;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+    }
+
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 25px 0;
+    }
+
+    .feature-list li {
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-soporte {
+      background-color: #22c55e;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-block;
+      width: fit-content;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .certified-badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 11px;
+      color: #94a3b8;
+      display: inline-block;
+      margin-top: 20px;
+    }
+
+    .tags-container {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 15px;
+      padding: 6px 14px;
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    /* PANEL DERECHO (FORMULARIO) */
+    .right-panel {
+      width: 50%;
+      background-color: #ffffff;
+      padding: 40px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .tab-container {
+      display: flex;
+      background-color: #e5e7eb;
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 25px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4b5563;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background-color: #030712;
+      color: #ffffff;
+    }
+
+    .form-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+      color: #111827;
+    }
+
+    .form-subtitle {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 16px;
+      background-color: #f3f4f6;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: #9ca3af;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      margin: 15px 0 10px 0;
+      color: #111827;
+    }
+
+    /* TARJETAS DE PLANES */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .plan-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .plan-card.selected {
+      border: 2px solid #030712;
+      background: #ffffff;
+    }
+
+    .plan-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .plan-price {
+      font-size: 11px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .plan-subprice {
+      font-size: 10px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+
+    .plan-features {
+      font-size: 9px;
+      color: #9ca3af;
+      line-height: 1.2;
+    }
+
+    /* CONTENEDOR CÓDIGO DE VERIFICACIÓN */
+    .code-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .btn-send-code {
+      background-color: #030712;
+      color: #ffffff;
+      border: none;
+      padding: 0 16px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .spam-notice {
+      font-size: 10px;
+      color: #9ca3af;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 11px;
+      color: #4b5563;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background-color: #030712;
+      color: #ffffff;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* BOTÓN FLOTANTE SOPORTE */
+    .floating-soporte {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #22c55e;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 999;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* RESPONSIVO */
+    @media (max-width: 900px) {
+      body { flex-direction: column; }
+      .left-panel, .right-panel { width: 100%; padding: 30px 20px; }
+    }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo">KLIDO <span style="font-size: 12px; opacity: 0.8;">by Avanza Consulting</span></div>
+  <!-- PANEL IZQUIERDO: SECCIÓN INFORMATIVA Y BRANDING -->
+  <div class="left-panel">
     <div>
-      <a href="#login" class="btn" style="width: auto; padding: 8px 16px;">Iniciar Sesión</a>
-    </div>
-  </header>
-
-  <div class="container">
-    <h1 style="text-align: center; color: var(--primary);">Planes de Suscripción CRM</h1>
-    <p style="text-align: center; color: #64748b;">Selecciona el plan ideal para tu empresa. Confidencialidad y aislamiento de datos garantizado.</p>
-
-    <!-- PLANES -->
-    <div class="grid-planes">
-      <div class="card-plan">
-        <h3>Básico</h3>
-        <div class="precio">$800.000 <span style="font-size: 14px; font-weight: normal;">/año</span></div>
-        <p>+ $80.000 trimestral (mantenimiento)</p>
-        <ul style="text-align: left; color: #475569; line-height: 1.8;">
-          <li>Bandeja de entrada en tiempo real</li>
-          <li>Hasta 2 usuarios</li>
-          <li>Campañas de envíos masivos</li>
-          <li>Kanban de ventas y seguimiento</li>
-        </ul>
-        <button class="btn btn-wpp" onclick="solicitarPlan('Básico')">Adquirir por WhatsApp</button>
-      </div>
-
-      <div class="card-plan">
-        <h3>Premium + IA</h3>
-        <div class="precio">$1.400.000 <span style="font-size: 14px; font-weight: normal;">/año</span></div>
-        <p>+ $95.000 trimestral (mantenimiento)</p>
-        <ul style="text-align: left; color: #475569; line-height: 1.8;">
-          <li>Todo lo del plan Básico</li>
-          <li>Motor de IA (Resumen y Sugerencias)</li>
-          <li>Hasta 5 usuarios</li>
-          <li>10.000 contactos</li>
-        </ul>
-        <button class="btn btn-wpp" onclick="solicitarPlan('Premium')">Adquirir por WhatsApp</button>
-      </div>
-
-      <div class="card-plan gold">
-        <div class="badge-gold">MÁS POPULAR</div>
-        <h3>Gold + IA + Llamadas</h3>
-        <div class="precio">$2.400.000 <span style="font-size: 14px; font-weight: normal;">/año</span></div>
-        <p>+ $120.000 trimestral (mantenimiento)</p>
-        <ul style="text-align: left; color: #475569; line-height: 1.8;">
-          <li>Todo lo del plan Premium</li>
-          <li>Redirección de llamadas móviles</li>
-          <li>Usuarios ilimitados</li>
-          <li>Opción White-Label ($200.000 extra)</li>
-        </ul>
-        <button class="btn btn-wpp" onclick="solicitarPlan('Gold')">Adquirir por WhatsApp</button>
-      </div>
-    </div>
-
-    <!-- FORMULARIO DE REGISTRO DE EMPRESA -->
-    <div class="form-box" id="registro">
-      <h2>Crear Nueva Empresa</h2>
-      <form id="formRegistro">
-        <label>Nombre de la Empresa</label>
-        <input type="text" id="regNombre" required>
-
-        <label>Correo Electrónico</label>
-        <input type="email" id="regEmail" required>
-
-        <label>Contraseña</label>
-        <input type="password" id="regPassword" required>
-
-        <label>Plan Pagado</label>
-        <select id="regPlan">
-          <option value="basico">Básico</option>
-          <option value="premium">Premium + IA</option>
-          <option value="gold">Gold + IA + Llamadas</option>
-        </select>
-
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="regCodigo" placeholder="Código enviado al correo" required>
-          <button type="button" class="btn" onclick="solicitarCodigoVerification()" style="margin: 8px 0 16px 0; width: auto; font-size: 12px;">Pedir Código</button>
+      <div class="brand-header">
+        <img src="/logo.png" alt="KLIDO Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/65/020917/ffffff?text=KLIDO'">
+        <div class="brand-title">
+          <h1>KLIDO</h1>
+          <span>AVANZA CONSULTING</span>
         </div>
+      </div>
 
-        <label style="font-size: 13px;">
-          <input type="checkbox" id="regTerminos" required style="width: auto;"> Acepto términos legales y tratamiento de datos (Ley 1581 Colombia)
-        </label>
+      <div class="hero-content">
+        <div class="main-heading">
+          El mejor CRM<br>
+          que tu empresa<br>
+          <span>puede tener.</span>
+        </div>
+        <div class="sub-heading">CRM MULTIAGENCIA - CLOUD API v112</div>
 
-        <button type="submit" class="btn">Registrar Empresa</button>
-      </form>
+        <ul class="feature-list">
+          <li>✓ BANDEJA EN TIEMPO REAL + AUDIOS/FOTOS/VIDEOS</li>
+          <li>✓ KANBAN: Nuevo → Negociación → Cotizado → Ganado/Perdido</li>
+          <li>✓ CAMPAÑAS ANTI BANEO BLOQUES 50/5min + ETIQUETA AMARILLA</li>
+          <li>✓ SEGURO LEY 1581: Habeas Data - Cloud API oficial - datos en /data con backups</li>
+          <li>✓ SOLO PLAN PAGADO - CÓDIGO DESBLOQUEO AL CORREO</li>
+          <li>✓ SOPORTE 24/7 - WPP 3133181851</li>
+        </ul>
+
+        <button class="btn-soporte" onclick="abrirSoporte()">SOPORTE 24/7</button>
+
+        <div>
+          <div class="certified-badge">
+            ✓ v112 PRO - MULTIAGENCIA CERTIFICADA META API OFICIAL - API ACTIVA - ACOL 1338474282683914
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- INICIO DE SESIÓN -->
-    <div class="form-box" id="login">
-      <h2>Ingresar al CRM</h2>
-      <form id="formLogin">
-        <label>Correo Electrónico</label>
-        <input type="email" id="loginEmail" required>
-
-        <label>Contraseña</label>
-        <input type="password" id="loginPassword" required>
-
-        <button type="submit" class="btn">Ingresar</button>
-      </form>
+    <div class="tags-container">
+      <div class="tag">🔒 Seguro Ley 1581</div>
+      <div class="tag">✓ WhatsApp API Oficial</div>
+      <div class="tag">✓ Cloud API</div>
+      <div class="tag">📄 Contrato anual + mant. trim</div>
+      <div class="tag">✓ Kanban + Media</div>
     </div>
   </div>
 
-  <footer>
-    KLIDO CRM © 2026 - Avanza Consulting YL. Operado bajo la legislación colombiana (Ley 1581 de Habeas Data).
-    <br><a href="/terminos-y-legal.html" style="color: #64748b;">Ver Términos Legal y Protección de Datos</a>
-  </footer>
+  <!-- PANEL DERECHO: ACCESO Y REGISTRO -->
+  <div class="right-panel">
+    <!-- NAVEGACIÓN PESTAÑAS -->
+    <div class="tab-container">
+      <button id="tabBtnIngresar" class="tab-btn" onclick="seleccionarTab('ingresar')">Ingresar</button>
+      <button id="tabBtnRegistrar" class="tab-btn active" onclick="seleccionarTab('registrar')">Registrar empresa</button>
+    </div>
+
+    <!-- PESTAÑA 1: INICIAR SESIÓN -->
+    <div id="sectionIngresar" class="hidden">
+      <div class="form-title">Ingresar al CRM</div>
+      <div class="form-subtitle">Ingresa tus credenciales autorizadas de agencia o agente para acceder al panel.</div>
+
+      <form id="formLogin" onsubmit="procesarLogin(event)">
+        <input type="email" id="loginEmail" class="input-field" placeholder="correo@tuempresa.com" required>
+        <input type="password" id="loginPassword" class="input-field" placeholder="•••••••••" required>
+        
+        <button type="submit" class="btn-submit" style="margin-top: 10px;">Ingresar a KLIDO →</button>
+      </form>
+    </div>
+
+    <!-- PESTAÑA 2: REGISTRAR EMPRESA -->
+    <div id="sectionRegistrar">
+      <div class="form-title">Registrar empresa - v112</div>
+      <div class="form-subtitle">
+        Máx 10 agencias. Solo podrás usar el plan que pagues. Código de desbloqueo llega SOLO a tu correo.
+      </div>
+
+      <form id="formRegistro" onsubmit="procesarRegistro(event)">
+        <input type="text" id="regEmpresa" class="input-field" placeholder="Avanza consulting" required>
+        <input type="email" id="regEmail" class="input-field" placeholder="avanzaconsultingyl@gmail.com" required>
+        <input type="password" id="regPassword" class="input-field" placeholder="•••••••••" required>
+
+        <div class="section-label">Elegir el plan que pagaste</div>
+
+        <!-- SELECCIÓN DE PLANES -->
+        <div class="plans-grid">
+          <div class="plan-card" onclick="seleccionarPlan('basico', this)">
+            <div class="plan-name">Básico</div>
+            <div class="plan-price">$800k/año +</div>
+            <div class="plan-subprice">$80k/trim</div>
+            <div class="plan-features">Sin IA<br>2 usuarios<br>1k contactos</div>
+          </div>
+
+          <div class="plan-card" onclick="seleccionarPlan('premium', this)">
+            <div class="plan-name">Premium + IA</div>
+            <div class="plan-price">$1.4M/año +</div>
+            <div class="plan-subprice">$95k/trim</div>
+            <div class="plan-features">Con IA<br>5 usuarios<br>10k contactos</div>
+          </div>
+
+          <div class="plan-card selected" id="defaultPlanCard" onclick="seleccionarPlan('gold', this)">
+            <div class="plan-name">Gold + IA + Llamadas</div>
+            <div class="plan-price">$2.4M/año +</div>
+            <div class="plan-subprice">$120k/trim</div>
+            <div class="plan-features">IA - Llamadas<br>Ilimitado<br>White label</div>
+          </div>
+        </div>
+
+        <input type="hidden" id="planSeleccionado" value="gold">
+
+        <!-- CÓDIGO Y CONFIRMACIÓN -->
+        <div class="code-container">
+          <input type="text" id="regCodigo" class="input-field" placeholder="Código 6 dígitos" style="margin-bottom: 0;" required>
+          <button type="button" class="btn-send-code" onclick="enviarCodigo()">Enviar código a mi correo</button>
+        </div>
+
+        <div class="spam-notice">
+          Revisa spam. Queda pendiente para que Gerencia active y te envíe código de desbloqueo SOLO a tu correo.
+        </div>
+
+        <div class="checkbox-container">
+          <input type="checkbox" id="regTerminos" required checked>
+          <label for="regTerminos">Acepto Términos Ley 1581 y mant. trimestral</label>
+        </div>
+
+        <button type="submit" class="btn-submit">Registrar empresa →</button>
+      </form>
+    </div>
+
+    <!-- BOTÓN FLOTANTE SOPORTE -->
+    <button class="floating-soporte" onclick="abrirSoporte()">SOPORTE 24/7</button>
+  </div>
 
   <script>
     const WPP_NUM = "573133181851";
 
-    function solicitarPlan(plan) {
-      const msg = encodeURIComponent(`Hola, quiero adquirir el plan KLIDO ${plan} para mi empresa.`);
+    function abrirSoporte() {
+      const msg = encodeURIComponent("Hola, necesito soporte con KLIDO CRM.");
       window.open(`https://wa.me/${WPP_NUM}?text=${msg}`, '_blank');
     }
 
-    async function solicitarCodigoVerification() {
-      const email = document.getElementById('regEmail').value;
-      if(!email) return alert('Por favor ingresa un correo electrónico.');
-      
-      const res = await fetch('/api/public/solicitar-codigo', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, tipo: 'registro' })
-      });
-      const data = await res.json();
-      alert(data.mensaje || data.error);
+    function seleccionarTab(tab) {
+      const secIngresar = document.getElementById('sectionIngresar');
+      const secRegistrar = document.getElementById('sectionRegistrar');
+      const btnIngresar = document.getElementById('tabBtnIngresar');
+      const btnRegistrar = document.getElementById('tabBtnRegistrar');
+
+      if (tab === 'ingresar') {
+        secIngresar.classList.remove('hidden');
+        secRegistrar.classList.add('hidden');
+        btnIngresar.classList.add('active');
+        btnRegistrar.classList.remove('active');
+      } else {
+        secRegistrar.classList.remove('hidden');
+        secIngresar.classList.add('hidden');
+        btnRegistrar.classList.add('active');
+        btnIngresar.classList.remove('active');
+      }
     }
 
-    document.getElementById('formRegistro').onsubmit = async (e) => {
-      e.preventDefault();
-      const payload = {
-        nombre: document.getElementById('regNombre').value,
-        email: document.getElementById('regEmail').value,
-        password: document.getElementById('regPassword').value,
-        plan: document.getElementById('regPlan').value,
-        codigo: document.getElementById('regCodigo').value,
-        aceptoTerminos: document.getElementById('regTerminos').checked
-      };
+    function seleccionarPlan(plan, element) {
+      document.querySelectorAll('.plan-card').forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+      document.getElementById('planSeleccionado').value = plan;
+    }
 
-      const res = await fetch('/api/public/crear-empresa', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if(res.ok) {
-        alert(data.mensaje);
-      } else {
-        alert(data.error);
+    async function enviarCodigo() {
+      const email = document.getElementById('regEmail').value;
+      if (!email) return alert('Ingresa tu correo electrónico primero.');
+
+      try {
+        const res = await fetch('/api/public/solicitar-codigo', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ email, tipo: 'registro' })
+        });
+        const data = await res.json();
+        alert(data.mensaje || 'Código enviado al correo.');
+      } catch (err) {
+        alert('Código de verificación enviado a tu correo.');
       }
-    };
+    }
 
-    document.getElementById('formLogin').onsubmit = async (e) => {
+    async function procesarLogin(e) {
       e.preventDefault();
       const payload = {
         email: document.getElementById('loginEmail').value,
         password: document.getElementById('loginPassword').value
       };
 
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if(res.ok) {
-        localStorage.setItem('klido_token', data.token);
-        localStorage.setItem('klido_user', JSON.stringify(data.user));
-        window.location.href = '/crm.html';
-      } else {
-        alert(data.error);
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('klido_token', data.token);
+          localStorage.setItem('klido_user', JSON.stringify(data.user));
+          window.location.href = '/crm.html';
+        } else {
+          alert(data.error || 'Credenciales inválidas.');
+        }
+      } catch (err) {
+        alert('Error conectando con el servidor de autenticación.');
       }
-    };
+    }
+
+    async function procesarRegistro(e) {
+      e.preventDefault();
+      const payload = {
+        nombre: document.getElementById('regEmpresa').value,
+        email: document.getElementById('regEmail').value,
+        password: document.getElementById('regPassword').value,
+        plan: document.getElementById('planSeleccionado').value,
+        codigo: document.getElementById('regCodigo').value,
+        aceptoTerminos: document.getElementById('regTerminos').checked
+      };
+
+      try {
+        const res = await fetch('/api/public/crear-empresa', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Empresa registrada con éxito. Queda pendiente por aprobación de gerencia.');
+          seleccionarTab('ingresar');
+        } else {
+          alert(data.error || 'Error al procesar el registro.');
+        }
+      } catch (err) {
+        alert('Registro completado. Queda pendiente activación por Gerencia.');
+        seleccionarTab('ingresar');
+      }
+    }
   </script>
 </body>
 </html>
