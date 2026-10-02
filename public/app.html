@@ -1,12 +1,145 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO APP</title><style>body{margin:0;background:#0f172a;color:#fff;font-family:sans-serif;display:flex;height:100vh}.side{width:240px;background:#0b1220;padding:15px;display:flex;flex-direction:column}.main{flex:1;display:flex;flex-direction:column}.top{background:#1e293b;padding:10px;display:flex;justify-content:space-between;align-items:center}.inbox{display:flex;flex:1}.lista{width:300px;background:#0f172a;border-right:1px solid #1e293b;overflow:auto}.chat{flex:1;background:#111b2f;padding:15px;overflow:auto}.badge{width:10px;height:10px;border-radius:50%;display:inline-block}.red{background:#ef4444}.yellow{background:#f59e0b} button{padding:8px 12px;border-radius:8px;border:0;background:#38bdf8;font-weight:700;cursor:pointer}.card{background:#1e293b;padding:12px;border-radius:12px;margin:6px}</style></head><body>
-<div class="side"><img src="/logo.png" width="110"><h4 id="empresa">KLIDO</h4><button onclick="show('inbox')">📥 Inbox <span id="dotR" class="badge red"></span><span id="dotY" class="badge yellow"></span></button><button onclick="show('cal')">📅 Calendario</button><button onclick="location.href='/campanas.html?v=115'">📢 Campañas</button><button onclick="show('config')">⚙️ Configuración</button><button onclick="logout()">Salir</button><a href="https://wa.me/573133181851" style="margin-top:auto;color:#25d366;text-decoration:none">💬 Soporte</a></div>
-<div class="main"><div class="top"><b id="plan">Plan</b><span id="userEmail"></span></div><div id="view_inbox" class="inbox"><div class="lista" id="listaChats"><div class="card">Cliente 1 - Mensaje nuevo <span class="badge red"></span></div><div class="card">Campaña promo <span class="badge yellow"></span></div></div><div class="chat" id="chatBox"><h3>Bandeja tiempo real - META API</h3><div id="msgs">Historial completo anclado a API. Audios, videos, fotos reproducibles.</div><input id="msgInput" placeholder="Responder..." style="width:80%;padding:10px;border-radius:8px"><button onclick="sendMsg()">Enviar</button></div></div><div id="view_cal" style="display:none;padding:20px"><h3>Calendario - Recordatorios y seguimiento</h3><input id="cita" placeholder="Nueva cita cliente"><button onclick="addCita()">Agregar</button><div id="citas"></div></div><div id="view_config" style="display:none;padding:20px"><h3>Configuración agencia</h3><p>WA Phone ID: <input id="waId" placeholder="1338474282683914"></p><p>Meta Token: <input id="waTok" placeholder="Token META API"></p><button onclick="saveConfig()">Guardar credenciales META por agencia (sin cruce)</button><div id="info"></div></div></div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO APP - CRM</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,Arial}
+body{display:flex;height:100vh;background:#0b1220;color:#fff;overflow:hidden}
+.sidebar{width:260px;background:#0f172a;border-right:1px solid #1e293b;padding:16px;display:flex;flex-direction:column;gap:10px}
+.sidebar img{width:120px;margin-bottom:8px}
+.sidebar button{padding:11px;border-radius:10px;border:1px solid #1e293b;background:#1e293b;color:#e2e8f0;text-align:left;cursor:pointer;font-weight:600}
+.sidebar button.active{background:#38bdf8;color:#0b1220;border-color:#38bdf8}
+.main{flex:1;display:flex;flex-direction:column}
+.top{padding:12px 18px;background:#1e293b;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #334155}
+.content{flex:1;display:flex;overflow:hidden}
+.lista{width:320px;background:#0f172a;border-right:1px solid #1e293b;overflow:auto;padding:8px}
+.chatArea{flex:1;background:#111c32;display:flex;flex-direction:column}
+.messages{flex:1;overflow:auto;padding:15px}
+.msgCard{background:#1e293b;padding:10px 14px;border-radius:14px;margin:8px 0;max-width:75%}
+.msgCard.me{margin-left:auto;background:#38bdf8;color:#0b1220}
+.inputBar{display:flex;gap:8px;padding:12px;background:#0f172a;border-top:1px solid #1e293b}
+.inputBar input{flex:1;padding:12px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#fff}
+.badgeRed{width:10px;height:10px;background:#ef4444;border-radius:50%;display:inline-block;margin-left:6px}
+.badgeYellow{width:10px;height:10px;background:#f59e0b;border-radius:50%;display:inline-block;margin-left:4px}
+.card{background:#1e293b;padding:14px;border-radius:12px;margin:8px 0;border:1px solid #334155}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="sidebar">
+<img src="/logo.png" onerror="this.style.display='none'">
+<b id="empNombre">KLIDO</b>
+<span id="empPlan" style="font-size:11px;color:#38bdf8"></span>
+<button id="btnInbox" class="active" onclick="showView('inbox')">📥 Inbox <span class="badgeRed" id="dotUnread"></span><span class="badgeYellow" id="dotCamp"></span></button>
+<button onclick="showView('cal')">📅 Calendario - Citas y Seguimiento</button>
+<button onclick="location.href='/campanas.html?v=115'">📢 Campañas - Excel + Plantillas META</button>
+<button onclick="showView('contactos')">👥 Segmentar Clientes</button>
+<button onclick="showView('equipo')" id="btnEquipo">👷 Equipos Trabajo</button>
+<button onclick="showView('metricas')">📊 Estadísticas Equipo</button>
+<button onclick="showView('config')">⚙️ Configuración - Info Botones</button>
+<button onclick="logout()" style="margin-top:auto;background:#ef4444;color:#fff">Salir</button>
+<a href="https://wa.me/573133181851" target="_blank" style="text-align:center;color:#25d366;text-decoration:none;font-weight:800;padding:10px">💬 Ayuda Soporte WPP</a>
+</div>
+
+<div class="main">
+<div class="top"><div><b id="userNombre">Usuario</b> - <span id="userRol"></span> - <span id="userEmail"></span></div><div><span id="estado">Conectado META API Tiempo Real</span></div></div>
+
+<div id="view_inbox" class="content">
+<div class="lista" id="listaContactos">
+<div style="padding:8px"><input id="searchContacto" placeholder="Buscar cliente..." onkeyup="filtrarContactos()" style="width:100%;padding:10px;border-radius:8px;background:#0b1220;border:1px solid #334155;color:#fff"></div>
+<div id="contactosList"></div>
+</div>
+<div class="chatArea">
+<div class="messages" id="messagesBox">
+<h3>Inbox Tiempo Real Anclado META API</h3>
+<p style="color:#94a3b8;font-size:12px">Historial completo, reproducir audios, videos, fotos, archivos satisfactoriamente. Cada agencia aislada sin cruce.</p>
+<div id="msgs"></div>
+</div>
+<div class="inputBar"><input id="msgInput" placeholder="Escribe mensaje..."><button onclick="enviarMensaje()" style="padding:12px 18px;border-radius:10px;border:0;background:#38bdf8;font-weight:900">Enviar</button></div>
+</div>
+</div>
+
+<div id="view_cal" class="hidden" style="padding:20px;overflow:auto">
+<h3>Calendario - Recordatorios, Citas y Seguimiento Potenciales</h3>
+<div class="card"><input id="citaCliente" placeholder="Cliente"><input id="citaFecha" type="datetime-local"><input id="citaNota" placeholder="Nota seguimiento"><button onclick="crearCita()">Agregar Cita</button></div>
+<div id="listaCitas"></div>
+</div>
+
+<div id="view_contactos" class="hidden" style="padding:20px;overflow:auto">
+<h3>Segmentar Clientes</h3><div class="card"><input id="contactNombre" placeholder="Nombre"><input id="contactPhone" placeholder="Teléfono"><input id="contactTag" placeholder="Etiqueta Ej: Potencial, Cliente"><button onclick="crearContacto()">Guardar Cliente</button></div><div id="listaContactosFull"></div>
+</div>
+
+<div id="view_equipo" class="hidden" style="padding:20px;overflow:auto">
+<h3>Equipos Trabajo - Agregar/Eliminar Trabajador</h3>
+<div class="card"><input id="eqNombre" placeholder="Nombre trabajador"><input id="eqEmail" placeholder="Correo"><input id="eqPass" placeholder="Clave"><select id="eqRol"><option value="trabajador">Trabajador - Ve chats asignados</option><option value="jefe">Jefe</option></select><button onclick="agregarTrabajador()">Agregar Trabajador</button></div>
+<div id="listaEquipo"></div>
+</div>
+
+<div id="view_metricas" class="hidden" style="padding:20px;overflow:auto">
+<h3>Estadísticas Equipo</h3><div class="card"><p>Métricas propias y de equipo - Tiempo real</p><p id="metricasBox"></p></div>
+</div>
+
+<div id="view_config" class="hidden" style="padding:20px;overflow:auto">
+<h3>Configuración - Información Detallada Botones KLIDO</h3>
+<div class="card"><b>Inbox:</b> Bandeja mensajes tiempo real META, punto rojo no leídos, punto amarillo campañas.</div>
+<div class="card"><b>Calendario:</b> Recordatorios y seguimiento clientes potenciales, citas.</div>
+<div class="card"><b>Campañas:</b> Subir Excel, selección automática teléfonos, plantillas aprobadas META tiempo real, historial, seguimiento, segmentación.</div>
+<div class="card"><b>Planes:</b> Básico 800k +80k, Premium 1.4M+95k con IA, Gold 2.4M+120k IA+llamadas. Botón comprar redirige WPP 3133181851.</div>
+<div class="card" style="border-color:#38bdf8">
+<h4>Conexión META API por Agencia (Sin cruce, sin baneos)</h4>
+<input id="cfgPhoneId" placeholder="WA Phone ID Ej: 1338474282683914"><input id="cfgToken" placeholder="WA Token META"><input id="cfgAppId" placeholder="Meta App ID"><input id="cfgBizId" placeholder="Business ID">
+<button onclick="guardarMeta()">Guardar Credenciales META - Autónomo por Agencia</button>
+<p style="font-size:11px;color:#94a3b8;margin-top:8px">Cada agencia tiene su propio Phone ID y Token, datos en data/empresas.json aislado, listo Postgres Railway. No hay filtración.</p>
+</div>
+<div class="card"><b>Legalidad:</b> Ley 1581 Habeas Data, Contrato aceptado en registro, botón términos.</div>
+<div id="configInfo"></div>
+</div>
+
+</div>
+
 <script>
-const token=localStorage.getItem('klido_token'); if(!token) location.href='/index.html'; let user=JSON.parse(localStorage.getItem('klido_user')||'{}'); document.getElementById('empresa').innerText=user.nombre||'Empresa'; document.getElementById('plan').innerText=user.plan||''; document.getElementById('userEmail').innerText=user.email||'';
-async function check(){ const r=await fetch('/api/me',{headers:{'Authorization':'Bearer '+token}}); if(!r.ok){ localStorage.clear(); location.href='/index.html'; } const j=await r.json(); document.getElementById('info').innerText=JSON.stringify(j,null,2); } check();
-function show(v){ document.getElementById('view_inbox').style.display=v==='inbox'?'flex':'none'; document.getElementById('view_cal').style.display=v==='cal'?'block':'none'; document.getElementById('view_config').style.display=v==='config'?'block':'none'; }
-function logout(){ localStorage.clear(); location.href='/index.html'; }
-function sendMsg(){ document.getElementById('msgs').innerHTML+='<p>Yo: '+document.getElementById('msgInput').value+'</p>'; }
-function addCita(){ document.getElementById('citas').innerHTML+='<div class=card>'+document.getElementById('cita').value+'</div>'; }
-function saveConfig(){ alert('Credenciales META guardadas por agencia - sin riesgo baneo - Postgres ready'); }
-</script></body></html>
+const token=localStorage.getItem('klido_token'); if(!token) location.href='/index.html?v=115';
+let user=JSON.parse(localStorage.getItem('klido_user')||'{}'); let empresaId=user.empresaId||user.id;
+document.getElementById('empNombre').innerText=user.empresaNombre||user.nombre||'KLIDO';
+document.getElementById('empPlan').innerText=(user.plan||'')+' - '+ (user.rol||'');
+document.getElementById('userNombre').innerText=user.nombre||''; document.getElementById('userRol').innerText=user.rol||''; document.getElementById('userEmail').innerText=user.email||'';
+if(user.rol==='trabajador'){ document.getElementById('btnEquipo').style.display='none'; }
+
+async function api(path,method='GET',body=null){
+  const opt={method,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}; if(body) opt.body=JSON.stringify(body);
+  const r=await fetch(path,opt); if(r.status===401){ localStorage.clear(); location.href='/index.html?v=115'; return null; } return r.json();
+}
+async function checkMe(){ const j=await api('/api/me'); if(!j) return; document.getElementById('configInfo').innerText=JSON.stringify(j,null,2); document.getElementById('metricasBox').innerText=`Empresa ${j.empresaNombre||j.nombre} Plan ${j.plan} Usuarios ${j.consumo?.usuarios||2} Mensajes ${j.consumo?.mensajes||0}`; }
+checkMe();
+
+function showView(v){ document.getElementById('view_inbox').classList.add('hidden'); document.getElementById('view_cal').classList.add('hidden'); document.getElementById('view_contactos').classList.add('hidden'); document.getElementById('view_equipo').classList.add('hidden'); document.getElementById('view_metricas').classList.add('hidden'); document.getElementById('view_config').classList.add('hidden'); document.getElementById('view_'+v).classList.remove('hidden'); document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active')); const btn=document.getElementById('btn'+v.charAt(0).toUpperCase()+v.slice(1)); if(btn) btn.classList.add('active'); if(v==='inbox') cargarContactos(); if(v==='cal') cargarCitas(); if(v==='contactos') cargarContactosFull(); if(v==='equipo') cargarEquipo(); }
+function logout(){ localStorage.clear(); location.href='/index.html?v=115'; }
+
+// CONTACTOS Y MENSAJES TIEMPO REAL
+async function cargarContactos(){ const contactos=await api('/api/contactos'); if(!contactos) return; const list=document.getElementById('contactosList'); list.innerHTML=''; contactos.forEach(c=>{ list.innerHTML+=`<div class=card onclick="abrirChat('${c.id}','${c.nombre}')">${c.nombre} - ${c.phone||''} <span class=badgeRed></span><br><small>${c.tag||''}</small></div>`; }); document.getElementById('contactosListFull')?null:null; }
+function filtrarContactos(){ const q=document.getElementById('searchContacto').value.toLowerCase(); document.querySelectorAll('#contactosList.card').forEach(el=>{ el.style.display=el.innerText.toLowerCase().includes(q)?'':'none'; }); }
+let chatActual=null;
+function abrirChat(id,nombre){ chatActual=id; document.getElementById('messagesBox').innerHTML=`<h3>Chat con ${nombre}</h3><div id=msgs></div>`; cargarMensajes(); }
+async function cargarMensajes(){ if(!chatActual) return; const msgs=await api('/api/mensajes'); if(!msgs) return; const box=document.getElementById('msgs'); if(!box) return; box.innerHTML=''; msgs.filter(m=>m.contactoId===chatActual||!m.contactoId).slice(-50).forEach(m=>{ box.innerHTML+=`<div class="msgCard ${m.de==='yo'?'me':''}"><b>${m.de||'cliente'}:</b> ${m.texto||m.mensaje||''} ${m.audio?'<audio controls src='+m.audio+'></audio>':''} ${m.imagen?'<br><img src='+m.imagen+' width=200 style=border-radius:8px>':''}<br><small>${new Date(m.fecha).toLocaleString()}</small></div>`; }); }
+async function enviarMensaje(){ const texto=document.getElementById('msgInput').value; if(!texto||!chatActual) return; await api('/api/mensajes','POST',{contactoId:chatActual,texto,de:'yo'}); document.getElementById('msgInput').value=''; cargarMensajes(); }
+async function crearContacto(){ const nombre=document.getElementById('contactNombre').value, phone=document.getElementById('contactPhone').value, tag=document.getElementById('contactTag').value; await api('/api/contactos','POST',{nombre,phone,tag}); cargarContactosFull(); }
+async function cargarContactosFull(){ const c=await api('/api/contactos'); const box=document.getElementById('listaContactosFull'); if(!box||!c) return; box.innerHTML=''; c.forEach(x=> box.innerHTML+=`<div class=card>${x.nombre} ${x.phone} ${x.tag}</div>`); }
+
+// CITAS
+async function crearCita(){ const cliente=document.getElementById('citaCliente').value, fecha=document.getElementById('citaFecha').value, nota=document.getElementById('citaNota').value; await api('/api/citas','POST',{cliente,fecha,nota}); cargarCitas(); }
+async function cargarCitas(){ const citas=await api('/api/citas'); const box=document.getElementById('listaCitas'); if(!box||!citas) return; box.innerHTML=''; citas.forEach(c=> box.innerHTML+=`<div class=card><b>${c.cliente}</b> ${c.fecha} - ${c.nota}</div>`); }
+
+// EQUIPO
+async function cargarEquipo(){ const eq=await api('/api/equipo'); const box=document.getElementById('listaEquipo'); if(!box||!eq) return; box.innerHTML=''; eq.forEach(u=> box.innerHTML+=`<div class=card>${u.nombre} ${u.email} ${u.rol} <button onclick="eliminarEquipo('${u.id}')" style="background:#ef4444;color:#fff;padding:4px 8px;border-radius:6px;border:0">Eliminar</button></div>`); }
+async function agregarTrabajador(){ const nombre=document.getElementById('eqNombre').value, email=document.getElementById('eqEmail').value, password=document.getElementById('eqPass').value, rol=document.getElementById('eqRol').value; const r=await fetch('/api/equipo',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,rol})}); const j=await r.json(); alert(j.ok?'Agregado':j.error); cargarEquipo(); }
+async function eliminarEquipo(id){ await api('/api/equipo/'+id,'DELETE'); cargarEquipo(); }
+
+// META CONFIG POR AGENCIA
+async function guardarMeta(){ const waPhoneId=document.getElementById('cfgPhoneId').value, waToken=document.getElementById('cfgToken').value, metaAppId=document.getElementById('cfgAppId').value, metaBusinessId=document.getElementById('cfgBizId').value; const j=await api('/api/config/meta','POST',{waPhoneId,waToken,metaAppId,metaBusinessId}); alert(j.mensaje||j.error||'Guardado'); }
+
+setInterval(()=>{ if(chatActual) cargarMensajes(); },3000);
+cargarContactos();
+</script>
+</body>
+</html>
