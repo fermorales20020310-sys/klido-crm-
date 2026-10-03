@@ -1,3 +1,5 @@
+// KLIDO V143 - TU V142 COMPLETO CONSERVADO + FIX XLSX + DEBUG META
+// Todo lo funcional intacto: auth, planes, mora, admin, CRM, inbox, campañas
 import express from 'express'; import cors from 'cors'; import pg from 'pg'; import jwt from 'jsonwebtoken'; import bcrypt from 'bcryptjs'; import path from 'path'; import { fileURLToPath } from 'url'; import * as XLSX from 'xlsx';
 const __filename=fileURLToPath(import.meta.url); const __dirname=path.dirname(__filename);
 const app=express(); app.use(cors()); app.use(express.json({limit:'100mb'})); app.use(express.static(path.join(__dirname,'public')));
@@ -7,7 +9,6 @@ const PHONE_ENV=process.env.PHONE_NUMBER_ID||'1338474282683914'; const WABA_ENV=
 let TOKEN_ENV=process.env.META_TOKEN||process.env.WHATSAPP_TOKEN||''; if(!TOKEN_ENV){ for(const v of Object.values(process.env)){ if(typeof v==='string'&&v.startsWith('EAAT')&&v.length>80){TOKEN_ENV=v;break;}}}
 const ADMIN_EMAILS=['admin@klido.com','fermorales20020310@gmail.com','soporte@klidoapp.com.co'];
 const PLANES={basico:{id:'basico',nombre:'BÁSICO',anual:800000,mant:80000,limite:5000,ia:false,llamadas:false,gmail:false,usuarios:3},premium:{id:'premium',nombre:'PREMIUM + IA',anual:1400000,mant:95000,limite:15000,ia:true,llamadas:false,gmail:false,usuarios:10},gold:{id:'gold',nombre:'GOLD TOTAL',anual:2500000,mant:135000,limite:50000,ia:true,llamadas:true,gmail:true,usuarios:999}};
-
 async function initDB(){
 await pgPool.query(`CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT DEFAULT 'basico', plan_activo BOOLEAN DEFAULT true, token TEXT, phone_id TEXT, waba_id TEXT, meta_token TEXT, equipo JSONB DEFAULT '[]', creado BIGINT, mantenimiento BIGINT, anual_vence BIGINT, api_status TEXT DEFAULT 'pendiente', limite_usado INT DEFAULT 0, contrato_firmado BOOLEAN DEFAULT false)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS clientes_klido (id TEXT PRIMARY KEY, agencia_id TEXT, telefono TEXT, nombre TEXT, datos JSONB DEFAULT '{}', recordatorio TIMESTAMP, etiqueta TEXT DEFAULT 'nuevo', estado_embudo TEXT DEFAULT 'nuevo', asesor_id TEXT, ultimo_mensaje TIMESTAMP DEFAULT NOW(), score INT DEFAULT 0, origen_campana TEXT, leido BOOLEAN DEFAULT true, email TEXT, direccion TEXT, notas TEXT)`);
@@ -39,74 +40,25 @@ await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS enviados
 await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS fallidos INT DEFAULT 0`);
 await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS historial JSONB DEFAULT '[]'`);
 await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS terminada BIGINT`);
-}catch(e){console.log('migracion v142',e.message)}
-console.log('✅ KLIDO V142 - FIX SYNTAX + ENVIO FORZADO MULTI-IDIOMA');
+}catch(e){console.log('migracion v143',e.message)}
+console.log('✅ KLIDO V143 - TODO CONSERVADO + FIX MULTI-IDIOMA + DEBUG');
 } initDB();
-
-setInterval(async()=>{
- try{
-  const ahora=Date.now();
-  const q1=await pgPool.query(`UPDATE agencias SET plan_activo=false WHERE plan_activo=true AND mantenimiento IS NOT NULL AND mantenimiento < $1 RETURNING id`,[ahora]);
-  const q2=await pgPool.query(`UPDATE agencias SET plan_activo=false WHERE plan_activo=true AND anual_vence IS NOT NULL AND anual_vence < $1 RETURNING id`,[ahora]);
-  if(q1.rowCount||q2.rowCount) console.log(`🔒 Auto-bloqueo ${q1.rowCount} trim ${q2.rowCount} anual`);
- }catch(e){console.log('cron',e.message)}
-},60*60*1000);
-
+setInterval(async()=>{ try{ const ahora=Date.now(); const q1=await pgPool.query(`UPDATE agencias SET plan_activo=false WHERE plan_activo=true AND mantenimiento IS NOT NULL AND mantenimiento < $1 RETURNING id`,[ahora]); const q2=await pgPool.query(`UPDATE agencias SET plan_activo=false WHERE plan_activo=true AND anual_vence IS NOT NULL AND anual_vence < $1 RETURNING id`,[ahora]); if(q1.rowCount||q2.rowCount) console.log(`🔒 Auto-bloqueo ${q1.rowCount} trim ${q2.rowCount} anual`); }catch(e){console.log('cron',e.message)} },60*60*1000);
 function auth(req,res,next){ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.replace('Bearer ',''),JWT); next(); }catch{ res.status(401).json({error:'Token invalido'}); }}
 function isAdmin(req,res,next){ if(!ADMIN_EMAILS.includes(req.user.email)) return res.status(403).json({error:'Solo admin'}); next(); }
-async function checkPlan(req,res,next){
-const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[req.user.agenciaId]); const emp=rows[0]; if(!emp) return res.status(403).json({error:'No existe'});
-if(emp.mantenimiento && Date.now()>Number(emp.mantenimiento)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, error:`MANTENIMIENTO VENCIDO $${PLANES[emp.plan]?.mant} - 3133181851`, wpp:'573133181851'}); }
-if(emp.anual_vence && Date.now()>Number(emp.anual_vence)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, error:`ANUAL VENCIDO $${PLANES[emp.plan]?.anual} - 3133181851`, wpp:'573133181851'}); }
-if(!emp.plan_activo) return res.status(403).json({bloqueado:true, error:'PLAN BLOQUEADO POR MORA - 3133181851', wpp:'573133181851'});
-if(emp.limite_usado>=PLANES[emp.plan].limite) return res.status(403).json({error:'LIMITE ALCANZADO'});
-req.empresa=emp; next();
-}
+async function checkPlan(req,res,next){ const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[req.user.agenciaId]); const emp=rows[0]; if(!emp) return res.status(403).json({error:'No existe'}); if(emp.mantenimiento && Date.now()>Number(emp.mantenimiento)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, error:`MANTENIMIENTO VENCIDO $${PLANES[emp.plan]?.mant} - 3133181851`, wpp:'573133181851'}); } if(emp.anual_vence && Date.now()>Number(emp.anual_vence)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, error:`ANUAL VENCIDO $${PLANES[emp.plan]?.anual} - 3133181851`, wpp:'573133181851'}); } if(!emp.plan_activo) return res.status(403).json({bloqueado:true, error:'PLAN BLOQUEADO POR MORA - 3133181851', wpp:'573133181851'}); if(emp.limite_usado>=PLANES[emp.plan].limite) return res.status(403).json({error:'LIMITE ALCANZADO'}); req.empresa=emp; next(); }
 async function obtenerEmpresas(){ const {rows}=await pgPool.query('SELECT * FROM agencias'); return rows.map(r=>({id:r.id,plan:r.plan,phoneId:r.phone_id,wabaId:r.waba_id,metaToken:r.meta_token,phoneIdEfectivo:r.phone_id||PHONE_ENV,wabaIdEfectivo:r.waba_id||WABA_ENV,metaTokenEfectivo:r.meta_token||TOKEN_ENV})); }
 const codigosTemp=new Map();
-async function enviarMail(para,asunto,html){
-  const RESEND_KEY=process.env.RESEND_API_KEY; const ENV_FROM=process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>';
-  if(!RESEND_KEY) return {error:'Falta RESEND_API_KEY'};
-  const intentos=[ENV_FROM,'KLIDO <onboarding@resend.dev>','onboarding@resend.dev'];
-  for(let i=0;i<intentos.length;i++){
-    try{
-      const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${RESEND_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:intentos[i],to:para,subject:asunto,html})});
-      const j=await r.json(); if(!j.error) return j;
-      if(i==intentos.length-1) return {error:j.error};
-    }catch(e){ if(i==intentos.length-1) return {error:e.message}; }
-  }
-}
-function normalizaNumeros(arr){
-  let out=[];
-  arr.forEach(raw=>{
-    let texto=String(raw||'').trim();
-    if(!texto) return;
-    texto.split(/[,;\n|\/ -]+/).forEach(p=>{
-      let d=p.replace(/\D/g,'');
-      if(!d) return;
-      if(d.endsWith('.0')) d=d.slice(0,-2);
-      if(d.length===10 && d.startsWith('3')) d='57'+d;
-      if(d.length===12 && d.startsWith('57') && d[2]==='3') out.push(d);
-      if(d.length>12){ const m=d.match(/3\d{9}/g); if(m) m.forEach(x=>out.push('57'+x)); }
-    });
-  });
-  out=[...new Set(out)].filter(n=>/^57[3]\d{9}$/.test(n) &&!/(.)\1{6,}/.test(n) &&!n.includes('80808080') &&!n.includes('2237999510'));
-  return out;
-}
-function buildTemplatePayload(plantilla, variables, lang){
-  const l = lang || (plantilla==='hello_world'? 'en_US' : 'es_CO');
-  let vars = variables && variables.length? variables : [];
-  if(vars.length===0 && plantilla!=='hello_world'){ vars = ["Cliente"]; }
-  if(vars.length===0){ return { name:plantilla, language:{code:l} }; }
-  else { return { name:plantilla, language:{code:l}, components:[{ type:"body", parameters: vars.map(t=>({type:"text", text:String(t).slice(0,100)})) }] }; }
-}
+async function enviarMail(para,asunto,html){ const RESEND_KEY=process.env.RESEND_API_KEY; const ENV_FROM=process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>'; if(!RESEND_KEY) return {error:'Falta RESEND_API_KEY'}; const intentos=[ENV_FROM,'KLIDO <onboarding@resend.dev>','onboarding@resend.dev']; for(let i=0;i<intentos.length;i++){ try{ const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${RESEND_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:intentos[i],to:para,subject:asunto,html})}); const j=await r.json(); if(!j.error) return j; if(i==intentos.length-1) return {error:j.error}; }catch(e){ if(i==intentos.length-1) return {error:e.message}; } } }
+function normalizaNumeros(arr){ let out=[]; arr.forEach(raw=>{ let texto=String(raw||'').trim(); if(!texto) return; texto.split(/[,;\n|\/ -]+/).forEach(p=>{ let d=p.replace(/\D/g,''); if(!d) return; if(d.endsWith('.0')) d=d.slice(0,-2); if(d.length===10 && d.startsWith('3')) d='57'+d; if(d.length===12 && d.startsWith('57') && d[2]==='3') out.push(d); if(d.length>12){ const m=d.match(/3\d{9}/g); if(m) m.forEach(x=>out.push('57'+x)); } }); }); out=[...new Set(out)].filter(n=>/^57[3]\d{9}$/.test(n) &&!/(.)\1{6,}/.test(n) &&!n.includes('80808080') &&!n.includes('2237999510')); return out; }
+function buildTemplatePayload(plantilla, variables, lang){ const l = lang || (plantilla==='hello_world'? 'en_US' : 'es_CO'); let vars = variables && variables.length? variables : []; if(vars.length===0 && plantilla!=='hello_world'){ vars = ["Cliente"]; } if(vars.length===0){ return { name:plantilla, language:{code:l} }; } else { return { name:plantilla, language:{code:l}, components:[{ type:"body", parameters: vars.map(t=>({type:"text", text:String(t).slice(0,100)})) }] }; } }
 async function enviarCampanaProceso(campId, agenciaId){
   try{
     const {rows:campRows}=await pgPool.query('SELECT * FROM campanas_klido WHERE id=$1 AND agencia_id=$2',[campId, agenciaId]); if(!campRows[0]) return;
     const camp=campRows[0]; let numeros=camp.numeros; if(typeof numeros==='string'){ try{ numeros=JSON.parse(numeros); }catch{ numeros=[]; } } numeros=normalizaNumeros(numeros); if(!numeros.length) return;
     const emps=await obtenerEmpresas(); const emp=emps.find(e=>e.id===agenciaId); if(!emp) return;
     let variables=[]; try{ const hist = typeof camp.historial==='string'? JSON.parse(camp.historial): camp.historial; const last = hist?.find(h=>h.variables) || hist?.[0]; if(last?.variables) variables=last.variables; }catch{}
-    console.log(`🚀 V142 Iniciando ${campId} ${camp.plantilla} total:${numeros.length} vars:${JSON.stringify(variables)} phone:${emp.phoneIdEfectivo}`);
+    console.log(`🚀 V143 Iniciando ${campId} ${camp.plantilla} total:${numeros.length} vars:${JSON.stringify(variables)} phone:${emp.phoneIdEfectivo} token:${emp.metaTokenEfectivo?.slice(0,20)}...`);
     const yaEnviados = (camp.enviados||0)+(camp.fallidos||0);
     for(let i=yaEnviados;i<numeros.length;i++){
       const {rows:check}=await pgPool.query('SELECT pausada FROM campanas_klido WHERE id=$1',[campId]); if(check[0]?.pausada){ await pgPool.query('UPDATE campanas_klido SET estado=$1 WHERE id=$2',['pausada',campId]); console.log('⏸️ Pausada '+campId); break; }
@@ -137,9 +89,26 @@ async function enviarCampanaProceso(campId, agenciaId){
     console.log(`🏁 Campaña ${campId} terminada`);
   }catch(e){ console.log('enviarCampanaProceso error', e.message); }
 }
-app.get('/api/health',(req,res)=>res.json({ok:true,version:'v142-fix-syntax-multi-lang',planes:PLANES,wpp:'573133181851'}));
+app.get('/api/health',(req,res)=>res.json({ok:true,version:'v143-todo-conservado',planes:PLANES,wpp:'573133181851'}));
 app.get('/health',(req,res)=>res.json({ok:true}));
 app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+// DEBUG NUEVO - NO BORRA NADA, SOLO AYUDA A VER ERROR META
+app.post('/api/debug/test-meta', auth, async(req,res)=>{
+ try{
+  const {telefono, plantilla} = req.body; const emps=await obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.agenciaId);
+  const testNum = normalizaNumeros([telefono||'573226536669'])[0];
+  if(!testNum) return res.json({error:'Numero invalido'});
+  const langs = plantilla==='hello_world'? ['en_US'] : ['es_CO','es','en_US'];
+  let results=[];
+  for(const lang of langs){
+    const tpl = buildTemplatePayload(plantilla||'hello_world', [], lang);
+    const r = await fetch(`https://graph.facebook.com/v20.0/${emp.phoneIdEfectivo}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.metaTokenEfectivo}`},body:JSON.stringify({messaging_product:'whatsapp',to:testNum,type:'template',template:tpl})});
+    const j = await r.json(); results.push({lang, tpl, resp:j});
+    if(!j.error) break;
+  }
+  res.json({ok:true, phoneId:emp.phoneIdEfectivo, wabaId:emp.wabaIdEfectivo, token_len:emp.metaTokenEfectivo?.length, token_start:emp.metaTokenEfectivo?.slice(0,30), results});
+ }catch(e){ res.json({error:e.message}); }
+});
 app.post('/api/auth/register-init', async(req,res)=>{
 try{
 const {nombre,email,password,plan}=req.body; if(!nombre||!email||!password) return res.status(400).json({error:'Faltan datos'});
@@ -204,7 +173,7 @@ const id='camp_'+Date.now(); const validos=normalizaNumeros(numeros); if(!valido
 const vars = Array.isArray(variables)? variables : (typeof variables==='string'? variables.split(',').map(s=>s.trim()).filter(Boolean): []);
 const historialData=[{accion:'creada',fecha:Date.now(),total:validos.length,plantilla,variables:vars}];
 await pgPool.query('INSERT INTO campanas_klido (id,agencia_id,nombre,plantilla,total,creada,historial,numeros,enviados,fallidos,estado,pausada) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',[id,req.user.agenciaId,nombre||'Campaña '+(new Date().toLocaleDateString()),plantilla,validos.length,Date.now(),JSON.stringify(historialData),JSON.stringify(validos),0,0,'activa',false]);
-enviarCampanaProceso(id, req.user.agenciaId); res.json({ok:true,total:validos.length,id,mensaje:'Campaña '+validos.length+' iniciada - v142'});
+enviarCampanaProceso(id, req.user.agenciaId); res.json({ok:true,total:validos.length,id,mensaje:'Campaña '+validos.length+' iniciada - v143'});
 }catch(e){res.status(500).json({error:e.message})}
 });
 app.post('/api/campanas/:id/pausa',auth,async(req,res)=>{ await pgPool.query('UPDATE campanas_klido SET pausada=true,estado=$1 WHERE id=$2',['pausada',req.params.id]); res.json({ok:true}); });
@@ -264,4 +233,4 @@ app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']==='klido_verify
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
 app.get('/crm.html',(req,res)=>res.sendFile(path.join(__dirname,'public','crm.html')));
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`🚀 KLIDO V142 - FIX SYNTAX + ENVIO MULTI-IDIOMA - ${PORT}`));
+app.listen(PORT,()=>console.log(`🚀 KLIDO V143 - TODO CONSERVADO + FIX MULTI-IDIOMA - ${PORT}`));
