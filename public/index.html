@@ -5,9 +5,11 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
 body{min-height:100vh;display:flex;background:#0a1931}
 .left{flex:1.1;background:#071a3a;background:radial-gradient(120% at 15% 85%, #1746a2 0%, #0e2a6b 30%, #07132e 65%, #020a1c 100%)!important;color:#ffffff!important;padding:44px 48px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
-.brand{display:flex;gap:14px;align-items:center;z-index:2}
-.brand img{width:62px;height:62px;background:#ffffff;border-radius:14px;padding:6px;object-fit:contain;box-shadow:0 8px 20px rgba(0,0,0,.4)}
-.hero{margin-top:60px;max-width:520px;z-index:2}
+.brand{display:flex;gap:18px;align-items:center;z-index:2}
+.brand img{width:96px;height:96px;background:#ffffff;border-radius:16px;padding:8px;object-fit:contain;box-shadow:0 12px 28px rgba(0,0,0,.5)}
+.brand .klido-title{font-size:30px;font-weight:900;letter-spacing:.8px;color:#ffffff;line-height:1.1}
+.brand .klido-sub{font-size:19px;font-weight:700;opacity:.9;letter-spacing:.6px;color:#ffffff;margin-top:2px}
+.hero{margin-top:50px;max-width:520px;z-index:2}
 .hero h1{font-size:52px;line-height:.92;font-weight:900;letter-spacing:-1px;color:#ffffff}
 .hero h1 span{color:#3fb4ff}
 .hero p{margin-top:18px;color:#c7d9f5!important;font-size:13.5px;line-height:1.6;font-weight:500}
@@ -28,15 +30,14 @@ body{min-height:100vh;display:flex;background:#0a1931}
 .btnGhost{width:100%;margin-top:8px;background:#eef2f7;color:#0f172a;border:1px solid #e2e8f0;padding:12px;border-radius:12px;font-weight:700;font-size:12px;cursor:pointer}
 .plan{border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;cursor:pointer;margin-top:8px;background:white}
 .plan.selected{border-color:#2563eb;background:#eef5ff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
-@media(max-width:900px){body{flex-direction:column}.left{padding:28px}.right{padding:16px}}
+@media(max-width:900px){body{flex-direction:column}.left{padding:28px}.brand img{width:78px;height:78px}.brand .klido-title{font-size:26px}.right{padding:16px}}
 </style></head><body>
 <div class="left">
-<div class="brand"><img src="/logo.png" alt="logo"><div><div style="font-size:22px;font-weight:900;letter-spacing:.5px;color:#ffffff">KLIDO AVANZA</div><div style="font-size:16px;font-weight:600;opacity:.9;letter-spacing:.5px;color:#ffffff">CONSULTING</div></div></div>
+<div class="brand"><img src="/logo.png" alt="logo KLIDO"><div><div class="klido-title">KLIDO AVANZA</div><div class="klido-sub">CONSULTING</div></div></div>
 <div class="hero">
 <h1 style="color:#ffffff">El mejor CRM que<br>tu empresa<br><span>puede tener.</span></h1>
 <p>Klido Avanza Consulting es un CRM empresarial multiagencia diseñado para aprovechar la API oficial de Meta WhatsApp Business API. Gestiona múltiples agencias desde un solo lugar.</p>
 <div class="badgeCert">🛡️ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
-<div id="health" style="margin-top:12px;font-size:10px;background:#052e16;color:#4ade80;border:1px solid #166534;padding:6px 12px;border-radius:999px;display:inline-block">✅ v123 FIX VISIBILIDAD - 3133181851 - TODO INTEGRADO</div>
 </div>
 <div class="footLeft"><div>✓ Seguro y confiable</div><div>✓ WhatsApp Business API</div><div>✓ Soporte Avanza Consulting</div></div>
 </div>
@@ -66,7 +67,7 @@ body{min-height:100vh;display:flex;background:#0a1931}
 <div style="margin-top:16px;border:1.5px dashed #2563eb;background:#eef5ff;border-radius:12px;padding:12px">
 <label class="label" style="margin-top:0;color:#1e40af">🔑 Código de activación (llega a tu correo después del pago)</label>
 <input id="rCodigo" class="input inputCode" placeholder="000000" maxlength="6">
-<div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.4">Si ya pagaste, ingresa el código de 6 dígitos que te enviamos a tu correo para activar tu empresa. Si aún no tienes código, deja este campo vacío y dale a "Crear empresa y activar" y te enviamos el código a tu correo.</div>
+<div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.4">Si ya pagaste, ingresa el código de 6 dígitos que te enviamos a tu correo para activar tu empresa. Si aún no tienes código, deja este campo vacío y dale a "Crear empresa y activar" y te enviamos el código a tu correo soporte@klidoapp.com.co</div>
 </div>
 
 <button class="btnPrimary" onclick="registerFlow()">Crear empresa y activar</button>
@@ -78,24 +79,23 @@ body{min-height:100vh;display:flex;background:#0a1931}
 </div>
 </div>
 
-<div id="modalForgot" style="position:fixed;inset:0;background:rgba(2,6,23,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:99"><div style="background:white;border-radius:16px;padding:20px;width:90%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><h3 style="font-weight:900;color:#0f172a">Recuperar contraseña</h3><p style="font-size:11px;color:#64748b;margin-top:4px">Código de 6 dígitos a tu correo</p><label class="label">Correo registrado</label><input id="fEmail" class="input" placeholder="tu@empresa.com"><label class="label">Código recibido</label><input id="fCode" class="input" placeholder="Código 123456"><label class="label">Nueva contraseña</label><input id="fPass" type="password" class="input" placeholder="Nueva clave"><button class="btnPrimary" onclick="doForgot()">Enviar código / Cambiar contraseña</button><div id="fMsg" style="font-size:11px;color:#dc2626;margin-top:8px;min-height:14px"></div><button class="btnGhost" onclick="document.getElementById('modalForgot').style.display='none'">Cerrar</button></div></div>
+<div id="modalForgot" style="position:fixed;inset:0;background:rgba(2,6,23,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:99"><div style="background:white;border-radius:16px;padding:20px;width:90%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><h3 style="font-weight:900;color:#0f172a">Recuperar contraseña</h3><p style="font-size:11px;color:#64748b;margin-top:4px">Código de 6 dígitos a tu correo desde soporte@klidoapp.com.co</p><label class="label">Correo registrado</label><input id="fEmail" class="input" placeholder="tu@empresa.com"><label class="label">Código recibido</label><input id="fCode" class="input" placeholder="Código 123456"><label class="label">Nueva contraseña</label><input id="fPass" type="password" class="input" placeholder="Nueva clave"><button class="btnPrimary" onclick="doForgot()">Enviar código / Cambiar contraseña</button><div id="fMsg" style="font-size:11px;color:#dc2626;margin-top:8px;min-height:14px"></div><button class="btnGhost" onclick="document.getElementById('modalForgot').style.display='none'">Cerrar</button></div></div>
 
 <script>
 let plan='premium';
 function setMode(m){document.getElementById('viewLogin').style.display=m==='login'?'block':'none';document.getElementById('viewReg').style.display=m==='reg'?'block':'none';document.getElementById('tL').classList.toggle('active',m==='login');document.getElementById('tR').classList.toggle('active',m==='reg');}
 function selPlan(p){plan=p;document.querySelectorAll('.plan').forEach(e=>e.classList.remove('selected'));document.getElementById('p_'+p).classList.add('selected');document.querySelectorAll('.plan div div').forEach(d=>{if(d.innerHTML==='✓')d.innerHTML='';});document.getElementById('p_'+p).querySelector('div').innerHTML='✓';document.getElementById('p_'+p).querySelector('div').style.background='#2563eb';document.getElementById('p_'+p).querySelector('div').style.color='white';}
 function openForgot(){document.getElementById('modalForgot').style.display='flex';}
-fetch('/api/health').then(r=>r.json()).then(j=>{document.getElementById('health').innerText='✅ '+j.version+' - TODO OK - Amarilla + Pausa + IA Score + Gmail + Llamadas + Gerencia 3133181851';}).catch(()=>{});
 async function login(){const email=document.getElementById('lEmail').value.trim(),password=document.getElementById('lPass').value.trim();if(!email||!password){document.getElementById('lMsg').innerText='Falta correo y contraseña';return;}try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok){document.getElementById('lMsg').innerText=j.error;return;}if(j.bloqueado){document.getElementById('lMsg').innerHTML=j.error+'<br><a href="'+j.link+'" target="_blank" style="color:#25D366;font-weight:800">Pagar a 3133181851</a>';return;}localStorage.setItem('klido_token',j.token);localStorage.setItem('klido_user',JSON.stringify(j.agencia||{}));location.href=j.agencia?.email==='admin@klido.com'?'/admin.html':'/crm.html';}catch(e){document.getElementById('lMsg').innerText='Error '+e.message;}}
 async function registerFlow(){
  const nombre=document.getElementById('rNom').value.trim(),email=document.getElementById('rEmail').value.trim(),password=document.getElementById('rPass').value.trim(),codigo=document.getElementById('rCodigo').value.trim();
  if(!nombre||!email||!password){document.getElementById('rMsg').innerText='Falta nombre, correo y contraseña';return;}
  if(!codigo){
-   document.getElementById('rMsg').style.color='#2563eb';document.getElementById('rMsg').innerText='Enviando código de activación a '+email+'... (revisa spam)';
+   document.getElementById('rMsg').style.color='#2563eb';document.getElementById('rMsg').innerText='Enviando código de activación a '+email+' desde soporte@klidoapp.com.co... (revisa spam)';
    try{
      const r=await fetch('/api/auth/register-init',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan})});
      const j=await r.json();if(!r.ok){document.getElementById('rMsg').style.color='#dc2626';document.getElementById('rMsg').innerText='❌ '+j.error;return;}
-     document.getElementById('rMsg').style.color='#16a34a';document.getElementById('rMsg').innerText='✅ Código enviado a '+email+' - Revisa tu bandeja y spam - Ahora ingresa el código de 6 dígitos arriba y dale de nuevo a Crear empresa y activar';
+     document.getElementById('rMsg').style.color='#16a34a';document.getElementById('rMsg').innerText='✅ Código enviado desde soporte@klidoapp.com.co a '+email+' - Revisa spam - Ahora ingresa el código de 6 dígitos arriba';
      document.getElementById('rCodigo').focus();
    }catch(e){document.getElementById('rMsg').style.color='#dc2626';document.getElementById('rMsg').innerText='Error '+e.message;}
    return;
@@ -110,21 +110,21 @@ async function registerFlow(){
 async function resendCode(){
  const email=document.getElementById('rEmail').value.trim(); if(!email){document.getElementById('rMsg').innerText='Escribe tu correo admin primero para reenviar código';return;}
  const nombre=document.getElementById('rNom').value.trim()||'Empresa'; const password=document.getElementById('rPass').value.trim()||'temp123';
- document.getElementById('rMsg').style.color='#2563eb';document.getElementById('rMsg').innerText='Reenviando código a '+email+'...';
+ document.getElementById('rMsg').style.color='#2563eb';document.getElementById('rMsg').innerText='Reenviando código desde soporte@klidoapp.com.co a '+email+'...';
  try{
    const r=await fetch('/api/auth/register-init',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan})});
-   const j=await r.json(); document.getElementById('rMsg').style.color=j.ok?'#16a34a':'#dc2626'; document.getElementById('rMsg').innerText=j.ok?'✅ Código reenviado a '+email+' - Revisa spam':'❌ '+j.error;
+   const j=await r.json(); document.getElementById('rMsg').style.color=j.ok?'#16a34a':'#dc2626'; document.getElementById('rMsg').innerText=j.ok?'✅ Código reenviado desde soporte@klidoapp.com.co a '+email+' - Revisa spam':'❌ '+j.error;
  }catch(e){document.getElementById('rMsg').innerText='Error '+e.message;}
 }
 async function doForgot(){
  const email=document.getElementById('fEmail').value.trim(),codigo=document.getElementById('fCode').value.trim(),password=document.getElementById('fPass').value.trim();
  if(!email){document.getElementById('fMsg').innerText='Escribe tu correo';return;}
  if(!codigo){
-   document.getElementById('fMsg').style.color='#2563eb';document.getElementById('fMsg').innerText='Enviando código a '+email+'...';
-   try{const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});const j=await r.json();document.getElementById('fMsg').style.color=j.ok?'#16a34a':'#dc2626';document.getElementById('fMsg').innerText=j.ok?'✅ Código enviado a '+email+' - Revisa spam':'❌ '+j.error;}catch(e){document.getElementById('fMsg').innerText='Error '+e.message;}
+   document.getElementById('fMsg').style.color='#2563eb';document.getElementById('fMsg').innerText='Enviando código desde soporte@klidoapp.com.co a '+email+'...';
+   try{const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});const j=await r.json();document.getElementById('fMsg').style.color=j.ok?'#16a34a':'#dc2626';document.getElementById('fMsg').innerText=j.ok?'✅ Código enviado desde soporte@klidoapp.com.co a '+email+' - Revisa spam':'❌ '+j.error;}catch(e){document.getElementById('fMsg').innerText='Error '+e.message;}
    return;
  }
  if(!password){document.getElementById('fMsg').innerText='Escribe nueva contraseña';return;}
- try{const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo,password})});const j=await r.json();document.getElementById('fMsg').style.color=j.ok?'#16a34a':'#dc2626';document.getElementById('fMsg').innerText=j.ok?'✅ Contraseña cambiada - Ya puedes ingresar con tu nueva clave':'❌ '+j.error;if(j.ok){setTimeout(()=>{document.getElementById('modalForgot').style.display='none';},1200);}}catch(e){document.getElementById('fMsg').innerText='Error '+e.message;}
+ try{const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo,password})});const j=await r.json();document.getElementById('fMsg').style.color=j.ok?'#16a34a':'#dc2626';document.getElementById('fMsg').innerText=j.ok?'✅ Contraseña cambiada - Ya puedes ingresar':'❌ '+j.error;if(j.ok){setTimeout(()=>{document.getElementById('modalForgot').style.display='none';},1200);}}catch(e){document.getElementById('fMsg').innerText='Error '+e.message;}
 }
 </script></body></html>
