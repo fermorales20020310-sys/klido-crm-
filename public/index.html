@@ -1,46 +1,130 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO AVANZA CONSULTING</title><link rel="icon" href="/logo.png">
+<title>KLIDO AVANZA CONSULTING - El mejor CRM</title><link rel="icon" href="/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
-body{min-height:100vh;display:flex;background:#eef2f7}
-.left{flex:1.15;background:radial-gradient(125% at 10% 100%, #18449e 0%, #0a224a 42%, #020a1c 100%);color:white;padding:42px 46px;display:flex;flex-direction:column;justify-content:space-between}
-.brand{display:flex;gap:16px;align-items:center}
-.brand img{width:74px;height:74px;background:white;border-radius:18px;padding:7px;object-fit:contain}
-.hero{margin-top:70px;max-width:520px}
-.hero h1{font-size:54px;line-height:.92;font-weight:900}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{min-height:100vh;display:flex;background:#0a1931}
+.left{flex:1.1;background:#071a3a;background:radial-gradient(120% at 15% 85%, #1746a2 0%, #0e2a6b 30%, #07132e 65%, #020a1c 100%)!important;color:#ffffff!important;padding:44px 48px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.brand{display:flex;gap:14px;align-items:center;z-index:2}
+.brand img{width:62px;height:62px;background:#ffffff;border-radius:14px;padding:6px;object-fit:contain;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.hero{margin-top:60px;max-width:520px;z-index:2}
+.hero h1{font-size:52px;line-height:.92;font-weight:900;letter-spacing:-1px;color:#ffffff}
 .hero h1 span{color:#3fb4ff}
-.hero p{margin-top:18px;color:#a9bddf;font-size:13.8px;line-height:1.6}
-.badgeCert{display:inline-flex;border:1.5px solid #2fa7e0;background:rgba(8,40,80,.7);padding:11px 18px;border-radius:999px;font-size:11px;font-weight:800;margin-top:32px}
-.right{flex:1;background:#eef2f7;display:flex;align-items:center;justify-content:center;padding:24px}
-.card{width:100%;max-width:460px;background:white;border-radius:22px;padding:26px 28px;box-shadow:0 20px 60px rgba(15,23,42,.08)}
-.tabs{display:flex;gap:28px;margin-bottom:24px}
-.tabs button{background:none;border:none;font-weight:800;font-size:16.5px;padding:10px 2px 12px;cursor:pointer;border-bottom:3px solid transparent;color:#94a3b8}
+.hero p{margin-top:18px;color:#c7d9f5!important;font-size:13.5px;line-height:1.6;font-weight:500}
+.badgeCert{margin-top:30px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid #2fa7e0;background:rgba(8,40,80,.9);color:#e0f2ff;padding:11px 18px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.2px}
+.footLeft{margin-top:auto;display:flex;gap:10px;flex-wrap:wrap}
+.footLeft div{font-size:11px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:999px;color:#d6e6ff}
+.right{flex:0.9;background:#eef2f7;display:flex;align-items:center;justify-content:center;padding:28px}
+.card{width:100%;max-width:460px;background:#ffffff;border-radius:20px;padding:24px 26px;box-shadow:0 20px 60px rgba(15,23,42,.15);border:1px solid #e6eaf1}
+.tabs{display:flex;gap:24px;margin-bottom:20px;border-bottom:1px solid #eef2f7}
+.tabs button{background:none;border:none;font-weight:800;font-size:15px;padding:10px 2px 12px;cursor:pointer;border-bottom:3px solid transparent;color:#94a3b8}
 .tabs button.active{color:#0f172a;border-bottom-color:#0f172a}
-.input{width:100%;padding:13px 14px;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;margin-top:6px;font-size:13px}
-.btnPrimary{width:100%;margin-top:18px;background:#1e5ad8;color:white;border:none;padding:15px;border-radius:12px;font-weight:900;cursor:pointer}
-.plan{border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;cursor:pointer;margin-top:8px}
-.plan.selected{border-color:#2563eb;background:#eef5ff}
+.label{font-size:11px;font-weight:700;color:#0f172a;margin-top:12px;display:block}
+.input{width:100%;padding:12px 14px;border:1.5px solid #d6deeb;border-radius:12px;background:#f1f6ff;margin-top:6px;font-size:13px;color:#0f172a;outline:none}
+.input::placeholder{color:#64748b}
+.input:focus{border-color:#2563eb;background:#ffffff}
+.inputCode{letter-spacing:8px;text-align:center;font-weight:900;font-size:20px;background:#eef5ff;border:2px dashed #2563eb}
+.btnPrimary{width:100%;margin-top:16px;background:#1e5ad8;color:white;border:none;padding:14px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 8px 24px rgba(37,99,235,.3)}
+.btnGhost{width:100%;margin-top:8px;background:#eef2f7;color:#0f172a;border:1px solid #e2e8f0;padding:12px;border-radius:12px;font-weight:700;font-size:12px;cursor:pointer}
+.plan{border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;cursor:pointer;margin-top:8px;background:white}
+.plan.selected{border-color:#2563eb;background:#eef5ff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+@media(max-width:900px){body{flex-direction:column}.left{padding:28px}.right{padding:16px}}
 </style></head><body>
 <div class="left">
-<div class="brand"><img src="/logo.png"><div><div style="font-size:26px;font-weight:900">KLIDO AVANZA</div><div style="font-size:21px;font-weight:600;margin-top:-4px">CONSULTING</div></div></div>
+<div class="brand"><img src="/logo.png" alt="logo"><div><div style="font-size:22px;font-weight:900;letter-spacing:.5px;color:#ffffff">KLIDO AVANZA</div><div style="font-size:16px;font-weight:600;opacity:.9;letter-spacing:.5px;color:#ffffff">CONSULTING</div></div></div>
 <div class="hero">
-<h1>El mejor CRM que<br>tu empresa<br><span>puede tener.</span></h1>
-<p><b>Klido Avanza Consulting</b> es un CRM empresarial multiagencia diseñado para aprovechar la API oficial de Meta WhatsApp Business API.</p>
+<h1 style="color:#ffffff">El mejor CRM que<br>tu empresa<br><span>puede tener.</span></h1>
+<p>Klido Avanza Consulting es un CRM empresarial multiagencia diseñado para aprovechar la API oficial de Meta WhatsApp Business API. Gestiona múltiples agencias desde un solo lugar.</p>
 <div class="badgeCert">🛡️ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
+<div id="health" style="margin-top:12px;font-size:10px;background:#052e16;color:#4ade80;border:1px solid #166534;padding:6px 12px;border-radius:999px;display:inline-block">✅ v123 FIX VISIBILIDAD - 3133181851 - TODO INTEGRADO</div>
 </div>
-<div style="display:flex;gap:10px;margin-top:auto"><div style="background:rgba(255,255,255,.08);padding:8px 14px;border-radius:999px;font-size:11px">✓ Seguro y confiable</div><div style="background:rgba(255,255,255,.08);padding:8px 14px;border-radius:999px;font-size:11px">✓ WhatsApp Business API</div></div>
+<div class="footLeft"><div>✓ Seguro y confiable</div><div>✓ WhatsApp Business API</div><div>✓ Soporte Avanza Consulting</div></div>
 </div>
-<div class="right"><div class="card">
-<div class="tabs"><button id="tLogin" onclick="setMode('login')" class="active">Ingresar</button><button id="tReg" onclick="setMode('reg')">Crear empresa</button></div>
-<div id="viewLogin"><input id="lEmail" class="input" placeholder="Correo administrador"><input id="lPass" type="password" class="input" placeholder="Contraseña"><div style="text-align:right;margin-top:8px"><a href="#" onclick="forgot();return false" style="font-size:11px;color:#2563eb;font-weight:700">¿Olvidaste tu contraseña?</a></div><button class="btnPrimary" onclick="login()">Entrar</button><div id="lMsg" style="font-size:11px;color:#dc2626;margin-top:10px"></div></div>
-<div id="viewReg" style="display:none"><input id="rNom" class="input" placeholder="Nombre de la empresa"><input id="rEmail" class="input" placeholder="Correo administrador"><input id="rPass" type="password" class="input" placeholder="Crear contraseña admin"><div style="margin-top:12px;font-weight:900">Selecciona tu plan</div><div class="plan selected" id="p_premium" onclick="selPlan('premium')"><div><b>Premium + IA $1.400.000/año + $95k trim</b><div style="font-size:10px">10 usuarios, IA incluida, Score caliente</div></div></div><div class="plan" id="p_basico" onclick="selPlan('basico')"><div><b>Básico $800.000/año + $80k trim</b><div style="font-size:10px">3 usuarios, API Meta oficial</div></div></div><div class="plan" id="p_gold" onclick="selPlan('gold')"><div><b>Gold $2.500.000/año + $135k trim</b><div style="font-size:10px">Ilimitado, IA + Llamadas + Gmail masivo</div></div></div><button class="btnPrimary" onclick="registerInit()">Crear empresa y pagar - Código al correo</button><div id="rMsg" style="font-size:11px;color:#dc2626;margin-top:10px"></div></div>
-</div></div>
+
+<div class="right">
+<div class="card">
+<div class="tabs"><button id="tL" class="active" onclick="setMode('login')">Ingresar</button><button id="tR" onclick="setMode('reg')">Crear empresa</button></div>
+
+<div id="viewLogin">
+<label class="label">Correo administrador</label><input id="lEmail" class="input" placeholder="tu@empresa.com">
+<label class="label">Contraseña</label><input id="lPass" type="password" class="input" placeholder="••••••••">
+<div style="text-align:right;margin-top:6px"><a href="#" onclick="openForgot();return false" style="font-size:11px;color:#2563eb;font-weight:800">¿Olvidaste tu contraseña? Código al correo</a></div>
+<button class="btnPrimary" onclick="login()">Entrar</button>
+<div id="lMsg" style="font-size:11px;color:#dc2626;margin-top:8px;min-height:14px"></div>
+<div style="text-align:center;margin-top:12px;font-size:11px;color:#94a3b8">Panel Gerencia <a href="/admin.html" style="color:#0f172a;font-weight:800">/admin.html</a> (admin@klido.com)</div>
+</div>
+
+<div id="viewReg" style="display:none">
+<label class="label">Nombre de la empresa</label><input id="rNom" class="input" placeholder="Ej: Agencia Digital Norte">
+<label class="label">Correo administrador</label><input id="rEmail" class="input" placeholder="admin@tuagencia.com">
+<label class="label">Crear contraseña admin</label><input id="rPass" type="password" class="input" placeholder="••••••••">
+<div style="margin-top:14px;font-weight:900;font-size:13px;color:#0f172a">Selecciona tu plan</div>
+<div class="plan selected" id="p_premium" onclick="selPlan('premium')"><div style="width:20px;height:20px;background:#2563eb;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:10px">✓</div><div><b style="font-size:11px;color:#0f172a">Premium + IA $1.400.000/año + $95k trim - 10 usuarios</b><div style="font-size:9px;color:#2563eb;font-weight:700">IA incluida + Score caliente + Recomendado</div></div></div>
+<div class="plan" id="p_basico" onclick="selPlan('basico')"><div style="width:20px;height:20px;border:1.5px solid #cbd5e1;border-radius:50%"></div><div><b style="font-size:11px;color:#0f172a">Básico $800.000/año + $80k trim - 3 usuarios</b><div style="font-size:9px;color:#64748b">API Meta oficial, hasta 5.000 mensajes</div></div></div>
+<div class="plan" id="p_gold" onclick="selPlan('gold')"><div style="width:20px;height:20px;border:1.5px solid #cbd5e1;border-radius:50%"></div><div><b style="font-size:11px;color:#0f172a">Gold $2.500.000/año + $135k trim - Ilimitado</b><div style="font-size:9px;color:#64748b">IA + Llamadas desde tu número + Gmail masivo anti-baneo</div></div></div>
+
+<div style="margin-top:16px;border:1.5px dashed #2563eb;background:#eef5ff;border-radius:12px;padding:12px">
+<label class="label" style="margin-top:0;color:#1e40af">🔑 Código de activación (llega a tu correo después del pago)</label>
+<input id="rCodigo" class="input inputCode" placeholder="000000" maxlength="6">
+<div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.4">Si ya pagaste, ingresa el código de 6 dígitos que te enviamos a tu correo para activar tu empresa. Si aún no tienes código, deja este campo vacío y dale a "Crear empresa y activar" y te enviamos el código a tu correo.</div>
+</div>
+
+<button class="btnPrimary" onclick="registerFlow()">Crear empresa y activar</button>
+<button class="btnGhost" onclick="resendCode()">📧 Reenviar código a mi correo</button>
+<div id="rMsg" style="font-size:11px;color:#dc2626;margin-top:8px;min-height:14px"></div>
+<div style="font-size:10px;color:#64748b;text-align:center;margin-top:8px;line-height:1.4">Al crear tu empresa aceptas nuestros <a href="/terminos.html" target="_blank" style="color:#2563eb;font-weight:700">Términos</a> y <a href="/legal.html" target="_blank" style="color:#2563eb;font-weight:700">Política de Privacidad</a> Ley 1581 Habeas Data Colombia<br>Soporte 24/7 <a href="https://wa.me/573133181851" style="color:#25D366;font-weight:800">3133181851</a></div>
+</div>
+
+</div>
+</div>
+
+<div id="modalForgot" style="position:fixed;inset:0;background:rgba(2,6,23,.6);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:99"><div style="background:white;border-radius:16px;padding:20px;width:90%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)"><h3 style="font-weight:900;color:#0f172a">Recuperar contraseña</h3><p style="font-size:11px;color:#64748b;margin-top:4px">Código de 6 dígitos a tu correo</p><label class="label">Correo registrado</label><input id="fEmail" class="input" placeholder="tu@empresa.com"><label class="label">Código recibido</label><input id="fCode" class="input" placeholder="Código 123456"><label class="label">Nueva contraseña</label><input id="fPass" type="password" class="input" placeholder="Nueva clave"><button class="btnPrimary" onclick="doForgot()">Enviar código / Cambiar contraseña</button><div id="fMsg" style="font-size:11px;color:#dc2626;margin-top:8px;min-height:14px"></div><button class="btnGhost" onclick="document.getElementById('modalForgot').style.display='none'">Cerrar</button></div></div>
+
 <script>
-let plan='premium',pendingEmail='';
-function setMode(m){document.getElementById('viewLogin').style.display=m==='login'?'block':'none';document.getElementById('viewReg').style.display=m==='reg'?'block':'none';document.getElementById('tLogin').classList.toggle('active',m==='login');document.getElementById('tReg').classList.toggle('active',m==='reg');}
-function selPlan(p){plan=p;document.querySelectorAll('.plan').forEach(e=>e.classList.remove('selected'));document.getElementById('p_'+p).classList.add('selected');}
-async function login(){const email=lEmail.value,password=lPass.value;const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok){lMsg.innerText=j.error;return;}if(j.bloqueado){lMsg.innerHTML=j.error+' <a href="'+j.link+'" target="_blank">Pagar 3133181851</a>';return;}localStorage.setItem('klido_token',j.token);location.href=j.agencia.email==='admin@klido.com'?'/admin.html':'/crm.html';}
-async function forgot(){const email=prompt('Escribe tu correo registrado para enviar código de recuperación');if(!email)return;let r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});let j=await r.json();if(!r.ok){alert(j.error);return;}const codigo=prompt('Código de 6 dígitos enviado a '+email+' (revisa spam) - Ingresa código:');const np=prompt('Nueva contraseña:');r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo,password:np})});j=await r.json();alert(j.ok?'Contraseña cambiada':'Error: '+j.error);}
-async function registerInit(){const nombre=rNom.value,email=rEmail.value,password=rPass.value;let r=await fetch('/api/auth/register-init',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan})});let j=await r.json();if(!r.ok){rMsg.innerText=j.error;return;}const codigo=prompt('✅ Te enviamos un código de verificación a '+email+' después del pago (revisa spam). Ingresa el código para activar tu empresa KLIDO:');r=await fetch('/api/auth/register-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo})});j=await r.json();if(!r.ok){alert(j.error);return;}localStorage.setItem('klido_token',j.token);location.href='/crm.html';}
+let plan='premium';
+function setMode(m){document.getElementById('viewLogin').style.display=m==='login'?'block':'none';document.getElementById('viewReg').style.display=m==='reg'?'block':'none';document.getElementById('tL').classList.toggle('active',m==='login');document.getElementById('tR').classList.toggle('active',m==='reg');}
+function selPlan(p){plan=p;document.querySelectorAll('.plan').forEach(e=>e.classList.remove('selected'));document.getElementById('p_'+p).classList.add('selected');document.querySelectorAll('.plan div div').forEach(d=>{if(d.innerHTML==='✓')d.innerHTML='';});document.getElementById('p_'+p).querySelector('div').innerHTML='✓';document.getElementById('p_'+p).querySelector('div').style.background='#2563eb';document.getElementById('p_'+p).querySelector('div').style.color='white';}
+function openForgot(){document.getElementById('modalForgot').style.display='flex';}
+fetch('/api/health').then(r=>r.json()).then(j=>{document.getElementById('health').innerText='✅ '+j.version+' - TODO OK - Amarilla + Pausa + IA Score + Gmail + Llamadas + Gerencia 3133181851';}).catch(()=>{});
+async function login(){const email=document.getElementById('lEmail').value.trim(),password=document.getElementById('lPass').value.trim();if(!email||!password){document.getElementById('lMsg').innerText='Falta correo y contraseña';return;}try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok){document.getElementById('lMsg').innerText=j.error;return;}if(j.bloqueado){document.getElementById('lMsg').innerHTML=j.error+'<br><a href="'+j.link+'" target="_blank" style="color:#25D366;font-weight:800">Pagar a 3133181851</a>';return;}localStorage.setItem('klido_token',j.token);localStorage.setItem('klido_user',JSON.stringify(j.agencia||{}));location.href=j.agencia?.email==='admin@klido.com'?'/admin.html':'/crm.html';}catch(e){document.getElementById('lMsg').innerText='Error '+e.message;}}
+async function registerFlow(){
+ const nombre=document.getElementById('rNom').value.trim(),email=document.getElementById('rEmail').value.trim(),password=document.getElementById('rPass').value.trim(),codigo=document.getElementById('rCodigo').value.trim();
+ if(!nombre||!email||!password){document.getElementById('rMsg').innerText='Falta nombre, correo y contraseña';return;}
+ if(!codigo){
+   document.getElementById('rMsg').style.color='#2563eb';document.getElementById('rMsg').innerText='Enviando código de activación a '+email+'... (revisa spam)';
+   try{
+     const r=await fetch('/api/auth/register-init',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan})});
+     const j=await r.json();if(!r.ok){document.getElementById('rMsg').style.color='#dc2626';document.getElementById('rMsg').innerText='❌ '+j.error;return;}
+     document.getElementById('rMsg').style.color='#16a34a';document.getElementById('rMsg').innerText='✅ Código enviado a '+email+' - Revisa tu bandeja y spam - Ahora ingresa el código de 6 dígitos arriba y dale de nuevo a Crear empresa y activar';
+     document.getElementById('rCodigo').focus();
+   }catch(e){document.getElementById('rMsg').style.color='#dc2626';document.getElementById('rMsg').innerText='Error '+e.message;}
+   return;
+ }
+ document.getElementById('rMsg').style.color='#2563eb';document.getElementById('rMsg').innerText='Verificando código '+codigo+'...';
+ try{
+   const r2=await fetch('/api/auth/register-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo})});
+   const j2=await r2.json();if(!r2.ok){document.getElementById('rMsg').style.color='#dc2626';document.getElementById('rMsg').innerText='❌ '+j2.error;return;}
+   localStorage.setItem('klido_token',j2.token);alert('✅ Empresa verificada y activada - Bienvenido a KLIDO');location.href='/crm.html';
+ }catch(e){document.getElementById('rMsg').style.color='#dc2626';document.getElementById('rMsg').innerText='Error '+e.message;}
+}
+async function resendCode(){
+ const email=document.getElementById('rEmail').value.trim(); if(!email){document.getElementById('rMsg').innerText='Escribe tu correo admin primero para reenviar código';return;}
+ const nombre=document.getElementById('rNom').value.trim()||'Empresa'; const password=document.getElementById('rPass').value.trim()||'temp123';
+ document.getElementById('rMsg').style.color='#2563eb';document.getElementById('rMsg').innerText='Reenviando código a '+email+'...';
+ try{
+   const r=await fetch('/api/auth/register-init',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan})});
+   const j=await r.json(); document.getElementById('rMsg').style.color=j.ok?'#16a34a':'#dc2626'; document.getElementById('rMsg').innerText=j.ok?'✅ Código reenviado a '+email+' - Revisa spam':'❌ '+j.error;
+ }catch(e){document.getElementById('rMsg').innerText='Error '+e.message;}
+}
+async function doForgot(){
+ const email=document.getElementById('fEmail').value.trim(),codigo=document.getElementById('fCode').value.trim(),password=document.getElementById('fPass').value.trim();
+ if(!email){document.getElementById('fMsg').innerText='Escribe tu correo';return;}
+ if(!codigo){
+   document.getElementById('fMsg').style.color='#2563eb';document.getElementById('fMsg').innerText='Enviando código a '+email+'...';
+   try{const r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});const j=await r.json();document.getElementById('fMsg').style.color=j.ok?'#16a34a':'#dc2626';document.getElementById('fMsg').innerText=j.ok?'✅ Código enviado a '+email+' - Revisa spam':'❌ '+j.error;}catch(e){document.getElementById('fMsg').innerText='Error '+e.message;}
+   return;
+ }
+ if(!password){document.getElementById('fMsg').innerText='Escribe nueva contraseña';return;}
+ try{const r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo,password})});const j=await r.json();document.getElementById('fMsg').style.color=j.ok?'#16a34a':'#dc2626';document.getElementById('fMsg').innerText=j.ok?'✅ Contraseña cambiada - Ya puedes ingresar con tu nueva clave':'❌ '+j.error;if(j.ok){setTimeout(()=>{document.getElementById('modalForgot').style.display='none';},1200);}}catch(e){document.getElementById('fMsg').innerText='Error '+e.message;}
+}
 </script></body></html>
