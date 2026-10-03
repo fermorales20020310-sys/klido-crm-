@@ -1,12 +1,9 @@
 {
   "$schema": "https://schema.railway.app/railway.schema.json",
-  "build": {
-    "builder": "nixpacks",
-    "buildCommand": "npm ci --omit=dev"
-  },
+  "build": { "builder": "nixpacks" },
   "deploy": {
     "startCommand": "node server.js",
     "restartPolicyType": "on_failure",
-    "restartPolicyMaxRetries": 3
+    "restartPolicyMaxRetries": 10
   }
 }
