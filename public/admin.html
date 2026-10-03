@@ -1,33 +1,30 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GERENCIA AVANZA - KLIDO</title>
-<style>body{margin:0;background:#0b1220;color:#fff;font-family:Arial;padding:20px}.card{background:#1e293b;padding:14px;border-radius:12px;margin:8px 0;border:1px solid #334155} button{padding:8px 12px;border-radius:8px;border:0;background:#38bdf8;font-weight:800;cursor:pointer;margin:2px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px} input{padding:8px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#fff}</style>
-</head>
-<body>
-<img src="/logo.png" width="110">
-<h2>GERENCIA AVANZA CONSULTING - KLIDO</h2>
-<p>admin@klido.com | Métricas agencias, movimientos, seguimiento, bloquear/desbloquear</p>
-<div class="card"><b id="resumen"></b> <button onclick="cargar()">Actualizar</button> <button onclick="logout()">Salir</button></div>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GERENCIA KLIDO v121</title><link rel="icon" href="/logo.png">
+<style>body{margin:0;background:#020617;color:white;font-family:Inter;padding:20px}.card{background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:16px;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}button{padding:8px 14px;border-radius:999px;border:none;font-weight:800;cursor:pointer} .yellow{background:#fef08a;color:#854d0e} .green{background:#16a34a;color:white} .red{background:#ef4444;color:white}</style>
+</head><body>
+<header style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:12px;align-items:center"><img src="/logo.png" style="width:50px;border-radius:10px"><div><b style="font-size:20px">GERENCIA KLIDO v121</b><br><span style="font-size:11px;color:#60a5fa">Panel 3133181851 - TODO ALINEADO</span></div></div><button onclick="logout()" class="red">Salir</button></div></header>
+
+<div class="card" style="margin-top:20px"><b id="resumen">Cargando...</b> <button onclick="cargar()" class="green" style="margin-left:12px">Actualizar</button> <span style="font-size:11px;color:#94a3b8;margin-left:12px">Planes: BÁSICO 800k+80k | PREMIUM 1.4M+95k | GOLD 2.5M+135k</span></div>
 <div id="lista" class="grid"></div>
+
 <script>
-const token=localStorage.getItem('klido_token'); if(!token) location.href='/index.html?v=115';
-async function api(p,m='GET',b=null){ const o={method:m,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'}}; if(b) o.body=JSON.stringify(b); const r=await fetch(p,o); if(r.status===401){ localStorage.clear(); location.href='/index.html'; return null;} return r.json(); }
+const token=localStorage.getItem('klido_token'); if(!token) location.href='/';
+async function api(url,method='GET',body){ const o={method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}}; if(body) o.body=JSON.stringify(body); const r=await fetch(url,o); const j=await r.json(); if(!r.ok) throw new Error(j.error); return j; }
 async function cargar(){
-  const j=await api('/api/admin/agencias'); if(!j) return;
-  document.getElementById('resumen').innerText=`Total ${j.total} / 10 Restan ${j.restan} WPP ${j.wpp}`;
-  const box=document.getElementById('lista'); box.innerHTML='';
-  j.agencias.forEach(a=>{
-    box.innerHTML+=`<div class=card><b>${a.nombre}</b><br>${a.email}<br>Plan ${a.plan} Estado ${a.estado} Pagado ${a.pagado}<br>WA Phone ${a.waPhoneId||'No config'}<br>Equipo ${a.equipo.length}/${a.consumo.usuarios}<br>Campañas ${a.campanas.length} Contactos ${a.contactos.length}<br><small>${a.fechaRegistro}</small><br><button onclick="desbloquear('${a.id}')">Desbloquear</button><button onclick="bloquear('${a.id}','bloqueada',false)" style="background:#ef4444;color:#fff">Bloquear</button><button onclick="verContrato('${a.id}')">Contrato</button><button onclick="verMetricas('${a.id}')">Métricas</button></div>`;
-  });
+  try{ const j=await api('/api/admin/agencias'); document.getElementById('resumen').innerText=`Total Agencias: ${j.total} | WPP Gerencia: ${j.wpp} | v121 TODO INTEGRADO`;
+    document.getElementById('lista').innerHTML=j.agencias.map(a=>`
+      <div class="card">
+        <b>${a.nombre}</b> - ${a.plan_activo?'✅ ACTIVA':'❌ BLOQUEADA'}<br>
+        <span style="font-size:12px;color:#94a3b8">${a.email}<br>ID: ${a.id}<br>Plan: ${a.plan} | Uso: ${a.limite}<br>Mantenimiento vence: ${a.mantenimiento}<br>API: ${a.api} | Alta: ${a.creado}</span><br>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="bloquear('${a.id}',true)" class="green">Desbloquear</button>
+          <button onclick="bloquear('${a.id}',false)" class="red">Bloquear por mora 3133181851</button>
+          <a href="https://wa.me/573133181851?text=Hola%20${a.nombre}%20tu%20plan%20${a.plan}%20vence%20${a.mantenimiento}" target="_blank" style="background:#25D366;color:white;padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:800;font-size:12px">WPP Cobro</a>
+        </div>
+      </div>`).join('');
+  }catch(e){ document.getElementById('resumen').innerText='❌ '+e.message+' - Entra con admin@klido.com'; }
 }
-async function desbloquear(id){ await api('/api/gerente/desbloquear/'+id,'POST'); cargar(); }
-async function bloquear(id,estado,pagado){ await api('/api/admin/bloquear','POST',{agenciaId:id,estado,pagado}); cargar(); }
-function verContrato(id){ window.open('/api/contrato/'+id+'?token='+token,'_blank'); }
-async function verMetricas(id){ const j=await api('/api/debug/empresas'); const emp=j.find(e=>e.id===id); alert(JSON.stringify(emp?.metricas||{},null,2)); }
-function logout(){ localStorage.clear(); location.href='/index.html'; }
+async function bloquear(id,activo){ await api('/api/admin/bloquear','POST',{agenciaId:id,activo}); alert(activo?'✅ Desbloqueada':'❌ Bloqueada - Cliente ve mensaje a 3133181851'); cargar(); }
+function logout(){ localStorage.clear(); location.href='/'; }
 cargar();
-</script>
-</body>
-</html>
+</script></body></html>
