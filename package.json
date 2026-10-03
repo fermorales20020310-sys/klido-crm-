@@ -1,9 +1,13 @@
 {
-  "name": "klido-v120-total",
-  "version": "120.0.0",
+  "name": "klido-avanza-consulting-v124-full",
+  "version": "124.0.0",
   "type": "module",
+  "description": "KLIDO AVANZA CONSULTING - CRM multiagencia WhatsApp Business API oficial META - v124 FULL TODO INTEGRADO - Bandeja amarilla + Pausa/Continuar + IA Score + Gmail + Llamadas + Gerencia 3133181851",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
@@ -11,6 +15,10 @@
     "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
     "nodemailer": "^6.9.7",
-    "node-fetch": "^3.3.2"
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
