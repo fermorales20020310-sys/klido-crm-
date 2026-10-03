@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO v125 PRO - Bandeja Roja/Amarilla</title>
+<title>KLIDO v126 PRO - XLSX REAL + Roja/Amarilla</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;font-family:Inter,system-ui,Arial}
 body{margin:0;display:flex;height:100vh;background:#f1f5f9}
@@ -62,12 +63,12 @@ body{margin:0;display:flex;height:100vh;background:#f1f5f9}
 <button class="side-btn" onclick="abrirConfig()">⚙️ Config API 1 vez - Phone/WABA</button>
 <button class="side-btn" onclick="abrirIA()">🧠 IA Score caliente</button>
 <div style="flex:1"></div>
-<div style="font-size:10px;opacity:.6;margin:8px 2px">v125 PRO 🔴🟡<br>Soporte 3133181851</div>
+<div style="font-size:10px;opacity:.6;margin:8px 2px">v126 PRO XLSX REAL 🔴🟡<br>Soporte 3133181851</div>
 <button class="side-btn" style="background:#1e293b;color:#fff" onclick="logout()">Salir</button>
 </div>
 
 <div style="flex:1;display:flex;flex-direction:column">
-<div class="topbar"><div><b id="topPlan">Plan GOLD - API conectado</b> <span id="topUso" style="font-size:11px;color:#64748b">Uso 0/50000 - Bandeja con puntos</span><br><small style="font-size:11px;color:#64748b">🔴 rojo = no contestado (desaparece al responder) | 🟡 amarillo = respuesta campaña</small></div><button class="btn-blue" onclick="abrirCampanas()">+ Nueva Campaña Excel + Plantilla META</button></div>
+<div class="topbar"><div><b id="topPlan">Plan GOLD - API conectado</b> <span id="topUso" style="font-size:11px;color:#64748b">Uso 0/50000 - Bandeja con puntos</span><br><small style="font-size:11px;color:#64748b">🔴 rojo = no contestado (desaparece al responder) | 🟡 amarillo = respuesta campaña | XLSX REAL</small></div><button class="btn-blue" onclick="abrirCampanas()">+ Nueva Campaña Excel + Plantilla META</button></div>
 
 <div class="content">
 <div class="col-bandeja">
@@ -132,15 +133,16 @@ body{margin:0;display:flex;height:100vh;background:#f1f5f9}
 </div>
 
 <div id="modalCamp" class="modal"><div class="modal-box">
-<div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">🎯 Campañas - Excel + Plantilla META auto + Historial</h3><button class="small-btn" onclick="cerrarModal('modalCamp')">✕</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">🎯 Campañas - Excel REAL + Plantilla META auto + Historial</h3><button class="small-btn" onclick="cerrarModal('modalCamp')">✕</button></div>
 <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px">
 <div style="flex:1;min-width:320px;background:#f8fafc;padding:14px;border-radius:14px;border:1px solid #e2e8f0">
 <label class="label">Nombre campaña</label><input id="campNombre" class="input" placeholder="Ej: Promo GOLD Marzo">
 <label class="label">Plantilla META (aprobadas se cargan automático)</label><select id="campPlantilla" class="input"></select>
 <button class="small-btn" style="margin-top:6px" onclick="cargarPlantillas()">🔄 Recargar plantillas aprobadas por Meta</button>
-<label class="label" style="margin-top:12px">Subir Excel con teléfonos (.xlsx,.xls,.csv)</label><input type="file" id="campExcel" accept=".xlsx,.xls,.csv" onchange="leerExcel(event)" class="input">
-<div class="scroll" id="previewNums" style="margin-top:10px">Sube Excel para ver qué números se seleccionaron (se guardan para seguimiento)</div>
+<label class="label" style="margin-top:12px">Subir Excel con teléfonos (.xlsx,.xls,.csv) - XLSX REAL</label><input type="file" id="campExcel" accept=".xlsx,.xls,.csv" onchange="leerExcel(event)" class="input">
+<div class="scroll" id="previewNums" style="margin-top:10px">Sube Excel.xlsx grande (hasta 50.000) - detecta columna telefono/celular/whatsapp automáticamente - se guardan para seguimiento</div>
 <div style="margin-top:12px;display:flex;gap:8px"><button class="btn-blue" onclick="crearCampana()">🚀 Enviar campaña ahora</button><button class="small-btn" onclick="cerrarModal('modalCamp')">Cancelar</button></div>
+<div style="font-size:10px;color:#64748b;margin-top:8px">Los que respondan entran en bandeja con punto 🟡 amarillo automático - punto 🔴 desaparece al responder</div>
 </div>
 <div style="flex:1;min-width:360px">
 <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">Historial de campañas - Seguimiento - Pausar/Continuar - Ver números</b><button class="small-btn" onclick="cargarCampanasLista()">🔄</button></div>
@@ -246,32 +248,85 @@ async function cargarPlantillas(){
   if(!t||!t.length) sel.innerHTML='<option value="hello_world">hello_world (APPROVED)</option>';
  }catch{ sel.innerHTML='<option value="hello_world">hello_world</option>'; }
 }
-function leerExcel(e){
+// === XLSX REAL - NO DAÑA NADA - SOLO MEJORA EXCEL ===
+async function leerExcel(e){
  const file=e.target.files[0]; if(!file) return;
- const reader=new FileReader();
- reader.onload=function(ev){
-   const text=new TextDecoder().decode(ev.target.result);
-   let nums=text.split(/[\n,;\t]+/).map(s=>s.replace(/\D/g,'')).filter(s=>s.length>=10 && s.length<=15);
-   numerosExcel=[...new Set(nums)];
-   document.getElementById('previewNums').innerHTML=`<b>${numerosExcel.length} números seleccionados</b><br><small>${numerosExcel.slice(0,150).join(', ')}${numerosExcel.length>150?'...':''}</small>`;
- };
- reader.readAsArrayBuffer(file);
+ document.getElementById('previewNums').innerHTML='⏳ Leyendo Excel XLSX grande... (hasta 50.000)';
+ try{
+  // Intenta backend primero para archivos gigantes si existe endpoint
+  const toBase64 = file => new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
+  const b64 = await toBase64(file);
+  try{
+   const resp = await fetch('/api/campanas/parse-excel',{method:'POST',headers:authHeaders(),body:JSON.stringify({dataBase64:b64})}).then(r=>r.json());
+   if(resp && resp.ok && resp.total>0){
+     numerosExcel=resp.numeros;
+     document.getElementById('previewNums').innerHTML=`<b style="color:#0f172a">${resp.total} números seleccionados (backend XLSX REAL)</b><br><div style="margin-top:6px;max-height:120px;overflow:auto;font-size:11px;word-break:break-all;background:#fff;padding:6px;border-radius:8px;border:1px solid #e2e8f0">${resp.preview.slice(0,200).join(', ')}${resp.total>200?'...':''}</div><br><small style="color:#64748b">Detectó columna telefono/celular/whatsapp automática - listo para campaña + seguimiento</small>`;
+     return;
+   }
+  }catch(err){ console.log('backend parse no disponible, usando frontend', err.message); }
+
+  // Frontend XLSX REAL con SheetJS
+  const arrayBuffer = await file.arrayBuffer();
+  const wb = XLSX.read(arrayBuffer,{type:'array'});
+  const firstSheet = wb.Sheets[wb.SheetNames[0]];
+  const json = XLSX.utils.sheet_to_json(firstSheet,{header:1,defval:''});
+  if(!json.length){ throw new Error('Excel vacío'); }
+  let headers = json[0].map(h=>String(h).toLowerCase().trim());
+  let telIdx = headers.findIndex(h=>['telefono','teléfono','celular','phone','whatsapp','numero','número','movil','móvil','cel','tel'].some(k=>h.includes(k)));
+  let col = telIdx>=0? telIdx : 0;
+  let start = telIdx>=0? 1 : 0;
+  // Si no encuentra header, intenta buscar columna con más números válidos
+  if(telIdx<0){
+    let bestCol=0,bestCount=0;
+    for(let c=0;c<(json[0]?.length||1);c++){
+      let cnt=0; for(let r=0;r<Math.min(json.length,100);r++){ const v=String(json[r][c]||'').replace(/\D/g,''); if(v.length>=10 && v.length<=15) cnt++; }
+      if(cnt>bestCount){ bestCount=cnt; bestCol=c; }
+    }
+    col=bestCol; start=0;
+  }
+  let nums=[];
+  for(let i=start;i<json.length;i++){
+    let raw = json[i][col];
+    if(raw===undefined || raw===null) continue;
+    let v=String(raw).replace(/\D/g,'');
+    if(v.length>=10 && v.length<=15) nums.push(v);
+  }
+  // Fallback escanea toda la hoja si no encontró
+  if(nums.length===0){
+    json.forEach(row=>{ row.forEach(cell=>{ const v=String(cell).replace(/\D/g,''); if(v.length>=10 && v.length<=15) nums.push(v); }); });
+  }
+  numerosExcel=[...new Set(nums)];
+  document.getElementById('previewNums').innerHTML=`<b style="color:#0f172a">${numerosExcel.length} números seleccionados (frontend XLSX REAL - columna ${col+1})</b><br><div style="margin-top:6px;max-height:140px;overflow:auto;font-size:11px;word-break:break-all;background:#fff;padding:8px;border-radius:8px;border:1px solid #e2e8f0">${numerosExcel.slice(0,200).join(', ')}${numerosExcel.length>200?`... +${numerosExcel.length-200} más`:''}</div><br><small style="color:#16a34a">✅ Excel XLSX leído correctamente - listo para enviar campaña, historial y seguimiento</small>`;
+  if(numerosExcel.length===0){
+    document.getElementById('previewNums').innerHTML+=`<br><span style="color:#ef4444">❌ No se detectaron números. Asegúrate que tenga columna telefono con formato +57 300...</span>`;
+  }
+ }catch(err){
+  document.getElementById('previewNums').innerHTML=`<span style="color:#ef4444">Error leyendo Excel: ${err.message}</span><br><small>Intenta guardar como.xlsx con columna telefono</small>`;
+  // fallback ultra simple
+  try{
+    const text = await file.text();
+    let nums=text.split(/[\n,;\t]+/).map(s=>s.replace(/\D/g,'')).filter(s=>s.length>=10);
+    numerosExcel=[...new Set(nums)];
+    if(numerosExcel.length) document.getElementById('previewNums').innerHTML+=`<br><b>${numerosExcel.length} números detectados modo texto</b>`;
+  }catch{}
+ }
 }
 async function crearCampana(){
  const nombre=document.getElementById('campNombre').value||'Campaña '+(new Date().toLocaleDateString());
  const plantilla=document.getElementById('campPlantilla').value;
- if(!plantilla) return alert('Selecciona plantilla');
- if(!numerosExcel.length) return alert('Sube Excel');
+ if(!plantilla) return alert('Selecciona plantilla aprobada por META');
+ if(!numerosExcel.length) return alert('Sube Excel.xlsx con números - ver números seleccionados');
  const res=await fetch('/api/campanas',{method:'POST',headers:authHeaders(),body:JSON.stringify({nombre,plantilla,numeros:numerosExcel})}).then(r=>r.json());
  if(res.error) return alert(res.error);
- alert('✅ Campaña '+res.total+' iniciada'); cargarCampanasLista();
+ alert('✅ Campaña '+res.total+' iniciada - Excel XLSX OK - revisa historial y bandeja 🟡'); cargarCampanasLista(); cargarClientes();
 }
 async function cargarCampanasLista(){
  const rows=await fetch('/api/campanas',{headers:authHeaders()}).then(r=>r.json()).catch(()=>[]);
  const box=document.getElementById('listaCampanas'); box.innerHTML='';
+ if(!rows.length){ box.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px">Sin campañas aún. Sube Excel XLSX REAL + Plantilla META aprobada</div>'; return; }
  rows.forEach(c=>{
    const d=document.createElement('div'); d.style.cssText='border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin:8px 0;font-size:11px;background:#fff';
-   d.innerHTML=`<div style="display:flex;justify-content:space-between"><b>${c.nombre}</b><span class="badge ${c.pausada?'badge-rojo':'badge-amarillo'}">${c.estado||'activa'} ${c.pausada?'⏸️':''}</span></div><div style="margin:4px 0;color:#64748b">Plantilla: ${c.plantilla} | Total: ${c.total} | Enviados: ${c.enviados} | Fallidos: ${c.fallidos}</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="small-btn" onclick="verNumerosCamp('${c.id}')">👁️ Ver números</button><button class="small-btn" onclick="pausarCamp('${c.id}')">⏸️ Pausar</button><button class="small-btn" style="background:#2563eb;color:#fff;border-color:#2563eb" onclick="continuarCamp('${c.id}')">▶️ Continuar</button><button class="small-btn" style="background:#fef9c3" onclick="verHistorialCamp('${c.id}')">📜 Historial</button></div>`;
+   d.innerHTML=`<div style="display:flex;justify-content:space-between"><b>${c.nombre}</b><span class="badge ${c.pausada?'badge-rojo':'badge-amarillo'}">${c.estado||'activa'} ${c.pausada?'⏸️ pausada':''}</span></div><div style="margin:4px 0;color:#64748b">Plantilla: ${c.plantilla} | Total: ${c.total} | Enviados: ${c.enviados} | Fallidos: ${c.fallidos}</div><div style="margin:4px 0;color:#64748b">Números: ${c.numeros? (typeof c.numeros==='string'? JSON.parse(c.numeros).length : c.numeros.length) : c.total} seleccionados - Excel XLSX REAL</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="small-btn" onclick="verNumerosCamp('${c.id}')">👁️ Ver números seleccionados</button><button class="small-btn" onclick="pausarCamp('${c.id}')">⏸️ Pausar</button><button class="small-btn" style="background:#2563eb;color:#fff;border-color:#2563eb" onclick="continuarCamp('${c.id}')">▶️ Continuar</button><button class="small-btn" style="background:#fef9c3" onclick="verHistorialCamp('${c.id}')">📜 Historial + Seguimiento</button></div>`;
    box.appendChild(d);
  });
 }
@@ -279,17 +334,20 @@ async function verNumerosCamp(id){
  const rows=await fetch('/api/campanas',{headers:authHeaders()}).then(r=>r.json());
  const c=rows.find(x=>x.id===id); if(!c) return;
  document.getElementById('modalHist').style.display='flex';
- document.getElementById('histCont').innerHTML=`<b>${c.nombre}</b><br>Total: ${c.total} Enviados: ${c.enviados} Fallidos: ${c.fallidos}<br><div class="scroll">${JSON.stringify(c.historial||[]).substring(0,4000)}</div>`;
+ let nums = c.numeros;
+ if(typeof nums==='string'){ try{ nums=JSON.parse(nums); }catch{ nums=[]; } }
+ if(!nums ||!nums.length) nums = [];
+ document.getElementById('histCont').innerHTML=`<div style="display:flex;justify-content:space-between;flex-wrap:wrap"><b>${c.nombre} - ${c.plantilla}</b><span>Total: ${c.total} | Enviados: ${c.enviados} | Fallidos: ${c.fallidos} | Estado: ${c.estado}</span></div><div style="margin-top:12px"><b>📋 Números seleccionados de esta campaña (Excel XLSX REAL):</b><div class="scroll" style="margin-top:8px;max-height:300px"><b>${nums.length||c.total} números:</b><br><span style="word-break:break-all;font-size:11px">${(nums.slice(0,500).join(', ')||'Revisa clientes con origen '+c.id)}${(nums.length>500?`... +${nums.length-500} más`: '')}</span></div></div><div style="margin-top:12px"><b>📜 Historial + Seguimiento:</b><div class="scroll" style="margin-top:6px">${JSON.stringify(c.historial||[]).substring(0,5000)}</div></div><div style="margin-top:10px;font-size:11px;color:#64748b">💡 Seguimiento: todos los que respondan aparecen en bandeja con punto amarillo 🟡 + rojo 🔴 si no has contestado + notas + recordatorio disponibles</div>`;
 }
-async function pausarCamp(id){ await fetch('/api/campanas/'+id+'/pausa',{method:'POST',headers:authHeaders()}); alert('Pausada'); cargarCampanasLista(); }
-async function continuarCamp(id){ await fetch('/api/campanas/'+id+'/continuar',{method:'POST',headers:authHeaders()}); alert('Continuada'); cargarCampanasLista(); }
-function pausarCampanaActual(){ if(!campanaActual) return alert('Selecciona cliente de campaña'); pausarCamp(campanaActual); }
-function continuarCampanaActual(){ if(!campanaActual) return alert('Selecciona cliente de campaña'); continuarCamp(campanaActual); }
-function abrirHistorial(){ if(!campanaActual) return alert('Selecciona cliente de campaña'); verNumerosCamp(campanaActual); }
+async function pausarCamp(id){ await fetch('/api/campanas/'+id+'/pausa',{method:'POST',headers:authHeaders()}); alert('⏸️ Pausada'); cargarCampanasLista(); }
+async function continuarCamp(id){ await fetch('/api/campanas/'+id+'/continuar',{method:'POST',headers:authHeaders()}); alert('▶️ Continuada'); cargarCampanasLista(); }
+function pausarCampanaActual(){ if(!campanaActual) return alert('Selecciona cliente que viene de campaña'); pausarCamp(campanaActual); }
+function continuarCampanaActual(){ if(!campanaActual) return alert('Selecciona cliente que viene de campaña'); continuarCamp(campanaActual); }
+function abrirHistorial(){ if(!campanaActual) return alert('Selecciona cliente de campaña para ver historial y números'); verNumerosCamp(campanaActual); }
 async function verHistorialCamp(id){ verNumerosCamp(id); }
 function abrirConfig(){ document.getElementById('modalConfig').style.display='flex'; }
-async function guardarConfig(){ const body={phoneId:document.getElementById('cfgPhone').value,wabaId:document.getElementById('cfgWaba').value,metaToken:document.getElementById('cfgToken').value}; const r=await fetch('/api/config',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)}).then(r=>r.json()); document.getElementById('cfgStatus').innerText= r.ok?'✅ API conectado':'Error'; }
-function abrirIA(){ alert('IA Score caliente activo'); }
+async function guardarConfig(){ const body={phoneId:document.getElementById('cfgPhone').value,wabaId:document.getElementById('cfgWaba').value,metaToken:document.getElementById('cfgToken').value}; const r=await fetch('/api/config',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)}).then(r=>r.json()); document.getElementById('cfgStatus').innerText= r.ok?'✅ API conectado - listo para campañas XLSX':'Error: '+(r.error||''); }
+function abrirIA(){ alert('🧠 IA Score caliente: bandeja 🔴 = no contestado (desaparece al responder) | 🟡 = respuesta campaña | Excel XLSX REAL hasta 50k'); }
 function logout(){ localStorage.removeItem('klido_token'); location.href='/'; }
 init();
 </script>
