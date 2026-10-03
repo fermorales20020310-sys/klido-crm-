@@ -16,6 +16,7 @@ await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY K
 await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, telefono TEXT, email TEXT, activo BOOLEAN DEFAULT true)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS logs_gmail (id SERIAL PRIMARY KEY, agencia_id TEXT, destinatario TEXT, asunto TEXT, estado TEXT, timestamp BIGINT)`);
 try{
+// V132 PRO - MIGRACION SEGURA PARA PUNTOS ROJO/AMARILLO + NOTAS + SEGUIMIENTO + RECORDATORIO
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS plan_activo BOOLEAN DEFAULT true`);
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'basico'`);
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS mantenimiento BIGINT`);
@@ -28,11 +29,22 @@ await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS waba_id TEXT`)
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS meta_token TEXT`);
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS creado BIGINT`);
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS contrato_firmado BOOLEAN DEFAULT false`);
-}catch(e){ console.log('migracion:', e.message); }
-console.log('✅ KLIDO V131 SEGURO - RESEND OK + BLOQUEO AUTOMATICO - 3133181851');
+// CLIENTES: asegura columnas para diseño nuevo
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS leido BOOLEAN DEFAULT true`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS notas TEXT`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS recordatorio TIMESTAMP`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS email TEXT`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS estado_embudo TEXT DEFAULT 'nuevo'`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS origen_campana TEXT`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS score INT DEFAULT 0`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS asesor_id TEXT`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS etiqueta TEXT DEFAULT 'nuevo'`);
+await pgPool.query(`ALTER TABLE clientes_klido ADD COLUMN IF NOT EXISTS datos JSONB DEFAULT '{}'`);
+}catch(e){ console.log('migracion v132:', e.message); }
+console.log('✅ KLIDO V132 PRO - BANDEJA ROJA/AMARILLA + NOTAS + SEGUIMIENTO + RECORDATORIO - RESEND OK');
 } initDB();
 
-// CRON SEGURO: cada hora bloquea morosos automaticamente
+// CRON SEGURO: cada hora bloquea morosos automaticamente - NO TOCADO
 setInterval(async()=>{
  try{
   const ahora = Date.now();
@@ -47,7 +59,6 @@ function isAdmin(req,res,next){ if(!ADMIN_EMAILS.includes(req.user.email)) retur
 
 async function checkPlan(req,res,next){
 const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[req.user.agenciaId]); const emp=rows[0]; if(!emp) return res.status(403).json({error:'No existe'});
-// SEGURIDAD: si vencio, bloquea AHORA mismo y no deja pasar
 if(emp.mantenimiento && Date.now()>Number(emp.mantenimiento)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, tipo:'trimestral', error:`MANTENIMIENTO TRIMESTRAL VENCIDO $${PLANES[emp.plan]?.mant||80000} - Paga 3133181851`, wpp:'573133181851'}); }
 if(emp.anual_vence && Date.now()>Number(emp.anual_vence)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, tipo:'anual', error:`PLAN ANUAL VENCIDO $${PLANES[emp.plan]?.anual||800000} - Renueva 3133181851`, wpp:'573133181851'}); }
 if(!emp.plan_activo) return res.status(403).json({bloqueado:true, error:'PLAN BLOQUEADO POR MORA - Contacta 3133181851', wpp:'573133181851', link:`https://wa.me/573133181851?text=Mi%20plan%20${emp.plan}%20vencio%20agencia%20${emp.id}`});
@@ -87,7 +98,7 @@ app.get('/api/debug/resend', async(req,res)=>{
     res.json({ok:!test?.error,key,from,to,test});
   }catch(e){ res.json({ok:false,key,from,error:e.message}); }
 });
-app.get('/api/health',(req,res)=>res.json({ok:true,version:'v131-seguro-bloqueo-auto-resend-ok',planes:PLANES,wpp:'573133181851',has_key:!!process.env.RESEND_API_KEY,resend_from:process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>'}));
+app.get('/api/health',(req,res)=>res.json({ok:true,version:'v132-pro-roja-amarilla-notas-seguimiento',planes:PLANES,wpp:'573133181851',has_key:!!process.env.RESEND_API_KEY,resend_from:process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>'}));
 app.get('/health',(req,res)=>res.json({ok:true}));
 app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 
@@ -118,7 +129,6 @@ app.post('/api/auth/login',async(req,res)=>{
 try{
 const {email,password}=req.body; const {rows}=await pgPool.query('SELECT * FROM agencias WHERE email=$1',[email]); const emp=rows[0]; if(!emp) return res.status(404).json({error:'No existe'});
 if(!await bcrypt.compare(password,emp.password)) return res.status(401).json({error:'Clave mala'});
-// SEGURIDAD: chequea vencimiento ANTES de dar token
 if(emp.mantenimiento && Date.now()>Number(emp.mantenimiento)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, tipo:'trimestral', error:`MANTENIMIENTO TRIMESTRAL VENCIDO $${PLANES[emp.plan]?.mant} - Paga 3133181851`, wpp:'573133181851'}); }
 if(emp.anual_vence && Date.now()>Number(emp.anual_vence)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, tipo:'anual', error:`PLAN ANUAL VENCIDO $${PLANES[emp.plan]?.anual} - Renueva 3133181851`, wpp:'573133181851'}); }
 if(!emp.plan_activo) return res.status(403).json({bloqueado:true, error:'🚫 PLAN BLOQUEADO POR MORA - '+emp.nombre, wpp:'573133181851'});
@@ -143,41 +153,94 @@ res.json({ok:true});
 app.get('/api/config',auth,async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[req.user.agenciaId]); const e=rows[0]; res.json({tieneConfig:!!e.phone_id, phoneId:e.phone_id||'', wabaId:e.waba_id||'', phoneIdEfectivo:e.phone_id||PHONE_ENV, wabaIdEfectivo:e.waba_id||WABA_ENV, plan:e.plan, limite:PLANES[e.plan].limite, usado:e.limite_usado, mantenimiento:e.mantenimiento?new Date(Number(e.mantenimiento)).toLocaleDateString():'90 días', anual_vence:e.anual_vence?new Date(Number(e.anual_vence)).toLocaleDateString():'365 días', api_status:e.api_status}); });
 app.post('/api/config',auth,async(req,res)=>{ const {phoneId,wabaId,metaToken}=req.body; if(!phoneId||!wabaId) return res.status(400).json({error:'Falta Phone y WABA'}); await pgPool.query('UPDATE agencias SET phone_id=$1,waba_id=$2,meta_token=$3,api_status=$4 WHERE id=$5',[phoneId,wabaId,metaToken||TOKEN_ENV,'conectado',req.user.agenciaId]); res.json({ok:true}); });
 app.get('/api/plantillas',auth,async(req,res)=>{ const emps=await obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.agenciaId); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.wabaIdEfectivo}/message_templates?access_token=${emp.metaTokenEfectivo}&limit=200`); const j=await r.json(); if(j.error) throw j.error; res.json(j.data?.filter(t=>t.status==='APPROVED')||j.data||[]); }catch(e){ res.json([{name:'hello_world',status:'APPROVED'}]); }});
+
 app.post('/api/campanas',auth,checkPlan,async(req,res)=>{
 try{
 const {nombre,plantilla,numeros}=req.body; if(!plantilla||!numeros?.length) return res.status(400).json({error:'Falta plantilla y números'});
 const id='camp_'+Date.now(); const validos=[...new Set(numeros.map(n=>n.replace(/\D/g,'')).filter(n=>n.length>=10))];
-await pgPool.query('INSERT INTO campanas_klido (id,agencia_id,nombre,plantilla,total,creada,historial) VALUES ($1,$2,$3,$4,$5,$6,$7)',[id,req.user.agenciaId,nombre||'Campaña '+(new Date().toLocaleDateString()),plantilla,validos.length,Date.now(),JSON.stringify([{accion:'creada',fecha:Date.now(),total:validos.length}])]);
+await pgPool.query('INSERT INTO campanas_klido (id,agencia_id,nombre,plantilla,total,creada,historial) VALUES ($1,$2,$3,$4,$5,$6,$7)',[id,req.user.agenciaId,nombre||'Campaña '+(new Date().toLocaleDateString()),plantilla,validos.length,Date.now(),JSON.stringify([{accion:'creada',fecha:Date.now(),total:validos.length,plantilla}])]);
 const emps=await obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.agenciaId);
 (async()=>{
 for(let i=0;i<validos.length;i++){ const num=validos[i]; const {rows}=await pgPool.query('SELECT pausada FROM campanas_klido WHERE id=$1',[id]); if(rows[0]?.pausada){ await pgPool.query('UPDATE campanas_klido SET estado=$1 WHERE id=$2',['pausada',id]); break; }
-try{ const resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phoneIdEfectivo}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.metaTokenEfectivo}`},body:JSON.stringify({messaging_product:'whatsapp',to:num,type:'template',template:{name:plantilla,language:{code:'es_CO'}}}),}); const jr=await resp.json(); if(jr.error) throw jr.error; await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1 WHERE id=$1',[id]); await pgPool.query('UPDATE agencias SET limite_usado=limite_usado+1 WHERE id=$1',[req.user.agenciaId]); await pgPool.query(`INSERT INTO clientes_klido (id,agencia_id,telefono,origen_campana,etiqueta,estado_embudo) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (id) DO NOTHING`,[`cli_${num}`,req.user.agenciaId,num,id,'nuevo','nuevo']); }catch(e){ await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1 WHERE id=$1',[id]); } await new Promise(r=>setTimeout(r,900)); }
+try{ const resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phoneIdEfectivo}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.metaTokenEfectivo}`},body:JSON.stringify({messaging_product:'whatsapp',to:num,type:'template',template:{name:plantilla,language:{code:'es_CO'}}}),}); const jr=await resp.json(); if(jr.error) throw jr.error; await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1 WHERE id=$1',[id]); await pgPool.query('UPDATE agencias SET limite_usado=limite_usado+1 WHERE id=$1',[req.user.agenciaId]); await pgPool.query(`INSERT INTO clientes_klido (id,agencia_id,telefono,origen_campana,etiqueta,estado_embudo,leido) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id) DO UPDATE SET origen_campana=$4, etiqueta=$5`,[`cli_${num}`,req.user.agenciaId,num,id,'nuevo','nuevo',true]); }catch(e){ await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1 WHERE id=$1',[id]); } await new Promise(r=>setTimeout(r,900)); }
 await pgPool.query('UPDATE campanas_klido SET estado=$1,terminada=$2 WHERE id=$3',['terminada',Date.now(),id]);
 })();
-res.json({ok:true,total:validos.length,id,mensaje:'Campaña '+validos.length+' iniciada'});
+res.json({ok:true,total:validos.length,id,mensaje:'Campaña '+validos.length+' iniciada - puntos amarillos al responder'});
 }catch(e){res.status(500).json({error:e.message})}
 });
 app.post('/api/campanas/:id/pausa',auth,async(req,res)=>{ await pgPool.query('UPDATE campanas_klido SET pausada=true,estado=$1 WHERE id=$2',['pausada',req.params.id]); res.json({ok:true}); });
 app.post('/api/campanas/:id/continuar',auth,async(req,res)=>{ await pgPool.query('UPDATE campanas_klido SET pausada=false,estado=$1 WHERE id=$2',['activa',req.params.id]); res.json({ok:true}); });
 app.get('/api/campanas',auth,async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM campanas_klido WHERE agencia_id=$1 ORDER BY creada DESC',[req.user.agenciaId]); res.json(rows); });
-app.get('/api/clientes',auth,async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM clientes_klido WHERE agencia_id=$1 ORDER BY ultimo_mensaje DESC',[req.user.agenciaId]); res.json(rows); });
-app.post('/api/clientes/:id/datos',auth,async(req,res)=>{ const {nombre,etiqueta}=req.body; await pgPool.query('UPDATE clientes_klido SET nombre=$1,etiqueta=$2 WHERE id=$3 AND agencia_id=$4',[nombre||null,etiqueta||'nuevo',req.params.id,req.user.agenciaId]); res.json({ok:true}); });
+
+// BANDEJA V132 PRO - TODOS LOS MENSAJES CON PUNTOS ROJO/AMARILLO
+app.get('/api/clientes',auth,async(req,res)=>{
+  const {rows}=await pgPool.query(`SELECT * FROM clientes_klido WHERE agencia_id=$1 ORDER BY
+    CASE WHEN leido=false THEN 0 ELSE 1 END,
+    CASE WHEN etiqueta='respuesta_campana' THEN 0 ELSE 1 END,
+    ultimo_mensaje DESC`,[req.user.agenciaId]);
+  res.json(rows);
+});
+
+// DATOS COMPLETOS - NOTAS + SEGUIMIENTO + RECORDATORIO + ASESOR + LEIDO - SIN DAÑAR
+app.post('/api/clientes/:id/datos',auth,async(req,res)=>{
+ try{
+  const {nombre,etiqueta,estado_embudo,notas,recordatorio,email,asesor_id,leido,origen_campana,score,direccion}=req.body;
+  const updates=[]; const vals=[]; let idx=1;
+  if(nombre!==undefined){ updates.push(`nombre=$${idx++}`); vals.push(nombre); }
+  if(etiqueta!==undefined){ updates.push(`etiqueta=$${idx++}`); vals.push(etiqueta); }
+  if(estado_embudo!==undefined){ updates.push(`estado_embudo=$${idx++}`); vals.push(estado_embudo); }
+  if(notas!==undefined){ updates.push(`notas=$${idx++}`); vals.push(notas); }
+  if(email!==undefined){ updates.push(`email=$${idx++}`); vals.push(email); }
+  if(direccion!==undefined){ updates.push(`direccion=$${idx++}`); vals.push(direccion); }
+  if(asesor_id!==undefined){ updates.push(`asesor_id=$${idx++}`); vals.push(asesor_id||null); }
+  if(leido!==undefined){ updates.push(`leido=$${idx++}`); vals.push(leido); }
+  if(origen_campana!==undefined){ updates.push(`origen_campana=$${idx++}`); vals.push(origen_campana); }
+  if(score!==undefined){ updates.push(`score=$${idx++}`); vals.push(score); }
+  if(recordatorio!==undefined){ updates.push(`recordatorio=$${idx++}`); vals.push(recordatorio? new Date(recordatorio):null); }
+  if(updates.length===0) return res.json({ok:true});
+  const q=`UPDATE clientes_klido SET ${updates.join(',')} WHERE id=$${idx} AND agencia_id=$${idx+1}`;
+  vals.push(req.params.id, req.user.agenciaId);
+  await pgPool.query(q, vals);
+  res.json({ok:true});
+ }catch(e){ res.status(500).json({error:e.message}); }
+});
+
 app.get('/api/mensajes/:clienteId',auth,async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM mensajes_klido WHERE agencia_id=$1 AND cliente_id=$2 ORDER BY timestamp ASC',[req.user.agenciaId,req.params.clienteId]); res.json(rows); });
-app.post('/api/mensajes/:clienteId',auth,checkPlan,async(req,res)=>{ const {contenido}=req.body; const clienteId=req.params.clienteId; const {rows:cl}=await pgPool.query('SELECT telefono FROM clientes_klido WHERE id=$1',[clienteId]); if(!cl[0]) return res.status(404).json({error:'Cliente no existe'}); const emps=await obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.agenciaId); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phoneIdEfectivo}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.metaTokenEfectivo}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'text',text:{body:contenido}})}); const j=await r.json(); if(j.error) throw j.error; await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7)',[req.user.agenciaId,clienteId,cl[0].telefono,'text',contenido,Date.now(),'saliente']); await pgPool.query('UPDATE agencias SET limite_usado=limite_usado+1 WHERE id=$1',[req.user.agenciaId]); res.json({ok:true}); }catch(e){res.status(500).json({error:e.message})} });
-app.get('/api/dashboard',auth,async(req,res)=>{ try{ const tot=await pgPool.query('SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1',[req.user.agenciaId]); const ama=await pgPool.query("SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1 AND etiqueta='respuesta_campana'",[req.user.agenciaId]); res.json({total:tot.rows[0].count,amarillas:ama.rows[0].count}); }catch(e){res.status(500).json({error:e.message})} });
+
+// ENVIAR MENSAJE - QUITA PUNTO ROJO AUTOMATICO
+app.post('/api/mensajes/:clienteId',auth,checkPlan,async(req,res)=>{
+ const {contenido}=req.body; const clienteId=req.params.clienteId;
+ const {rows:cl}=await pgPool.query('SELECT telefono FROM clientes_klido WHERE id=$1 AND agencia_id=$2',[clienteId, req.user.agenciaId]);
+ if(!cl[0]) return res.status(404).json({error:'Cliente no existe'});
+ const emps=await obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.agenciaId);
+ try{
+  const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phoneIdEfectivo}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.metaTokenEfectivo}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'text',text:{body:contenido}})});
+  const j=await r.json(); if(j.error) throw j.error;
+  await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion,leido) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',[req.user.agenciaId,clienteId,cl[0].telefono,'text',contenido,Date.now(),'saliente',true]);
+  await pgPool.query('UPDATE agencias SET limite_usado=limite_usado+1 WHERE id=$1',[req.user.agenciaId]);
+  // QUITA PUNTO ROJO: al responder marca leido=true
+  await pgPool.query('UPDATE clientes_klido SET leido=true, ultimo_mensaje=NOW() WHERE id=$1',[clienteId]);
+  res.json({ok:true});
+ }catch(e){res.status(500).json({error:e.message})}
+});
+
+app.get('/api/dashboard',auth,async(req,res)=>{
+ try{
+  const tot=await pgPool.query('SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1',[req.user.agenciaId]);
+  const noleidos=await pgPool.query('SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1 AND leido=false',[req.user.agenciaId]);
+  const ama=await pgPool.query("SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1 AND etiqueta='respuesta_campana'",[req.user.agenciaId]);
+  res.json({total:tot.rows[0].count, noleidos:noleidos.rows[0].count, amarillas:ama.rows[0].count});
+ }catch(e){res.status(500).json({error:e.message})}
+});
 app.get('/api/admin/agencias', auth, isAdmin, async(req,res)=>{ const {rows}=await pgPool.query('SELECT id,nombre,email,plan,plan_activo,mantenimiento,anual_vence,limite_usado,creado FROM agencias ORDER BY creado DESC'); res.json({ok:true,agencias:rows}); });
 app.post('/api/admin/agencias/:id/activar', auth, isAdmin, async(req,res)=>{
   try{
-    const {plan, dias, tipo} = req.body;
-    const d = Number(dias)||90;
-    const p = plan||'basico';
+    const {plan, dias, tipo} = req.body; const d = Number(dias)||90; const p = plan||'basico';
     if(tipo==='anual'){
-      const nuevoAnual = Date.now() + 365*24*60*60*1000;
-      const nuevoMant = Date.now() + 90*24*60*60*1000;
+      const nuevoAnual = Date.now() + 365*24*60*60*1000; const nuevoMant = Date.now() + 90*24*60*60*1000;
       await pgPool.query('UPDATE agencias SET plan_activo=true, plan=$1, mantenimiento=$2, anual_vence=$3, limite_usado=0 WHERE id=$4',[p, nuevoMant, nuevoAnual, req.params.id]);
-      res.json({ok:true, mensaje:`ACTIVADA ANUAL ${req.params.id} plan ${p.toUpperCase()} 365d + 90d mant - SEGURO`});
+      res.json({ok:true, mensaje:`ACTIVADA ANUAL ${req.params.id} plan ${p.toUpperCase()} 365d + 90d mant`});
     } else {
-      // SEGURIDAD: solo extiende mantenimiento, NO anual, y NO deja para siempre
       const nuevoMant = Date.now() + d*24*60*60*1000;
       await pgPool.query('UPDATE agencias SET plan_activo=true, plan=$1, mantenimiento=$2, limite_usado=0 WHERE id=$3',[p, nuevoMant, req.params.id]);
       res.json({ok:true, mensaje:`ACTIVADA TRIMESTRAL ${req.params.id} plan ${p.toUpperCase()} por ${d} días - vence ${new Date(nuevoMant).toLocaleDateString()}`});
@@ -186,9 +249,25 @@ app.post('/api/admin/agencias/:id/activar', auth, isAdmin, async(req,res)=>{
 });
 app.post('/api/admin/agencias/:id/bloquear', auth, isAdmin, async(req,res)=>{ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[req.params.id]); res.json({ok:true, mensaje:'Bloqueada por mora'}); });
 app.get('/admin-stats', auth, isAdmin, async(req,res)=>{ const {rows} = await pgPool.query('SELECT plan, COUNT(*) as total, SUM(CASE WHEN plan_activo=false THEN 1 ELSE 0 END) as morosas FROM agencias GROUP BY plan'); res.json({ok:true, stats:rows}); });
-app.post('/webhook',async(req,res)=>{ try{ const body=req.body; const m=body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]; const meta=body.entry?.[0]?.changes?.[0]?.value?.metadata; if(!m) return res.sendStatus(200); const tel=m.from; const pid=meta?.phone_number_id; let agId=null; if(pid){ const {rows}=await pgPool.query('SELECT id FROM agencias WHERE phone_id=$1',[pid]); agId=rows[0]?.id; } if(!agId){ const {rows}=await pgPool.query('SELECT id FROM agencias LIMIT 1'); agId=rows[0]?.id; } await pgPool.query(`INSERT INTO clientes_klido (id,agencia_id,telefono,etiqueta,estado_embudo,score,ultimo_mensaje) VALUES ($1,$2,$3,$4,$5,$6,NOW()) ON CONFLICT (id) DO UPDATE SET etiqueta=$4, ultimo_mensaje=NOW(), leido=false`,[`cli_${tel}`,agId,tel,'respuesta_campana','contactado',70]); await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7)',[agId,`cli_${tel}`,tel,m.type||'text',m.text?.body||'media',Date.now(),'entrante']); }catch{} res.sendStatus(200); });
+
+// WEBHOOK - PUNTO ROJO + AMARILLO - MEJORADO
+app.post('/webhook',async(req,res)=>{
+ try{
+  const body=req.body; const m=body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]; const meta=body.entry?.[0]?.changes?.[0]?.value?.metadata;
+  if(!m) return res.sendStatus(200);
+  const tel=m.from; const pid=meta?.phone_number_id; let agId=null;
+  if(pid){ const {rows}=await pgPool.query('SELECT id FROM agencias WHERE phone_id=$1',[pid]); agId=rows[0]?.id; }
+  if(!agId){ const {rows}=await pgPool.query('SELECT id FROM agencias LIMIT 1'); agId=rows[0]?.id; }
+  // Si cliente existe y tiene origen_campana, es respuesta de campaña -> amarilla, si no -> rojo
+  const {rows:ex}=await pgPool.query('SELECT origen_campana FROM clientes_klido WHERE id=$1',['cli_'+tel]);
+  const esRespuestaCamp =!!ex[0]?.origen_campana;
+  const etiqueta = esRespuestaCamp? 'respuesta_campana' : 'respuesta_campana'; // todos los que responden se marcan amarillo, pero con leido=false rojo
+  await pgPool.query(`INSERT INTO clientes_klido (id,agencia_id,telefono,etiqueta,estado_embudo,score,ultimo_mensaje,leido,origen_campana) VALUES ($1,$2,$3,$4,$5,$6,NOW(),false,$7) ON CONFLICT (id) DO UPDATE SET etiqueta=$4, ultimo_mensaje=NOW(), leido=false, score=70`,[`cli_${tel}`,agId,tel,etiqueta,'contactado',70,ex[0]?.origen_campana||null]);
+  await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion,leido) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',[agId,`cli_${tel}`,tel,m.type||'text',m.text?.body||'media',Date.now(),'entrante',false]);
+ }catch(e){ console.log('webhook err', e.message); } res.sendStatus(200);
+});
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']==='klido_verify') res.send(req.query['hub.challenge']); else res.sendStatus(403); });
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
 app.get('/crm.html',(req,res)=>res.sendFile(path.join(__dirname,'public','crm.html')));
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`🚀 KLIDO V131 SEGURO - BLOQUEO AUTO - RESEND OK - ${PORT}`));
+app.listen(PORT,()=>console.log(`🚀 KLIDO V132 PRO ROJO/AMARILLO + NOTAS + SEGUIMIENTO + RECORDATORIO - ${PORT}`));
