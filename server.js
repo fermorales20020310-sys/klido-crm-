@@ -1,4 +1,4 @@
-// KLIDO CRM v115.1 FINAL - TUS VARIABLES EXACTAS - FIX ANTI-CRASH SIN JODERLO
+// KLIDO CRM v115.2 FINAL - FIX CAMPAÑA + PRECIOS COL - TUS VARIABLES INTACTAS
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -19,7 +19,6 @@ app.use(express.json({limit:'50mb'}));
 app.use(express.urlencoded({extended:true, limit:'50mb'}));
 app.use(express.static(path.join(__dirname,'public')));
 
-// === VARIABLES EXACTAS TUYAS - NO TOCAR NOMBRES ===
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'KLIDO_DUEÑA_2026';
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
@@ -39,51 +38,51 @@ const GERENCIA_EMAIL = 'admin@klido.com';
 const GERENCIA_PASS = 'Mafe2002@';
 const SOPORTE_WPP = '573133181851';
 
-// === FIX DATA_DIR - ESTO ES LO QUE TE DAÑÓ TODO ===
 let BASE_DATA = DATA_DIR_RAW;
-// Limpia /app/data/data -> /data y quita // y slash final
 BASE_DATA = BASE_DATA.replace(/\/app\/data\/data/g, '/data').replace(/\/data\/data/g, '/data').replace(/\/+/g,'/').replace(/\/$/,'');
-// Si Railway te pasa VOLUME, usa /data directo (donde está montado tu vol_1tm618dxta65d30)
-if(RAILWAY_VOLUME_MOUNT_PATH){
-  // Tu volumen está en /var/lib/containers/railwayapp/bind-mounts/882... pero dentro del container es /data
-  BASE_DATA = '/data';
-}
-if(BASE_DATA === '' || BASE_DATA === '/app' || BASE_DATA === '/app/data'){
-  BASE_DATA = '/data';
-}
-try{
-  if(!fs.existsSync(BASE_DATA)) fs.mkdirSync(BASE_DATA, {recursive:true});
-}catch(e){
-  console.log('[DATA_DIR FALLBACK]', e.message);
-  BASE_DATA = path.join(__dirname,'data');
-  if(!fs.existsSync(BASE_DATA)) fs.mkdirSync(BASE_DATA, {recursive:true});
-}
+if(RAILWAY_VOLUME_MOUNT_PATH){ BASE_DATA = '/data'; }
+if(BASE_DATA === '' || BASE_DATA === '/app' || BASE_DATA === '/app/data'){ BASE_DATA = '/data'; }
+try{ if(!fs.existsSync(BASE_DATA)) fs.mkdirSync(BASE_DATA, {recursive:true}); }catch(e){ BASE_DATA = path.join(__dirname,'data'); if(!fs.existsSync(BASE_DATA)) fs.mkdirSync(BASE_DATA, {recursive:true}); }
 const AGENCIAS_DIR = path.join(BASE_DATA,'agencias');
-try{ if(!fs.existsSync(AGENCIAS_DIR)) fs.mkdirSync(AGENCIAS_DIR, {recursive:true}); }catch(e){ console.log('[AGENCIAS DIR FAIL]', e.message); }
+try{ if(!fs.existsSync(AGENCIAS_DIR)) fs.mkdirSync(AGENCIAS_DIR, {recursive:true}); }catch(e){}
 
-console.log('[DATA_DIR FINAL ALINEADO]', BASE_DATA, 'RAW ERA', DATA_DIR_RAW, 'VOLUME', RAILWAY_VOLUME_MOUNT_PATH? 'SI' : 'NO');
+console.log('[DATA_DIR FINAL ALINEADO]', BASE_DATA, 'RAW', DATA_DIR_RAW);
 
-// === HEALTHCHECK ULTRA RAPIDO - ANTES DE PG PARA QUE NO SE CAIGA ===
-app.get('/health', (req,res)=> res.status(200).json({ok:true, status:'KLIDO v115.1 OK', META_VERIFY_TOKEN, PHONE_NUMBER_ID, ADMIN_KEY, DATA_DIR:BASE_DATA, PG: DATABASE_URL?'CONFIGURADO':'FS', RESEND: RESEND_API_KEY?'OK':'MISSING'}));
+app.get('/health', (req,res)=> res.status(200).json({ok:true, status:'KLIDO v115.2 OK', META_VERIFY_TOKEN, PHONE_NUMBER_ID, ADMIN_KEY, DATA_DIR:BASE_DATA, PG: DATABASE_URL?'CONFIGURADO':'FS', RESEND: RESEND_API_KEY?'OK':'MISSING'}));
 app.get('/api/health', (req,res)=> res.status(200).json({ok:true}));
 
-// ESCUCHA INMEDIATA EN 0.0.0.0 - ESTO QUITA EL CRASH DE TU FOTO
-app.listen(PORT, '0.0.0.0', ()=> console.log(`[KLIDO HEALTH OK] Puerto ${PORT} 0.0.0.0 META_VERIFY_TOKEN=${META_VERIFY_TOKEN} PHONE_NUMBER_ID=${PHONE_NUMBER_ID} ADMIN_KEY=${ADMIN_KEY} DATA_DIR=${BASE_DATA} - /health OK`));
+app.listen(PORT, '0.0.0.0', ()=> console.log(`[KLIDO HEALTH OK] Puerto ${PORT} 0.0.0.0 META_VERIFY_TOKEN=${META_VERIFY_TOKEN} PHONE_NUMBER_ID=${PHONE_NUMBER_ID} ADMIN_KEY=${ADMIN_KEY} DATA_DIR=${BASE_DATA}`));
 
-// === DESPUES DE ESCUCHAR, TODO LO DEMAS IGUAL QUE TENIAS ===
+// === FIX TU FOTO Cannot GET /campana.html - VA ANTES DE PG ===
+app.get('/campana.html', (req,res)=> {
+  const f = path.join(__dirname,'public','campana.html');
+  if(fs.existsSync(f)) return res.sendFile(f);
+  return res.sendFile(path.join(__dirname,'public','crm.html'));
+});
+app.get('/campanas.html', (req,res)=> {
+  const f = path.join(__dirname,'public','campanas.html');
+  if(fs.existsSync(f)) return res.sendFile(f);
+  const f2 = path.join(__dirname,'public','campana.html');
+  if(fs.existsSync(f2)) return res.sendFile(f2);
+  return res.sendFile(path.join(__dirname,'public','crm.html'));
+});
+app.get(['/campaña.html','/campañas.html'], (req,res)=> {
+  return res.sendFile(path.join(__dirname,'public','crm.html'));
+});
+
 let pgPool = null;
 if(DATABASE_URL && Pool){
   try{
     pgPool = new Pool({connectionString: DATABASE_URL, ssl:{rejectUnauthorized:false}});
     pgPool.query(`
-      CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT, token TEXT, phone_id TEXT, waba_id TEXT, meta_token TEXT, equipo JSONB DEFAULT '[]'::jsonb, creado BIGINT, mantenimiento BIGINT, default_agency TEXT);
+      CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT, token TEXT, phone_id TEXT, waba_id TEXT, meta_token TEXT, equipo JSONB DEFAULT '[]'::jsonb, creado BIGINT, mantenimiento BIGINT, default_agency TEXT, plan_precio TEXT, plan_trimestral TEXT);
       CREATE TABLE IF NOT EXISTS mensajes (id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, texto TEXT, timestamp BIGINT, tipo TEXT, leido BOOLEAN, etiqueta TEXT, phone_id TEXT, nombre TEXT, campana_id TEXT, asignado_a TEXT);
       CREATE TABLE IF NOT EXISTS contactos (id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, nombre TEXT, telefono TEXT, creado BIGINT, seguimiento JSONB, etiquetas JSONB);
       CREATE TABLE IF NOT EXISTS campanas (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, plantilla TEXT, telefonos JSONB, total INT, enviados INT, estado TEXT, creada BIGINT, historial JSONB, phone_usado TEXT);
       CREATE TABLE IF NOT EXISTS calendario (id TEXT PRIMARY KEY, agencia_id TEXT, wa_id TEXT, fecha TEXT, nota TEXT, estado TEXT, creado BIGINT);
       CREATE TABLE IF NOT EXISTS plantillas (id TEXT PRIMARY KEY, agencia_id TEXT, data JSONB);
       CREATE TABLE IF NOT EXISTS gmail_camp (id TEXT PRIMARY KEY, agencia_id TEXT, asunto TEXT, total INT, enviados INT, creado BIGINT, historial JSONB);
-    `).then(()=>console.log('[PG] Tablas OK con DATA_DIR', BASE_DATA)).catch(e=>console.log('[PG ERROR]', e.message));
+    `).then(()=>console.log('[PG] Tablas OK v115.2 con precios COL')).catch(e=>console.log('[PG ERROR]', e.message));
   }catch(e){ console.log('[PG INIT FAIL]', e.message); }
 }
 
@@ -107,12 +106,14 @@ async function sendEmail(to, subject, html){
 }
 
 async function obtenerEmpresas(){
-  if(pgPool){ const {rows}=await pgPool.query('SELECT * FROM agencias'); return rows.map(r=>({id:r.id, nombre:r.nombre, email:r.email, password:r.password, plan:r.plan, token:r.token, phoneId:r.phone_id, wabaId:r.waba_id, metaToken:r.meta_token, equipo:r.equipo||[], creado:r.creado, mantenimiento:r.mantenimiento, defaultAgency:r.default_agency})); }
+  if(pgPool){ const {rows}=await pgPool.query('SELECT * FROM agencias'); return rows.map(r=>({id:r.id, nombre:r.nombre, email:r.email, password:r.password, plan:r.plan, token:r.token, phoneId:r.phone_id, wabaId:r.waba_id, metaToken:r.meta_token, equipo:r.equipo||[], creado:r.creado, mantenimiento:r.mantenimiento, defaultAgency:r.default_agency, planPrecio:r.plan_precio, planTrimestral:r.plan_trimestral})); }
   else { const fp=path.join(BASE_DATA,'empresas.json'); if(!fs.existsSync(fp)) fs.writeFileSync(fp,'[]'); return readJSON(fp); }
 }
 async function guardarEmpresa(emp){
-  if(pgPool){ await pgPool.query(`INSERT INTO agencias (id,nombre,email,password,plan,token,phone_id,waba_id,meta_token,equipo,creado,mantenimiento,default_agency) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) ON CONFLICT (id) DO UPDATE SET nombre=$2,email=$3,password=$4,plan=$5,token=$6,phone_id=$7,waba_id=$8,meta_token=$9,equipo=$10,mantenimiento=$12,default_agency=$13`, [emp.id,emp.nombre,emp.email,emp.password,emp.plan,emp.token,emp.phoneId||PHONE_NUMBER_ID,emp.wabaId||null,emp.metaToken||null, JSON.stringify(emp.equipo||[]), emp.creado, emp.mantenimiento, DEFAULT_AGENCY]); }
-  else { const fp=path.join(BASE_DATA,'empresas.json'); const all=readJSON(fp); const idx=all.findIndex(e=>e.id===emp.id); if(idx>=0) all[idx]=emp; else all.push(emp); writeJSON(fp, all); }
+  const precios={basico:{precio:'$800.000', trim:'$80.000 trimestral'}, premium:{precio:'$1.400.000', trim:'$95.000 trimestral'}, gold:{precio:'$2.600.000', trim:'$135.000 trimestral + IA + Llamadas + Gmail'}};
+  const pInfo = precios[emp.plan] || precios.basico;
+  if(pgPool){ await pgPool.query(`INSERT INTO agencias (id,nombre,email,password,plan,token,phone_id,waba_id,meta_token,equipo,creado,mantenimiento,default_agency,plan_precio,plan_trimestral) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) ON CONFLICT (id) DO UPDATE SET nombre=$2,email=$3,password=$4,plan=$5,token=$6,phone_id=$7,waba_id=$8,meta_token=$9,equipo=$10,mantenimiento=$12,default_agency=$13,plan_precio=$14,plan_trimestral=$15`, [emp.id,emp.nombre,emp.email,emp.password,emp.plan,emp.token,emp.phoneId||PHONE_NUMBER_ID,emp.wabaId||null,emp.metaToken||null, JSON.stringify(emp.equipo||[]), emp.creado, emp.mantenimiento, DEFAULT_AGENCY, pInfo.precio, pInfo.trim]); }
+  else { emp.planPrecio=pInfo.precio; emp.planTrimestral=pInfo.trim; const fp=path.join(BASE_DATA,'empresas.json'); const all=readJSON(fp); const idx=all.findIndex(e=>e.id===emp.id); if(idx>=0) all[idx]=emp; else all.push(emp); writeJSON(fp, all); }
 }
 
 function auth(req,res,next){
@@ -155,7 +156,6 @@ app.post('/webhook', async(req,res)=>{
             mensajes.push({id:nuevo.id, waId, texto, timestamp:nuevo.timestamp, tipo:'entrante', leido:false, etiqueta:nuevo.etiqueta, phoneId, nombre, campanaId:nuevo.campana_id, asignadoA:null});
             writeJSON(path.join(ap,'mensajes.json'), mensajes);
           }
-          console.log(`[KLIDO REAL TIEMPO] ${agencia.nombre} <- ${waId}: ${texto} ${nuevo.etiqueta?'[AMARILLA]':''} [ROJO NO LEIDO]`);
         }
       }
     }
@@ -168,8 +168,9 @@ app.post('/api/public/solicitar-codigo', async(req,res)=>{
   if(!email) return res.status(400).json({error:'Email requerido'});
   const codigo=Math.floor(100000+Math.random()*900000).toString();
   codigosRegistro.set(email,{codigo, expira:Date.now()+600000, nombre, plan, tipo:'registro'});
-  const html=`<h2>KLIDO Código</h2><p>Hola ${nombre} Plan ${plan}</p><h1>${codigo}</h1><p>Expira 10 min ${email} ${PHONE_NUMBER_ID}</p>`;
-  await sendEmail(email, `KLIDO Código ${codigo} - Plan ${plan}`, html);
+  const preciosTxt={basico:'$800.000 + $80.000 trim (3 usuarios)', premium:'$1.400.000 + $95.000 trim (10 usuarios)', gold:'$2.600.000 + $135.000 trim + IA + Llamadas + Gmail (Ilimitado)'};
+  const html=`<h2>KLIDO Código - ${plan.toUpperCase()}</h2><p>Hola ${nombre} Plan ${plan} - ${preciosTxt[plan]||''}</p><h1>${codigo}</h1><p>Expira 10 min ${email} ${PHONE_NUMBER_ID} Soporte 3133181851</p>`;
+  await sendEmail(email, `KLIDO Código ${codigo} - Plan ${plan} ${preciosTxt[plan]||''}`, html);
   res.json({ok:true});
 });
 app.post('/api/public/crear-empresa', async(req,res)=>{
@@ -222,7 +223,7 @@ app.get('/api/mensajes', auth, async(req,res)=>{
 });
 app.post('/api/mensajes/leido', auth, async(req,res)=>{
   const {id}=req.body; const agenciaId=req.user.agenciaId;
-  if(pgPool) await pgPool.query('UPDATE mensajes SET leido=true WHERE id=$1 AND agencia_id=$2', [id, agenciaId]);
+  if(pgPool) await pgPool.query('UPDATE mensajes SET leido=true WHERE id=$1 AND agencia_id=$2', [id][agenciaId]);
   else { const p=path.join(agenciaPath(agenciaId),'mensajes.json'); const ms=readJSON(p); const m=ms.find(x=>x.id===id); if(m){ m.leido=true; writeJSON(p,ms); } }
   res.json({ok:true});
 });
@@ -294,7 +295,7 @@ app.post('/api/equipo/agregar', auth, async(req,res)=>{
   if(req.user.rol!=='jefe' && req.user.rol!=='gerencia') return res.status(403).json({error:'Solo Jefe'});
   const {nombre,email,password,rol}=req.body; const agenciaId=req.user.agenciaId; const empresas=await obtenerEmpresas(); const emp=empresas.find(e=>e.id===agenciaId);
   const limites={basico:3, premium:10, gold:999}; const max=limites[emp.plan]||3;
-  if((emp.equipo||[]).length>=max) return res.status(400).json({error:`Límite ${max} para ${emp.plan}`});
+  if((emp.equipo||[]).length>=max) return res.status(400).json({error:`Límite ${max} para ${emp.plan} ${emp.planPrecio||''} ${emp.planTrimestral||''}`});
   const token=jwt.sign({agenciaId, email:email.toLowerCase(), rol:rol||'trabajador', nombre}, JWT_SECRET, {expiresIn:'30d'});
   emp.equipo.push({id:uuidv4(), nombre, email:email.toLowerCase(), password, rol:rol||'trabajador', token, asignados:[], creado:Date.now()}); await guardarEmpresa(emp); res.json({ok:true});
 });
@@ -305,7 +306,7 @@ app.get('/api/metricas', auth, async(req,res)=>{
 });
 app.get('/api/config', auth, async(req,res)=>{
   const empresas=await obtenerEmpresas(); const emp=empresas.find(e=>e.id===req.user.agenciaId);
-  res.json({ ADMIN_KEY, DATA_DIR:BASE_DATA, DATABASE_URL: DATABASE_URL?'OK':'FS', DEFAULT_AGENCY, EMAIL_USER, JWT_SECRET: JWT_SECRET.slice(0,15)+'...', META_VERIFY_TOKEN, PHONE_NUMBER_ID, RESEND_API_KEY: RESEND_API_KEY?'OK':'MISSING', agencia:emp?.nombre, plan:emp?.plan });
+  res.json({ ADMIN_KEY, DATA_DIR:BASE_DATA, DATABASE_URL: DATABASE_URL?'OK':'FS', DEFAULT_AGENCY, EMAIL_USER, JWT_SECRET: JWT_SECRET.slice(0,15)+'...', META_VERIFY_TOKEN, PHONE_NUMBER_ID, RESEND_API_KEY: RESEND_API_KEY?'OK':'MISSING', agencia:emp?.nombre, plan:emp?.plan, planPrecio:emp?.planPrecio, planTrimestral:emp?.planTrimestral });
 });
 app.post('/api/config', auth, async(req,res)=>{
   if(req.user.rol!=='jefe' && req.user.rol!=='gerencia') return res.status(403).json({error:'Solo Jefe'});
@@ -313,6 +314,6 @@ app.post('/api/config', auth, async(req,res)=>{
   if(phoneId) emp.phoneId=phoneId; if(wabaId) emp.wabaId=wabaId; if(metaToken) emp.metaToken=metaToken; await guardarEmpresa(emp); res.json({ok:true});
 });
 app.get('/api/gerencia/agencias', authGerencia, async(req,res)=>{
-  const empresas=await obtenerEmpresas(); res.json(empresas.map(e=>({id:e.id, nombre:e.nombre, email:e.email, plan:e.plan, phoneId:e.phoneId||PHONE_NUMBER_ID, equipo:e.equipo?.length||0})));
+  const empresas=await obtenerEmpresas(); res.json(empresas.map(e=>({id:e.id, nombre:e.nombre, email:e.email, plan:e.plan, precio:e.planPrecio, trimestral:e.planTrimestral, phoneId:e.phoneId||PHONE_NUMBER_ID, equipo:e.equipo?.length||0})));
 });
 app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','index.html')));
