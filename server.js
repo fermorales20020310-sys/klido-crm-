@@ -2,7 +2,7 @@ import express from 'express'; import cors from 'cors'; import pg from 'pg'; imp
 const __filename=fileURLToPath(import.meta.url); const __dirname=path.dirname(__filename);
 const app=express(); app.use(cors()); app.use(express.json({limit:'100mb'})); app.use(express.static(path.join(__dirname,'public')));
 const {Pool}=pg; const pgPool=new Pool({connectionString:process.env.DATABASE_URL, ssl:{rejectUnauthorized:false}});
-const JWT=process.env.JWT_SECRET||'klido-v125-resend-fix-2026-3133181851';
+const JWT=process.env.JWT_SECRET||'klido-v126-resend-debug-2026-3133181851';
 const PHONE_ENV=process.env.PHONE_NUMBER_ID||'1338474282683914'; const WABA_ENV=process.env.WABA_ID||'2317286332424288';
 let TOKEN_ENV=process.env.META_TOKEN||process.env.WHATSAPP_TOKEN||''; if(!TOKEN_ENV){ for(const v of Object.values(process.env)){ if(typeof v==='string'&&v.startsWith('EAAT')&&v.length>80){TOKEN_ENV=v;break;}}}
 const PLANES={basico:{id:'basico',nombre:'BÁSICO',anual:800000,mant:80000,limite:5000,ia:false,llamadas:false,gmail:false,usuarios:3},premium:{id:'premium',nombre:'PREMIUM + IA',anual:1400000,mant:95000,limite:15000,ia:true,llamadas:false,gmail:false,usuarios:10},gold:{id:'gold',nombre:'GOLD TOTAL',anual:2500000,mant:135000,limite:50000,ia:true,llamadas:true,gmail:true,usuarios:999}};
@@ -13,7 +13,7 @@ await pgPool.query(`CREATE TABLE IF NOT EXISTS mensajes_klido (id SERIAL PRIMARY
 await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, plantilla TEXT, total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', pausada BOOLEAN DEFAULT false, historial JSONB DEFAULT '[]', creada BIGINT, terminada BIGINT)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, telefono TEXT, email TEXT, activo BOOLEAN DEFAULT true)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS logs_gmail (id SERIAL PRIMARY KEY, agencia_id TEXT, destinatario TEXT, asunto TEXT, estado TEXT, timestamp BIGINT)`);
-console.log('✅ KLIDO V125 RESEND FIX - DB LISTA - soporte@klidoapp.com.co - 3133181851');
+console.log('✅ KLIDO V126 RESEND DEBUG - DB LISTA - soporte@klidoapp.com.co - 3133181851');
 } initDB();
 function auth(req,res,next){ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.replace('Bearer ',''),JWT); next(); }catch{ res.status(401).json({error:'Token invalido'}); }}
 async function checkPlan(req,res,next){
@@ -27,22 +27,54 @@ if(req.path.includes('/gmail')&&!PLANES[emp.plan].gmail) return res.status(403).
 req.empresa=emp; next();
 }
 async function obtenerEmpresas(){ const {rows}=await pgPool.query('SELECT * FROM agencias'); return rows.map(r=>({id:r.id,plan:r.plan,phoneId:r.phone_id,wabaId:r.waba_id,metaToken:r.meta_token,phoneIdEfectivo:r.phone_id||PHONE_ENV,wabaIdEfectivo:r.waba_id||WABA_ENV,metaTokenEfectivo:r.meta_token||TOKEN_ENV})); }
-app.get('/api/health',(req,res)=>res.json({ok:true,version:'v125-resend-fix-soporte@klidoapp.com.co',planes:PLANES,wpp:'573133181851',resend_from:process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>'}));
-app.get('/health',(req,res)=>res.json({ok:true})); app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+
 const codigosTemp = new Map();
+
 async function enviarMail(para,asunto,html){
  try{
   const RESEND_KEY = process.env.RESEND_API_KEY;
-  const FROM = process.env.RESEND_FROM || process.env.MAIL_FROM || 'KLIDO <soporte@klidoapp.com.co>';
-  if(!RESEND_KEY){ console.error('❌ FALTA RESEND_API_KEY en Railway Variables'); return {error:'Falta RESEND_API_KEY - Configura en Railway'}; }
-  console.log(`📧 Enviando via RESEND FROM ${FROM} TO ${para} Subject ${asunto}`);
-  const r = await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${RESEND_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:FROM,to:para,subject:asunto,html})});
-  const j = await r.json();
-  if(j.error){ console.error('❌ Resend error',j); return {error:j.error}; }
-  console.log('✅ Resend OK id',j.id,' to',para);
+  let FROM = process.env.RESEND_FROM || 'KLIDO <soporte@klidoapp.com.co>';
+  console.log('--- RESEND DEBUG ---');
+  console.log('FROM env:',FROM);
+  console.log('TO:',para);
+  console.log('KEY exists:',!!RESEND_KEY,' startsWith re_:',RESEND_KEY?.startsWith('re_'));
+  if(!RESEND_KEY){ console.error('❌ FALTA RESEND_API_KEY'); return {error:'Falta RESEND_API_KEY - Configura en Railway Variables'}; }
+
+  // Intento 1 con tu dominio
+  let r = await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${RESEND_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:FROM,to:para,subject:asunto,html})});
+  let j = await r.json();
+  console.log('Resend intento 1 status:',r.status,' body:',JSON.stringify(j));
+
+  // Si falla por dominio no verificado, fallback automatico a onboarding@resend.dev para que SI llegue hoy
+  if(j.error && (JSON.stringify(j.error).toLowerCase().includes('domain') || JSON.stringify(j.error).toLowerCase().includes('verify') || r.status===422)){
+    console.log('⚠️ Dominio no verificado, haciendo fallback a onboarding@resend.dev para que llegue HOY');
+    FROM = 'KLIDO <onboarding@resend.dev>';
+    r = await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Authorization':`Bearer ${RESEND_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:FROM,to:para,subject:asunto,html})});
+    j = await r.json();
+    console.log('Resend fallback status:',r.status,' body:',JSON.stringify(j));
+  }
+
+  if(j.error){ console.error('❌ Resend error final:',j.error); return {error:j.error, status:r.status}; }
+  console.log('✅ Resend OK id',j.id,' to',para,' from',FROM);
   return j;
- }catch(e){ console.error('❌ enviarMail error',e.message); return {error:e.message}; }
+ }catch(e){ console.error('❌ enviarMail exception',e); return {error:e.message}; }
 }
+
+// ENDPOINT DEBUG - entra a /api/debug/resend para ver error real
+app.get('/api/debug/resend', async(req,res)=>{
+  const key = process.env.RESEND_API_KEY? 'SI existe '+process.env.RESEND_API_KEY.substring(0,6)+'...' : 'NO EXISTE RESEND_API_KEY';
+  const from = process.env.RESEND_FROM || 'NO SET';
+  const testTo = req.query.to || 'fermorales20020310@gmail.com';
+  try{
+    const test = await enviarMail(testTo,'KLIDO TEST RESEND '+Date.now(),`<h1>Test KLIDO ${Date.now()}</h1><p>FROM: ${from}</p><p>Si ves esto, Resend OK. Si usas onboarding@resend.dev es porque tu dominio klidoapp.com.co aun no esta verificado en resend.com/domains</p><p>Soporte 3133181851</p>`);
+    res.json({ok:true,key,from,to:testTo,test, instruccion:'Si test.error contiene Domain not verified, ve a resend.com/domains y verifica klidoapp.com.co con los TXT DKIM. Mientras tanto el sistema usa onboarding@resend.dev automatico para que SI llegue'});
+  }catch(e){ res.json({ok:false,key,from,error:e.message}); }
+});
+
+app.get('/api/health',(req,res)=>res.json({ok:true,version:'v126-resend-debug-fallback-onboarding',planes:PLANES,wpp:'573133181851',resend_from:process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>',has_key:!!process.env.RESEND_API_KEY}));
+app.get('/health',(req,res)=>res.json({ok:true}));
+app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+
 app.post('/api/auth/register-init', async(req,res)=>{
 try{
 const {nombre,email,password,plan}=req.body;
@@ -51,9 +83,9 @@ const {rows}=await pgPool.query('SELECT email FROM agencias WHERE email=$1',[ema
 if(rows[0]) return res.status(400).json({error:'Ya existe agencia con ese correo - Si olvidaste clave usa Recuperar'});
 const codigo=Math.floor(100000+Math.random()*900000).toString();
 codigosTemp.set(email,{codigo,expira:Date.now()+30*60*1000,datos:{nombre,email,password,plan:plan||'basico'},intentos:0});
-const resMail = await enviarMail(email,`KLIDO - Código activación Plan ${(plan||'basico').toUpperCase()} - ${codigo}`, `<div style="font-family:Arial;padding:20px;background:#f8fafc"><div style="background:white;padding:20px;border-radius:14px;border:1px solid #e2e8f0"><img src="https://klido-production.up.railway.app/logo.png" width="80" style="background:#0a1931;border-radius:12px;padding:8px"><h2 style="color:#0a1931">KLIDO AVANZA - Activación</h2><p>Hola <b>${nombre}</b>, plan <b>${(plan||'basico').toUpperCase()} $${PLANES[plan||'basico']?.anual}</b> + trim $${PLANES[plan||'basico']?.mant}</p><p style="font-size:36px;font-weight:900;letter-spacing:10px;background:#eef5ff;padding:14px 22px;border-radius:12px;color:#1e40af;border:2px dashed #2563eb;text-align:center">${codigo}</p><p>Ingresa en klido-production.up.railway.app campo Código activación. Vence 30 min. Soporte 3133181851<br>Desde soporte@klidoapp.com.co vía Resend</p></div></div>`);
-if(resMail?.error) return res.status(500).json({error:'Error enviando correo Resend: '+JSON.stringify(resMail.error)+' - Verifica RESEND_API_KEY y dominio klidoapp.com.co verificado en resend.com/domains'});
-res.json({ok:true,mensaje:'Código enviado desde soporte@klidoapp.com.co a '+email+' - Revisa spam - Post pago'});
+const resMail = await enviarMail(email,`KLIDO - Código activación Plan ${(plan||'basico').toUpperCase()} - ${codigo}`, `<div style="font-family:Arial;padding:20px;background:#f8fafc"><div style="background:white;padding:20px;border-radius:14px;border:1px solid #e2e8f0"><img src="https://klido-production.up.railway.app/logo.png" width="80" style="background:#0a1931;border-radius:12px;padding:8px"><h2 style="color:#0a1931">KLIDO AVANZA - Activación</h2><p>Hola <b>${nombre}</b>, plan <b>${(plan||'basico').toUpperCase()} $${PLANES[plan||'basico']?.anual}</b> + trim $${PLANES[plan||'basico']?.mant}</p><p style="font-size:36px;font-weight:900;letter-spacing:10px;background:#eef5ff;padding:14px 22px;border-radius:12px;color:#1e40af;border:2px dashed #2563eb;text-align:center">${codigo}</p><p>Ingresa en klido-production.up.railway.app campo Código activación. Vence 30 min. Soporte 3133181851<br>Desde ${process.env.RESEND_FROM||'soporte@klidoapp.com.co'} vía Resend</p></div></div>`);
+if(resMail?.error) return res.status(500).json({error:'Error Resend: '+JSON.stringify(resMail.error)+' - Ve a /api/debug/resend?to='+email+' para ver detalle. Si dice Domain not verified, verifica klidoapp.com.co en resend.com/domains o deja RESEND_FROM=KLIDO <onboarding@resend.dev> temporal'});
+res.json({ok:true,mensaje:'Código enviado desde '+(process.env.RESEND_FROM||'soporte@klidoapp.com.co')+' a '+email+' - Revisa spam y bandeja - Si no llega revisa /api/debug/resend'});
 }catch(e){res.status(500).json({error:e.message})}
 });
 app.post('/api/auth/register-verify', async(req,res)=>{
@@ -81,7 +113,7 @@ try{
 const {email}=req.body; const {rows}=await pgPool.query('SELECT * FROM agencias WHERE email=$1',[email]); if(!rows[0]) return res.status(404).json({error:'No existe agencia con ese correo'});
 const codigo=Math.floor(100000+Math.random()*900000).toString(); codigosTemp.set(email,{codigo,expira:Date.now()+15*60*1000,intentos:0,datos:{email}});
 await enviarMail(email,'KLIDO - Código recuperación '+codigo, `<div style="font-family:Arial;padding:20px"><p>Código recuperación KLIDO: <b style="font-size:32px;letter-spacing:8px;background:#eef5ff;padding:10px 18px;border-radius:10px;border:2px dashed #2563eb">${codigo}</b></p><p>Vence 15 min - Soporte 3133181851 - soporte@klidoapp.com.co</p></div>`);
-res.json({ok:true,mensaje:'Código enviado desde soporte@klidoapp.com.co a '+email});
+res.json({ok:true,mensaje:'Código enviado desde '+(process.env.RESEND_FROM||'soporte@klidoapp.com.co')+' a '+email});
 }catch(e){res.status(500).json({error:e.message})}
 });
 app.post('/api/auth/reset', async(req,res)=>{
@@ -146,7 +178,7 @@ const {texto,clienteId}=req.body; let score=20, etiqueta='nuevo';
 if(/cuanto|precio|pago|interesa|comprar|cuesta|valor|orden|pedido/i.test(texto)){ score=90; etiqueta='caliente'; }
 else if(/hola|info|informacion|quisiera|saber/i.test(texto)){ score=65; etiqueta='respuesta_campana'; }
 else if(/no|gracias/i.test(texto)){ score=10; etiqueta='frio'; }
-if(clienteId){ await pgPool.query('UPDATE clientes_klido SET score=$1,etiqueta=$2 WHERE id=$3',[score][etiqueta][clienteId]); }
+if(clienteId){ await pgPool.query('UPDATE clientes_klido SET score=$1,etiqueta=$2 WHERE id=$3',[score,etiqueta,clienteId]); }
 res.json({respuesta:`Hola! Soy KLIDO IA. Vi: "${texto}". Score ${score}. ¿Asigno asesor?`, score, etiqueta});
 }catch(e){res.status(500).json({error:e.message})}
 });
@@ -158,7 +190,7 @@ for(const dest of destinatarios){
 try{ await enviarMail(dest,asunto,html); await pgPool.query('INSERT INTO logs_gmail (agencia_id,destinatario,asunto,estado,timestamp) VALUES ($1,$2,$3,$4,$5)',[req.user.agenciaId,dest,asunto,'enviado',Date.now()]); enviados++; }catch{ await pgPool.query('INSERT INTO logs_gmail (agencia_id,destinatario,asunto,estado,timestamp) VALUES ($1,$2,$3,$4,$5)',[req.user.agenciaId,dest,asunto,'fallido',Date.now()]); }
 await new Promise(r=>setTimeout(r, 1200 + Math.random()*1800));
 }
-res.json({ok:true,enviados,mensaje:`Gmail anti-baneo via Resend soporte@klidoapp.com.co: ${enviados}/${destinatarios.length} - Solo GOLD`});
+res.json({ok:true,enviados,mensaje:`Gmail anti-baneo via Resend: ${enviados}/${destinatarios.length}`});
 }catch(e){res.status(500).json({error:e.message})}
 });
 app.post('/api/llamada',auth,checkPlan,async(req,res)=>{
@@ -184,7 +216,7 @@ try{
 const {rows:me}=await pgPool.query('SELECT email FROM agencias WHERE id=$1',[req.user.agenciaId]);
 if(me[0]?.email!=='admin@klido.com' && req.user.email!=='admin@klido.com') return res.status(403).json({error:'Solo admin@klido.com - GERENCIA 3133181851'});
 const {rows}=await pgPool.query('SELECT * FROM agencias ORDER BY creado DESC');
-res.json({ok:true,total:rows.length,wpp:'573133181851',version:'v125-resend',agencias:rows.map(r=>({id:r.id,nombre:r.nombre,email:r.email,plan:r.plan,plan_activo:r.plan_activo,mantenimiento:r.mantenimiento? new Date(Number(r.mantenimiento)).toLocaleDateString():'90 días',limite:`${r.limite_usado||0}/${PLANES[r.plan]?.limite||0}`,usado:r.limite_usado,api:r.api_status,creado:r.creado? new Date(Number(r.creado)).toLocaleString():'',phone:r.phone_id,waba:r.waba_id}))});
+res.json({ok:true,total:rows.length,wpp:'573133181851',version:'v126-debug',agencias:rows.map(r=>({id:r.id,nombre:r.nombre,email:r.email,plan:r.plan,plan_activo:r.plan_activo,mantenimiento:r.mantenimiento? new Date(Number(r.mantenimiento)).toLocaleDateString():'90 días',limite:`${r.limite_usado||0}/${PLANES[r.plan]?.limite||0}`,usado:r.limite_usado,api:r.api_status,creado:r.creado? new Date(Number(r.creado)).toLocaleString():'',phone:r.phone_id,waba:r.waba_id}))});
 }catch(e){res.status(500).json({error:e.message})}
 });
 app.post('/api/admin/bloquear', auth, async(req,res)=>{
@@ -216,4 +248,4 @@ app.get('/admin.html',(req,res)=>res.sendFile(path.join(__dirname,'public','admi
 app.get('/crm.html',(req,res)=>res.sendFile(path.join(__dirname,'public','crm.html')));
 app.get('/campanas.html',(req,res)=>res.sendFile(path.join(__dirname,'public','campanas.html')));
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`🚀 KLIDO V125 RESEND FIX soporte@klidoapp.com.co - LOGO 96px + KLIDO 30px + SIN BADGE VERDE + TODO INTEGRADO - ${PORT}`));
+app.listen(PORT,()=>console.log(`🚀 KLIDO V126 RESEND DEBUG + FALLBACK onboarding@resend.dev - LOGO 96px + KLIDO 30px + TODO INTEGRADO - ${PORT}`));
