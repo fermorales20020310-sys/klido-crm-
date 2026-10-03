@@ -1,92 +1,46 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO - Avanza Consulting - El mejor CRM</title><link rel="icon" href="/logo.png"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{min-height:100vh;display:flex;background:#020617}
-.left{flex:1.1;background:radial-gradient(120% at 0% 100%, #0a2a6b 0%, #0f172a 40%, #020617 85%);color:white;padding:28px 36px;display:flex;flex-direction:column;position:relative;overflow:hidden}
-.left::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.2),transparent 40%)}
-.left>*{position:relative;z-index:2}
-.brand{display:flex;align-items:center;gap:14px}.brand img{width:64px;height:64px;background:white;border-radius:16px;object-fit:contain;padding:6px}
-.right{flex:0.9;background:#f8fafc;display:flex;justify-content:center;align-items:center;padding:20px}
-.card{width:100%;max-width:420px;background:white;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.15);border:1px solid #e2e8f0}
-.tabs{display:flex;background:#f1f5f9;border-radius:999px;padding:4px;gap:4px;margin-bottom:16px}.tab{flex:1;padding:10px;border-radius:999px;border:none;font-weight:800;font-size:12px;cursor:pointer}.tab.active{background:#0f172a;color:white}.tab.inactive{background:transparent;color:#64748b}
-.input{width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;font-size:13px;margin-top:10px;outline:none}.input:focus{border-color:#0f172a}
-.planGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}.plan{border:1.5px solid #e2e8f0;border-radius:16px;padding:10px;text-align:center;cursor:pointer;background:white}.plan.selected{border-color:#0f172a;box-shadow:0 0 0 3px rgba(15,23,42,.12);background:#eff6ff}.plan b{font-size:11px;display:block}.plan .price{font-size:11px;font-weight:900;margin-top:4px}.plan .mant{font-size:9px;color:#64748b;margin-top:2px}.plan .desc{font-size:8px;color:#94a3b8;margin-top:4px}
-.btn{width:100%;padding:14px;border-radius:999px;border:none;font-weight:900;cursor:pointer;margin-top:14px}.btn-primary{background:#0f172a;color:white}.btn-wpp{background:#25D366;color:white;display:block;text-align:center;text-decoration:none;margin-top:8px;font-size:12px}
-.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px);padding:8px 14px;border-radius:999px;font-size:11px;font-weight:700;margin-top:10px}
-.check{font-size:11px;display:flex;gap:6px;align-items:flex-start;margin-top:12px;color:#475569}
-@media(max-width:900px){body{flex-direction:column}.left{min-height:420px}}
+<title>KLIDO AVANZA CONSULTING</title><link rel="icon" href="/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
+body{min-height:100vh;display:flex;background:#eef2f7}
+.left{flex:1.15;background:radial-gradient(125% at 10% 100%, #18449e 0%, #0a224a 42%, #020a1c 100%);color:white;padding:42px 46px;display:flex;flex-direction:column;justify-content:space-between}
+.brand{display:flex;gap:16px;align-items:center}
+.brand img{width:74px;height:74px;background:white;border-radius:18px;padding:7px;object-fit:contain}
+.hero{margin-top:70px;max-width:520px}
+.hero h1{font-size:54px;line-height:.92;font-weight:900}
+.hero h1 span{color:#3fb4ff}
+.hero p{margin-top:18px;color:#a9bddf;font-size:13.8px;line-height:1.6}
+.badgeCert{display:inline-flex;border:1.5px solid #2fa7e0;background:rgba(8,40,80,.7);padding:11px 18px;border-radius:999px;font-size:11px;font-weight:800;margin-top:32px}
+.right{flex:1;background:#eef2f7;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:460px;background:white;border-radius:22px;padding:26px 28px;box-shadow:0 20px 60px rgba(15,23,42,.08)}
+.tabs{display:flex;gap:28px;margin-bottom:24px}
+.tabs button{background:none;border:none;font-weight:800;font-size:16.5px;padding:10px 2px 12px;cursor:pointer;border-bottom:3px solid transparent;color:#94a3b8}
+.tabs button.active{color:#0f172a;border-bottom-color:#0f172a}
+.input{width:100%;padding:13px 14px;border:1.5px solid #e2e8f0;border-radius:12px;background:#f8fafc;margin-top:6px;font-size:13px}
+.btnPrimary{width:100%;margin-top:18px;background:#1e5ad8;color:white;border:none;padding:15px;border-radius:12px;font-weight:900;cursor:pointer}
+.plan{border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;cursor:pointer;margin-top:8px}
+.plan.selected{border-color:#2563eb;background:#eef5ff}
 </style></head><body>
 <div class="left">
-  <div class="brand"><img src="/logo.png" onerror="this.src='https://klido-production.up.railway.app/logo.png'"><div><div style="display:flex;align-items:baseline;gap:8px"><b style="font-size:28px;font-weight:900;letter-spacing:.5px">KLIDO</b><span style="font-size:10px;letter-spacing:3px;opacity:.7">AVANZA CONSULTING</span></div></div></div>
-
-  <div style="margin-top:36px;max-width:520px">
-    <h1 style="font-size:42px;font-weight:900;line-height:0.95;letter-spacing:-.5px">El mejor CRM<br>que tu empresa<br><span style="color:#60a5fa">puede tener.</span></h1>
-    <p style="margin-top:14px;color:#cbd5e1;font-size:13px;line-height:1.5;font-weight:600">Klido Avanza Consulting — CRM empresarial multiagencia para API oficial de Meta (WhatsApp Business API).</p>
-    <p style="margin-top:8px;color:#94a3b8;font-size:12px;line-height:1.5">Gestiona todas tus agencias, números, equipos, campañas y ventas desde un solo lugar.</p>
-    <div class="badge">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
-    <div id="healthBox" style="margin-top:16px;background:rgba(15,23,42,.6);border:1px solid rgba(30,41,59,.6);border-radius:12px;padding:10px;font-size:10px;color:#60a5fa;white-space:pre-wrap">Verificando v121 + gerencia 3133181851...</div>
-  </div>
-
-  <div style="margin-top:auto;display:flex;gap:8px;flex-wrap:wrap">
-    <div class="badge" style="background:rgba(255,255,255,.1)">✓ Seguro y confiable</div>
-    <div class="badge" style="background:rgba(255,255,255,.1)">✓ WhatsApp Business API</div>
-    <div class="badge" style="background:rgba(255,255,255,.1)">✓ Soporte Avanza Consulting</div>
-  </div>
+<div class="brand"><img src="/logo.png"><div><div style="font-size:26px;font-weight:900">KLIDO AVANZA</div><div style="font-size:21px;font-weight:600;margin-top:-4px">CONSULTING</div></div></div>
+<div class="hero">
+<h1>El mejor CRM que<br>tu empresa<br><span>puede tener.</span></h1>
+<p><b>Klido Avanza Consulting</b> es un CRM empresarial multiagencia diseñado para aprovechar la API oficial de Meta WhatsApp Business API.</p>
+<div class="badgeCert">🛡️ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
 </div>
-
-<div class="right">
-  <div class="card">
-    <div class="tabs"><button id="tabLogin" class="tab active" onclick="setMode('login')">Ingresar</button><button id="tabReg" class="tab inactive" onclick="setMode('register')">Crear empresa</button></div>
-
-    <div id="loginView">
-      <h3 style="font-weight:900;font-size:16px">Ingresar a tu agencia</h3>
-      <input id="loginEmail" class="input" placeholder="Correo del administrador">
-      <input id="loginPass" type="password" class="input" placeholder="Contraseña">
-      <button class="btn btn-primary" onclick="login()">Entrar al CRM →</button>
-      <a href="https://wa.me/573133181851" target="_blank" class="btn btn-wpp">Soporte 24/7 WhatsApp 3133181851</a>
-      <div id="loginMsg" style="margin-top:10px;font-size:11px;color:#dc2626"></div>
-    </div>
-
-    <div id="registerView" style="display:none">
-      <h3 style="font-weight:900;font-size:16px">Registrar nueva agencia</h3>
-      <input id="regNombre" class="input" placeholder="Nombre de la agencia / empresa">
-      <input id="regEmail" class="input" placeholder="Correo del administrador">
-      <input id="regPass" type="password" class="input" placeholder="Crear contraseña admin">
-
-      <div style="margin-top:12px;font-size:11px;font-weight:800;color:#0f172a">Selecciona tu plan - Anual + Mantenimiento trimestral aparte</div>
-      <div class="planGrid">
-        <div class="plan selected" id="plan_basico" onclick="selectPlan('basico')"><b>Básico</b><div class="price">$800.000/año</div><div class="mant">+ $80.000/trim mant.</div><div class="desc">3 asesores<br>API Meta</div></div>
-        <div class="plan" id="plan_premium" onclick="selectPlan('premium')"><b>Premium + IA</b><div class="price">$1.400.000/año</div><div class="mant">+ $95.000/trim mant.</div><div class="desc">10 asesores<br>IA incluida</div></div>
-        <div class="plan" id="plan_gold" onclick="selectPlan('gold')"><b>Gold + IA + Llamadas</b><div class="price">$2.500.000/año</div><div class="mant">+ $135.000/trim mant.</div><div class="desc">Ilimitado<br>IA + Llamadas</div></div>
-      </div>
-
-      <div class="check"><input type="checkbox" id="chkTerm" checked><label for="chkTerm">Acepto <a href="/terminos.html" target="_blank">Términos y Condiciones</a> y entiendo que el mantenimiento trimestral es adicional al pago anual. <a href="/legal.html" target="_blank">Ley 1581</a></label></div>
-      <button class="btn btn-primary" onclick="register()">Crear empresa y generar código →</button>
-      <div id="regMsg" style="margin-top:10px;font-size:11px;color:#dc2626"></div>
-    </div>
-
-    <div style="margin-top:12px;font-size:10px;color:#94a3b8;text-align:center">Panel Gerencia: <a href="/admin.html" style="color:#0f172a;font-weight:800">/admin.html</a> (solo admin@klido.com) | v121 TODO INTEGRADO</div>
-  </div>
+<div style="display:flex;gap:10px;margin-top:auto"><div style="background:rgba(255,255,255,.08);padding:8px 14px;border-radius:999px;font-size:11px">✓ Seguro y confiable</div><div style="background:rgba(255,255,255,.08);padding:8px 14px;border-radius:999px;font-size:11px">✓ WhatsApp Business API</div></div>
 </div>
-
+<div class="right"><div class="card">
+<div class="tabs"><button id="tLogin" onclick="setMode('login')" class="active">Ingresar</button><button id="tReg" onclick="setMode('reg')">Crear empresa</button></div>
+<div id="viewLogin"><input id="lEmail" class="input" placeholder="Correo administrador"><input id="lPass" type="password" class="input" placeholder="Contraseña"><div style="text-align:right;margin-top:8px"><a href="#" onclick="forgot();return false" style="font-size:11px;color:#2563eb;font-weight:700">¿Olvidaste tu contraseña?</a></div><button class="btnPrimary" onclick="login()">Entrar</button><div id="lMsg" style="font-size:11px;color:#dc2626;margin-top:10px"></div></div>
+<div id="viewReg" style="display:none"><input id="rNom" class="input" placeholder="Nombre de la empresa"><input id="rEmail" class="input" placeholder="Correo administrador"><input id="rPass" type="password" class="input" placeholder="Crear contraseña admin"><div style="margin-top:12px;font-weight:900">Selecciona tu plan</div><div class="plan selected" id="p_premium" onclick="selPlan('premium')"><div><b>Premium + IA $1.400.000/año + $95k trim</b><div style="font-size:10px">10 usuarios, IA incluida, Score caliente</div></div></div><div class="plan" id="p_basico" onclick="selPlan('basico')"><div><b>Básico $800.000/año + $80k trim</b><div style="font-size:10px">3 usuarios, API Meta oficial</div></div></div><div class="plan" id="p_gold" onclick="selPlan('gold')"><div><b>Gold $2.500.000/año + $135k trim</b><div style="font-size:10px">Ilimitado, IA + Llamadas + Gmail masivo</div></div></div><button class="btnPrimary" onclick="registerInit()">Crear empresa y pagar - Código al correo</button><div id="rMsg" style="font-size:11px;color:#dc2626;margin-top:10px"></div></div>
+</div></div>
 <script>
-let mode='login'; let planSel='basico';
-function setMode(m){ mode=m; document.getElementById('loginView').style.display=m==='login'?'block':'none'; document.getElementById('registerView').style.display=m==='register'?'block':'none'; document.getElementById('tabLogin').className=m==='login'?'tab active':'tab inactive'; document.getElementById('tabReg').className=m==='register'?'tab active':'tab inactive'; }
-function selectPlan(p){ planSel=p; document.querySelectorAll('.plan').forEach(x=>x.classList.remove('selected')); document.getElementById('plan_'+p).classList.add('selected'); }
-
-async function health(){
-  try{ const r=await fetch('/api/health'); const j=await r.json(); document.getElementById('healthBox').innerText=`✅ KLIDO ${j.version||'v121-gerencia'} CONECTADO\nPlanes: BÁSICO 800k+80k | PREMIUM 1.4M+95k | GOLD 2.5M+135k\nAPI Autónoma por agencia + Etiqueta amarilla + Pausa/Continuar\nGerencia: 3133181851 - Bloqueo automático activo\nContrato Ley 1581 + Términos`; }catch(e){ document.getElementById('healthBox').innerText='❌ Error conectando API: '+e.message; }
-}
-health();
-
-async function login(){
-  const email=document.getElementById('loginEmail').value.trim(); const password=document.getElementById('loginPass').value.trim();
-  if(!email||!password) return document.getElementById('loginMsg').innerText='Falta email y pass';
-  try{ const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})}); const j=await r.json(); if(!r.ok) throw new Error(j.error||'Error'); if(j.bloqueado){ document.getElementById('loginMsg').innerHTML=`❌ ${j.error} <br><a href="${j.link||'https://wa.me/573133181851'}" target="_blank" style="color:#25D366;font-weight:800">Pagar a 3133181851</a>`; return; } localStorage.setItem('klido_token',j.token); localStorage.setItem('klido_user',JSON.stringify(j.agencia||{})); location.href=j.agencia?.email==='admin@klido.com'?'/admin.html':'/crm.html'; }catch(e){ document.getElementById('loginMsg').innerText='❌ '+e.message; }
-}
-async function register(){
-  if(!document.getElementById('chkTerm').checked) return document.getElementById('regMsg').innerText='Debes aceptar términos';
-  const nombre=document.getElementById('regNombre').value.trim(); const email=document.getElementById('regEmail').value.trim(); const password=document.getElementById('regPass').value.trim();
-  if(!nombre||!email||!password) return document.getElementById('regMsg').innerText='Faltan datos';
-  try{ const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan:planSel})}); const j=await r.json(); if(!r.ok) throw new Error(j.error); localStorage.setItem('klido_token',j.token); alert('✅ Empresa creada - Plan '+planSel.toUpperCase()+' - Contrato Ley 1581 enviado a tu correo. Ahora configura tu API en Config 1 vez.'); location.href='/crm.html'; }catch(e){ document.getElementById('regMsg').innerText='❌ '+e.message; }
-}
+let plan='premium',pendingEmail='';
+function setMode(m){document.getElementById('viewLogin').style.display=m==='login'?'block':'none';document.getElementById('viewReg').style.display=m==='reg'?'block':'none';document.getElementById('tLogin').classList.toggle('active',m==='login');document.getElementById('tReg').classList.toggle('active',m==='reg');}
+function selPlan(p){plan=p;document.querySelectorAll('.plan').forEach(e=>e.classList.remove('selected'));document.getElementById('p_'+p).classList.add('selected');}
+async function login(){const email=lEmail.value,password=lPass.value;const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok){lMsg.innerText=j.error;return;}if(j.bloqueado){lMsg.innerHTML=j.error+' <a href="'+j.link+'" target="_blank">Pagar 3133181851</a>';return;}localStorage.setItem('klido_token',j.token);location.href=j.agencia.email==='admin@klido.com'?'/admin.html':'/crm.html';}
+async function forgot(){const email=prompt('Escribe tu correo registrado para enviar código de recuperación');if(!email)return;let r=await fetch('/api/auth/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});let j=await r.json();if(!r.ok){alert(j.error);return;}const codigo=prompt('Código de 6 dígitos enviado a '+email+' (revisa spam) - Ingresa código:');const np=prompt('Nueva contraseña:');r=await fetch('/api/auth/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo,password:np})});j=await r.json();alert(j.ok?'Contraseña cambiada':'Error: '+j.error);}
+async function registerInit(){const nombre=rNom.value,email=rEmail.value,password=rPass.value;let r=await fetch('/api/auth/register-init',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password,plan})});let j=await r.json();if(!r.ok){rMsg.innerText=j.error;return;}const codigo=prompt('✅ Te enviamos un código de verificación a '+email+' después del pago (revisa spam). Ingresa el código para activar tu empresa KLIDO:');r=await fetch('/api/auth/register-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo})});j=await r.json();if(!r.ok){alert(j.error);return;}localStorage.setItem('klido_token',j.token);location.href='/crm.html';}
 </script></body></html>
