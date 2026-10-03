@@ -30,6 +30,8 @@ body{min-height:100vh;display:flex;background:#0a1931}
 .btnGhost{width:100%;margin-top:8px;background:#eef2f7;color:#0f172a;border:1px solid #e2e8f0;padding:12px;border-radius:12px;font-weight:700;font-size:12px;cursor:pointer}
 .plan{border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center;cursor:pointer;margin-top:8px;background:white}
 .plan.selected{border-color:#2563eb;background:#eef5ff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.circle{width:20px;height:20px;min-width:20px;border:1.5px solid #cbd5e1;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:900}
+.circle.active{background:#2563eb;border-color:#2563eb}
 @media(max-width:900px){body{flex-direction:column}.left{padding:28px}.brand img{width:78px;height:78px}.brand .klido-title{font-size:26px}.right{padding:16px}}
 </style></head><body>
 <div class="left">
@@ -60,9 +62,9 @@ body{min-height:100vh;display:flex;background:#0a1931}
 <label class="label">Correo administrador</label><input id="rEmail" class="input" placeholder="admin@tuagencia.com">
 <label class="label">Crear contraseña admin</label><input id="rPass" type="password" class="input" placeholder="••••••••">
 <div style="margin-top:14px;font-weight:900;font-size:13px;color:#0f172a">Selecciona tu plan</div>
-<div class="plan selected" id="p_premium" onclick="selPlan('premium')"><div style="width:20px;height:20px;background:#2563eb;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:10px">✓</div><div><b style="font-size:11px;color:#0f172a">Premium + IA $1.400.000/año + $95k trim - 10 usuarios</b><div style="font-size:9px;color:#2563eb;font-weight:700">IA incluida + Score caliente + Recomendado</div></div></div>
-<div class="plan" id="p_basico" onclick="selPlan('basico')"><div style="width:20px;height:20px;border:1.5px solid #cbd5e1;border-radius:50%"></div><div><b style="font-size:11px;color:#0f172a">Básico $800.000/año + $80k trim - 3 usuarios</b><div style="font-size:9px;color:#64748b">API Meta oficial, hasta 5.000 mensajes</div></div></div>
-<div class="plan" id="p_gold" onclick="selPlan('gold')"><div style="width:20px;height:20px;border:1.5px solid #cbd5e1;border-radius:50%"></div><div><b style="font-size:11px;color:#0f172a">Gold $2.500.000/año + $135k trim - Ilimitado</b><div style="font-size:9px;color:#64748b">IA + Llamadas desde tu número + Gmail masivo anti-baneo</div></div></div>
+<div class="plan selected" id="p_premium" onclick="selPlan('premium')"><div class="circle active">✓</div><div><b style="font-size:11px;color:#0f172a">Premium + IA $1.400.000/año + $95k trim - 10 usuarios</b><div style="font-size:9px;color:#2563eb;font-weight:700">IA incluida + Score caliente + Recomendado</div></div></div>
+<div class="plan" id="p_basico" onclick="selPlan('basico')"><div class="circle"></div><div><b style="font-size:11px;color:#0f172a">Básico $800.000/año + $80k trim - 3 usuarios</b><div style="font-size:9px;color:#64748b">API Meta oficial, hasta 5.000 mensajes</div></div></div>
+<div class="plan" id="p_gold" onclick="selPlan('gold')"><div class="circle"></div><div><b style="font-size:11px;color:#0f172a">Gold $2.500.000/año + $135k trim - Ilimitado</b><div style="font-size:9px;color:#64748b">IA + Llamadas desde tu número + Gmail masivo anti-baneo</div></div></div>
 
 <div style="margin-top:16px;border:1.5px dashed #2563eb;background:#eef5ff;border-radius:12px;padding:12px">
 <label class="label" style="margin-top:0;color:#1e40af">🔑 Código de activación (llega a tu correo después del pago)</label>
@@ -71,8 +73,7 @@ body{min-height:100vh;display:flex;background:#0a1931}
 </div>
 
 <button class="btnPrimary" onclick="registerFlow()">Crear empresa y activar</button>
-<button class="btnGhost" onclick="resendCode()">📧 Reenviar código a mi correo</button>
-<div id="rMsg" style="font-size:11px;color:#dc2626;margin-top:8px;min-height:14px"></div>
+<button class="btnGhost" onclick="resendCode()">📧 Reenviar código a mi correo</button><div id="rMsg" style="font-size:11px;color:#dc2626;margin-top:8px;min-height:14px"></div>
 <div style="font-size:10px;color:#64748b;text-align:center;margin-top:8px;line-height:1.4">Al crear tu empresa aceptas nuestros <a href="/terminos.html" target="_blank" style="color:#2563eb;font-weight:700">Términos</a> y <a href="/legal.html" target="_blank" style="color:#2563eb;font-weight:700">Política de Privacidad</a> Ley 1581 Habeas Data Colombia<br>Soporte 24/7 <a href="https://wa.me/573133181851" style="color:#25D366;font-weight:800">3133181851</a></div>
 </div>
 
@@ -84,7 +85,22 @@ body{min-height:100vh;display:flex;background:#0a1931}
 <script>
 let plan='premium';
 function setMode(m){document.getElementById('viewLogin').style.display=m==='login'?'block':'none';document.getElementById('viewReg').style.display=m==='reg'?'block':'none';document.getElementById('tL').classList.toggle('active',m==='login');document.getElementById('tR').classList.toggle('active',m==='reg');}
-function selPlan(p){plan=p;document.querySelectorAll('.plan').forEach(e=>e.classList.remove('selected'));document.getElementById('p_'+p).classList.add('selected');document.querySelectorAll('.plan div div').forEach(d=>{if(d.innerHTML==='✓')d.innerHTML='';});document.getElementById('p_'+p).querySelector('div').innerHTML='✓';document.getElementById('p_'+p).querySelector('div').style.background='#2563eb';document.getElementById('p_'+p).querySelector('div').style.color='white';}
+// FIX V128 - solo 1 plan seleccionado
+function selPlan(p){
+  plan=p;
+  document.querySelectorAll('.plan').forEach(e=>{
+    e.classList.remove('selected');
+    const c=e.querySelector('.circle');
+    if(c){ c.classList.remove('active'); c.innerHTML=''; c.style.background='transparent'; c.style.color='transparent'; }
+  });
+  const active=document.getElementById('p_'+p);
+  active.classList.add('selected');
+  const circle=active.querySelector('.circle');
+  circle.classList.add('active');
+  circle.innerHTML='✓';
+  circle.style.background='#2563eb';
+  circle.style.color='white';
+}
 function openForgot(){document.getElementById('modalForgot').style.display='flex';}
 async function login(){const email=document.getElementById('lEmail').value.trim(),password=document.getElementById('lPass').value.trim();if(!email||!password){document.getElementById('lMsg').innerText='Falta correo y contraseña';return;}try{const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});const j=await r.json();if(!r.ok){document.getElementById('lMsg').innerText=j.error;return;}if(j.bloqueado){document.getElementById('lMsg').innerHTML=j.error+'<br><a href="'+j.link+'" target="_blank" style="color:#25D366;font-weight:800">Pagar a 3133181851</a>';return;}localStorage.setItem('klido_token',j.token);localStorage.setItem('klido_user',JSON.stringify(j.agencia||{}));location.href=j.agencia?.email==='admin@klido.com'?'/admin.html':'/crm.html';}catch(e){document.getElementById('lMsg').innerText='Error '+e.message;}}
 async function registerFlow(){
