@@ -1,22 +1,44 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO - Avanza Consulting - AUTO</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#f8fafc;display:flex;min-height:100vh}.left{flex:1;background:linear-gradient(180deg,#0f172a 0%,#0a1930 100%);color:white;padding:40px;display:flex;flex-direction:column;justify-content:center}.right{flex:1;background:white;padding:40px;display:flex;flex-direction:column;justify-content:center;max-width:480px}.logo{width:80px;height:80px;background:white;border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:20px}.badge{display:inline-block;background:#dcfce7;color:#16a34a;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-top:10px}.input{width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:12px;margin-top:12px}.btn{width:100%;padding:14px;background:#0f172a;color:white;border:none;border-radius:12px;font-weight:700;cursor:pointer;margin-top:16px}.auto-box{background:#0f172a;color:#60a5fa;padding:12px;border-radius:12px;font-size:11px;margin-top:20px;white-space:pre-wrap}</style></head><body>
-<div class="left"><div class="logo"><img src="/logo.png" style="width:100%;height:100%;object-fit:cover;border-radius:20px"></div><h1 style="font-size:42px;font-weight:900;line-height:1">KLIDO<br>AVANZA CONSULTING</h1><p style="margin-top:12px;color:#94a3b8">CRM WhatsApp - Campañas - Plantillas aprobadas API Meta autónomas - Sin configuración manual</p><div class="badge">✅ v116.1 AUTO TOTAL - Lee Variables Railway automático</div><div id="autoStatus" class="auto-box">Verificando configuración automática...</div></div>
-<div class="right"><h2 style="font-weight:900;font-size:24px">Ingresar a KLIDO</h2><p style="font-size:12px;color:#64748b;margin-top:6px">Tu WABA, Phone ID y Token ya están configurados automático desde Variables. No necesitas pegarlos manual.</p><input id="email" placeholder="Email" class="input"><input id="pass" type="password" placeholder="Contraseña" class="input"><button class="btn" onclick="login()">Entrar al CRM AUTO</button><div style="margin-top:12px;font-size:11px;color:#64748b;text-align:center"><a href="https://wa.me/573133181851" target="_blank" style="color:#25D366;font-weight:700">Soporte 24/7 WhatsApp</a></div><div id="msg" style="margin-top:12px;font-size:11px"></div></div>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO v121 - CRM WhatsApp Autónomo</title>
+<link rel="icon" href="/logo.png"><link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#020617;color:white;display:flex;min-height:100vh;flex-wrap:wrap}</style></head><body>
+<div style="flex:1;background:linear-gradient(180deg,#0f172a,#020617);padding:40px;display:flex;flex-direction:column;justify-content:center;min-width:320px">
+<div style="width:80px;height:80px;background:white;border-radius:20px;overflow:hidden"><img src="/logo.png" style="width:100%;height:100%;object-fit:cover"></div>
+<h1 style="font-size:44px;font-weight:900;line-height:1;margin-top:20px">KLIDO<br>V121 TODO INTEGRADO</h1>
+<p style="color:#94a3b8;margin-top:12px">Bandeja amarilla auto, pausa/continuar campañas, datos cliente, alarma recordatorio, IA score, llamadas API y Gmail masivo.</p>
+<div style="display:inline-block;background:#16a34a;color:white;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800;margin-top:14px">✅ Server v121 conectado - 3133181851</div>
+<div id="autoStatus" style="background:#0f172a;border:1px solid #1e293b;padding:12px;border-radius:12px;font-size:11px;margin-top:20px;color:#60a5fa;white-space:pre-wrap">Verificando...</div>
+<div style="margin-top:16px;font-size:11px"><a href="/terminos.html" style="color:#94a3b8">Términos</a> | <a href="/legal.html" style="color:#94a3b8">Privacidad Ley 1581</a> | <a href="https://wa.me/573133181851" style="color:#25D366;font-weight:800"> Soporte</a></div>
+</div>
+<div style="flex:1;background:white;color:#0f172a;padding:32px;min-width:320px;max-width:480px;display:flex;flex-direction:column;justify-content:center">
+<h2 style="font-weight:900;font-size:26px">Entrar</h2>
+<input id="email" placeholder="Email" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:12px;margin-top:12px">
+<input id="pass" type="password" placeholder="Contraseña" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:12px;margin-top:12px">
+<button onclick="login()" style="width:100%;padding:14px;background:#0f172a;color:white;border:none;border-radius:12px;font-weight:800;margin-top:16px;cursor:pointer">Entrar al CRM</button>
+<button onclick="register()" style="width:100%;padding:14px;background:white;color:#0f172a;border:1px solid #0f172a;border-radius:12px;font-weight:800;margin-top:8px;cursor:pointer">Crear agencia</button>
+<div id="msg" style="margin-top:12px;font-size:11px;color:#dc2626"></div>
+<div style="margin-top:20px;display:grid;gap:8px">
+<a href="https://wa.me/573133181851?text=Quiero%20BASICO%20800k%2B80k" target="_blank" style="background:#0f172a;color:white;padding:12px;border-radius:999px;text-align:center;font-weight:800;text-decoration:none;font-size:12px">BÁSICO $800k + $80k trim</a>
+<a href="https://wa.me/573133181851?text=Quiero%20PREMIUM%201.4M%2B95k" target="_blank" style="background:#6366f1;color:white;padding:12px;border-radius:999px;text-align:center;font-weight:800;text-decoration:none;font-size:12px">PREMIUM IA $1.4M + $95k trim</a>
+<a href="https://wa.me/573133181851?text=Quiero%20GOLD%202.5M%2B135k" target="_blank" style="background:#f59e0b;color:#020617;padding:12px;border-radius:999px;text-align:center;font-weight:800;text-decoration:none;font-size:12px">GOLD $2.5M + $135k trim</a>
+</div>
+</div>
 <script>
 async function checkAuto(){
-  try{
-    const r=await fetch('/api/health'); const j=await r.json().catch(()=>({}));
-    const r2=await fetch('/health'); const j2=await r2.json().catch(()=>({}));
-    document.getElementById('autoStatus').innerText=`[AUTO CONFIG]\nWABA_ID: ${j.waba||j2.WABA_ID||'FALTA'}\nPHONE_ID: ${j.phone||j2.PHONE_NUMBER_ID||'FALTA'}\nTOKEN: ${j.token||j2.TOKEN||'FALTA'}\n\nSi dice OK, tus plantillas aprobadas se suben solas sin código.\nSi dice FALTA, renombra tu variable EAAT... a WHATSAPP_TOKEN en Railway Variables.`;
-  }catch(e){ document.getElementById('autoStatus').innerText='Verificando... '+e.message; }
+  try{ const r=await fetch('/api/health'); const j=await r.json();
+    document.getElementById('autoStatus').innerText=`[KLIDO V121]\nVersion: ${j.version}\nPlanes: ${Object.keys(j.planes).join(', ')}\nAPI Madre: OK\nTu API agencia se pega 1 vez en CRM -> Config\nBloqueo mantenimiento activo -> 3133181851`;
+  }catch(e){ document.getElementById('autoStatus').innerText='Error: '+e.message; }
 }
 async function login(){
-  const email=document.getElementById('email').value.trim(); const pass=document.getElementById('pass').value.trim();
-  if(!email||!pass) return document.getElementById('msg').innerText='Falta email y pass';
-  try{
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
-    const j=await r.json(); if(!r.ok) throw new Error(j.error);
-    localStorage.setItem('klido_token',j.token); location.href='/crm.html';
-  }catch(e){ document.getElementById('msg').innerText='❌ '+e.message; }
+  const email=document.getElementById('email').value.trim(), password=document.getElementById('pass').value.trim();
+  if(!email||!password) return document.getElementById('msg').innerText='Falta email y pass';
+  try{ const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})}); const j=await r.json(); if(!r.ok) throw new Error(j.error); localStorage.setItem('klido_token',j.token); location.href='/crm.html'; }catch(e){ document.getElementById('msg').innerText='❌ '+e.message; }
+}
+async function register(){
+  const email=document.getElementById('email').value.trim(), password=document.getElementById('pass').value.trim();
+  const nombre=prompt('Nombre agencia:'); if(!nombre||!email||!password) return alert('Faltan datos');
+  try{ const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre,email,password})}); const j=await r.json(); if(!r.ok) throw new Error(j.error); localStorage.setItem('klido_token',j.token); alert('✅ Contrato Ley 1581 enviado a tu correo'); location.href='/crm.html'; }catch(e){ document.getElementById('msg').innerText='❌ '+e.message; }
 }
 checkAuto();
 </script></body></html>
