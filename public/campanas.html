@@ -1,64 +1,49 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO v121 - Campañas</title><link rel="icon" href="/logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#020617;color:white;display:flex;min-height:100vh}
-.side{width:280px;background:#0f172a;border-right:1px solid #1e293b;padding:16px}
-.main{flex:1;padding:20px;overflow:auto}
-.card{background:#0f172a;border:1px solid #1e293b;border-radius:20px;padding:20px;margin-bottom:16px}
-.input{width:100%;padding:12px;background:#020617;border:1px solid #1e293b;border-radius:10px;color:white;margin-top:8px}
-.btn{padding:12px;border-radius:999px;font-weight:800;border:none;cursor:pointer}
-</style></head><body>
-<div class="side">
-<div style="display:flex;gap:12px;align-items:center"><div style="width:48px;height:48px;background:white;border-radius:12px;overflow:hidden"><img src="/logo.png" style="width:100%;height:100%;object-fit:cover"></div><div><b>KLIDO</b><br><span style="color:#60a5fa;font-size:9px;letter-spacing:2px">V121 TODO INTEGRADO</span></div></div>
-<a href="/crm.html" style="display:block;margin-top:20px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.05);color:#94a3b8;text-decoration:none">📥 Bandeja Amarilla</a>
-<div style="margin-top:8px;padding:12px;border-radius:12px;background:white;color:#0f172a;font-weight:800">📢 Campañas Pausa/Continuar</div>
-<a href="https://wa.me/573133181851" target="_blank" style="display:block;margin-top:20px;background:#25D366;color:white;padding:12px;border-radius:999px;text-align:center;font-weight:800;text-decoration:none">Ayuda 3133181851</a>
-</div>
-
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO Campañas - Pausa/Continuar + Amarillas</title><link rel="icon" href="/logo.png"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#f8fafc;padding:0;display:flex;height:100vh}.sidebar{width:230px;background:#020617;color:white;padding:16px;display:flex;flex-direction:column}.main{flex:1;overflow:auto;padding:18px}.card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-top:12px}.btn{padding:8px 12px;border-radius:8px;border:none;font-weight:700;cursor:pointer;font-size:12px}.btn-primary{background:#1e5ad8;color:white}.btn-yellow{background:#fef08a;color:#713f12;border:1px solid #facc15}.btn-red{background:#fee2e2;color:#991b1b}.btn-green{background:#dcfce7;color:#166534}.input{width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;margin-top:6px;font-size:12px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px;border-bottom:1px solid #f1f5f9;text-align:left}.badge{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:800}.badge-activa{background:#dcfce7;color:#166534}.badge-pausada{background:#fef08a;color:#713f12}.badge-terminada{background:#e2e8f0;color:#475569}</style></head><body>
+<div class="sidebar"><div style="display:flex;gap:8px;align-items:center"><img src="/logo.png" width:32 style="background:white;border-radius:8px;padding:3px"><b>KLIDO</b></div><div id="info" style="font-size:10px;opacity:.7;margin-top:12px">Cargando...</div><div style="margin-top:16px;display:flex;flex-direction:column;gap:6px"><button class="btn" style="background:#1e293b;color:white" onclick="location.href='/crm.html'">📥 Bandeja Amarillas</button><button class="btn btn-primary" onclick="location.href='/campanas.html'">📢 Campañas (aquí)</button><button class="btn" style="background:#1e293b;color:white" onclick="location.href='/admin.html'" id="btnAdmin" style="display:none">👑 Gerencia 3133181851</button><button class="btn" style="background:#1e293b;color:white;margin-top:auto" onclick="localStorage.clear();location.href='/'">Salir</button></div></div>
 <div class="main">
-<h1 style="font-weight:900">Campañas Excel - v121 Alineado con Server v121</h1>
-<p style="color:#94a3b8;font-size:12px;margin-top:4px">Tu server v121 ya segmenta real, limpia duplicados y envía con tu API autónoma. Bloques 25 anti-baneo automático.</p>
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-weight:900">📢 Campañas Excel + Plantillas META tiempo real + Pausa/Continuar</h2><button class="btn btn-primary" onclick="document.getElementById('modalNew').style.display='flex'">+ Nueva Campaña</button></div>
+<div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap"><div class="card" style="flex:1;min-width:160px"><b>Total campañas</b><div id="tTotal" style="font-size:26px;font-weight:900">0</div></div><div class="card" style="flex:1;min-width:160px"><b>Activas enviando</b><div id="tAct" style="font-size:26px;font-weight:900;color:#16a34a">0</div></div><div class="card" style="flex:1;min-width:160px"><b>Pausadas</b><div id="tPau" style="font-size:26px;font-weight:900;color:#ca8a04">0</div></div><div class="card" style="flex:1;min-width:160px"><b>Terminadas</b><div id="tTer" style="font-size:26px;font-weight:900;color:#64748b">0</div></div><div class="card" style="flex:1;min-width:160px"><b>Enviados totales</b><div id="tEnv" style="font-size:26px;font-weight:900">0</div></div></div>
 
-<div class="card">
-<input id="nombreCamp" placeholder="Nombre campaña Ej: Remate Junio" class="input">
-<select id="selPlantilla" class="input"><option>Cargando plantillas aprobadas de tu API autónoma...</option></select>
-<textarea id="numsManual" placeholder="Pega números aquí o sube CSV (uno por línea) - Ej: 573001234567" class="input" style="height:120px"></textarea>
-<input type="file" id="excelFile" accept=".csv,.txt" class="input">
-<div id="preview" style="margin-top:10px;font-size:11px;color:#60a5fa">Esperando números... Este server v121 detecta 10 dígitos auto y elimina duplicados</div>
-<button onclick="crearCampana()" class="btn" style="width:100%;margin-top:12px;background:#6366f1;color:white;padding:14px">🚀 Crear y Enviar con tu API autónoma</button>
-<div style="display:flex;gap:8px;margin-top:8px"><button onclick="pausa()" class="btn" style="flex:1;background:#f59e0b;color:#020617">⏸️ Pausar actual</button><button onclick="continuar()" class="btn" style="flex:1;background:#16a34a;color:white">▶️ Continuar</button></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>Historial de campañas - Con pausa/continuar y segmentación amarilla automática</b><button class="btn" style="background:#eef2f7" onclick="load()">🔄 Actualizar</button></div><table><thead><tr><th>ID / Nombre</th><th>Plantilla META</th><th>Total números</th><th>Enviados / Fallidos</th><th>Estado</th><th>Creada</th><th>Acciones pausa/continuar</th><th>Ver amarillas de esta campaña</th></tr></thead><tbody id="tbody"></tbody></table></div>
+
+<div class="card"><b>Cómo funciona - Flujo completo que hablamos:</b><div style="font-size:11px;color:#475569;margin-top:8px;line-height:1.6">
+1. <b>Subes Excel/CSV</b> con números (10 dígitos) - Anti-baneo 900ms delay humano<br>
+2. Eliges <b>plantilla aprobada META tiempo real</b> (se carga de graph.facebook.com/v20.0/waba/templates)<br>
+3. Das <b>Enviar</b> → se crea campaña con historial JSON<br>
+4. Backend envía en background con <b>pausa/continuar</b> - cada mensaje chequea si está pausada<br>
+5. Si pausas, se queda en <b>pausada</b> y puedes continuar cuando quieras<br>
+6. Los que responden entran en <b>🟡 Bandeja amarilla automática</b> con etiqueta respuesta_campana + Score IA 70-90<br>
+7. Asignas asesor a esos amarillas → embudo ventas → alarma recordatorio<br>
+8. Todo queda con <b>origen_campana = ID campaña</b> para filtrar amarillas por campaña
+</div></div>
 </div>
 
-<div class="card"><h3>📋 Historial Tiempo Real v121</h3><div id="listaCampanas" style="margin-top:12px"></div></div>
-</div>
+<div id="modalNew" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:99"><div class="card" style="width:90%;max-width:580px;max-height:90vh;overflow:auto"><h3 style="font-weight:900">Nueva Campaña Excel + Plantilla META aprobada tiempo real - Pausa/Continuar</h3>
+<label style="font-size:11px;font-weight:700;margin-top:10px;display:block">Nombre campaña (ej: Promo Black Friday)</label><input id="campNombre" class="input" placeholder="Ej: Campaña Diciembre 2026">
+<label style="font-size:11px;font-weight:700;margin-top:8px;display:block">Plantilla aprobada META - Se carga tiempo real de tu WABA</label><select id="plantillaSel" class="input"></select><div style="font-size:10px;color:#64748b;margin-top:4px">Si no ves plantillas, verifica que tu Phone ID y WABA ID estén configurados en CRM > Config API 1 vez - Solo muestra APPROVED</div>
+<label style="font-size:11px;font-weight:700;margin-top:8px;display:block">Archivo Excel / CSV / TXT con números</label><input type="file" id="excelFile" accept=".xlsx,.xls,.csv,.txt" class="input">
+<div style="font-size:10px;color:#64748b;margin-top:6px">Formato:.xlsx,.xls,.csv,.txt - Números con o sin +57, separados por coma, punto y coma o salto de línea. Ej: 573001234567 o 3001234567. Se limpia a 10-12 dígitos. Anti-baneo delay 900ms humano.</div>
+<label style="font-size:11px;font-weight:700;margin-top:8px;display:block">O pega números directamente aquí (separados por coma o salto línea)</label><textarea id="numerosTxt" class="input" style="height:80px" placeholder="3001234567, 3109876543, 320..."></textarea>
+<div id="campProgress" style="font-size:11px;margin-top:10px;min-height:20px;background:#f8fafc;padding:8px;border-radius:8px;border:1px solid #f1f5f9">Listo para enviar - Pausa/Continuar disponible durante envío</div>
+<button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="enviarCamp()">📢 Enviar campaña ahora - Con pausa/continuar + amarillas auto</button><button class="btn" style="width:100%;margin-top:6px;background:#eef2f7" onclick="document.getElementById('modalNew').style.display='none'">Cerrar</button>
+</div></div>
 
 <script>
-const token=localStorage.getItem('klido_token'); if(!token) location.href='/'; 
-let campActual=null, numerosFinales=[];
-
-async function api(url,method='GET',body){ const o={method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}}; if(body) o.body=JSON.stringify(body); const r=await fetch(url,o); const j=await r.json(); if(!r.ok) throw new Error(j.error||JSON.stringify(j)); return j; }
-
-async function cargarPlantillas(){ try{ const pls=await api('/api/plantillas'); document.getElementById('selPlantilla').innerHTML=pls.map(p=>`<option value="${p.name}">${p.name} - ${p.status} - APROBADA AUTÓNOMA</option>`).join('')||'<option value="hello_world">hello_world - APROBADA DEFAULT</option>'; }catch{ document.getElementById('selPlantilla').innerHTML='<option value="hello_world">hello_world</option>'; } }
-
-document.getElementById('excelFile').addEventListener('change', async(e)=>{
-  const f=e.target.files[0]; if(!f) return; const t=await f.text(); const nums=t.split(/[\n,;\s]+/).map(x=>x.replace(/\D/g,'')).filter(x=>x.length>=10);
-  numerosFinales=[...new Set(nums)]; document.getElementById('preview').innerText=`✅ ${numerosFinales.length} números válidos detectados (duplicados eliminados) - Listo para enviar`;
-});
-document.getElementById('numsManual').addEventListener('input', (e)=>{
-  const nums=e.target.value.split(/[\n,;\s]+/).map(x=>x.replace(/\D/g,'')).filter(x=>x.length>=10); numerosFinales=[...new Set(nums)];
-  document.getElementById('preview').innerText=`✅ ${numerosFinales.length} números pegados válidos`;
-});
-
-async function crearCampana(){
-  const nombre=document.getElementById('nombreCamp').value.trim(); const plantilla=document.getElementById('selPlantilla').value;
-  if(!nombre||!numerosFinales.length) return alert('Falta nombre y números');
-  try{ const j=await api('/api/campanas','POST',{nombre,plantilla,numeros:numerosFinales}); campActual=j.id||j.campana?.id; alert(`✅ Campaña ${nombre} iniciada con ${numerosFinales.length} números - Pausa/continuar activo`); cargarCampanas(); }catch(e){ alert('❌ '+e.message); }
+const token=localStorage.getItem('klido_token'); if(!token) location.href='/';
+async function api(p,opt={}){opt.headers={...(opt.headers||{}),Authorization:'Bearer '+token,'Content-Type':'application/json'};const r=await fetch(p,opt);const j=await r.json();if(!r.ok){if(j.bloqueado){document.body.innerHTML='<div style="padding:40px"><h1>BLOQUEADO POR MORA</h1><p>'+j.error+'</p><a href="'+j.link+'" target="_blank" style="background:#25D366;color:white;padding:12px 20px;border-radius:10px;display:inline-block;margin-top:12px">Pagar 3133181851</a></div>';throw j;}throw j;}return j;}
+async function load(){const info=await api('/api/config');document.getElementById('info').innerHTML=(JSON.parse(localStorage.getItem('klido_user')||'{}').nombre||'Agencia')+'<br>Plan '+info.plan?.toUpperCase()+'<br>API '+info.api_status+'<br>Uso '+info.usado+'/'+info.limite;if(JSON.parse(localStorage.getItem('klido_user')||'{}').email==='admin@klido.com')document.getElementById('btnAdmin').style.display='block';const camps=await api('/api/campanas');document.getElementById('tTotal').innerText=camps.length;document.getElementById('tAct').innerText=camps.filter(c=>c.estado==='activa'&&!c.pausada).length;document.getElementById('tPau').innerText=camps.filter(c=>c.pausada).length;document.getElementById('tTer').innerText=camps.filter(c=>c.estado==='terminada').length;document.getElementById('tEnv').innerText=camps.reduce((s,c)=>s+(c.enviados||0),0);document.getElementById('tbody').innerHTML=camps.map(c=>`<tr><td><b>${c.nombre||c.id}</b><br><span style="font-size:9px;color:#94a3b8">${c.id}</span></td><td><span style="background:#eef5ff;padding:3px 6px;border-radius:6px;font-size:10px">${c.plantilla||''}</span></td><td>${c.total||0}</td><td>${c.enviados||0} / <span style="color:#dc2626">${c.fallidos||0}</span><br><div style="width:60px;height:6px;background:#e2e8f0;border-radius:999px;margin-top:4px"><div style="width:${Math.round((c.enviados||0)/(c.total||1)*100)}%;height:6px;background:#16a34a;border-radius:999px"></div></div><span style="font-size:9px">${Math.round((c.enviados||0)/(c.total||1)*100)}%</span></td><td><span class="badge ${c.pausada?'badge-pausada':c.estado==='activa'?'badge-activa':'badge-terminada'}">${c.pausada?'PAUSADA':c.estado?.toUpperCase()||'ACTIVA'}</span></td><td style="font-size:10px">${c.creada?new Date(Number(c.creada)).toLocaleString():''}<br><span style="font-size:9px">${c.terminada?new Date(Number(c.terminada)).toLocaleString():''}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap">${c.pausada?`<button class="btn btn-green" onclick="continuar('${c.id}')">▶️ Continuar</button>`:`<button class="btn btn-yellow" onclick="pausar('${c.id}')">⏸️ Pausar</button>`}<button class="btn" style="background:#eef2f7" onclick="verHist('${c.id}')">📜 Hist</button></div></td><td><button class="btn btn-yellow" onclick="verAmarillas('${c.id}')">🟡 Ver amarillas de ${c.id.substring(0,8)}</button><br><a href="/crm.html?campana=${c.id}" style="font-size:10px;color:#2563eb">Ir a bandeja filtrada</a></td></tr>`).join('');api('/api/plantillas').then(p=>{document.getElementById('plantillaSel').innerHTML=p.map(t=>`<option value="${t.name}">${t.name} - ${t.status} - ${t.language||'es_CO'}</option>`).join('');}).catch(()=>{document.getElementById('plantillaSel').innerHTML='<option value="hello_world">hello_world - APPROVED</option>';});}
+async function pausar(id){await api('/api/campanas/'+id+'/pausa',{method:'POST'});alert('⏸️ Campaña '+id+' pausada - Puedes continuar cuando quieras desde aquí');load();}
+async function continuar(id){await api('/api/campanas/'+id+'/continuar',{method:'POST'});alert('▶️ Campaña '+id+' continuada - Se reanuda envío');load();}
+async function verHist(id){const c=await api('/api/campanas/'+id);alert('Historial campaña '+id+':\n'+JSON.stringify(c.historial||c,null,2));}
+async function verAmarillas(campId){const clientes=await api('/api/clientes');const filt=clientes.filter(cl=>cl.origen_campana===campId&&cl.etiqueta==='respuesta_campana');alert('🟡 Amarillas de campaña '+campId+': '+filt.length+' contactos respondieron\n'+filt.map(c=>c.telefono+' - '+(c.nombre||'')+' - Score '+c.score).join('\n')+'\n\nIr a /crm.html para gestionarlos con asesor + embudo + alarma');}
+async function enviarCamp(){
+const plantilla=document.getElementById('plantillaSel').value;const nombre=document.getElementById('campNombre').value;let numeros=[];
+const file=document.getElementById('excelFile').files[0];if(file){const text=await file.text();numeros=numeros.concat(text.split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean));}
+const txt=document.getElementById('numerosTxt').value.trim();if(txt){numeros=numeros.concat(txt.split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean));}
+numeros=[...new Set(numeros.map(n=>n.replace(/\\D/g,'')).filter(n=>n.length>=10))];
+if(!plantilla||!numeros.length){alert('Falta plantilla y números - Sube Excel o pega números');return;}
+document.getElementById('campProgress').innerText='📢 Enviando '+numeros.length+' números con plantilla '+plantilla+'... Delay 900ms anti-baneo - Puedes pausar desde tabla';
+try{const r=await api('/api/campanas',{method:'POST',body:JSON.stringify({nombre,plantilla,numeros})});document.getElementById('campProgress').innerHTML='✅ Campaña <b>'+r.id+'</b> creada - Total '+r.total+' - Enviando en background<br>Los que respondan entrarán en 🟡 Amarillas automático con Score IA<br><button class="btn btn-yellow" style="margin-top:6px" onclick="pausar(\''+r.id+'\')">⏸️ Pausar esta campaña</button>';load();}catch(e){document.getElementById('campProgress').innerText='❌ Error: '+(e.error||e.message);}
 }
-async function cargarCampanas(){
-  try{ const camps=await api('/api/campanas'); document.getElementById('listaCampanas').innerHTML=camps.map(c=>`<div style="padding:12px;border:1px solid #1e293b;border-radius:12px;margin-bottom:8px;background:${campActual===c.id?'#1e293b':'#020617'};cursor:pointer" onclick="campActual='${c.id}'"><b>${c.nombre}</b> - ${c.plantilla}<br><span style="font-size:11px;color:#94a3b8">${c.total} total | ${c.enviados||0} enviados | ${c.pausada?'⏸️ PAUSADA':'▶️ ACTIVA'} - ${Math.round((c.enviados||0)/(c.total||1)*100)}%</span><div style="height:6px;background:#020617;border-radius:10px;margin-top:6px"><div style="width:${Math.round((c.enviados||0)/(c.total||1)*100)}%;height:100%;background:#6366f1;border-radius:10px"></div></div></div>`).join('')||'Sin campañas'; }catch(e){ document.getElementById('listaCampanas').innerText=e.message; }
-}
-async function pausa(){ if(!campActual) return alert('Selecciona campaña del historial'); await api(`/api/campanas/${campActual}/pausa`,'POST'); cargarCampanas(); }
-async function continuar(){ if(!campActual) return alert('Selecciona campaña'); await api(`/api/campanas/${campActual}/continuar`,'POST'); cargarCampanas(); }
-
-cargarPlantillas(); cargarCampanas(); setInterval(cargarCampanas,5000);
+load();
 </script></body></html>
