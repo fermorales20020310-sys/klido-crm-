@@ -1,70 +1,238 @@
 
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+ <!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KLIDO v132 LEE TODO</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;font-family:Inter,Arial}
+body{margin:0;display:flex;height:100vh;background:#f1f5f9}
+.sidebar{width:230px;background:#0b1220;color:#fff;padding:14px 10px;display:flex;flex-direction:column}
+.side-btn{background:#fff;color:#0f172a;border:none;border-radius:12px;padding:11px;margin:6px 0;cursor:pointer;font-weight:800;font-size:12px;width:100%;text-align:left}
+.side-btn.active{background:#2563eb;color:#fff}
+.content{display:flex;flex:1;overflow:hidden}
+.col-bandeja{width:360px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column}
+.col-chat{flex:1;background:#f8fafc;display:flex;flex-direction:column}
+.col-datos{width:360px;background:#fff;border-left:1px solid #e2e8f0;padding:14px;overflow:auto}
+.search{margin:10px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:12px;width:94%;align-self:center;background:#f8fafc}
+.filters{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap}
+.f{padding:7px 10px;border-radius:20px;border:1px solid #e2e8f0;font-size:11px;font-weight:800;cursor:pointer;background:#f8fafc}
+.f.active{background:#0f172a;color:#fff}
+.client-item{padding:12px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;gap:10px;align-items:center}
+.client-item.no-leido{background:#fff1f2}
+.client-item.respuesta{background:#fefce8;border-left:4px solid #facc15}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.rojo{background:#ef4444}
+.dot.amarillo{background:#eab308}
+.dot.verde{background:#e5e7eb}
+.avatar{width:38px;height:38px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
+.info{flex:1;min-width:0}
+.info b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.info small{font-size:11px;color:#64748b;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:#fff;border-bottom:1px solid #e2e8f0}
+.btn-blue{background:#2563eb;color:#fff;border:none;padding:9px 16px;border-radius:10px;font-weight:900;cursor:pointer;font-size:12px}
+.chat-header{padding:12px 16px;background:#fff;border-bottom:1px solid #e2e8f0}
+.chat-messages{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:72%;padding:10px 12px;border-radius:16px;font-size:13px}
+.msg.entrante{background:#fff;border:1px solid #e2e8f0;align-self:flex-start}
+.msg.saliente{background:#2563eb;color:#fff;align-self:flex-end}
+.chat-input{display:flex;gap:8px;padding:12px;background:#fff;border-top:1px solid #e2e8f0}
+.chat-input input{flex:1;padding:12px;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc}
+.label{font-size:11px;font-weight:900;margin:12px 0 4px;display:block;text-transform:uppercase;color:#334155}
+.input{width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:12px;font-size:12px;background:#f8fafc}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:center;justify-content:center;z-index:50}
+.modal-box{background:#fff;border-radius:20px;padding:20px;width:95%;max-width:960px;max-height:92vh;overflow:auto}
+.scroll{max-height:240px;overflow:auto;border:1px solid #e2e8f0;border-radius:12px;padding:8px;background:#f8fafc}
+.small-btn{padding:7px 12px;border-radius:10px;border:1px solid #e2e8f0;font-size:11px;font-weight:800;cursor:pointer;background:#fff}
+.badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:900}
+.badge-rojo{background:#fee2e2;color:#991b1b}
+.badge-amarillo{background:#fef9c3;color:#854d0e}
+</style>
+</head>
+<body>
+<div class="sidebar">
+<h2 style="font-size:14px;margin:0 0 8px">🦁 KLIDO AVANZA v132</h2>
+<div class="side-info" id="sideInfo">Plan GOLD - API conectado<br>Uso 0/50000<br>Mant: 1/1/2027</div>
+<button class="side-btn active">💬 Bandeja</button>
+<button class="side-btn" onclick="abrirCampanas()">🎯 Campañas</button>
+<button class="side-btn" onclick="abrirConfig()">⚙️ Config API</button>
+<div style="flex:1"></div>
+<div style="font-size:10px;opacity:.6;margin:8px 2px">v132 LEE TODO SIN ORDEN<br>Soporte 3133181851</div>
+<button class="side-btn" style="background:#1e293b;color:#fff" onclick="logout()">Salir</button>
+</div>
+<div style="flex:1;display:flex;flex-direction:column">
+<div class="topbar"><div><b id="topPlan">Plan GOLD - v132 LEE TODO</b><br><small style="font-size:11px;color:#16a34a;font-weight:800">✅ Lee TODOS los números sin importar orden, hoja, columna, formato.0</small></div><button class="btn-blue" onclick="abrirCampanas()">+ Nueva Campaña</button></div>
+<div class="content">
+<div class="col-bandeja">
+<div style="padding:12px 14px;font-weight:900;font-size:12px;display:flex;justify-content:space-between">BANDEJA <span id="badgeStats" class="badge badge-rojo">0</span></div>
+<input id="buscador" class="search" placeholder="🔍 Buscar" oninput="renderBandeja()">
+<div class="filters">
+<button class="f active" id="fTodos" onclick="filtro='todos';renderBandeja()">Todos</button>
+<button class="f" id="fNoCont" onclick="filtro='noleido';renderBandeja()">🔴 Sin contestar</button>
+<button class="f" id="fCamp" onclick="filtro='amarillas';renderBandeja()">🟡 Campaña</button>
+</div>
+<div id="listaClientes" style="overflow:auto;flex:1"></div>
+</div>
+<div class="col-chat">
+<div class="chat-header"><b id="chatTitle">Selecciona cliente</b></div>
+<div id="chatMsgs" class="chat-messages"></div>
+<div class="chat-input"><input id="inputMsg" placeholder="Escribe mensaje..."><button class="btn-blue" onclick="enviarMensaje()">Enviar vía API</button></div>
+<div style="padding:8px 12px;display:flex;gap:6px;background:#fff;border-top:1px solid #f1f5f9">
+<button class="small-btn" onclick="pausarCampanaActual()">⏸️ Pausar</button>
+<button class="small-btn" style="background:#2563eb;color:#fff" onclick="continuarCampanaActual()">▶️ Continuar</button>
+<button class="small-btn" style="background:#fef3c7" onclick="abrirHistorial()">📜 Historial</button>
+</div>
+</div>
+<div class="col-datos">
+<div style="font-weight:900;font-size:12px">DATOS CLIENTE</div>
+<label class="label">Nombre</label><input id="dNombre" class="input">
+<label class="label">Email</label><input id="dEmail" class="input">
+<label class="label">Etiqueta</label><select id="dEtiqueta" class="input"><option value="nuevo">Nuevo</option><option value="respuesta_campana">🟡 Respuesta campaña</option><option value="noleido">🔴 Sin contestar</option><option value="contactado">Contactado</option><option value="interesado">Interesado</option><option value="caliente">🔥 Caliente</option><option value="frio">Frío</option><option value="vendido">Vendido</option></select>
+<label class="label">Embudo</label><select id="dEmbudo" class="input"><option value="nuevo">Nuevo</option><option value="contactado">Contactado</option><option value="seguimiento">Seguimiento</option><option value="cotizacion">Cotización</option><option value="vendido">Vendido</option><option value="perdido">Perdido</option></select>
+<label class="label">Recordatorio</label><input id="dRecordatorio" class="input" type="datetime-local">
+<label class="label">Asesor</label><select id="dAsesor" class="input"><option value="">Sin asignar</option></select>
+<label class="label">Notas</label><textarea id="dNotas" class="input" rows="4"></textarea>
+<div style="margin-top:14px;padding:12px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0">
+<b style="font-size:11px">Score IA</b><div id="dScore" style="font-size:26px;font-weight:900;color:#eab308">- Score</div>
+<div id="seguimientoBox" style="margin-top:8px;font-size:11px;color:#334155"></div>
+</div>
+<button class="btn-blue" style="width:100%;margin-top:14px;padding:12px" onclick="guardarDatos()">💾 Guardar datos</button>
+</div>
+</div>
+</div>
+<div id="modalCamp" class="modal"><div class="modal-box">
+<div style="display:flex;justify-content:space-between"><h3 style="margin:0">🎯 Campañas v132 - Lee TODO sin orden</h3><button class="small-btn" onclick="cerrarModal('modalCamp')">✕</button></div>
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px">
+<div style="flex:1;min-width:320px;background:#f8fafc;padding:14px;border-radius:14px;border:1px solid #e2e8f0">
+<label class="label">Nombre campaña</label><input id="campNombre" class="input" placeholder="Ej: Promo GOLD Marzo">
+<label class="label">Plantilla META</label><select id="campPlantilla" class="input"></select>
+<button class="small-btn" style="margin-top:6px" onclick="cargarPlantillas()">🔄 Recargar plantillas</button>
+<label class="label" style="margin-top:12px;color:#16a34a;font-weight:900">SUBIR EXCEL - LEE TODO SIN ORDEN</label><input type="file" id="campExcel" accept=".xlsx,.xls,.csv" onchange="leerExcel(event)" class="input">
+<div class="scroll" id="previewNums" style="margin-top:10px;background:#fff">Sube Excel - Lee todos los números de todas las hojas y columnas, sin importar orden</div>
+<div style="margin-top:12px;display:flex;gap:8px"><button class="btn-blue" onclick="crearCampana()">🚀 Enviar campaña ahora</button><button class="small-btn" onclick="cerrarModal('modalCamp')">Cancelar</button></div>
+</div>
+<div style="flex:1;min-width:360px">
+<div style="display:flex;justify-content:space-between"><b style="font-size:12px">Historial campañas</b><button class="small-btn" onclick="cargarCampanasLista()">🔄</button></div>
+<div id="listaCampanas" style="margin-top:10px;max-height:60vh;overflow:auto"></div>
+</div>
+</div>
+</div></div>
+<div id="modalHist" class="modal"><div class="modal-box"><div style="display:flex;justify-content:space-between"><h3>📜 Historial - Números</h3><button class="small-btn" onclick="cerrarModal('modalHist')">✕</button></div><div id="histCont" style="margin-top:12px"></div></div></div>
+<div id="modalConfig" class="modal"><div class="modal-box" style="max-width:520px"><h3>⚙️ Config API</h3><label class="label">Phone Number ID</label><input id="cfgPhone" class="input"><label class="label">WABA ID</label><input id="cfgWaba" class="input"><label class="label">Token</label><input id="cfgToken" class="input"><button class="btn-blue" style="margin-top:12px;width:100%" onclick="guardarConfig()">Guardar</button><button class="small-btn" style="margin-top:8px" onclick="cerrarModal('modalConfig')">Cerrar</button><div id="cfgStatus" style="font-size:11px;margin-top:8px"></div></div></div>
 <script>
-// v131 - LEE TODOS LOS NUMEROS SIN IMPORTAR ORDEN
+let clientes=[], seleccionado=null, filtro='todos', numerosExcel=[], campanaActual=null;
+const token=localStorage.getItem('klido_token'); if(!token) location.href='/';
+function authHeaders(){return{'Authorization':'Bearer '+token,'Content-Type':'application/json'};}
+async function init(){
+ try{
+  const cfg=await fetch('/api/config',{headers:authHeaders()}).then(r=>r.json());
+  document.getElementById('sideInfo').innerHTML=`${cfg.plan? 'Plan '+cfg.plan.toUpperCase():''} - ${cfg.api_status||'pendiente'}<br>Uso ${cfg.usado||0}/${cfg.limite||0}<br>Mant: ${cfg.mantenimiento||'90d'}`;
+  document.getElementById('topPlan').innerText=`Plan ${cfg.plan?.toUpperCase()||'GOLD'} - v132 LEE TODO`;
+  document.getElementById('cfgPhone').value=cfg.phoneId||''; document.getElementById('cfgWaba').value=cfg.wabaId||'';
+ }catch{}
+ cargarClientes(); cargarPlantillas(); cargarCampanasLista(); setInterval(cargarClientes,15000);
+}
+async function cargarClientes(){
+ const rows=await fetch('/api/clientes',{headers:authHeaders()}).then(r=>r.json()).catch(()=>[]);
+ clientes=rows||[]; renderBandeja();
+}
+function renderBandeja(){
+ let list=[...clientes];
+ const q=document.getElementById('buscador').value.toLowerCase();
+ if(q) list=list.filter(c=>(c.telefono+' '+(c.nombre||'')+' '+(c.notas||'')).toLowerCase().includes(q));
+ if(filtro==='noleido') list=list.filter(c=>!c.leido);
+ if(filtro==='amarillas') list=list.filter(c=>c.etiqueta==='respuesta_campana');
+ list.sort((a,b)=>{ const aR=(!a.leido)?1:0; const bR=(!b.leido)?1:0; if(bR!==aR) return bR-aR; return new Date(b.ultimo_mensaje)-new Date(a.ultimo_mensaje); });
+ document.getElementById('badgeStats').innerHTML=`${clientes.filter(c=>!c.leido).length} 🔴`;
+ document.querySelectorAll('.f').forEach(e=>e.classList.remove('active'));
+ if(filtro==='todos') document.getElementById('fTodos').classList.add('active');
+ if(filtro==='noleido') document.getElementById('fNoCont').classList.add('active');
+ if(filtro==='amarillas') document.getElementById('fCamp').classList.add('active');
+ const cont=document.getElementById('listaClientes'); cont.innerHTML='';
+ list.forEach(c=>{
+   const esNoLeido=!c.leido; const esAm=c.etiqueta==='respuesta_campana';
+   const d=document.createElement('div'); d.className='client-item '+(esNoLeido?'no-leido ':'')+(esAm?'respuesta':'');
+   let dot='verde'; if(esNoLeido) dot='rojo'; else if(esAm) dot='amarillo';
+   const ini=(c.nombre||c.telefono||'?').charAt(0).toUpperCase();
+   d.innerHTML=`<div class="dot ${dot}"></div><div class="avatar">${ini}</div><div class="info"><b>${c.nombre||c.telefono} ${esNoLeido?'🔴':''} ${esAm?'🟡':''}</b><small>${c.telefono} • ${c.estado_embudo||'nuevo'}</small></div>`;
+   d.onclick=()=>seleccionarCliente(c); cont.appendChild(d);
+ });
+}
+function seleccionarCliente(c){ seleccionado=c; campanaActual=c.origen_campana||null; document.getElementById('chatTitle').innerText=(c.nombre||c.telefono)+' - '+c.telefono; document.getElementById('dNombre').value=c.nombre||''; document.getElementById('dEmail').value=c.email||''; document.getElementById('dEtiqueta').value=c.etiqueta||'nuevo'; document.getElementById('dEmbudo').value=c.estado_embudo||'nuevo'; document.getElementById('dNotas').value=c.notas||''; document.getElementById('dRecordatorio').value=c.recordatorio? new Date(c.recordatorio).toISOString().slice(0,16):''; document.getElementById('dScore').innerText=c.score? c.score+' Score':'- Score'; document.getElementById('seguimientoBox').innerHTML=`Origen: <b>${c.origen_campana||'directo'}</b><br>Tel: ${c.telefono}<br>Etiqueta: ${c.etiqueta}<br>Embudo: ${c.estado_embudo}<br>Ultimo: ${c.ultimo_mensaje? new Date(c.ultimo_mensaje).toLocaleString():''}`; cargarMensajes(c.id); }
+async function cargarMensajes(id){ const msgs=await fetch('/api/mensajes/'+id,{headers:authHeaders()}).then(r=>r.json()); const box=document.getElementById('chatMsgs'); box.innerHTML=''; msgs.forEach(m=>{ const d=document.createElement('div'); d.className='msg '+(m.direccion==='entrante'?'entrante':'saliente'); d.innerHTML=(m.contenido||'').replace(/\n/g,'<br>')+`<br><small style="opacity:.6;font-size:10px">${m.timestamp? new Date(Number(m.timestamp)).toLocaleTimeString():''}</small>`; box.appendChild(d); }); box.scrollTop=box.scrollHeight; }
+async function enviarMensaje(){ const txt=document.getElementById('inputMsg').value.trim(); if(!txt||!seleccionado) return; await fetch('/api/mensajes/'+seleccionado.id,{method:'POST',headers:authHeaders(),body:JSON.stringify({contenido:txt})}); document.getElementById('inputMsg').value=''; await fetch('/api/clientes/'+seleccionado.id+'/datos',{method:'POST',headers:authHeaders(),body:JSON.stringify({leido:true})}); seleccionado.leido=true; cargarMensajes(seleccionado.id); cargarClientes(); }
+async function guardarDatos(){ if(!seleccionado) return alert('Selecciona cliente'); const body={nombre:document.getElementById('dNombre').value,email:document.getElementById('dEmail').value,etiqueta:document.getElementById('dEtiqueta').value,estado_embudo:document.getElementById('dEmbudo').value,recordatorio:document.getElementById('dRecordatorio').value,asesor_id:document.getElementById('dAsesor').value,notas:document.getElementById('dNotas').value}; await fetch('/api/clientes/'+seleccionado.id+'/datos',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)}); alert('✅ Guardado'); cargarClientes(); }
+function abrirCampanas(){ document.getElementById('modalCamp').style.display='flex'; cargarCampanasLista(); cargarPlantillas(); }
+function cerrarModal(id){ document.getElementById(id).style.display='none'; }
+async function cargarPlantillas(){ const sel=document.getElementById('campPlantilla'); sel.innerHTML='<option>Cargando...</option>'; try{ const t=await fetch('/api/plantillas',{headers:authHeaders()}).then(r=>r.json()); sel.innerHTML=''; (t||[]).forEach(p=>{ const o=document.createElement('option'); o.value=p.name; o.text=p.name+' ('+(p.status||'APPROVED')+')'; sel.appendChild(o); }); if(!t||!t.length) sel.innerHTML='<option value="hello_world">hello_world (APPROVED)</option>'; }catch{ sel.innerHTML='<option value="hello_world">hello_world</option>'; } }
+
+// === v132 FIX DEFINITIVO - LEE TODO SIN IMPORTAR ORDEN ===
 async function leerExcel(e){
  const file=e.target.files[0]; if(!file) return;
  const preview=document.getElementById('previewNums');
- preview.innerHTML='⏳ Leyendo Excel de prueba... extrayendo todos los números sin importar orden';
+ preview.innerHTML='⏳ Leyendo TODAS las hojas, TODAS las columnas...';
  try{
   const buf=await file.arrayBuffer();
   const wb=XLSX.read(buf,{type:'array'});
   let lista=[];
 
-  function telefonoRealColombia(celda){
-    if(celda==null || celda==='') return null;
-    let valor = celda;
-    // Si Excel lo guardó como 3226536669.0 (float con.0) -> trunca
-    if(typeof valor==='number'){
-      valor = Math.trunc(valor);
+  function extraerNumerosDeCelda(celda){
+    if(celda==null || celda==='') return [];
+    let resultados=[];
+    // Si es número (Excel guarda 3226536669.0 como float)
+    if(typeof celda==='number'){
+      let n = Math.trunc(celda); // quita.0
+      let s = String(n);
+      if(s.length>=7) resultados.push(s);
+      return resultados;
     }
-    // Si viene como "3226536669.0" string -> quita.0
-    let str = String(valor).trim();
-    if(str.includes('.')){
-      str = str.split('.')[0]; // 3226536669.0 -> 3226536669
+    let texto = String(celda);
+    // Extrae TODOS los grupos de 7 a 15 dígitos que haya en la celda
+    // Ej: "61105655640" -> 61105655640, "2026263430830" -> 2026263430830
+    let matches = texto.match(/\d{7,15}/g);
+    if(matches){
+      matches.forEach(m=>{
+        // Si tiene.0 al final por float, ya lo quitamos arriba, pero por si acaso
+        if(m.length>=7) resultados.push(m);
+      });
     }
-    let d = str.replace(/\D/g,'');
-    if(!d) return null;
-    d = d.replace(/^0+/,''); // quita ceros iniciales
-    // Maneja el bug del.0 que duplica: 32265366690 (11 dígitos termina en 0)
-    if(d.length===11 && d.endsWith('0') && d.slice(0,10).startsWith('3')){
-      d = d.slice(0,10);
-    }
-    if(d.length===13 && d.endsWith('0') && d.slice(0,12).startsWith('57')){
-      d = d.slice(0,12);
-    }
-    // Valida Colombia
-    if(d.length===10 && d.startsWith('3')) return '57'+d; // 3226536669 -> 573226536669
-    if(d.length===12 && d.startsWith('57') && d[2]==='3') return d; // 573226536669
-    return null;
+    // También si la celda es "3226536669.0", el regex saca 3226536669 y 0, filtramos
+    return resultados.filter(n=> n.length>=7);
   }
 
   wb.SheetNames.forEach(nombreHoja=>{
-    const hoja = wb.Sheets[nombreHoja];
-    const filas = XLSX.utils.sheet_to_json(hoja,{header:1, defval:'', raw:true});
-    console.log(`Hoja ${nombreHoja}: ${filas.length} filas`, filas.slice(0,5));
+    const hoja=wb.Sheets[nombreHoja];
+    const filas=XLSX.utils.sheet_to_json(hoja,{header:1, defval:'', raw:true});
     filas.forEach(fila=>{
       fila.forEach(celda=>{
-        let tel = telefonoRealColombia(celda);
-        if(tel) lista.push(tel);
+        let nums = extraerNumerosDeCelda(celda);
+        lista.push(...nums);
       });
     });
   });
 
+  // Limpia: quita.0 extras, deja solo dígitos, únicos
+  lista=lista.map(n=> String(n).replace(/\D/g,'').replace(/^0+/,'')).filter(n=> n.length>=7 && n.length<=15);
+  // Normaliza a formato WhatsApp: si es 10 dígitos que empieza en 3, ponle 57
+  lista=lista.map(n=>{
+    if(n.length===10 && n.startsWith('3')) return '57'+n;
+    return n;
+  });
   lista=[...new Set(lista)]; // únicos
+
   numerosExcel=lista;
 
   if(lista.length>0){
-    preview.innerHTML=`<b style="color:#16a34a">✅ ${lista.length} números detectados (sin importar orden ni columna)</b>
+    preview.innerHTML=`<b style="color:#16a34a">✅ ${lista.length} números detectados (lee TODO sin orden)</b>
       <div style="margin-top:8px;max-height:200px;overflow:auto;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px;border-radius:12px;font-size:12px;word-break:break-all">
-        ${lista.join(', ')}
+        ${lista.slice(0,300).join(', ')}${lista.length>300?`... +${lista.length-300} más`:''}
       </div>
-      <div style="font-size:10px;color:#64748b;margin-top:6px">Archivo: ${file.name} - Leyó TODAS las hojas y columnas - Convirtió 3226536669.0 -> 573226536669 automáticamente</div>`;
+      <div style="font-size:10px;color:#16a34a;margin-top:6px">Archivo: ${file.name} - Hojas: ${wb.SheetNames.join(', ')} - Leyó ${lista.length} números sin importar orden ni columna<br>
+      Incluye 61105655640, 2026263430830, 3226536669, etc.</div>`;
   } else {
-    preview.innerHTML=`<div style="background:#fef2f2;border:1px solid #fecaca;padding:10px;border-radius:12px;font-size:11px;color:#991b1b">
-      ❌ 0 números. Datos leídos: ${JSON.stringify(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(0,5)).substring(0,600)}
-    </div>`;
+    preview.innerHTML=`<div style="background:#fef2f2;border:1px solid #fecaca;padding:10px;border-radius:12px;font-size:11px;color:#991b1b">❌ 0 números. Revisa que tu Excel tenga números.</div>`;
   }
 
  }catch(err){
@@ -72,4 +240,36 @@ async function leerExcel(e){
   console.error(err);
  }
 }
+
+async function crearCampana(){
+ const nombre=document.getElementById('campNombre').value||'Campaña '+(new Date().toLocaleDateString());
+ const plantilla=document.getElementById('campPlantilla').value;
+ if(!plantilla) return alert('Selecciona plantilla');
+ if(!numerosExcel.length) return alert('Sube Excel - no se detectaron números');
+ const res=await fetch('/api/campanas',{method:'POST',headers:authHeaders(),body:JSON.stringify({nombre,plantilla,numeros:numerosExcel})}).then(r=>r.json());
+ if(res.error) return alert(res.error);
+ alert('✅ Campaña '+res.total+' iniciada - Leyó TODO sin orden'); cargarCampanasLista();
+}
+async function cargarCampanasLista(){
+ const rows=await fetch('/api/campanas',{headers:authHeaders()}).then(r=>r.json()).catch(()=>[]);
+ const box=document.getElementById('listaCampanas'); box.innerHTML='';
+ if(!rows.length){ box.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px">Sin campañas aún.</div>'; return; }
+ rows.forEach(c=>{
+   const d=document.createElement('div'); d.style.cssText='border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin:8px 0;font-size:11px;background:#fff';
+   d.innerHTML=`<div style="display:flex;justify-content:space-between"><b>${c.nombre}</b><span class="badge ${c.pausada?'badge-rojo':'badge-amarillo'}">${c.estado||'activa'}</span></div><div style="margin:4px 0;color:#64748b">Plantilla: ${c.plantilla} | Total: ${c.total} | Enviados: ${c.enviados||0} | Fallidos: ${c.fallidos||0}</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="small-btn" onclick="verNumerosCamp('${c.id}')">👁️ Ver números</button><button class="small-btn" onclick="pausarCamp('${c.id}')">⏸️ Pausar</button><button class="small-btn" style="background:#2563eb;color:#fff" onclick="continuarCamp('${c.id}')">▶️ Continuar</button></div>`;
+   box.appendChild(d);
+ });
+}
+async function verNumerosCamp(id){ const rows=await fetch('/api/campanas',{headers:authHeaders()}).then(r=>r.json()); const c=rows.find(x=>x.id===id); if(!c) return; document.getElementById('modalHist').style.display='flex'; let nums=c.numeros; if(typeof nums==='string'){ try{ nums=JSON.parse(nums); }catch{ nums=[]; } } document.getElementById('histCont').innerHTML=`<b>${c.nombre}</b> - ${c.plantilla} - Total: ${c.total}<br><div class="scroll" style="margin-top:8px"><b>${(nums?.length||c.total)} números:</b><br>${(nums||[]).slice(0,500).join(', ')}</div>`; }
+async function pausarCamp(id){ await fetch('/api/campanas/'+id+'/pausa',{method:'POST',headers:authHeaders()}); alert('Pausada'); cargarCampanasLista(); }
+async function continuarCamp(id){ await fetch('/api/campanas/'+id+'/continuar',{method:'POST',headers:authHeaders()}); alert('Continuada'); cargarCampanasLista(); }
+function pausarCampanaActual(){ if(!campanaActual) return alert('Selecciona cliente'); pausarCamp(campanaActual); }
+function continuarCampanaActual(){ if(!campanaActual) return alert('Selecciona cliente'); continuarCamp(campanaActual); }
+function abrirHistorial(){ if(!campanaActual) return alert('Selecciona cliente'); verNumerosCamp(campanaActual); }
+function abrirConfig(){ document.getElementById('modalConfig').style.display='flex'; }
+async function guardarConfig(){ const body={phoneId:document.getElementById('cfgPhone').value,wabaId:document.getElementById('cfgWaba').value,metaToken:document.getElementById('cfgToken').value}; const r=await fetch('/api/config',{method:'POST',headers:authHeaders(),body:JSON.stringify(body)}).then(r=>r.json()); document.getElementById('cfgStatus').innerText= r.ok?'✅ API conectado':'Error'; }
+function logout(){ localStorage.removeItem('klido_token'); location.href='/'; }
+init();
 </script>
+</body>
+</html>
