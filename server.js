@@ -5,7 +5,9 @@ const {Pool}=pg; const pgPool=new Pool({connectionString:process.env.DATABASE_UR
 const JWT=process.env.JWT_SECRET||'klido-v127-resend-force-2026-3133181851';
 const PHONE_ENV=process.env.PHONE_NUMBER_ID||'1338474282683914'; const WABA_ENV=process.env.WABA_ID||'2317286332424288';
 let TOKEN_ENV=process.env.META_TOKEN||process.env.WHATSAPP_TOKEN||''; if(!TOKEN_ENV){ for(const v of Object.values(process.env)){ if(typeof v==='string'&&v.startsWith('EAAT')&&v.length>80){TOKEN_ENV=v;break;}}}
+const ADMIN_EMAILS = ['admin@klido.com','fermorales20020310@gmail.com','soporte@klidoapp.com.co'];
 const PLANES={basico:{id:'basico',nombre:'BÁSICO',anual:800000,mant:80000,limite:5000,ia:false,llamadas:false,gmail:false,usuarios:3},premium:{id:'premium',nombre:'PREMIUM + IA',anual:1400000,mant:95000,limite:15000,ia:true,llamadas:false,gmail:false,usuarios:10},gold:{id:'gold',nombre:'GOLD TOTAL',anual:2500000,mant:135000,limite:50000,ia:true,llamadas:true,gmail:true,usuarios:999}};
+
 async function initDB(){
 await pgPool.query(`CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT DEFAULT 'basico', plan_activo BOOLEAN DEFAULT true, token TEXT, phone_id TEXT, waba_id TEXT, meta_token TEXT, equipo JSONB DEFAULT '[]', creado BIGINT, mantenimiento BIGINT, anual_vence BIGINT, api_status TEXT DEFAULT 'pendiente', limite_usado INT DEFAULT 0, contrato_firmado BOOLEAN DEFAULT false)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS clientes_klido (id TEXT PRIMARY KEY, agencia_id TEXT, telefono TEXT, nombre TEXT, datos JSONB DEFAULT '{}', recordatorio TIMESTAMP, etiqueta TEXT DEFAULT 'nuevo', estado_embudo TEXT DEFAULT 'nuevo', asesor_id TEXT, ultimo_mensaje TIMESTAMP DEFAULT NOW(), score INT DEFAULT 0, origen_campana TEXT, leido BOOLEAN DEFAULT false, email TEXT, direccion TEXT, notas TEXT)`);
@@ -13,7 +15,6 @@ await pgPool.query(`CREATE TABLE IF NOT EXISTS mensajes_klido (id SERIAL PRIMARY
 await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, plantilla TEXT, total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', pausada BOOLEAN DEFAULT false, historial JSONB DEFAULT '[]', creada BIGINT, terminada BIGINT)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, telefono TEXT, email TEXT, activo BOOLEAN DEFAULT true)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS logs_gmail (id SERIAL PRIMARY KEY, agencia_id TEXT, destinatario TEXT, asunto TEXT, estado TEXT, timestamp BIGINT)`);
-// --- FIX V130: NO BORRA CORREOS - solo crea columnas si faltan (tu error plan_activo) ---
 try{
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS plan_activo BOOLEAN DEFAULT true`);
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'basico'`);
@@ -25,15 +26,31 @@ await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS token TEXT`);
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS phone_id TEXT`);
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS waba_id TEXT`);
 await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS meta_token TEXT`);
+await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS creado BIGINT`);
+await pgPool.query(`ALTER TABLE agencias ADD COLUMN IF NOT EXISTS contrato_firmado BOOLEAN DEFAULT false`);
 }catch(e){ console.log('migracion:', e.message); }
-console.log('✅ KLIDO V130 FINAL PRO - RESEND OK + ANUAL 365d + TRIM 90d - 3133181851');
+console.log('✅ KLIDO V131 SEGURO - RESEND OK + BLOQUEO AUTOMATICO - 3133181851');
 } initDB();
+
+// CRON SEGURO: cada hora bloquea morosos automaticamente
+setInterval(async()=>{
+ try{
+  const ahora = Date.now();
+  const q1 = await pgPool.query(`UPDATE agencias SET plan_activo=false WHERE plan_activo=true AND mantenimiento IS NOT NULL AND mantenimiento < $1 RETURNING id,email`,[ahora]);
+  const q2 = await pgPool.query(`UPDATE agencias SET plan_activo=false WHERE plan_activo=true AND anual_vence IS NOT NULL AND anual_vence < $1 RETURNING id,email`,[ahora]);
+  if(q1.rowCount>0 || q2.rowCount>0) console.log(`🔒 Auto-bloqueo: ${q1.rowCount} por trim + ${q2.rowCount} por anual`);
+ }catch(e){ console.log('cron error', e.message); }
+}, 60*60*1000);
+
 function auth(req,res,next){ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.replace('Bearer ',''),JWT); next(); }catch{ res.status(401).json({error:'Token invalido'}); }}
+function isAdmin(req,res,next){ if(!ADMIN_EMAILS.includes(req.user.email)) return res.status(403).json({error:'Solo admin'}); next(); }
+
 async function checkPlan(req,res,next){
 const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[req.user.agenciaId]); const emp=rows[0]; if(!emp) return res.status(403).json({error:'No existe'});
+// SEGURIDAD: si vencio, bloquea AHORA mismo y no deja pasar
+if(emp.mantenimiento && Date.now()>Number(emp.mantenimiento)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, tipo:'trimestral', error:`MANTENIMIENTO TRIMESTRAL VENCIDO $${PLANES[emp.plan]?.mant||80000} - Paga 3133181851`, wpp:'573133181851'}); }
+if(emp.anual_vence && Date.now()>Number(emp.anual_vence)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, tipo:'anual', error:`PLAN ANUAL VENCIDO $${PLANES[emp.plan]?.anual||800000} - Renueva 3133181851`, wpp:'573133181851'}); }
 if(!emp.plan_activo) return res.status(403).json({bloqueado:true, error:'PLAN BLOQUEADO POR MORA - Contacta 3133181851', wpp:'573133181851', link:`https://wa.me/573133181851?text=Mi%20plan%20${emp.plan}%20vencio%20agencia%20${emp.id}`});
-if(emp.mantenimiento && Date.now()>Number(emp.mantenimiento)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, error:'MANTENIMIENTO TRIMESTRAL VENCIDO $'+PLANES[emp.plan].mant+' - Paga 3133181851', wpp:'573133181851'}); }
-if(emp.anual_vence && Date.now()>Number(emp.anual_vence)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, error:'PLAN ANUAL VENCIDO $'+PLANES[emp.plan].anual+' - Renueva 3133181851', wpp:'573133181851'}); }
 if(emp.limite_usado>=PLANES[emp.plan].limite) return res.status(403).json({error:'LIMITE ALCANZADO'});
 if(req.path.includes('/ia')&&!PLANES[emp.plan].ia) return res.status(403).json({error:'IA solo PREMIUM/GOLD', upgrade:true, wpp:'573133181851'});
 if(req.path.includes('/llamada')&&!PLANES[emp.plan].llamadas) return res.status(403).json({error:'Llamadas solo GOLD'});
@@ -70,7 +87,7 @@ app.get('/api/debug/resend', async(req,res)=>{
     res.json({ok:!test?.error,key,from,to,test});
   }catch(e){ res.json({ok:false,key,from,error:e.message}); }
 });
-app.get('/api/health',(req,res)=>res.json({ok:true,version:'v130-final-pro-anual-trimestral-resend-ok',planes:PLANES,wpp:'573133181851',has_key:!!process.env.RESEND_API_KEY,resend_from:process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>'}));
+app.get('/api/health',(req,res)=>res.json({ok:true,version:'v131-seguro-bloqueo-auto-resend-ok',planes:PLANES,wpp:'573133181851',has_key:!!process.env.RESEND_API_KEY,resend_from:process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>'}));
 app.get('/health',(req,res)=>res.json({ok:true}));
 app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 
@@ -101,9 +118,10 @@ app.post('/api/auth/login',async(req,res)=>{
 try{
 const {email,password}=req.body; const {rows}=await pgPool.query('SELECT * FROM agencias WHERE email=$1',[email]); const emp=rows[0]; if(!emp) return res.status(404).json({error:'No existe'});
 if(!await bcrypt.compare(password,emp.password)) return res.status(401).json({error:'Clave mala'});
+// SEGURIDAD: chequea vencimiento ANTES de dar token
+if(emp.mantenimiento && Date.now()>Number(emp.mantenimiento)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, tipo:'trimestral', error:`MANTENIMIENTO TRIMESTRAL VENCIDO $${PLANES[emp.plan]?.mant} - Paga 3133181851`, wpp:'573133181851'}); }
+if(emp.anual_vence && Date.now()>Number(emp.anual_vence)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, tipo:'anual', error:`PLAN ANUAL VENCIDO $${PLANES[emp.plan]?.anual} - Renueva 3133181851`, wpp:'573133181851'}); }
 if(!emp.plan_activo) return res.status(403).json({bloqueado:true, error:'🚫 PLAN BLOQUEADO POR MORA - '+emp.nombre, wpp:'573133181851'});
-if(emp.mantenimiento && Date.now()>Number(emp.mantenimiento)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, error:'MANTENIMIENTO TRIMESTRAL VENCIDO $'+PLANES[emp.plan].mant, wpp:'573133181851'}); }
-if(emp.anual_vence && Date.now()>Number(emp.anual_vence)){ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[emp.id]); return res.status(403).json({bloqueado:true, error:'PLAN ANUAL VENCIDO $'+PLANES[emp.plan].anual, wpp:'573133181851'}); }
 res.json({ok:true,token:jwt.sign({agenciaId:emp.id,email:emp.email},JWT),agencia:emp});
 }catch(e){res.status(500).json({error:e.message})}
 });
@@ -147,8 +165,8 @@ app.post('/api/clientes/:id/datos',auth,async(req,res)=>{ const {nombre,etiqueta
 app.get('/api/mensajes/:clienteId',auth,async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM mensajes_klido WHERE agencia_id=$1 AND cliente_id=$2 ORDER BY timestamp ASC',[req.user.agenciaId,req.params.clienteId]); res.json(rows); });
 app.post('/api/mensajes/:clienteId',auth,checkPlan,async(req,res)=>{ const {contenido}=req.body; const clienteId=req.params.clienteId; const {rows:cl}=await pgPool.query('SELECT telefono FROM clientes_klido WHERE id=$1',[clienteId]); if(!cl[0]) return res.status(404).json({error:'Cliente no existe'}); const emps=await obtenerEmpresas(); const emp=emps.find(e=>e.id===req.user.agenciaId); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phoneIdEfectivo}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.metaTokenEfectivo}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'text',text:{body:contenido}})}); const j=await r.json(); if(j.error) throw j.error; await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7)',[req.user.agenciaId,clienteId,cl[0].telefono,'text',contenido,Date.now(),'saliente']); await pgPool.query('UPDATE agencias SET limite_usado=limite_usado+1 WHERE id=$1',[req.user.agenciaId]); res.json({ok:true}); }catch(e){res.status(500).json({error:e.message})} });
 app.get('/api/dashboard',auth,async(req,res)=>{ try{ const tot=await pgPool.query('SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1',[req.user.agenciaId]); const ama=await pgPool.query("SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1 AND etiqueta='respuesta_campana'",[req.user.agenciaId]); res.json({total:tot.rows[0].count,amarillas:ama.rows[0].count}); }catch(e){res.status(500).json({error:e.message})} });
-app.get('/api/admin/agencias', auth, async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM agencias ORDER BY creado DESC'); res.json({ok:true,agencias:rows}); });
-app.post('/api/admin/agencias/:id/activar', auth, async(req,res)=>{
+app.get('/api/admin/agencias', auth, isAdmin, async(req,res)=>{ const {rows}=await pgPool.query('SELECT id,nombre,email,plan,plan_activo,mantenimiento,anual_vence,limite_usado,creado FROM agencias ORDER BY creado DESC'); res.json({ok:true,agencias:rows}); });
+app.post('/api/admin/agencias/:id/activar', auth, isAdmin, async(req,res)=>{
   try{
     const {plan, dias, tipo} = req.body;
     const d = Number(dias)||90;
@@ -157,19 +175,20 @@ app.post('/api/admin/agencias/:id/activar', auth, async(req,res)=>{
       const nuevoAnual = Date.now() + 365*24*60*60*1000;
       const nuevoMant = Date.now() + 90*24*60*60*1000;
       await pgPool.query('UPDATE agencias SET plan_activo=true, plan=$1, mantenimiento=$2, anual_vence=$3, limite_usado=0 WHERE id=$4',[p, nuevoMant, nuevoAnual, req.params.id]);
-      res.json({ok:true, mensaje:`ACTIVADA ANUAL ${req.params.id} plan ${p.toUpperCase()} 365d + 90d mant`});
+      res.json({ok:true, mensaje:`ACTIVADA ANUAL ${req.params.id} plan ${p.toUpperCase()} 365d + 90d mant - SEGURO`});
     } else {
+      // SEGURIDAD: solo extiende mantenimiento, NO anual, y NO deja para siempre
       const nuevoMant = Date.now() + d*24*60*60*1000;
       await pgPool.query('UPDATE agencias SET plan_activo=true, plan=$1, mantenimiento=$2, limite_usado=0 WHERE id=$3',[p, nuevoMant, req.params.id]);
-      res.json({ok:true, mensaje:`ACTIVADA TRIMESTRAL ${req.params.id} plan ${p.toUpperCase()} por ${d} días`});
+      res.json({ok:true, mensaje:`ACTIVADA TRIMESTRAL ${req.params.id} plan ${p.toUpperCase()} por ${d} días - vence ${new Date(nuevoMant).toLocaleDateString()}`});
     }
   }catch(e){ res.status(500).json({error:e.message}); }
 });
-app.post('/api/admin/agencias/:id/bloquear', auth, async(req,res)=>{ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[req.params.id]); res.json({ok:true, mensaje:'Bloqueada por mora'}); });
-app.get('/admin-stats', auth, async(req,res)=>{ const {rows} = await pgPool.query('SELECT plan, COUNT(*) as total, SUM(CASE WHEN plan_activo=false THEN 1 ELSE 0 END) as morosas FROM agencias GROUP BY plan'); res.json({ok:true, stats:rows}); });
+app.post('/api/admin/agencias/:id/bloquear', auth, isAdmin, async(req,res)=>{ await pgPool.query('UPDATE agencias SET plan_activo=false WHERE id=$1',[req.params.id]); res.json({ok:true, mensaje:'Bloqueada por mora'}); });
+app.get('/admin-stats', auth, isAdmin, async(req,res)=>{ const {rows} = await pgPool.query('SELECT plan, COUNT(*) as total, SUM(CASE WHEN plan_activo=false THEN 1 ELSE 0 END) as morosas FROM agencias GROUP BY plan'); res.json({ok:true, stats:rows}); });
 app.post('/webhook',async(req,res)=>{ try{ const body=req.body; const m=body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]; const meta=body.entry?.[0]?.changes?.[0]?.value?.metadata; if(!m) return res.sendStatus(200); const tel=m.from; const pid=meta?.phone_number_id; let agId=null; if(pid){ const {rows}=await pgPool.query('SELECT id FROM agencias WHERE phone_id=$1',[pid]); agId=rows[0]?.id; } if(!agId){ const {rows}=await pgPool.query('SELECT id FROM agencias LIMIT 1'); agId=rows[0]?.id; } await pgPool.query(`INSERT INTO clientes_klido (id,agencia_id,telefono,etiqueta,estado_embudo,score,ultimo_mensaje) VALUES ($1,$2,$3,$4,$5,$6,NOW()) ON CONFLICT (id) DO UPDATE SET etiqueta=$4, ultimo_mensaje=NOW(), leido=false`,[`cli_${tel}`,agId,tel,'respuesta_campana','contactado',70]); await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7)',[agId,`cli_${tel}`,tel,m.type||'text',m.text?.body||'media',Date.now(),'entrante']); }catch{} res.sendStatus(200); });
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']==='klido_verify') res.send(req.query['hub.challenge']); else res.sendStatus(403); });
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
 app.get('/crm.html',(req,res)=>res.sendFile(path.join(__dirname,'public','crm.html')));
 const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`🚀 KLIDO V130 FINAL PRO - RESEND OK - ANUAL+TRIM - ${PORT}`));
+app.listen(PORT,()=>console.log(`🚀 KLIDO V131 SEGURO - BLOQUEO AUTO - RESEND OK - ${PORT}`));
