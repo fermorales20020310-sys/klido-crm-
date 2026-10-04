@@ -1,15 +1,18 @@
 {
-  "name": "klido-v151-completo",
-  "version": "151.0.0",
+  "name": "klido-v139",
+  "version": "1.39.0",
+  "type": "module",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
     "pg": "^8.11.3",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
     "xlsx": "^0.18.5",
-    "socket.io": "^4.7.4"
+    "socket.io": "^4.7.2"
   }
 }
