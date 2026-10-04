@@ -1,4 +1,4 @@
-// KLIDO v140 FULL FIX ENVIO - TU SERVER + FIX VENTANA 24H - LOGIN INTACTO
+// KLIDO v143 TU V140 + FIX media_id - SIN DAÑAR NADA
 import express from 'express'; import cors from 'cors'; import pg from 'pg'; import jwt from 'jsonwebtoken'; import bcrypt from 'bcryptjs'; import path from 'path'; import { fileURLToPath } from 'url'; import * as XLSX from 'xlsx'; import http from 'http'; import { Server } from 'socket.io';
 const __filename=fileURLToPath(import.meta.url); const __dirname=path.dirname(__filename);
 const app=express(); const server=http.createServer(app); const io=new Server(server,{cors:{origin:"*", methods:["GET","POST"]}});
@@ -15,7 +15,12 @@ await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY K
 await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_gmail (id TEXT PRIMARY KEY, agencia_id TEXT, asunto TEXT, cuerpo TEXT, total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', creada BIGINT)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, telefono TEXT, email TEXT, activo BOOLEAN DEFAULT true, rol TEXT DEFAULT 'worker', password TEXT)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS soporte_klido (id SERIAL PRIMARY KEY, agencia_id TEXT, mensaje TEXT, fecha BIGINT)`);
-console.log('✅ V140 DB OK - Webhook klido123 - Envio fix 24h');
+// --- FIX UNICO QUE FALTABA: tu tabla vieja no tenia media_id ---
+await pgPool.query(`ALTER TABLE mensajes_klido ADD COLUMN IF NOT EXISTS media_id TEXT`);
+await pgPool.query(`ALTER TABLE mensajes_klido ADD COLUMN IF NOT EXISTS mime TEXT`);
+await pgPool.query(`ALTER TABLE mensajes_klido ADD COLUMN IF NOT EXISTS url TEXT`);
+await pgPool.query(`ALTER TABLE mensajes_klido ADD COLUMN IF NOT EXISTS direccion TEXT`);
+console.log('✅ V143 DB OK + migracion media_id - Webhook klido123 - Envio fix 24h');
 } initDB();
 
 function auth(req,res,next){ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.replace('Bearer ',''),JWT); next(); }catch{ res.status(401).json({error:'Token invalido'}); }}
@@ -54,13 +59,9 @@ app.post('/api/mensajes/:clienteId',auth,async(req,res)=>{
     if(!cl[0]) return res.status(404).json({error:'Cliente no encontrado'});
     const emp=await getEmp(req.user.agenciaId);
     console.log(`📤 Enviando a ${cl[0].telefono} desde ${emp.phone} agencia ${emp.id}`);
-
-    // Intento 1: texto normal
     let resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'text',text:{body:contenido}})});
     let j=await resp.json();
     console.log('📤 Meta texto:', JSON.stringify(j).slice(0,800));
-
-    // Si falla por ventana 24h -> plantilla
     if(j.error){
       const msgErr=(j.error.message||'').toLowerCase();
       const isWindow = j.error.code===131047 || j.error.code===470 || msgErr.includes('24') || msgErr.includes('window') || msgErr.includes('outside');
@@ -81,7 +82,6 @@ app.post('/api/mensajes/:clienteId',auth,async(req,res)=>{
         return res.status(400).json({error:j.error.message, detalle:j.error, tip:'Si es fuera de 24h, usa Campaña con plantilla'});
       }
     }
-
     await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7)',[req.user.agenciaId,req.params.clienteId,cl[0].telefono,'text',contenido,Date.now(),'saliente']);
     await pgPool.query('UPDATE clientes_klido SET ultimo_mensaje=NOW(), no_leido=0 WHERE id=$1',[req.params.clienteId]);
     io.to(`agencia_${req.user.agenciaId}`).emit('new_message',{agencia_id:req.user.agenciaId}); io.emit('new_message',{agencia_id:req.user.agenciaId});
@@ -143,7 +143,7 @@ app.post('/webhook',async(req,res)=>{
   }catch(e){ console.log('❌ webhook error',e.message); }
 });
 app.get('/api/media/:mediaId',auth,async(req,res)=>{ const emp=await getEmp(req.user.agenciaId); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${req.params.mediaId}?access_token=${emp.token}`); const j=await r.json(); if(!j.url) return res.status(404).json({error:'No url media'}); const m=await fetch(j.url,{headers:{Authorization:`Bearer ${emp.token}`}}); res.set('Content-Type', m.headers.get('content-type')||'application/octet-stream'); res.send(Buffer.from(await m.arrayBuffer())); }catch(e){ res.status(500).json({error:e.message}); }});
-app.get('/api/health',(req,res)=>res.json({ok:true, version:'v140-envio-fix-24h', webhook:'klido123', gerente:GERENTE_LINK})); app.get('/health',(req,res)=>res.json({ok:true}));
+app.get('/api/health',(req,res)=>res.json({ok:true, version:'v143-tu-v140-fix-media', webhook:'klido123', gerente:GERENTE_LINK})); app.get('/health',(req,res)=>res.json({ok:true}));
 app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 io.on('connection',s=>{ s.on('join_agencia',id=>{ s.join(`agencia_${id}`); }); });
-const PORT=process.env.PORT||3000; server.listen(PORT,()=>console.log(`🚀 V140 ENVIO FIX 24H - PORT ${PORT}`));
+const PORT=process.env.PORT||3000; server.listen(PORT,()=>console.log(`🚀 V143 TU V140 + FIX media_id - PORT ${PORT}`));
