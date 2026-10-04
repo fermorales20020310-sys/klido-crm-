@@ -1,6 +1,6 @@
 {
-  "name": "klido-crm-v165",
-  "version": "1.5.19",
+  "name": "klido-crm-v166",
+  "version": "1.5.20",
   "type": "module",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
