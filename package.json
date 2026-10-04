@@ -1,9 +1,11 @@
 {
-  "name": "klido-server",
-  "version": "1.5.12",
+  "name": "klido-crm-v161",
+  "version": "1.5.14",
   "type": "module",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
@@ -13,5 +15,7 @@
     "xlsx": "^0.18.5",
     "socket.io": "^4.7.4"
   },
-  "engines": { "node": ">=18.0.0" }
+  "engines": {
+    "node": "20.x"
+  }
 }
