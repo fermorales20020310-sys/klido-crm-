@@ -1,189 +1,145 @@
-// Node.js  (usa axios, pg o tu ORM preferido, Bottleneck para rate-limiting)
-// npm install axios pg bottleneck retry
+// KLIDO FINAL - EXCEL AUTO + PLANTILLA APROBADA + SIN 132012
+import express from 'express'; import cors from 'cors'; import pg from 'pg'; import jwt from 'jsonwebtoken'; import bcrypt from 'bcryptjs'; import path from 'path'; import { fileURLToPath } from 'url'; import multer from 'multer'; import xlsx from 'xlsx'; import fs from 'fs'; import Bottleneck from 'bottleneck';
+const __filename=fileURLToPath(import.meta.url); const __dirname=path.dirname(__filename);
+const app=express(); app.use(cors({origin:"*"})); app.use(express.json({limit:'100mb'})); app.use(express.static(path.join(__dirname,'public')));
 
-const axios = require('axios');
-const { Client } = require('pg'); // o tu ORM
-const Bottleneck = require('bottleneck');
-const retry = require('retry');
+const uploadDir=path.join(__dirname,'public','uploads'); if(!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir,{recursive:true});
+const storage=multer.diskStorage({destination:uploadDir, filename:(req,file,cb)=>cb(null, Date.now()+'-'+file.originalname)}); const upload=multer({storage});
+const uploadMem=multer({storage:multer.memoryStorage()});
 
-const API_VERSION = process.env.META_API_VERSION || 'v16.0';
-const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
-const AD_ACCOUNT_ID = process.env.AD_ACCOUNT_ID; // act_<num>
-const DB_URL = process.env.DATABASE_URL;
-const CONCURRENCY = parseInt(process.env.CONCURRENCY || '4', 10);
-const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || '20', 10);
+const {Pool}=pg; const pool=new Pool({connectionString:process.env.DATABASE_URL, ssl:{rejectUnauthorized:false}});
+const JWT=process.env.JWT_SECRET||'klido-final'; const META_TOKEN_GLOBAL=process.env.META_TOKEN||process.env.WHATSAPP_TOKEN||'';
+const limiter=new Bottleneck({maxConcurrent:1, minTime:3500}); // Meta pide 3.5 seg
 
-if (!ACCESS_TOKEN || !AD_ACCOUNT_ID || !DB_URL) {
-  console.error('Faltan variables de entorno: META_ACCESS_TOKEN, AD_ACCOUNT_ID, DATABASE_URL');
-  process.exit(1);
+async function initDB(){
+ await pool.query(`CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, phone_id TEXT, waba_id TEXT, meta_token TEXT, creado BIGINT)`);
+ await pool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY KEY, agencia_id TEXT, plantilla TEXT, total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', creada BIGINT, numeros JSONB, bloque_actual INT DEFAULT 0, imagen_url TEXT, variables JSONB)`);
+ console.log('✅ KLIDO FINAL DB OK');
+} initDB();
+
+function auth(req,res,next){const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{req.user=jwt.verify(h.replace('Bearer ',''),JWT); next();}catch{res.status(401).json({error:'Token invalido'});}}
+async function getEmp(id){if(!id) return {phone:process.env.PHONE_NUMBER_ID, waba:process.env.WABA_ID, token:META_TOKEN_GLOBAL}; const {rows}=await pool.query('SELECT * FROM agencias WHERE id=$1',[id]); const r=rows[0]; return {phone:r?.phone_id||process.env.PHONE_NUMBER_ID, waba:r?.waba_id||process.env.WABA_ID, token:r?.meta_token||META_TOKEN_GLOBAL};}
+
+// DETECTOR DE NUMEROS INTELIGENTE - NO IMPORTA COLUMNA NI ORDEN
+function extraeNumerosDeTexto(texto){
+  let nums=[];
+  String(texto).split(/[\s,;|\n]+/).forEach(p=>{
+    let d=p.replace(/\D/g,'');
+    if(d.length===10 && d.startsWith('3')) d='57'+d;
+    if(d.length===12 && d.startsWith('57') && d[2]==='3') nums.push(d);
+    if(d.length===11 && d.startsWith('573')) nums.push('57'+d.slice(1)); // por si viene sin un digito
+  });
+  return nums;
 }
-
-// Pool/Client DB (ejemplo con pg)
-const db = new Client({ connectionString: DB_URL });
-db.connect();
-
-// Rate limiter para no superar límites de la API
-const limiter = new Bottleneck({
-  maxConcurrent: CONCURRENCY,
-  minTime: 200 // intervalo mínimo entre requests (ajusta según tus límites)
-});
-
-async function requestWithRetry(method, url, params = {}, data = null) {
-  return new Promise((resolve, reject) => {
-    const operation = retry.operation({
-      retries: 3,
-      factor: 2,
-      minTimeout: 1000,
-      maxTimeout: 60000
-    });
-    operation.attempt(async (current) => {
-      try {
-        const config = { params: { access_token: ACCESS_TOKEN, ...params } };
-        let res;
-        if (method === 'get') res = await limiter.schedule(() => axios.get(url, config));
-        else if (method === 'post') res = await limiter.schedule(() => axios.post(url, data, { params: { access_token: ACCESS_TOKEN, ...params } }));
-        else if (method === 'delete') res = await limiter.schedule(() => axios.delete(url, config));
-        else res = await limiter.schedule(() => axios({ method, url, data, params: { access_token: ACCESS_TOKEN, ...params } }));
-        resolve(res.data);
-      } catch (err) {
-        const shouldRetry = err.response && [429, 500, 502, 503, 504].includes(err.response.status);
-        if (shouldRetry && operation.retry(err)) {
-          console.warn(`Reintentando ${method.toUpperCase()} ${url} (intento ${current})`);
-          return;
-        }
-        reject(err);
-      }
+function numerosDeWorkbook(workbook){
+  let todos=[];
+  workbook.SheetNames.forEach(sheetName=>{
+    const sheet=workbook.Sheets[sheetName];
+    const json=xlsx.utils.sheet_to_json(sheet, {header:1, defval:''});
+    json.forEach(row=>{
+      row.forEach(cell=>{
+        todos.push(...extraeNumerosDeTexto(cell));
+      });
     });
   });
+  // Unicos y validos
+  let unicos=[...new Set(todos)].filter(n=>/^57[3][0-9]{9}$/.test(n));
+  return unicos;
 }
 
-// 1) Obtener campañas locales pendientes de enviar masivo
-async function getLocalPendingCampaigns(limit = BATCH_SIZE) {
-  // Ajusta según tu esquema. Supuesto: tabla campaigns con columnas:
-  // id, name, meta_campaign_id, approved_by_meta (bool), mass_sent (bool)
-  const q = `
-    SELECT id, name, meta_campaign_id
-    FROM campaigns
-    WHERE approved_by_meta = true
-      AND mass_sent = false
-      AND meta_campaign_id IS NOT NULL
-    LIMIT $1
-  `;
-  const res = await db.query(q, [limit]);
-  return res.rows;
-}
+// 1. SUBIR EXCEL Y DETECTAR NUMEROS AUTOMATICAMENTE
+app.post('/api/upload-excel', auth, uploadMem.single('file'), (req,res)=>{
+  try{
+    if(!req.file) return res.status(400).json({error:'No file'});
+    const wb=xlsx.read(req.file.buffer, {type:'buffer'});
+    const numeros=numerosDeWorkbook(wb);
+    if(!numeros.length) return res.status(400).json({error:'No encontre numeros en el Excel. Asegurate que tenga numeros 3xx...'});
+    res.json({ok:true, total:numeros.length, numeros});
+  }catch(e){ res.status(500).json({error:e.message}); }
+});
 
-// 2) Comprobar estado en Meta (campaign)
-async function getCampaignMetaStatus(metaCampaignId) {
-  const url = `https://graph.facebook.com/${API_VERSION}/${metaCampaignId}`;
-  const params = { fields: 'id,effective_status,ad_review_feedback' };
-  return requestWithRetry('get', url, params);
-}
+// 2. SUBIR IMAGEN PARA PLANTILLAS CON FOTO
+app.post('/api/upload-imagen', auth, upload.single('file'), (req,res)=>{
+  const url=`https://app.klidoapp.com.co/uploads/${req.file.filename}`;
+  res.json({ok:true, url});
+});
 
-// 3) Listar adsets de la campaña
-async function listAdSetsForCampaign(metaCampaignId) {
-  const url = `https://graph.facebook.com/${API_VERSION}/${metaCampaignId}/adsets`;
-  const params = { fields: 'id,effective_status' , limit: 100 };
-  return requestWithRetry('get', url, params)
-    .then(r => r.data || [])
-    .catch(err => { console.warn('No adsets o error:', err.message); return []; });
-}
+// 3. SOLO PLANTILLAS APROBADAS - NO IMPORTA SI TIENEN FOTO O NO
+app.get('/api/plantillas', auth, async(req,res)=>{
+  const emp=await getEmp(req.user.agenciaId);
+  try{
+    const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=200`);
+    const j=await r.json();
+    const aprobadas=(j.data||[]).filter(t=>t.status==='APPROVED').map(t=>{
+      const header=t.components?.find(c=>c.type==='HEADER');
+      const body=t.components?.find(c=>c.type==='BODY');
+      return {
+        name:t.name,
+        language:t.language,
+        necesitaImagen: header?.format==='IMAGE',
+        necesitaVideo: header?.format==='VIDEO',
+        necesitaDocumento: header?.format==='DOCUMENT',
+        variables: (body?.text?.match(/{{\d+}}/g)||[]).length,
+        componentes:t.components
+      };
+    });
+    res.json(aprobadas);
+  }catch(e){ res.status(500).json({error:e.message}); }
+});
 
-// 4) Listar ads de un adset
-async function listAdsForAdSet(adsetId) {
-  const url = `https://graph.facebook.com/${API_VERSION}/${adsetId}/ads`;
-  const params = { fields: 'id,effective_status' , limit: 100 };
-  return requestWithRetry('get', url, params)
-    .then(r => r.data || [])
-    .catch(err => { console.warn('No ads o error:', err.message); return []; });
-}
+// 4. CREAR CAMPAÑA - ACEPTA CUALQUIER PLANTILLA APROBADA
+app.post('/api/campanas', auth, async(req,res)=>{
+  const {plantilla, numeros, imagen_url, variables} = req.body;
+  const validos=[...new Set((numeros||[]).map(n=>String(n).replace(/\D/g,'')).map(d=>d.length===10?'57'+d:d).filter(n=>/^57[3][0-9]{9}$/.test(n)))];
+  if(!validos.length) return res.status(400).json({error:'Sin numeros validos'});
+  const id='camp_'+Date.now();
+  await pool.query('INSERT INTO campanas_klido (id,agencia_id,plantilla,total,creada,numeros,bloque_actual,estado,imagen_url,variables) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[id,req.user.agenciaId,plantilla,validos.length,Date.now(),JSON.stringify(validos),0,'activa',imagen_url||null,JSON.stringify(variables||[])]);
+  procesa(id);
+  res.json({ok:true, id, total:validos.length});
+});
 
-// 5) Activar un objeto (campaign/adset/ad)
-async function activateObject(objectId) {
-  const url = `https://graph.facebook.com/${API_VERSION}/${objectId}`;
-  const params = { status: 'ACTIVE' };
-  return requestWithRetry('post', url, params);
-}
+// 5. PROCESADOR QUE NUNCA DA 132012
+async function procesa(id){
+  const {rows}=await pool.query('SELECT * FROM campanas_klido WHERE id=$1',[id]); if(!rows[0]) return;
+  const c=rows[0]; let nums=c.numeros; if(typeof nums==='string') nums=JSON.parse(nums);
+  const emp=await getEmp(c.agencia_id);
+  
+  // Averiguar que necesita la plantilla
+  let necesitaImagen=false; let lang='es_CO';
+  try{
+    const rT=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=200`);
+    const jT=await rT.json(); const info=(jT.data||[]).find(t=>t.name===c.plantilla);
+    if(info){ necesitaImagen=info.components?.some(x=>x.type==='HEADER'&&x.format==='IMAGE'); lang=info.language||'es_CO'; }
+  }catch{}
 
-// 6) Marcar en BD resultado
-async function markCampaignMassSent(localId, metaId, ok, info = null) {
-  const q = `
-    UPDATE campaigns
-    SET mass_sent = $1, mass_sent_at = NOW(), last_meta_info = $2
-    WHERE id = $3
-  `;
-  await db.query(q, [ok, info ? JSON.stringify(info) : null, localId]);
-}
+  let vars=c.variables; if(typeof vars==='string') try{vars=JSON.parse(vars)}catch{vars=[]}
 
-// Flujo para procesar una campaña local
-async function processCampaign(localCampaign) {
-  const { id: localId, name, meta_campaign_id: metaId } = localCampaign;
-  try {
-    const metaStatus = await getCampaignMetaStatus(metaId);
-    const effStatus = metaStatus.effective_status;
-    const review = metaStatus.ad_review_feedback || null;
-
-    // Si Meta reporta rechazo explícito, guardamos feedback y no activamos.
-    if (review && Object.keys(review).length) {
-      await markCampaignMassSent(localId, metaId, false, { reason: 'rejected', review });
-      console.log(`Campaña ${localId} rechazada en Meta:`, review);
-      return { localId, metaId, ok: false, reason: 'rejected', review };
-    }
-
-    // Consideraciones: en distintas versiones effective_status puede ser array o string.
-    const isApproved = Array.isArray(effStatus) ? effStatus.includes('ACTIVE') || effStatus.includes('APPROVED') : effStatus === 'ACTIVE' || effStatus === 'APPROVED';
-
-    if (!isApproved) {
-      // Si no está aprobada, no forzamos activación: guardamos estado y salimos.
-      await markCampaignMassSent(localId, metaId, false, { reason: 'not_approved', effective_status: effStatus });
-      console.log(`Campaña ${localId} no está aprobada en Meta (status=${effStatus}).`);
-      return { localId, metaId, ok: false, reason: 'not_approved', effective_status: effStatus };
-    }
-
-    // Si está aprobada: activar campaign -> adsets -> ads (por si alguno quedó PAUSED)
-    await activateObject(metaId);
-    const adsets = await listAdSetsForCampaign(metaId);
-    for (const adset of adsets) {
-      await activateObject(adset.id);
-      const ads = await listAdsForAdSet(adset.id);
-      for (const ad of ads) {
-        await activateObject(ad.id);
+  for(let i=c.bloque_actual||0;i<nums.length;i++){
+    const sendFn=async()=>{
+      let components=[];
+      if(necesitaImagen && c.imagen_url){
+        components.push({type:'header', parameters:[{type:'image', image:{link:c.imagen_url}}]});
       }
-    }
-
-    // Marcar como enviado masivo
-    await markCampaignMassSent(localId, metaId, true, { effective_status: effStatus });
-    console.log(`Campaña local ${localId} (meta ${metaId}) activada correctamente.`);
-    return { localId, metaId, ok: true };
-  } catch (err) {
-    console.error('Error procesando campaña', localId, err.response?.data || err.message);
-    await markCampaignMassSent(localId, metaId, false, { reason: 'error', error: err.response?.data || err.message });
-    return { localId, metaId, ok: false, reason: 'error', error: err.response?.data || err.message };
+      if(vars && vars.length>0){
+        components.push({type:'body', parameters: vars.map(v=>({type:'text', text:String(v||'').slice(0,1024)}))});
+      }
+      const payload={messaging_product:'whatsapp', to:nums[i], type:'template', template:{name:c.plantilla, language:{code:lang}, ...(components.length?{components}:{})}};
+      const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify(payload)});
+      const j=await r.json();
+      console.log(`📨 ${c.plantilla} -> ${nums[i]} ->`, j.messages?'OK '+j.messages[0].id:JSON.stringify(j));
+      return j;
+    };
+    try{
+      const j=await limiter.schedule(()=>sendFn());
+      if(j.messages?.[0]?.id) await pool.query('UPDATE campanas_klido SET enviados=enviados+1,bloque_actual=$1 WHERE id=$2',[i+1,id]);
+      else await pool.query('UPDATE campanas_klido SET fallidos=fallidos+1,bloque_actual=$1 WHERE id=$2',[i+1,id]);
+    }catch(e){ await pool.query('UPDATE campanas_klido SET fallidos=fallidos+1,bloque_actual=$1 WHERE id=$2',[i+1,id]); }
   }
+  await pool.query('UPDATE campanas_klido SET estado=$1 WHERE id=$2',['terminada',id]);
+  console.log(`🏁 ${id} terminada`);
 }
 
-// Orquestador por lotes
-async function processBatch() {
-  const candidates = await getLocalPendingCampaigns(BATCH_SIZE);
-  if (!candidates.length) {
-    console.log('No hay campañas pendientes.');
-    return;
-  }
-  // Procesar en paralelo limitado por Bottleneck (internamente)
-  const promises = candidates.map(c => processCampaign(c));
-  const results = await Promise.all(promises);
-  return results;
-}
-
-// Ejecución principal
-(async () => {
-  try {
-    console.log('Iniciando job: enviar campañas aprobadas en Meta');
-    const res = await processBatch();
-    console.log('Resultado batch:', res);
-  } catch (err) {
-    console.error('Fallo en job principal', err);
-  } finally {
-    await db.end();
-  }
-})();
+app.get('/api/campanas', auth, async(req,res)=>{const {rows}=await pool.query('SELECT * FROM campanas_klido WHERE agencia_id=$1 ORDER BY creada DESC',[req.user.agenciaId]); res.json(rows);});
+app.get('/health',(req,res)=>res.json({version:'klido-final-excel-auto', status:'ok'}));
+app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+const PORT=process.env.PORT||3000; app.listen(PORT,()=>console.log(`🚀 KLIDO FINAL PORT ${PORT}`));
