@@ -1,4 +1,4 @@
-// KLIDO v157 - PLANTILLA APROBADA - FIX META GRAPH API & COMPONENTS & FLEXIBLE PHONE NORMALIZATION
+// KLIDO v157 - PLANTILLA APROBADA - FIX META GRAPH API & JSON ERROR HANDLING
 import express from 'express'; 
 import cors from 'cors'; 
 import pg from 'pg'; 
@@ -19,7 +19,7 @@ const io = new Server(server, { cors: { origin: "*", methods: ["GET", "POST"] } 
 
 app.use(cors({ origin: "*" })); 
 app.use(express.json({ limit: '100mb' })); 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 const { Pool } = pg; 
 const pgPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
@@ -36,14 +36,18 @@ if (!TOKEN_ENV) {
 }
 
 async function initDB() {
-  await pgPool.query(`CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT DEFAULT 'basico', plan_activo BOOLEAN DEFAULT true, phone_id TEXT, waba_id TEXT, meta_token TEXT, creado BIGINT, limite_usado INT DEFAULT 0, mantenimiento BIGINT, anual_vence BIGINT)`);
-  await pgPool.query(`CREATE TABLE IF NOT EXISTS clientes_klido (id TEXT PRIMARY KEY, agencia_id TEXT, telefono TEXT, nombre TEXT, email TEXT, datos JSONB DEFAULT '{}', recordatorio TIMESTAMP, etiqueta TEXT DEFAULT 'Nuevo', estado_embudo TEXT DEFAULT 'Nuevo', asesor_id TEXT, ultimo_mensaje TIMESTAMP DEFAULT NOW(), origen TEXT DEFAULT 'manual', no_leido INT DEFAULT 0, notas TEXT)`);
-  await pgPool.query(`CREATE TABLE IF NOT EXISTS mensajes_klido (id SERIAL PRIMARY KEY, agencia_id TEXT, cliente_id TEXT, telefono TEXT, tipo TEXT, contenido TEXT, url TEXT, timestamp BIGINT, direccion TEXT, mime TEXT, media_id TEXT)`);
-  await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, plantilla TEXT, tipo TEXT DEFAULT 'whatsapp', total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', pausada BOOLEAN DEFAULT false, historial JSONB DEFAULT '[]', creada BIGINT, terminada BIGINT, numeros JSONB DEFAULT '[]', bloque_actual INT DEFAULT 0, programada BIGINT)`);
-  await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_gmail (id TEXT PRIMARY KEY, agencia_id TEXT, asunto TEXT, cuerpo TEXT, total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', creada BIGINT)`);
-  await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, telefono TEXT, email TEXT, activo BOOLEAN DEFAULT true, rol TEXT DEFAULT 'worker', password TEXT)`);
-  await pgPool.query(`CREATE TABLE IF NOT EXISTS soporte_klido (id SERIAL PRIMARY KEY, agencia_id TEXT, mensaje TEXT, fecha BIGINT)`);
-  console.log('✅ V157 DB OK');
+  try {
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT DEFAULT 'basico', plan_activo BOOLEAN DEFAULT true, phone_id TEXT, waba_id TEXT, meta_token TEXT, creado BIGINT, limite_usado INT DEFAULT 0, mantenimiento BIGINT, anual_vence BIGINT)`);
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS clientes_klido (id TEXT PRIMARY KEY, agencia_id TEXT, telefono TEXT, nombre TEXT, email TEXT, datos JSONB DEFAULT '{}', recordatorio TIMESTAMP, etiqueta TEXT DEFAULT 'Nuevo', estado_embudo TEXT DEFAULT 'Nuevo', asesor_id TEXT, ultimo_mensaje TIMESTAMP DEFAULT NOW(), origen TEXT DEFAULT 'manual', no_leido INT DEFAULT 0, notas TEXT)`);
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS mensajes_klido (id SERIAL PRIMARY KEY, agencia_id TEXT, cliente_id TEXT, telefono TEXT, tipo TEXT, contenido TEXT, url TEXT, timestamp BIGINT, direccion TEXT, mime TEXT, media_id TEXT)`);
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, plantilla TEXT, tipo TEXT DEFAULT 'whatsapp', total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', pausada BOOLEAN DEFAULT false, historial JSONB DEFAULT '[]', creada BIGINT, terminada BIGINT, numeros JSONB DEFAULT '[]', bloque_actual INT DEFAULT 0, programada BIGINT)`);
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_gmail (id TEXT PRIMARY KEY, agencia_id TEXT, asunto TEXT, cuerpo TEXT, total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', creada BIGINT)`);
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, telefono TEXT, email TEXT, activo BOOLEAN DEFAULT true, rol TEXT DEFAULT 'worker', password TEXT)`);
+    await pgPool.query(`CREATE TABLE IF NOT EXISTS soporte_klido (id SERIAL PRIMARY KEY, agencia_id TEXT, mensaje TEXT, fecha BIGINT)`);
+    console.log('✅ V157 DB OK');
+  } catch (e) {
+    console.error('❌ Error iniciando DB:', e.message);
+  }
 } 
 initDB();
 
@@ -148,7 +152,6 @@ async function procesaWPP(id) {
       vars = h?.[0]?.variables || []; 
     } catch {}
 
-    // FIX META: Incluye parameter_name exigido por la API de Meta Graph
     let components = [];
     if (vars.length > 0 && vars[0]) {
       components.push({
@@ -181,8 +184,6 @@ async function procesaWPP(id) {
         } 
       };
 
-      console.log(`📤 V157 Payload ${nums[i]}:`, JSON.stringify(payload));
-
       try {
         const r = await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`, {
           method: 'POST',
@@ -194,8 +195,6 @@ async function procesaWPP(id) {
         });
 
         const j = await r.json(); 
-        console.log(`📨 V157 resp ${nums[i]}:`, JSON.stringify(j));
-
         if (j.error) throw j.error;
 
         await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1, bloque_actual=$1 WHERE id=$2', [i + 1, id]);
@@ -213,17 +212,19 @@ async function procesaWPP(id) {
   }
 }
 
+// --- ENDPOINTS API ---
+
 app.post('/api/auth/login', async (req, res) => { 
   try { 
     const { email, password } = req.body; 
     const { rows } = await pgPool.query('SELECT * FROM agencias WHERE email=$1', [email]); 
     if (!rows[0]) { 
       const { rows: as } = await pgPool.query('SELECT * FROM asesores WHERE email=$1', [email]); 
-      if (!as[0]) return res.status(404).json({ error: 'No existe' }); 
-      if (!await bcrypt.compare(password, as[0].password || '')) return res.status(401).json({ error: 'Clave mala' }); 
+      if (!as[0]) return res.status(404).json({ error: 'Usuario no encontrado' }); 
+      if (!await bcrypt.compare(password, as[0].password || '')) return res.status(401).json({ error: 'Contraseña incorrecta' }); 
       return res.json({ ok: true, token: jwt.sign({ agenciaId: as[0].agencia_id, asesorId: as[0].id, rol: 'worker' }, JWT), rol: 'worker' }); 
     } 
-    if (!await bcrypt.compare(password, rows[0].password)) return res.status(401).json({ error: 'Clave mala' }); 
+    if (!await bcrypt.compare(password, rows[0].password)) return res.status(401).json({ error: 'Contraseña incorrecta' }); 
     res.json({ ok: true, token: jwt.sign({ agenciaId: rows[0].id, rol: 'admin' }, JWT), rol: 'admin' }); 
   } catch (e) { 
     res.status(500).json({ error: e.message }); 
@@ -231,18 +232,26 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/config', auth, async (req, res) => { 
-  const emp = await getEmp(req.user.agenciaId); 
-  res.json({ phoneId: emp.phone, wabaId: emp.waba, tieneToken: emp.token.length > 50, plan: emp.plan }); 
+  try {
+    const emp = await getEmp(req.user.agenciaId); 
+    res.json({ phoneId: emp.phone, wabaId: emp.waba, tieneToken: emp.token.length > 50, plan: emp.plan }); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post('/api/config', auth, async (req, res) => { 
-  await pgPool.query('UPDATE agencias SET phone_id=$1,waba_id=$2,meta_token=$3 WHERE id=$4', [req.body.phoneId, req.body.wabaId, req.body.metaToken, req.user.agenciaId]); 
-  res.json({ ok: true }); 
+  try {
+    await pgPool.query('UPDATE agencias SET phone_id=$1,waba_id=$2,meta_token=$3 WHERE id=$4', [req.body.phoneId, req.body.wabaId, req.body.metaToken, req.user.agenciaId]); 
+    res.json({ ok: true }); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/api/plantillas', auth, async (req, res) => { 
-  const emp = await getEmp(req.user.agenciaId); 
   try { 
+    const emp = await getEmp(req.user.agenciaId); 
     const r = await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=250`); 
     const j = await r.json(); 
     res.json((j.data || []).filter(t => t.status === 'APPROVED')); 
@@ -252,13 +261,21 @@ app.get('/api/plantillas', auth, async (req, res) => {
 });
 
 app.get('/api/clientes', auth, async (req, res) => { 
-  const { rows } = await pgPool.query('SELECT * FROM clientes_klido WHERE agencia_id=$1 ORDER BY ultimo_mensaje DESC LIMIT 300', [req.user.agenciaId]); 
-  res.json(rows); 
+  try {
+    const { rows } = await pgPool.query('SELECT * FROM clientes_klido WHERE agencia_id=$1 ORDER BY ultimo_mensaje DESC LIMIT 300', [req.user.agenciaId]); 
+    res.json(rows); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/api/mensajes/:clienteId', auth, async (req, res) => { 
-  const { rows } = await pgPool.query('SELECT * FROM mensajes_klido WHERE cliente_id=$1 ORDER BY timestamp ASC LIMIT 1000', [req.params.clienteId]); 
-  res.json(rows); 
+  try {
+    const { rows } = await pgPool.query('SELECT * FROM mensajes_klido WHERE cliente_id=$1 ORDER BY timestamp ASC LIMIT 1000', [req.params.clienteId]); 
+    res.json(rows); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post('/api/mensajes/:clienteId', auth, async (req, res) => { 
@@ -275,7 +292,6 @@ app.post('/api/mensajes/:clienteId', auth, async (req, res) => {
     }); 
     let j = await resp.json(); 
     
-    // Si expira la ventana de 24 horas, reintenta con plantilla
     if (j.error && (j.error.code === 131047 || j.error.code === 470)) { 
       const plantilla = 'acol_invitacion_congreso'; 
       const meta = await getMeta(plantilla, emp); 
@@ -332,15 +348,17 @@ app.post('/api/campanas/parse-excel', auth, async (req, res) => {
 app.post('/api/campanas', auth, async (req, res) => { 
   try { 
     const { nombre, plantilla, numeros, variables, programada } = req.body; 
-    if (!plantilla) return res.status(400).json({ error: 'Falta plantilla' }); 
+    if (!plantilla) return res.status(400).json({ error: 'Falta seleccionar una plantilla' }); 
     const validos = normalizaNumeros(numeros || []); 
-    if (!validos.length) return res.status(400).json({ error: 'No hay números válidos' }); 
+    if (!validos.length) return res.status(400).json({ error: 'No hay números válidos para enviar' }); 
     const id = 'camp_' + Date.now(); 
     const prog = programada ? new Date(programada).getTime() : null; 
     await pgPool.query('INSERT INTO campanas_klido (id,agencia_id,nombre,plantilla,total,creada,historial,numeros,programada,bloque_actual,estado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)', [id, req.user.agenciaId, nombre || plantilla, plantilla, validos.length, Date.now(), JSON.stringify([{ variables: variables || ['Cliente'] }]), JSON.stringify(validos), prog, 0, 'activa']); 
+    
     if (!prog) procesaWPP(id); 
     else if (prog > Date.now()) setTimeout(() => procesaWPP(id), prog - Date.now()); 
     else procesaWPP(id); 
+    
     res.json({ ok: true, id, total: validos.length }); 
   } catch (e) { 
     res.status(500).json({ error: e.message }); 
@@ -348,36 +366,60 @@ app.post('/api/campanas', auth, async (req, res) => {
 });
 
 app.get('/api/campanas', auth, async (req, res) => { 
-  const { rows } = await pgPool.query('SELECT * FROM campanas_klido WHERE agencia_id=$1 ORDER BY creada DESC', [req.user.agenciaId]); 
-  res.json(rows); 
+  try {
+    const { rows } = await pgPool.query('SELECT * FROM campanas_klido WHERE agencia_id=$1 ORDER BY creada DESC', [req.user.agenciaId]); 
+    res.json(rows); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post('/api/campanas/:id/pausa', auth, async (req, res) => { 
-  await pgPool.query('UPDATE campanas_klido SET pausada=true WHERE id=$1', [req.params.id]); 
-  res.json({ ok: true }); 
+  try {
+    await pgPool.query('UPDATE campanas_klido SET pausada=true WHERE id=$1', [req.params.id]); 
+    res.json({ ok: true }); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post('/api/campanas/:id/continuar', auth, async (req, res) => { 
-  await pgPool.query('UPDATE campanas_klido SET pausada=false WHERE id=$1', [req.params.id]); 
-  procesaWPP(req.params.id); 
-  res.json({ ok: true }); 
+  try {
+    await pgPool.query('UPDATE campanas_klido SET pausada=false WHERE id=$1', [req.params.id]); 
+    procesaWPP(req.params.id); 
+    res.json({ ok: true }); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/api/trabajadores', auth, async (req, res) => { 
-  const { rows } = await pgPool.query('SELECT * FROM asesores WHERE agencia_id=$1', [req.user.agenciaId]); 
-  res.json(rows); 
+  try {
+    const { rows } = await pgPool.query('SELECT * FROM asesores WHERE agencia_id=$1', [req.user.agenciaId]); 
+    res.json(rows); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post('/api/trabajadores', auth, async (req, res) => { 
-  const id = 'as_' + Date.now(); 
-  const hash = await bcrypt.hash(req.body.password || '123456', 10); 
-  await pgPool.query('INSERT INTO asesores (id,agencia_id,nombre,email,telefono,password) VALUES ($1,$2,$3,$4,$5,$6)', [id, req.user.agenciaId, req.body.nombre, req.body.email, req.body.telefono, hash]); 
-  res.json({ ok: true }); 
+  try {
+    const id = 'as_' + Date.now(); 
+    const hash = await bcrypt.hash(req.body.password || '123456', 10); 
+    await pgPool.query('INSERT INTO asesores (id,agencia_id,nombre,email,telefono,password) VALUES ($1,$2,$3,$4,$5,$6)', [id, req.user.agenciaId, req.body.nombre, req.body.email, req.body.telefono, hash]); 
+    res.json({ ok: true }); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/api/dashboard', auth, async (req, res) => { 
-  const c = await pgPool.query('SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1', [req.user.agenciaId]); 
-  res.json({ clientes: c.rows[0].count }); 
+  try {
+    const c = await pgPool.query('SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1', [req.user.agenciaId]); 
+    res.json({ clientes: c.rows[0].count }); 
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/webhook', (req, res) => { 
@@ -421,7 +463,28 @@ app.post('/webhook', async (req, res) => {
 
 app.get('/health', (req, res) => res.json({ ok: true, version: 'v157-fix-meta', time: new Date().toISOString() }));
 app.get('/api/health', (req, res) => res.json({ ok: true, version: 'v157-fix-meta', time: new Date().toISOString() }));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+
+// Archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Captura de rutas API no encontradas (previene respuesta HTML en peticiones de API)
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: `Ruta de API no encontrada: ${req.originalUrl}` });
+});
+
+// Fallback para SPA / Frontend
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Manejo global de errores de servidor para responder siempre en JSON en /api
+app.use((err, req, res, next) => {
+  console.error('❌ Error no controlado:', err);
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(500).json({ error: err.message || 'Error interno del servidor' });
+  }
+  res.status(500).send('Error interno del servidor');
+});
 
 io.on('connection', s => { 
   s.on('join_agencia', id => s.join(`agencia_${id}`)); 
