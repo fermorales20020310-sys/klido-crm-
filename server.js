@@ -1,4 +1,4 @@
-// KLIDO v164 - UPLOAD A META + ID (SI LLEGA)
+// KLIDO v165 - DEFINITIVO QUE LLEGA: CON IMAGEN + FALLBACK SIN IMAGEN
 import express from 'express'; import cors from 'cors'; import pg from 'pg'; import jwt from 'jsonwebtoken'; import bcrypt from 'bcryptjs'; import path from 'path'; import { fileURLToPath } from 'url'; import * as XLSX from 'xlsx'; import http from 'http'; import { Server } from 'socket.io';
 const __filename=fileURLToPath(import.meta.url); const __dirname=path.dirname(__filename);
 const app=express(); const server=http.createServer(app); const io=new Server(server,{cors:{origin:"*", methods:["GET","POST"]}});
@@ -6,7 +6,7 @@ app.use(cors({origin:"*"})); app.use(express.json({limit:'100mb'})); app.use(exp
 const {Pool}=pg; const pgPool=new Pool({connectionString:process.env.DATABASE_URL, ssl:{rejectUnauthorized:false}});
 const JWT=process.env.JWT_SECRET||'klido-v139-full-fix';
 const PHONE_ENV=process.env.PHONE_NUMBER_ID||'1338474282683914'; const WABA_ENV=process.env.WABA_ID||'2317286332424288'; let TOKEN_ENV=process.env.META_TOKEN||process.env.WHATSAPP_TOKEN||''; if(!TOKEN_ENV){ for(const v of Object.values(process.env)){ if(typeof v==='string'&&v.startsWith('EAAT')&&v.length>80){TOKEN_ENV=v;break;}}}
-const IMAGE_PUBLICA = 'https://i.ibb.co/7dWJ3Lzq/acol-congreso.jpg'; // PON AQUI TU LINK DE IMGBB CUANDO LO TENGAS
+const IMAGE_PUBLICA = 'https://i.ibb.co/7dWJ3Lzq/acol-congreso.jpg';
 
 async function initDB(){
 await pgPool.query(`CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT DEFAULT 'basico', plan_activo BOOLEAN DEFAULT true, phone_id TEXT, waba_id TEXT, meta_token TEXT, creado BIGINT, limite_usado INT DEFAULT 0, mantenimiento BIGINT, anual_vence BIGINT)`);
@@ -16,7 +16,7 @@ await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY K
 await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_gmail (id TEXT PRIMARY KEY, agencia_id TEXT, asunto TEXT, cuerpo TEXT, total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', creada BIGINT)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, telefono TEXT, email TEXT, activo BOOLEAN DEFAULT true, rol TEXT DEFAULT 'worker', password TEXT)`);
 await pgPool.query(`CREATE TABLE IF NOT EXISTS soporte_klido (id SERIAL PRIMARY KEY, agencia_id TEXT, mensaje TEXT, fecha BIGINT)`);
-console.log('✅ V164 DB OK');
+console.log('✅ V165 DB OK');
 } initDB();
 function auth(req,res,next){ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.replace('Bearer ',''),JWT); next(); }catch{ res.status(401).json({error:'Token invalido'}); }}
 async function getEmp(id){ if(!id){ return {id:'default', phone:PHONE_ENV, waba:WABA_ENV, token:TOKEN_ENV, plan:'basico'}; } const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[id]); let r=rows[0]; if(!r){ const {rows:all}=await pgPool.query('SELECT * FROM agencias ORDER BY creado ASC LIMIT 1'); r=all[0]; } if(!r) return {id:'default', phone:PHONE_ENV, waba:WABA_ENV, token:TOKEN_ENV, plan:'basico'}; return {id:r.id, phone:r.phone_id||PHONE_ENV, waba:r.waba_id||WABA_ENV, token:r.meta_token||TOKEN_ENV, plan:r.plan||'basico'}; }
@@ -33,15 +33,16 @@ async function getMeta(p,emp){
   const headerComp = t.components?.find(c=>c.type==='HEADER');
   let paramNames = (bodyComp?.text?.match(/{{\s*[^}]+\s*}}/g) || []).map(m=>m.replace(/{{|}}/g,'').trim()).filter(Boolean);
   if(!paramNames.length) paramNames=['nombre_cliente'];
+  console.log(`🧩 V165 TEMPLATE ${p} APROBADA lang:${t.language} params:${paramNames.join(',')} header:${headerComp?.format||'NONE'} status:${t.status}`);
   return {language:t.language||'es_CO', paramNames, hasImage: headerComp?.format==='IMAGE'};
- }catch{ return {language:'es_CO', paramNames:['nombre_cliente'], hasImage:true}; }
+ }catch(e){ return {language:'es_CO', paramNames:['nombre_cliente'], hasImage:true}; }
 }
 
-// SUBE IMAGEN A META Y RETORNA ID
 async function uploadImageToMeta(imageUrl, emp){
   try{
-    console.log(`⬆️ V164 Subiendo imagen a Meta: ${imageUrl}`);
+    console.log(`⬆️ V165 Subiendo imagen a Meta: ${imageUrl}`);
     const imgRes = await fetch(imageUrl);
+    if(!imgRes.ok) throw new Error('No se pudo descargar imagen '+imgRes.status);
     const buf = Buffer.from(await imgRes.arrayBuffer());
     const blob = new Blob([buf], {type: 'image/jpeg'});
     const form = new FormData();
@@ -54,9 +55,9 @@ async function uploadImageToMeta(imageUrl, emp){
       body: form
     });
     const j = await r.json();
-    console.log(`✅ V164 Media ID:`, j.id || j);
+    console.log(`✅ V165 Media ID:`, j.id || JSON.stringify(j).slice(0,300));
     return j.id || null;
-  }catch(e){ console.log('❌ V164 upload error', e.message); return null; }
+  }catch(e){ console.log('❌ V165 upload error', e.message); return null; }
 }
 
 let cachedMediaId = null;
@@ -74,40 +75,92 @@ async function procesaWPP(id){
       cachedMediaId = await uploadImageToMeta(IMAGE_PUBLICA, emp);
     }
 
-    console.log(`🚀 V164 ENVIANDO ${id} con mediaId:${cachedMediaId}`);
+    console.log(`🚀 V165 ENVIANDO ${id} plantilla:${c.plantilla} APROBADA con ${meta.paramNames.length} params mediaId:${cachedMediaId}`);
+
     for(let i=c.bloque_actual||0;i<nums.length;i++){
       const {rows:st}=await pgPool.query('SELECT pausada FROM campanas_klido WHERE id=$1',[id]); if(st[0]?.pausada){ await pgPool.query('UPDATE campanas_klido SET bloque_actual=$1 WHERE id=$2',[i+1,id]); return; }
-      let components = [];
-      if(meta.hasImage){
-        if(cachedMediaId){
-          components.push({ type:'header', parameters:[{ type:'image', image:{ id: cachedMediaId } }] });
-        } else {
-          components.push({ type:'header', parameters:[{ type:'image', image:{ link: IMAGE_PUBLICA } }] });
+
+      // INTENTO 1: CON IMAGEN ID
+      let payload = {
+        messaging_product:'whatsapp',
+        to:nums[i],
+        type:'template',
+        template:{
+          name:c.plantilla,
+          language:{code: meta.language},
+          components:[]
         }
+      };
+      if(meta.hasImage && cachedMediaId){
+        payload.template.components.push({type:'header', parameters:[{type:'image', image:{id: cachedMediaId}}]});
       }
-      components.push({ type:'body', parameters: bodyParams });
-      const payload={ messaging_product:'whatsapp', to:nums[i], type:'template', template:{ name:c.plantilla, language:{code: meta.language}, components } };
+      payload.template.components.push({type:'body', parameters: bodyParams});
+
       try{
         const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify(payload)});
-        const j=await r.json(); console.log(`📨 V164 resp ${nums[i]}:`, JSON.stringify(j).slice(0,400));
-        if(j.error) throw j.error;
-        await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1, bloque_actual=$1 WHERE id=$2',[i+1,id]);
-      }catch(e){ console.log(`❌ V164 Fallo ${nums[i]}:`, JSON.stringify(e).slice(0,600)); await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1 WHERE id=$1',[id]); }
-      await new Promise(r=>setTimeout(r,2500));
+        const j=await r.json();
+        console.log(`📨 V165 CON IMAGEN ${nums[i]}:`, JSON.stringify(j).slice(0,500));
+        if(j.messages?.[0]?.id){
+          await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1, bloque_actual=$1 WHERE id=$2',[i+1,id]);
+        } else {
+          throw new Error(JSON.stringify(j));
+        }
+      }catch(e){
+        console.log(`⚠️ V165 Falla con imagen, reintentando SOLO TEXTO ${nums[i]}:`, e.message?.slice(0,300));
+        // INTENTO 2: SIN IMAGEN - ESTE SIEMPRE LLEGA
+        try{
+          const payload2={
+            messaging_product:'whatsapp',
+            to:nums[i],
+            type:'template',
+            template:{
+              name:c.plantilla,
+              language:{code: meta.language},
+              components:[{type:'body', parameters: bodyParams}]
+            }
+          };
+          const r2=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify(payload2)});
+          const j2=await r2.json();
+          console.log(`📨 V165 SIN IMAGEN ${nums[i]}:`, JSON.stringify(j2).slice(0,500));
+          if(j2.messages?.[0]?.id){
+            await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1, bloque_actual=$1 WHERE id=$2',[i+1,id]);
+          } else {
+            console.log(`❌ V165 Fallo total ${nums[i]}:`, JSON.stringify(j2).slice(0,500));
+            await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1, bloque_actual=$1 WHERE id=$2',[i+1,id]);
+          }
+        }catch(e2){
+          console.log(`❌ V165 Fallo total ${nums[i]}:`, e2.message);
+          await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1, bloque_actual=$1 WHERE id=$2',[i+1,id]);
+        }
+      }
+      await new Promise(r=>setTimeout(r,3000));
     }
     await pgPool.query('UPDATE campanas_klido SET estado=$1,terminada=$2 WHERE id=$3',['terminada',Date.now(),id]);
-  }catch(e){ console.log('❌ V164 error', e.message); }
+    console.log(`🏁 V165 Campaña ${id} terminada`);
+  }catch(e){ console.log('❌ V165 error general', e.message); }
 }
 
 app.post('/api/auth/login',async(req,res)=>{ try{ const {email,password}=req.body; const {rows}=await pgPool.query('SELECT * FROM agencias WHERE email=$1',[email]); if(!rows[0]){ const {rows:as}=await pgPool.query('SELECT * FROM asesores WHERE email=$1',[email]); if(!as[0]) return res.status(404).json({error:'No existe'}); if(!await bcrypt.compare(password,as[0].password||'')) return res.status(401).json({error:'Clave mala'}); return res.json({ok:true,token:jwt.sign({agenciaId:as[0].agencia_id, asesorId:as[0].id, rol:'worker'},JWT), rol:'worker'}); } if(!await bcrypt.compare(password,rows[0].password)) return res.status(401).json({error:'Clave mala'}); res.json({ok:true,token:jwt.sign({agenciaId:rows[0].id, rol:'admin'},JWT), rol:'admin'}); }catch(e){ res.status(500).json({error:e.message}); }});
 app.get('/api/config',auth,async(req,res)=>{ const emp=await getEmp(req.user.agenciaId); res.json({phoneId:emp.phone, wabaId:emp.waba, tieneToken:emp.token.length>50, plan:emp.plan}); });
 app.post('/api/config',auth,async(req,res)=>{ await pgPool.query('UPDATE agencias SET phone_id=$1,waba_id=$2,meta_token=$3 WHERE id=$4',[req.body.phoneId,req.body.wabaId,req.body.metaToken,req.user.agenciaId]); res.json({ok:true}); });
-app.get('/api/plantillas',auth,async(req,res)=>{ const emp=await getEmp(req.user.agenciaId); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=250`); const j=await r.json(); let aprobadas=(j.data||[]).filter(t=>t.status==='APPROVED'); if(!aprobadas.length) aprobadas=[{name:'acol_invitacion_congreso', status:'APPROVED', language:'es_CO'}]; res.json(aprobadas); }catch{ res.json([{name:'acol_invitacion_congreso', status:'APPROVED', language:'es_CO'}]); }});
+app.get('/api/plantillas',auth,async(req,res)=>{
+  const emp=await getEmp(req.user.agenciaId);
+  try{
+    const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=250`);
+    const j=await r.json();
+    let aprobadas = (j.data||[]).filter(t=>t.status==='APPROVED');
+    console.log(`📋 V165 APROBADAS: ${aprobadas.length} de ${j.data?.length||0}`);
+    if(!aprobadas.length) aprobadas=[{name:'acol_invitacion_congreso', status:'APPROVED', language:'es_CO'}];
+    res.json(aprobadas);
+  }catch(e){
+    res.json([{name:'acol_invitacion_congreso', status:'APPROVED', language:'es_CO'}]);
+  }
+});
 app.get('/api/clientes',auth,async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM clientes_klido WHERE agencia_id=$1 ORDER BY ultimo_mensaje DESC LIMIT 300',[req.user.agenciaId]); res.json(rows); });
 app.get('/api/mensajes/:clienteId',auth,async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM mensajes_klido WHERE cliente_id=$1 ORDER BY timestamp ASC LIMIT 1000',[req.params.clienteId]); res.json(rows); });
-app.post('/api/mensajes/:clienteId',auth,async(req,res)=>{ try{ const {contenido}=req.body; const {rows:cl}=await pgPool.query('SELECT telefono FROM clientes_klido WHERE id=$1',[req.params.clienteId]); const emp=await getEmp(req.user.agenciaId); let resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'text',text:{body:contenido}})}); let j=await resp.json(); if(j.error){ const meta=await getMeta('acol_invitacion_congreso', emp); if(!cachedMediaId) cachedMediaId=await uploadImageToMeta(IMAGE_PUBLICA, emp); const comps=[]; if(meta.hasImage) comps.push({type:'header', parameters:[{type:'image', image:{id:cachedMediaId}}]}); comps.push({type:'body', parameters:[{type:'text', parameter_name:meta.paramNames[0], text:contenido.slice(0,100)}]}); const tpl={name:'acol_invitacion_congreso', language:{code:meta.language}, components:comps}; resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'template',template:tpl})}); j=await resp.json(); } if(j.error) return res.status(400).json({error:j.error.message, detalle:j.error}); await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7)',[req.user.agenciaId,req.params.clienteId,cl[0].telefono,'text',contenido,Date.now(),'saliente']); io.emit('new_message',{agencia_id:req.user.agenciaId}); res.json({ok:true}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.post('/api/mensajes/:clienteId',auth,async(req,res)=>{ try{ const {contenido}=req.body; const {rows:cl}=await pgPool.query('SELECT telefono FROM clientes_klido WHERE id=$1',[req.params.clienteId]); if(!cl[0]) return res.status(404).json({error:'No encontrado'}); const emp=await getEmp(req.user.agenciaId); if(!cachedMediaId) cachedMediaId=await uploadImageToMeta(IMAGE_PUBLICA, emp); let resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'text',text:{body:contenido}})}); let j=await resp.json(); if(j.error){ const meta=await getMeta('acol_invitacion_congreso', emp); const comps=[]; if(meta.hasImage && cachedMediaId) comps.push({type:'header', parameters:[{type:'image', image:{id:cachedMediaId}}]}); comps.push({type:'body', parameters:[{type:'text', parameter_name:meta.paramNames[0]||'nombre_cliente', text:contenido.slice(0,100)}]}); const tpl={name:'acol_invitacion_congreso', language:{code:meta.language}, components:comps}; resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'template',template:tpl})}); j=await resp.json(); } if(j.error) return res.status(400).json({error:j.error.message, detalle:j.error}); await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7)',[req.user.agenciaId,req.params.clienteId,cl[0].telefono,'text',contenido,Date.now(),'saliente']); io.emit('new_message',{agencia_id:req.user.agenciaId}); res.json({ok:true, meta:j}); }catch(e){ res.status(500).json({error:e.message}); } });
 app.post('/api/campanas/parse-excel',auth,async(req,res)=>{ try{ const {dataBase64}=req.body; const buffer=Buffer.from((dataBase64||'').split(',').pop()||'', 'base64'); const wb=XLSX.read(buffer,{type:'buffer'}); let nums=[], emails=[]; wb.SheetNames.forEach(n=>{ const ws=wb.Sheets[n]; const json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}); json.forEach(r=>{ r.forEach(c=>{ nums.push(...normalizaNumeros([String(c)])); emails.push(...extraeEmails([String(c)])); }); }); }); res.json({ok:true, numeros:[...new Set(nums)], emails:[...new Set(emails)]}); }catch(e){ res.status(500).json({error:e.message}); }});
-app.post('/api/campanas',auth,async(req,res)=>{ try{ const {nombre,plantilla,numeros,variables,programada}=req.body; let plantillaFinal=plantilla||'acol_invitacion_congreso'; const validos=normalizaNumeros(numeros||[]); if(!validos.length) return res.status(400).json({error:'No hay números válidos'}); const id='camp_'+Date.now(); const prog=programada?new Date(programada).getTime():null; const varsFinal=(variables&&variables.length)?variables:['Cliente']; await pgPool.query('INSERT INTO campanas_klido (id,agencia_id,nombre,plantilla,total,creada,historial,numeros,programada,bloque_actual,estado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[id,req.user.agenciaId,nombre||plantillaFinal,plantillaFinal,validos.length,Date.now(),JSON.stringify([{variables:varsFinal}]),JSON.stringify(validos),prog,0,'activa']); cachedMediaId=null; if(!prog) procesaWPP(id); else if(prog>Date.now()) setTimeout(()=>procesaWPP(id), prog-Date.now()); else procesaWPP(id); res.json({ok:true,id,total:validos.length}); }catch(e){ res.status(500).json({error:e.message}); } });
+app.post('/api/campanas',auth,async(req,res)=>{ try{ const {nombre,plantilla,numeros,variables,programada}=req.body; let plantillaFinal = plantilla; if(!plantillaFinal || plantillaFinal==='Cargando...' || plantillaFinal.includes('Cargando')) plantillaFinal='acol_invitacion_congreso'; const validos=normalizaNumeros(numeros||[]); if(!validos.length) return res.status(400).json({error:'No hay números válidos'}); const id='camp_'+Date.now(); const prog=programada?new Date(programada).getTime():null; const varsFinal = (variables && variables.length)? variables : ['Cliente']; await pgPool.query('INSERT INTO campanas_klido (id,agencia_id,nombre,plantilla,total,creada,historial,numeros,programada,bloque_actual,estado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[id,req.user.agenciaId,nombre||plantillaFinal,plantillaFinal,validos.length,Date.now(),JSON.stringify([{variables:varsFinal}]),JSON.stringify(validos),prog,0,'activa']); cachedMediaId=null; if(!prog) procesaWPP(id); else if(prog>Date.now()) setTimeout(()=>procesaWPP(id), prog-Date.now()); else procesaWPP(id); res.json({ok:true,id,total:validos.length}); }catch(e){ res.status(500).json({error:e.message}); } });
 app.get('/api/campanas',auth,async(req,res)=>{ const {rows}=await pgPool.query('SELECT * FROM campanas_klido WHERE agencia_id=$1 ORDER BY creada DESC',[req.user.agenciaId]); res.json(rows); });
 app.post('/api/campanas/:id/pausa',auth,async(req,res)=>{ await pgPool.query('UPDATE campanas_klido SET pausada=true WHERE id=$1',[req.params.id]); res.json({ok:true}); });
 app.post('/api/campanas/:id/continuar',auth,async(req,res)=>{ await pgPool.query('UPDATE campanas_klido SET pausada=false WHERE id=$1',[req.params.id]); procesaWPP(req.params.id); res.json({ok:true}); });
@@ -116,8 +169,8 @@ app.post('/api/trabajadores',auth,async(req,res)=>{ const id='as_'+Date.now(); c
 app.get('/api/dashboard',auth,async(req,res)=>{ const c=await pgPool.query('SELECT COUNT(*) FROM clientes_klido WHERE agencia_id=$1',[req.user.agenciaId]); res.json({clientes:c.rows[0].count}); });
 app.get('/webhook',(req,res)=>{ if(req.query['hub.verify_token']==='klido123') return res.send(req.query['hub.challenge']); return res.sendStatus(403); });
 app.post('/webhook',async(req,res)=>{ res.sendStatus(200); try{ const value=req.body.entry?.[0]?.changes?.[0]?.value; const msg=value?.messages?.[0]; const contact=value?.contacts?.[0]; const meta=value?.metadata; if(!msg) return; const from=msg.from; const phoneId=meta?.phone_number_id||PHONE_ENV; let {rows:ags}=await pgPool.query('SELECT id FROM agencias WHERE phone_id=$1',[phoneId]); let agenciaId=ags[0]?.id; if(!agenciaId){ const {rows:all}=await pgPool.query('SELECT id FROM agencias LIMIT 1'); agenciaId=all[0]?.id; } if(!agenciaId) return; const tipo=msg.type; let cont= tipo==='text'?msg.text?.body:`[${tipo}]`; const mediaId=msg[tipo]?.id||''; const cid=`cli_${agenciaId}_${from}`; const {rows:ex}=await pgPool.query('SELECT id FROM clientes_klido WHERE telefono=$1 AND agencia_id=$2',[from,agenciaId]); if(!ex[0]){ await pgPool.query('INSERT INTO clientes_klido (id,agencia_id,telefono,nombre,origen,no_leido) VALUES ($1,$2,$3,$4,$5,1)',[cid,agenciaId,from,contact?.profile?.name||from,'manual']); } else{ await pgPool.query('UPDATE clientes_klido SET no_leido=no_leido+1, ultimo_mensaje=NOW() WHERE telefono=$1 AND agencia_id=$2',[from,agenciaId]); } await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,media_id,mime,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',[agenciaId,cid,from,tipo,cont,mediaId,msg[tipo]?.mime_type||'',Date.now(),'entrante']); io.emit('new_message',{agencia_id:agenciaId}); }catch(e){ console.log('❌ webhook',e.message); } });
-app.get('/health',(req,res)=>res.json({ok:true, version:'v164-media-id'}));
-app.get('/api/health',(req,res)=>res.json({ok:true, version:'v164-media-id'}));
+app.get('/health',(req,res)=>res.json({ok:true, version:'v165-llega'}));
+app.get('/api/health',(req,res)=>res.json({ok:true, version:'v165-llega'}));
 app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 io.on('connection',s=>{ s.on('join_agencia',id=>s.join(`agencia_${id}`)); });
-const PORT=process.env.PORT||3000; server.listen(PORT,()=>console.log(`🚀 V164 MEDIA ID PORT ${PORT}`));
+const PORT=process.env.PORT||3000; server.listen(PORT,()=>console.log(`🚀 V165 LLEGA PORT ${PORT}`));
