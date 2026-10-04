@@ -17,10 +17,15 @@ await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, ag
 await pgPool.query(`CREATE TABLE IF NOT EXISTS soporte_klido (id SERIAL PRIMARY KEY, agencia_id TEXT, mensaje TEXT, fecha BIGINT)`);
 console.log('✅ V155 DB OK');
 } initDB();
+
 function auth(req,res,next){ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.replace('Bearer ',''),JWT); next(); }catch{ res.status(401).json({error:'Token invalido'}); }}
+
 async function getEmp(id){ if(!id){ return {id:'default', phone:PHONE_ENV, waba:WABA_ENV, token:TOKEN_ENV, plan:'basico'}; } const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[id]); let r=rows[0]; if(!r){ const {rows:all}=await pgPool.query('SELECT * FROM agencias ORDER BY creado ASC LIMIT 1'); r=all[0]; } if(!r) return {id:'default', phone:PHONE_ENV, waba:WABA_ENV, token:TOKEN_ENV, plan:'basico'}; return {id:r.id, phone:r.phone_id||PHONE_ENV, waba:r.waba_id||WABA_ENV, token:r.meta_token||TOKEN_ENV, plan:r.plan||'basico', nombre:r.nombre, activo:r.plan_activo}; }
+
 function normalizaNumeros(arr){ let out=[]; (arr||[]).forEach(raw=>{ String(raw||'').split(/[,;\n|]+/).forEach(p=>{ let d=p.replace(/\D/g,''); if(d.endsWith('.0')) d=d.slice(0,-2); if(d.length===10&&d.startsWith('3')) d='57'+d; if(d.length===12&&d.startsWith('57')) out.push(d); if(d.length>12){ const m=d.match(/3\d{9}/g); if(m) m.forEach(x=>out.push('57'+x)); } }); }); return [...new Set(out)].filter(n=>/^57[3]\d{9}$/.test(n)); }
+
 function extraeEmails(arr){ let out=[]; const re=/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g; (arr||[]).forEach(raw=>{ const ms=String(raw).match(re); if(ms) out.push(...ms); }); return [...new Set(out.map(e=>e.toLowerCase()))]; }
+
 async function getMeta(p,emp){
  try{
   const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=250`);
@@ -30,6 +35,7 @@ async function getMeta(p,emp){
   return {language:t.language};
  }catch(e){ return {language:'es_CO'}; }
 }
+
 async function procesaWPP(id){
   try{
     const {rows}=await pgPool.query('SELECT * FROM campanas_klido WHERE id=$1',[id]); if(!rows[0]) return; let c=rows[0];
@@ -54,6 +60,7 @@ async function procesaWPP(id){
     await pgPool.query('UPDATE campanas_klido SET estado=$1,terminada=$2 WHERE id=$3',['terminada',Date.now(),id]);
   }catch(e){ console.log('❌ V155 error', e.message); }
 }
+
 app.post('/api/auth/login',async(req,res)=>{ try{ const {email,password}=req.body; const {rows}=await pgPool.query('SELECT * FROM agencias WHERE email=$1',[email]); if(!rows[0]){ const {rows:as}=await pgPool.query('SELECT * FROM asesores WHERE email=$1',[email]); if(!as[0]) return res.status(404).json({error:'No existe'}); if(!await bcrypt.compare(password,as[0].password||'')) return res.status(401).json({error:'Clave mala'}); return res.json({ok:true,token:jwt.sign({agenciaId:as[0].agencia_id, asesorId:as[0].id, rol:'worker'},JWT), rol:'worker'}); } if(!await bcrypt.compare(password,rows[0].password)) return res.status(401).json({error:'Clave mala'}); res.json({ok:true,token:jwt.sign({agenciaId:rows[0].id, rol:'admin'},JWT), rol:'admin'}); }catch(e){ res.status(500).json({error:e.message}); }});
 app.get('/api/config',auth,async(req,res)=>{ const emp=await getEmp(req.user.agenciaId); res.json({phoneId:emp.phone, wabaId:emp.waba, tieneToken:emp.token.length>50, plan:emp.plan}); });
 app.post('/api/config',auth,async(req,res)=>{ await pgPool.query('UPDATE agencias SET phone_id=$1,waba_id=$2,meta_token=$3 WHERE id=$4',[req.body.phoneId,req.body.wabaId,req.body.metaToken,req.user.agenciaId]); res.json({ok:true}); });
