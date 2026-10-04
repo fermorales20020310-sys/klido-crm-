@@ -22,50 +22,40 @@ function auth(req,res,next){ const h=req.headers.authorization; if(!h) return re
 async function getEmp(id){ if(!id){ return {id:'default', phone:PHONE_ENV, waba:WABA_ENV, token:TOKEN_ENV, plan:'basico'}; } const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[id]); let r=rows[0]; if(!r){ const {rows:all}=await pgPool.query('SELECT * FROM agencias ORDER BY creado ASC LIMIT 1'); r=all[0]; } if(!r) return {id:'default', phone:PHONE_ENV, waba:WABA_ENV, token:TOKEN_ENV, plan:'basico'}; return {id:r.id, phone:r.phone_id||PHONE_ENV, waba:r.waba_id||WABA_ENV, token:r.meta_token||TOKEN_ENV, plan:r.plan||'basico', nombre:r.nombre, activo:r.plan_activo}; }
 function normalizaNumeros(arr){ let out=[]; (arr||[]).forEach(raw=>{ String(raw||'').split(/[,;\n|]+/).forEach(p=>{ let d=p.replace(/\D/g,''); if(d.endsWith('.0')) d=d.slice(0,-2); if(d.length===10&&d.startsWith('3')) d='57'+d; if(d.length===12&&d.startsWith('57')) out.push(d); if(d.length>12){ const m=d.match(/3\d{9}/g); if(m) m.forEach(x=>out.push('57'+x)); } }); }); return [...new Set(out)].filter(n=>/^57[3]\d{9}$/.test(n)); }
 function extraeEmails(arr){ let out=[]; const re=/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g; (arr||[]).forEach(raw=>{ const ms=String(raw).match(re); if(ms) out.push(...ms); }); return [...new Set(out.map(e=>e.toLowerCase()))]; }
-
-// FIX V151: lee el nombre real de la variable de Meta
 async function getMeta(p,emp){
  try{
   const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=250`);
-  const j=await r.json();
-  const t=j.data?.find(x=>x.name===p);
+  const j=await r.json(); const t=j.data?.find(x=>x.name===p);
   if(!t) return {language:'es_CO', varName:'nombre_cliente'};
-  let varName='nombre_cliente';
-  const allText=JSON.stringify(t);
-  const match=allText.match(/\{\{([^}]+)\}\}/);
-  if(match) varName=match[1].trim();
-  console.log(`🧩 TEMPLATE ${p} idioma:${t.language} varReal:${varName}`);
+  let varName='nombre_cliente'; const txt=JSON.stringify(t); const m=txt.match(/\{\{([^}]+)\}\}/); if(m) varName=m[1].trim();
+  console.log(`🧩 TEMPLATE ${p} varReal:${varName} lang:${t.language}`);
   return {language:t.language, varName};
  }catch(e){ return {language:'es_CO', varName:'nombre_cliente'}; }
 }
-
 async function procesaWPP(id){
   try{
     const {rows}=await pgPool.query('SELECT * FROM campanas_klido WHERE id=$1',[id]); if(!rows[0]) return; let c=rows[0];
     let nums=c.numeros; if(typeof nums==='string') try{ nums=JSON.parse(nums); }catch{ nums=[]; } nums=normalizaNumeros(nums);
     const emp=await getEmp(c.agencia_id); const meta=await getMeta(c.plantilla, emp);
     let vars=[]; try{ const h=typeof c.historial==='string'?JSON.parse(c.historial):c.historial; vars=h?.[0]?.variables||[]; }catch{} if(!vars.length) vars=['Cliente'];
-    const txt=String(vars[0]||'Cliente').slice(0,100);
-    const varName = meta.varName || 'nombre_cliente';
+    const txt=String(vars[0]||'Cliente').slice(0,100); const varName=meta.varName||'nombre_cliente';
     console.log(`🚀 V151 INICIANDO ${id} plantilla:${c.plantilla} varName:${varName} txt:${txt} total:${nums.length}`);
     for(let i=c.bloque_actual||0;i<nums.length;i++){
       const {rows:st}=await pgPool.query('SELECT pausada FROM campanas_klido WHERE id=$1',[id]); if(st[0]?.pausada){ await pgPool.query('UPDATE campanas_klido SET bloque_actual=$1 WHERE id=$2',[i,id]); return; }
-      // AQUI EL FIX: parameter_name debe ser nombre_cliente
       const payload={ messaging_product:'whatsapp', to:nums[i], type:'template', template:{ name:c.plantilla, language:{code: meta.language || 'es_CO'}, components:[{type:'body', parameters:[{type:'text', text:txt, parameter_name:varName}]}] } };
-      console.log(`📤 V151 Payload FORZADO ${nums[i]}:`, JSON.stringify(payload));
+      console.log(`📤 V151 Payload FIX ${nums[i]}:`, JSON.stringify(payload));
       try{
         const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify(payload)});
         const j=await r.json(); console.log(`📨 V151 Meta resp ${nums[i]}:`, JSON.stringify(j));
         if(j.error) throw j.error;
         await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1, bloque_actual=$1 WHERE id=$2',[i+1,id]);
-        console.log(`✅ V151 ${nums[i]} OK wamid ${j.messages?.[0]?.id}`);
+        console.log(`✅ V151 ${nums[i]} OK`);
       }catch(e){ console.log(`❌ V151 Fallo ${nums[i]}:`, JSON.stringify(e)); await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1 WHERE id=$1',[id]); }
       await new Promise(r=>setTimeout(r,2500));
     }
     await pgPool.query('UPDATE campanas_klido SET estado=$1,terminada=$2 WHERE id=$3',['terminada',Date.now(),id]);
   }catch(e){ console.log('❌ V151 error', e.message); }
 }
-
 app.post('/api/auth/login',async(req,res)=>{ try{ const {email,password}=req.body; const {rows}=await pgPool.query('SELECT * FROM agencias WHERE email=$1',[email]); if(!rows[0]){ const {rows:as}=await pgPool.query('SELECT * FROM asesores WHERE email=$1',[email]); if(!as[0]) return res.status(404).json({error:'No existe'}); if(!await bcrypt.compare(password,as[0].password||'')) return res.status(401).json({error:'Clave mala'}); return res.json({ok:true,token:jwt.sign({agenciaId:as[0].agencia_id, asesorId:as[0].id, rol:'worker'},JWT), rol:'worker'}); } if(!await bcrypt.compare(password,rows[0].password)) return res.status(401).json({error:'Clave mala'}); res.json({ok:true,token:jwt.sign({agenciaId:rows[0].id, rol:'admin'},JWT), rol:'admin'}); }catch(e){ res.status(500).json({error:e.message}); }});
 app.get('/api/config',auth,async(req,res)=>{ const emp=await getEmp(req.user.agenciaId); res.json({phoneId:emp.phone, wabaId:emp.waba, tieneToken:emp.token.length>50, plan:emp.plan}); });
 app.post('/api/config',auth,async(req,res)=>{ await pgPool.query('UPDATE agencias SET phone_id=$1,waba_id=$2,meta_token=$3 WHERE id=$4',[req.body.phoneId,req.body.wabaId,req.body.metaToken,req.user.agenciaId]); res.json({ok:true}); });
