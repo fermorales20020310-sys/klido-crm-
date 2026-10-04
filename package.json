@@ -1,6 +1,6 @@
 {
   "name": "klido-server",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "type": "module",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
