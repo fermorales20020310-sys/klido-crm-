@@ -1,6 +1,6 @@
 {
-  "name": "klido-v139",
-  "version": "1.39.0",
+  "name": "klido-server",
+  "version": "1.5.0",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -13,6 +13,9 @@
     "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
     "xlsx": "^0.18.5",
-    "socket.io": "^4.7.2"
+    "socket.io": "^4.7.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
