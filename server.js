@@ -1,94 +1,189 @@
-// KLIDO v187 AUTOMATICO - NUNCA MAS TOCAR CODIGO POR PLANTILLA
-import express from 'express'; import cors from 'cors'; import pg from 'pg'; import jwt from 'jsonwebtoken'; import bcrypt from 'bcryptjs'; import path from 'path'; import { fileURLToPath } from 'url'; import http from 'http'; import { Server } from 'socket.io';
-const __filename=fileURLToPath(import.meta.url); const __dirname=path.dirname(__filename);
-const app=express(); const server=http.createServer(app); const io=new Server(server,{cors:{origin:"*", methods:["GET","POST"]}});
-app.use(cors({origin:"*"})); app.use(express.json({limit:'100mb'})); app.use(express.urlencoded({extended:true, limit:'100mb'})); app.use(express.static(path.join(__dirname,'public')));
-const {Pool}=pg; const pgPool=new Pool({connectionString:process.env.DATABASE_URL, ssl:{rejectUnauthorized:false}});
-const JWT=process.env.JWT_SECRET||'klido-v187'; const PHONE_ID=process.env.PHONE_NUMBER_ID||'1338474282683914'; const WABA_ID=process.env.WABA_ID||'2317286332424288'; let META_TOKEN=process.env.META_TOKEN||process.env.WHATSAPP_TOKEN||''; if(!META_TOKEN){ for(const v of Object.values(process.env)){ if(typeof v==='string'&&v.startsWith('EAAT')&&v.length>80){META_TOKEN=v;break;}}}
-const EN_PROCESO=new Map(); const CACHE_PLANTILLAS=new Map();
+// Node.js  (usa axios, pg o tu ORM preferido, Bottleneck para rate-limiting)
+// npm install axios pg bottleneck retry
 
-async function initDB(){
- await pgPool.query(`CREATE TABLE IF NOT EXISTS agencias (id TEXT PRIMARY KEY, nombre TEXT, email TEXT UNIQUE, password TEXT, plan TEXT DEFAULT 'basico', phone_id TEXT, waba_id TEXT, meta_token TEXT, creado BIGINT)`);
- await pgPool.query(`CREATE TABLE IF NOT EXISTS campanas_klido (id TEXT PRIMARY KEY, agencia_id TEXT, nombre TEXT, plantilla TEXT, total INT, enviados INT DEFAULT 0, fallidos INT DEFAULT 0, estado TEXT DEFAULT 'activa', pausada BOOLEAN DEFAULT false, historial JSONB DEFAULT '[]', creada BIGINT, terminada BIGINT, numeros JSONB DEFAULT '[]', bloque_actual INT DEFAULT 0, imagen_url TEXT)`);
- console.log('✅ V187 AUTOMATICO DB OK');
-} initDB();
+const axios = require('axios');
+const { Client } = require('pg'); // o tu ORM
+const Bottleneck = require('bottleneck');
+const retry = require('retry');
 
-function auth(req,res,next){const h=req.headers.authorization;if(!h) return res.status(401).json({error:'No token'});try{req.user=jwt.verify(h.replace('Bearer ',''),JWT);next();}catch{res.status(401).json({error:'Token invalido'});}}
-async function getEmp(id){if(!id) return {phone:PHONE_ID,waba:WABA_ID,token:META_TOKEN};const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[id]);const r=rows[0];return {phone:r?.phone_id||PHONE_ID,waba:r?.waba_id||WABA_ID,token:r?.meta_token||META_TOKEN};}
-function normalizaNumeros(arr){let out=[];(arr||[]).forEach(raw=>{String(raw||'').split(/[,;\n|]+/).forEach(p=>{let d=p.replace(/\D/g,'');if(d.length===10&&d.startsWith('3')) d='57'+d;if(/^57[3]\d{9}$/.test(d)) out.push(d);});});return [...new Set(out)];}
+const API_VERSION = process.env.META_API_VERSION || 'v16.0';
+const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
+const AD_ACCOUNT_ID = process.env.AD_ACCOUNT_ID; // act_<num>
+const DB_URL = process.env.DATABASE_URL;
+const CONCURRENCY = parseInt(process.env.CONCURRENCY || '4', 10);
+const BATCH_SIZE = parseInt(process.env.BATCH_SIZE || '20', 10);
 
-async function getPlantillaInfo(agenciaId, nombrePlantilla){
- try{
-  const emp=await getEmp(agenciaId);
-  if(CACHE_PLANTILLAS.has(nombrePlantilla)) return CACHE_PLANTILLAS.get(nombrePlantilla);
-  const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=200`);
-  const j=await r.json();
-  const t=(j.data||[]).find(x=>x.name===nombrePlantilla);
-  if(t){ CACHE_PLANTILLAS.set(nombrePlantilla, t); return t; }
- }catch(e){ console.log('No pude leer plantilla', e.message); }
- return null;
+if (!ACCESS_TOKEN || !AD_ACCOUNT_ID || !DB_URL) {
+  console.error('Faltan variables de entorno: META_ACCESS_TOKEN, AD_ACCOUNT_ID, DATABASE_URL');
+  process.exit(1);
 }
 
-async function procesaWPP(id){
- if(EN_PROCESO.get(id)) return; EN_PROCESO.set(id,true);
- try{
-  const {rows}=await pgPool.query('SELECT * FROM campanas_klido WHERE id=$1',[id]); if(!rows[0]) return;
-  let c=rows[0]; let nums=c.numeros; if(typeof nums==='string') try{nums=JSON.parse(nums)}catch{nums=[]} nums=normalizaNumeros(nums);
-  const emp=await getEmp(c.agencia_id);
-  const info=await getPlantillaInfo(c.agencia_id, c.plantilla);
-  const tieneImagenHeader = info?.components?.some(comp=>comp.type==='HEADER' && comp.format==='IMAGE');
-  console.log(`🚀 V187 ${c.plantilla} tieneImagen=${tieneImagenHeader} imagen=${c.imagen_url}`);
+// Pool/Client DB (ejemplo con pg)
+const db = new Client({ connectionString: DB_URL });
+db.connect();
 
-  for(let i=c.bloque_actual||0;i<nums.length;i++){
-    let components=[];
-    // 1. Si plantilla necesita imagen, la mandamos
-    if(tieneImagenHeader){
-      const linkImg = c.imagen_url || process.env.IMAGE_URL || 'https://app.klidoapp.com.co/img/banner.jpg';
-      components.push({type:'header', parameters:[{type:'image', image:{link:linkImg}}]});
-    }
-    // 2. Body siempre con variable Cliente
-    components.push({type:'body', parameters:[{type:'text', text:'Cliente'}]});
+// Rate limiter para no superar límites de la API
+const limiter = new Bottleneck({
+  maxConcurrent: CONCURRENCY,
+  minTime: 200 // intervalo mínimo entre requests (ajusta según tus límites)
+});
 
-    const payload={messaging_product:'whatsapp',to:nums[i],type:'template',template:{name:c.plantilla, language:{code:'es_CO'}, components}};
-    const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify(payload)});
-    const j=await r.json(); console.log(`📨 ${nums[i]} ->`,JSON.stringify(j).slice(0,500));
-    if(j.messages?.[0]?.id){ await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1,bloque_actual=$1 WHERE id=$2',[i+1,id]); }
-    else{ await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1,bloque_actual=$1 WHERE id=$2',[i+1,id]); }
-    await new Promise(r=>setTimeout(r,3500));
-  }
-  await pgPool.query('UPDATE campanas_klido SET estado=$1,terminada=$2 WHERE id=$3',['terminada',Date.now(),id]);
- }catch(e){console.log('❌ V187',e.message);}finally{EN_PROCESO.delete(id);}
-}
-
-app.post('/api/auth/login',async(req,res)=>{try{const {email,password}=req.body;const {rows}=await pgPool.query('SELECT * FROM agencias WHERE email=$1',[email]);if(!rows[0]) return res.status(404).json({error:'No existe'});if(!await bcrypt.compare(password,rows[0].password)) return res.status(401).json({error:'Clave mala'});res.json({ok:true,token:jwt.sign({agenciaId:rows[0].id,rol:'admin'},JWT)});}catch(e){res.status(500).json({error:e.message});}});
-
-// AHORA DEVUELVE SI NECESITA IMAGEN O NO
-app.get('/api/plantillas',auth,async(req,res)=>{
- const emp=await getEmp(req.user.agenciaId);
- try{
-  const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=100`);
-  const j=await r.json();
-  const filtradas=(j.data||[]).filter(t=>t.status==='APPROVED').map(t=>{
-    const necesitaImg = t.components?.some(c=>c.type==='HEADER' && c.format==='IMAGE');
-    return {...t, necesitaImagen: necesitaImg };
+async function requestWithRetry(method, url, params = {}, data = null) {
+  return new Promise((resolve, reject) => {
+    const operation = retry.operation({
+      retries: 3,
+      factor: 2,
+      minTimeout: 1000,
+      maxTimeout: 60000
+    });
+    operation.attempt(async (current) => {
+      try {
+        const config = { params: { access_token: ACCESS_TOKEN, ...params } };
+        let res;
+        if (method === 'get') res = await limiter.schedule(() => axios.get(url, config));
+        else if (method === 'post') res = await limiter.schedule(() => axios.post(url, data, { params: { access_token: ACCESS_TOKEN, ...params } }));
+        else if (method === 'delete') res = await limiter.schedule(() => axios.delete(url, config));
+        else res = await limiter.schedule(() => axios({ method, url, data, params: { access_token: ACCESS_TOKEN, ...params } }));
+        resolve(res.data);
+      } catch (err) {
+        const shouldRetry = err.response && [429, 500, 502, 503, 504].includes(err.response.status);
+        if (shouldRetry && operation.retry(err)) {
+          console.warn(`Reintentando ${method.toUpperCase()} ${url} (intento ${current})`);
+          return;
+        }
+        reject(err);
+      }
+    });
   });
-  res.json(filtradas);
- }catch{res.json([{name:'acol_invitacion_congreso',status:'APPROVED',language:'es_CO', necesitaImagen:true}]);}
-});
+}
 
-// AHORA ACEPTA imagen_url
-app.post('/api/campanas',auth,async(req,res)=>{
- try{
-  const {plantilla,numeros,imagen_url}=req.body;
-  const validos=normalizaNumeros(numeros||[]); if(!validos.length) return res.status(400).json({error:'No hay números'});
-  const id='camp_'+Date.now();
-  await pgPool.query('INSERT INTO campanas_klido (id,agencia_id,nombre,plantilla,total,creada,historial,numeros,bloque_actual,estado,imagen_url) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[id,req.user.agenciaId,plantilla,plantilla,validos.length,Date.now(),JSON.stringify([{variables:['Cliente']}]),JSON.stringify(validos),0,'activa',imagen_url||null]);
-  procesaWPP(id); res.json({ok:true,id,total:validos.length});
- }catch(e){res.status(500).json({error:e.message});}
-});
+// 1) Obtener campañas locales pendientes de enviar masivo
+async function getLocalPendingCampaigns(limit = BATCH_SIZE) {
+  // Ajusta según tu esquema. Supuesto: tabla campaigns con columnas:
+  // id, name, meta_campaign_id, approved_by_meta (bool), mass_sent (bool)
+  const q = `
+    SELECT id, name, meta_campaign_id
+    FROM campaigns
+    WHERE approved_by_meta = true
+      AND mass_sent = false
+      AND meta_campaign_id IS NOT NULL
+    LIMIT $1
+  `;
+  const res = await db.query(q, [limit]);
+  return res.rows;
+}
 
-app.get('/api/campanas',auth,async(req,res)=>{const {rows}=await pgPool.query('SELECT * FROM campanas_klido WHERE agencia_id=$1 ORDER BY creada DESC',[req.user.agenciaId]);res.json(rows);});
-app.get('/health',(req,res)=>res.json({ok:true,version:'v187-automatico'}));
-app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-const PORT=process.env.PORT||3000;server.listen(PORT,()=>console.log(`🚀 V187 AUTOMATICO PORT ${PORT}`));
-setTimeout(async()=>{const {rows}=await pgPool.query("SELECT id FROM campanas_klido WHERE estado='activa'");rows.forEach(r=>procesaWPP(r.id));},5000);
+// 2) Comprobar estado en Meta (campaign)
+async function getCampaignMetaStatus(metaCampaignId) {
+  const url = `https://graph.facebook.com/${API_VERSION}/${metaCampaignId}`;
+  const params = { fields: 'id,effective_status,ad_review_feedback' };
+  return requestWithRetry('get', url, params);
+}
+
+// 3) Listar adsets de la campaña
+async function listAdSetsForCampaign(metaCampaignId) {
+  const url = `https://graph.facebook.com/${API_VERSION}/${metaCampaignId}/adsets`;
+  const params = { fields: 'id,effective_status' , limit: 100 };
+  return requestWithRetry('get', url, params)
+    .then(r => r.data || [])
+    .catch(err => { console.warn('No adsets o error:', err.message); return []; });
+}
+
+// 4) Listar ads de un adset
+async function listAdsForAdSet(adsetId) {
+  const url = `https://graph.facebook.com/${API_VERSION}/${adsetId}/ads`;
+  const params = { fields: 'id,effective_status' , limit: 100 };
+  return requestWithRetry('get', url, params)
+    .then(r => r.data || [])
+    .catch(err => { console.warn('No ads o error:', err.message); return []; });
+}
+
+// 5) Activar un objeto (campaign/adset/ad)
+async function activateObject(objectId) {
+  const url = `https://graph.facebook.com/${API_VERSION}/${objectId}`;
+  const params = { status: 'ACTIVE' };
+  return requestWithRetry('post', url, params);
+}
+
+// 6) Marcar en BD resultado
+async function markCampaignMassSent(localId, metaId, ok, info = null) {
+  const q = `
+    UPDATE campaigns
+    SET mass_sent = $1, mass_sent_at = NOW(), last_meta_info = $2
+    WHERE id = $3
+  `;
+  await db.query(q, [ok, info ? JSON.stringify(info) : null, localId]);
+}
+
+// Flujo para procesar una campaña local
+async function processCampaign(localCampaign) {
+  const { id: localId, name, meta_campaign_id: metaId } = localCampaign;
+  try {
+    const metaStatus = await getCampaignMetaStatus(metaId);
+    const effStatus = metaStatus.effective_status;
+    const review = metaStatus.ad_review_feedback || null;
+
+    // Si Meta reporta rechazo explícito, guardamos feedback y no activamos.
+    if (review && Object.keys(review).length) {
+      await markCampaignMassSent(localId, metaId, false, { reason: 'rejected', review });
+      console.log(`Campaña ${localId} rechazada en Meta:`, review);
+      return { localId, metaId, ok: false, reason: 'rejected', review };
+    }
+
+    // Consideraciones: en distintas versiones effective_status puede ser array o string.
+    const isApproved = Array.isArray(effStatus) ? effStatus.includes('ACTIVE') || effStatus.includes('APPROVED') : effStatus === 'ACTIVE' || effStatus === 'APPROVED';
+
+    if (!isApproved) {
+      // Si no está aprobada, no forzamos activación: guardamos estado y salimos.
+      await markCampaignMassSent(localId, metaId, false, { reason: 'not_approved', effective_status: effStatus });
+      console.log(`Campaña ${localId} no está aprobada en Meta (status=${effStatus}).`);
+      return { localId, metaId, ok: false, reason: 'not_approved', effective_status: effStatus };
+    }
+
+    // Si está aprobada: activar campaign -> adsets -> ads (por si alguno quedó PAUSED)
+    await activateObject(metaId);
+    const adsets = await listAdSetsForCampaign(metaId);
+    for (const adset of adsets) {
+      await activateObject(adset.id);
+      const ads = await listAdsForAdSet(adset.id);
+      for (const ad of ads) {
+        await activateObject(ad.id);
+      }
+    }
+
+    // Marcar como enviado masivo
+    await markCampaignMassSent(localId, metaId, true, { effective_status: effStatus });
+    console.log(`Campaña local ${localId} (meta ${metaId}) activada correctamente.`);
+    return { localId, metaId, ok: true };
+  } catch (err) {
+    console.error('Error procesando campaña', localId, err.response?.data || err.message);
+    await markCampaignMassSent(localId, metaId, false, { reason: 'error', error: err.response?.data || err.message });
+    return { localId, metaId, ok: false, reason: 'error', error: err.response?.data || err.message };
+  }
+}
+
+// Orquestador por lotes
+async function processBatch() {
+  const candidates = await getLocalPendingCampaigns(BATCH_SIZE);
+  if (!candidates.length) {
+    console.log('No hay campañas pendientes.');
+    return;
+  }
+  // Procesar en paralelo limitado por Bottleneck (internamente)
+  const promises = candidates.map(c => processCampaign(c));
+  const results = await Promise.all(promises);
+  return results;
+}
+
+// Ejecución principal
+(async () => {
+  try {
+    console.log('Iniciando job: enviar campañas aprobadas en Meta');
+    const res = await processBatch();
+    console.log('Resultado batch:', res);
+  } catch (err) {
+    console.error('Fallo en job principal', err);
+  } finally {
+    await db.end();
+  }
+})();
