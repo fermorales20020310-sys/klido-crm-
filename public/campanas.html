@@ -1,117 +1,153 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO Campañas v140 - Envia CUALQUIER plantilla</title><link rel="icon" href="/logo.png"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}body{background:#f8fafc;padding:0;display:flex;height:100vh}.sidebar{width:230px;background:#020617;color:white;padding:16px;display:flex;flex-direction:column}.main{flex:1;overflow:auto;padding:18px}.card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-top:12px}.btn{padding:8px 12px;border-radius:8px;border:none;font-weight:700;cursor:pointer;font-size:12px}.btn-primary{background:#1e5ad8;color:white}.btn-yellow{background:#fef08a;color:#713f12;border:1px solid #facc15}.btn-red{background:#fee2e2;color:#991b1b}.btn-green{background:#dcfce7;color:#166534}.input{width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;margin-top:6px;font-size:12px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px;border-bottom:1px solid #f1f5f9;text-align:left;vertical-align:top}.badge{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:800}.badge-activa{background:#dcfce7;color:#166534}.badge-pausada{background:#fef08a;color:#713f12}.badge-terminada{background:#e2e8f0;color:#475569}.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:99}</style></head><body>
-<div class="sidebar"><div style="display:flex;gap:8px;align-items:center"><img src="/logo.png" width:32 style="background:white;border-radius:8px;padding:3px"><b>KLIDO</b></div><div id="info" style="font-size:10px;opacity:.7;margin-top:12px">Cargando...</div><div style="margin-top:16px;display:flex;flex-direction:column;gap:6px"><button class="btn" style="background:#1e293b;color:white" onclick="location.href='/crm.html'">📥 Bandeja Amarillas</button><button class="btn btn-primary">📢 Campañas (aquí)</button><button class="btn" style="background:#1e293b;color:white" onclick="location.href='/admin.html'" id="btnAdmin" style="display:none">👑 Gerencia 3133181851</button><button class="btn" style="background:#1e293b;color:white;margin-top:auto" onclick="localStorage.clear();location.href='/'">Salir</button></div></div>
-<div class="main">
-<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><h2 style="font-weight:900">📢 Campañas v140 - Envía CUALQUIER plantilla aprobada</h2><button class="btn btn-primary" onclick="openModal()">+ Nueva Campaña</button></div>
-<div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap"><div class="card" style="flex:1;min-width:140px"><b>Total</b><div id="tTotal" style="font-size:22px;font-weight:900">0</div></div><div class="card" style="flex:1;min-width:140px"><b>Activas</b><div id="tAct" style="font-size:22px;font-weight:900;color:#16a34a">0</div></div><div class="card" style="flex:1;min-width:140px"><b>Pausadas</b><div id="tPau" style="font-size:22px;font-weight:900;color:#ca8a04">0</div></div><div class="card" style="flex:1;min-width:140px"><b>Terminadas</b><div id="tTer" style="font-size:22px;font-weight:900;color:#64748b">0</div></div><div class="card" style="flex:1;min-width:140px"><b>Enviados</b><div id="tEnv" style="font-size:22px;font-weight:900">0</div></div></div>
-<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>Historial campañas - Pausa/Continuar + Debug META</b><button class="btn" style="background:#eef2f7" onclick="load()">🔄 Actualizar</button></div><table><thead><tr><th>Nombre / ID</th><th>Plantilla</th><th>Total</th><th>Enviados / Fallidos</th><th>Estado</th><th>Creada</th><th>Acciones</th></tr></thead><tbody id="tbody"></tbody></table></div>
+<!-- CAMPAÑAS V160 - COMPLETO - FIX 3 PARAMS + MANUAL INPUT -->
+<div id="modalCampanas" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
+<div style="background:white;border-radius:20px;width:100%;max-width:1100px;max-height:90vh;overflow:auto;display:flex;flex-direction:column">
+<div style="padding:20px 24px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center">
+  <h2 style="margin:0;font-size:18px">🎯 Campañas v160 - Envía CUALQUIER plantilla aprobada (3 params)</h2>
+  <button onclick="document.getElementById('modalCampanas').style.display='none'" style="border:none;background:#f3f4f6;width:32px;height:32px;border-radius:50%;cursor:pointer">✕</button>
 </div>
 
-<!-- MODAL NUEVA -->
-<div id="modalNew" class="modal"><div class="card" style="width:95%;max-width:620px;max-height:92vh;overflow:auto;display:flex;flex-direction:column">
-<div style="display:flex;justify-content:space-between;align-items:center"><h3 style="font-weight:900">🎯 Campañas v140 - Envía CUALQUIER plantilla aprobada</h3><button class="btn" style="background:#f1f5f9" onclick="closeModal()">✕</button></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px">
+  <!-- IZQUIERDA -->
+  <div>
+    <label style="font-weight:700;font-size:12px">NOMBRE CAMPAÑA</label>
+    <input id="campNombre" placeholder="Ej: Promo GOLD Marzo - Congreso" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0 12px">
 
-<label style="font-size:11px;font-weight:800;margin-top:12px;display:block">NOMBRE CAMPAÑA</label>
-<input id="campNombre" class="input" placeholder="Ej: Promo GOLD Marzo">
+    <label style="font-weight:700;font-size:12px">PLANTILLA META (APPROVED)</label>
+    <select id="campPlantilla" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0">
+      <option value="acol_invitacion_congreso">Cargando plantillas...</option>
+    </select>
+    <!-- FIX MANUAL -->
+    <input id="plantillaManual" placeholder="Si dice Cargando... escribe: acol_invitacion_congreso" style="width:100%;margin-top:8px;padding:12px;border:2px solid #f59e0b;border-radius:10px;background:#fffbeb;font-weight:600">
+    <div style="font-size:11px;color:#92400e;background:#fffbeb;padding:6px;border-radius:6px;margin-top:4px">V160 - Si el select no carga, escribe el nombre aquí. El server forzará 3 variables.</div>
 
-<label style="font-size:11px;font-weight:800;margin-top:10px;display:block">PLANTILLA META (APPROVED)</label>
-<select id="plantillaSel" class="input"></select>
-<button class="btn" style="background:#eef2f7;margin-top:6px;font-size:10px" onclick="loadPlantillas()">🔄 Recargar plantillas</button>
+    <label style="font-weight:700;font-size:12px;color:#d97706;margin-top:14px;display:block">VARIABLES {{1}} {{2}} {{3}} - OPCIONAL</label>
+    <input id="campVariables" placeholder="Ej: Fer, Congreso ACOL, 15 Marzo - Déjalo vacío y envía igual" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0">
+    <div style="font-size:11px;color:#666">Si tu plantilla tiene 3 variables y lo dejas vacío, envía: Cliente, Congreso ACOL, Bogotá</div>
 
-<label style="font-size:11px;font-weight:800;margin-top:12px;display:block;color:#ca8a04">VARIABLES {{1}} {{2}} {{3}} - OPCIONAL (SI NO LLENAS, SE ENVÍA CON GENÉRICOS)</label>
-<input id="variablesTxt" class="input" placeholder="Ej: Fer, Congreso ACOL, 15 Marzo - Déjalo vacío y envía igual">
-<div style="font-size:10px;color:#64748b;margin-top:4px">Si tu plantilla acol_invitacion_congreso tiene 3 variables y lo dejas vacío, envía: Cliente, Congreso ACOL, Bogotá<br>Si tiene 1 variable, escribe solo: Fer - Si tiene 2: Fer, Congreso ACOL</div>
+    <label style="font-weight:700;font-size:12px;color:#16a34a;margin-top:14px;display:block">SUBIR EXCEL - CUALQUIER ORDEN, CUALQUIER HOJA</label>
+    <div style="border:1px solid #ddd;border-radius:10px;padding:12px;margin:6px 0;display:flex;gap:10px;align-items:center">
+      <input type="file" id="campExcel" accept=".xlsx,.xls,.csv" style="flex:1">
+      <span id="excelCount" style="font-size:12px;font-weight:700"></span>
+    </div>
+    <div id="excelPreview" style="font-size:11px;color:#666;margin:4px 0;max-height:60px;overflow:auto"></div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:10px;border-radius:10px;font-size:12px;margin-top:8px">📱 Sube cualquier Excel - Detecta teléfonos automáticamente (10 dígitos con 3 o 57+3)</div>
 
-<label style="font-size:11px;font-weight:800;margin-top:12px;display:block;color:#16a34a">SUBIR EXCEL - CUALQUIER ORDEN, CUALQUIER HOJA</label>
-<input type="file" id="excelFile" accept=".xlsx,.xls,.csv,.txt" class="input">
-<div id="excelInfo" style="font-size:10px;color:#2563eb;margin-top:6px;min-height:16px"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button id="btnEnviarCamp" style="flex:1;background:#2563eb;color:white;border:none;padding:14px;border-radius:12px;font-weight:800;cursor:pointer">🚀 Enviar campaña ahora (cualquier plantilla)</button>
+      <button onclick="document.getElementById('modalCampanas').style.display='none'" style="padding:14px 20px;border:1px solid #ddd;border-radius:12px;background:white;cursor:pointer">Cancelar</button>
+    </div>
+    <div id="campStatus" style="margin-top:10px;font-size:13px"></div>
+  </div>
 
-<label style="font-size:11px;font-weight:700;margin-top:8px;display:block">O pega números directamente (coma o salto línea)</label>
-<textarea id="numerosTxt" class="input" style="height:70px" placeholder="3001234567, 3109876543, 320..."></textarea>
-
-<div id="campProgress" style="font-size:11px;margin-top:10px;min-height:20px;background:#f8fafc;padding:8px;border-radius:8px;border:1px solid #f1f5f9">Listo - Detecta teléfonos automáticamente 57 3xx - Delay 900ms anti-baneo - V140 reintenta idiomas y variables solo</div>
-<button class="btn btn-primary" style="width:100%;margin-top:10px;padding:12px;font-size:13px" onclick="enviarCamp()">🚀 Enviar campaña ahora (cualquier plantilla)</button><button class="btn" style="width:100%;margin-top:6px;background:#eef2f7" onclick="closeModal()">Cancelar</button>
-</div></div>
-
-<!-- MODAL HISTORIAL -->
-<div id="modalHist" class="modal"><div class="card" style="width:95%;max-width:700px;max-height:90vh;overflow:auto"><div style="display:flex;justify-content:space-between"><h3 id="histTitle" style="font-weight:900">Historial</h3><button class="btn" style="background:#f1f5f9" onclick="document.getElementById('modalHist').style.display='none'">✕</button></div><pre id="histBody" style="font-size:11px;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:10px;margin-top:10px;white-space:pre-wrap;overflow:auto;max-height:60vh"></pre></div></div>
+  <!-- DERECHA HISTORIAL -->
+  <div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 style="margin:0;font-size:14px">Historial campañas</h3>
+      <button onclick="cargarHistorial()" style="border:1px solid #ddd;background:white;padding:6px 10px;border-radius:8px;cursor:pointer">🔄</button>
+    </div>
+    <div id="historialCamp" style="display:flex;flex-direction:column;gap:10px;max-height:600px;overflow:auto"></div>
+  </div>
+</div>
+</div>
+</div>
 
 <script>
-const token=localStorage.getItem('klido_token'); if(!token) location.href='/';
-function openModal(){document.getElementById('modalNew').style.display='flex'; loadPlantillas();}
-function closeModal(){document.getElementById('modalNew').style.display='none';}
-async function api(p,opt={}){opt.headers={...(opt.headers||{}),Authorization:'Bearer '+token,'Content-Type':'application/json'};const r=await fetch(p,opt);const j=await r.json();if(!r.ok){if(j.bloqueado){document.body.innerHTML='<div style="padding:40px"><h1>BLOQUEADO POR MORA 3133181851</h1><p>'+j.error+'</p></div>';throw j;}throw j;}return j;}
-async function loadPlantillas(){
- try{
-  const p=await api('/api/plantillas');
-  document.getElementById('plantillaSel').innerHTML=p.map(t=>`<option value="${t.name}">${t.name} (${t.status||'APPROVED'}) - ${t.language||'es'}</option>`).join('') || '<option value="hello_world">hello_world - APPROVED</option><option value="acol_invitacion_congreso">acol_invitacion_congreso - APPROVED</option>';
- }catch(e){
-  document.getElementById('plantillaSel').innerHTML='<option value="hello_world">hello_world - APPROVED</option><option value="acol_invitacion_congreso">acol_invitacion_congreso - APPROVED</option>';
- }
+let numerosDetectados = [];
+const token = localStorage.getItem('token');
+
+async function cargarPlantillas(){
+  const sel = document.getElementById('campPlantilla');
+  try{
+    const r = await fetch('/api/plantillas', { headers: { Authorization: 'Bearer ' + token } });
+    const data = await r.json();
+    console.log('Plantillas:', data);
+    sel.innerHTML = '';
+    if(!data ||!data.length) throw new Error('vacío');
+    data.forEach(p=>{
+      const o = document.createElement('option');
+      o.value = p.name; o.textContent = p.name + (p.language? ` (${p.language})` : '');
+      sel.appendChild(o);
+    });
+    if(!data.find(x=>x.name==='acol_invitacion_congreso')){
+      const o = document.createElement('option'); o.value='acol_invitacion_congreso'; o.textContent='acol_invitacion_congreso (forzado)'; sel.appendChild(o);
+    }
+  }catch(e){
+    console.log('Fallback plantillas', e);
+    sel.innerHTML = `<option value="acol_invitacion_congreso">acol_invitacion_congreso (forzado)</option><option value="hello_world">hello_world</option>`;
+  }
 }
-async function load(){
- const info=await api('/api/config'); document.getElementById('info').innerHTML=(JSON.parse(localStorage.getItem('klido_user')||'{}').nombre||'Agencia')+'<br>Plan '+info.plan?.toUpperCase()+'<br>API '+info.api_status+'<br>Uso '+info.usado+'/'+info.limite;
- try{if(JSON.parse(localStorage.getItem('klido_user')||'{}').email?.includes('admin')||JSON.parse(localStorage.getItem('klido_user')||'{}').email?.includes('fermorales')) document.getElementById('btnAdmin').style.display='block';}catch{}
- const camps=await api('/api/campanas');
- document.getElementById('tTotal').innerText=camps.length;
- document.getElementById('tAct').innerText=camps.filter(c=>c.estado==='activa'&&!c.pausada).length;
- document.getElementById('tPau').innerText=camps.filter(c=>c.pausada).length;
- document.getElementById('tTer').innerText=camps.filter(c=>c.estado==='terminada').length;
- document.getElementById('tEnv').innerText=camps.reduce((s,c)=>s+(c.enviados||0),0);
- document.getElementById('tbody').innerHTML=camps.map(c=>{
-  const pct=Math.round((c.enviados||0)/(c.total||1)*100);
-  const histErr = (c.historial && Array.isArray(c.historial)? c.historial.filter(h=>h.error).slice(-1)[0]?.error : '') || '';
-  return `<tr><td><b>${c.nombre||c.id.slice(0,12)}</b><br><span style="font-size:9px;color:#94a3b8">${c.id}</span><br>${histErr?`<span style="font-size:9px;color:#dc2626;background:#fee2e2;padding:2px 5px;border-radius:4px">${String(histErr).slice(0,80)}</span>`:''}</td>
-  <td><span style="background:#eef5ff;padding:3px 6px;border-radius:6px;font-size:10px">${c.plantilla||''}</span></td>
-  <td>${c.total||0}</td>
-  <td>${c.enviados||0} / <span style="color:#dc2626;font-weight:800">${c.fallidos||0}</span><div style="width:60px;height:6px;background:#e2e8f0;border-radius:999px;margin-top:4px"><div style="width:${pct}%;height:6px;background:#16a34a;border-radius:999px"></div></div><span style="font-size:9px">${pct}%</span></td>
-  <td><span class="badge ${c.pausada?'badge-pausada':c.estado==='activa'?'badge-activa':'badge-terminada'}">${c.pausada?'PAUSADA':(c.estado||'ACTIVA').toUpperCase()}</span></td>
-  <td style="font-size:10px">${c.creada?new Date(Number(c.creada)).toLocaleString():''}<br><span style="font-size:9px">${c.terminada?new Date(Number(c.terminada)).toLocaleString():''}</span></td>
-  <td><div style="display:flex;gap:4px;flex-wrap:wrap">
-  <button class="btn" style="background:#eef2f7" onclick="verHist('${c.id}')">👁️ Ver números</button>
-  ${c.pausada?`<button class="btn btn-green" onclick="continuar('${c.id}')">▶️ Continuar</button>`:`<button class="btn btn-yellow" onclick="pausar('${c.id}')">⏸️ Pausar</button>`}
-  <button class="btn btn-primary" onclick="continuar('${c.id}')">🔵 Continuar (forzar)</button>
-  </div></td></tr>`;
- }).join('');
+
+async function cargarHistorial(){
+  const div = document.getElementById('historialCamp');
+  try{
+    const r = await fetch('/api/campanas', { headers: { Authorization: 'Bearer ' + token } });
+    const data = await r.json();
+    div.innerHTML = '';
+    data.slice(0,20).forEach(c=>{
+      const d = new Date(c.creada).toLocaleString();
+      div.innerHTML += `
+      <div style="border:1px solid #eee;border-radius:12px;padding:12px">
+        <div style="display:flex;justify-content:space-between"><b style="font-size:12px">Campaña ${d}</b><span style="font-size:10px;background:#fef3c7;padding:3px 8px;border-radius:20px">${c.estado}</span></div>
+        <div style="font-size:11px;color:#666;margin:6px 0">Plantilla: ${c.plantilla} | Total: ${c.total} | Enviados: ${c.enviados||0} | Fallidos: ${c.fallidos||0}</div>
+        <div style="display:flex;gap:6px">
+          <button onclick="alert(JSON.stringify(${JSON.stringify(c.numeros||[]).replace(/"/g,'&quot;')}))" style="font-size:11px;border:1px solid #ddd;background:white;padding:6px 10px;border-radius:8px">👁 Ver números</button>
+          <button onclick="pausarCamp('${c.id}')" style="font-size:11px;border:1px solid #ddd;background:white;padding:6px 10px;border-radius:8px">⏸ Pausar</button>
+          <button onclick="continuarCamp('${c.id}')" style="font-size:11px;background:#2563eb;color:white;border:none;padding:6px 12px;border-radius:8px">▶ Continuar (forzar)</button>
+        </div>
+      </div>`;
+    });
+  }catch(e){ div.innerHTML = 'Error cargando historial'; }
 }
-async function pausar(id){await api('/api/campanas/'+id+'/pausa',{method:'POST'});alert('⏸️ Pausada '+id);load();}
-async function continuar(id){await api('/api/campanas/'+id+'/continuar',{method:'POST'});alert('▶️ Continuando/forzando '+id+' - Mira Logs V140');load();}
-async function verHist(id){
- const rows=await api('/api/campanas'); const c=rows.find(x=>x.id===id);
- document.getElementById('histTitle').innerText='Campaña '+id+' - '+c.plantilla+' - '+c.enviados+'/'+c.total+' fallidos:'+c.fallidos;
- let txt=''; try{ txt=JSON.stringify(c.historial||[],null,2); }catch{ txt=String(c.historial); }
- document.getElementById('histBody').innerText=txt + "\n\n--- NUMEROS ---\n" + JSON.stringify(c.numeros||[],null,2).slice(0,5000);
- document.getElementById('modalHist').style.display='flex';
-}
-document.getElementById('excelFile').addEventListener('change', async (e)=>{
- const file=e.target.files[0]; if(!file) return;
- document.getElementById('excelInfo').innerText='⏳ Leyendo '+file.name+'...';
- try{
-  const reader=new FileReader();
-  reader.onload=async (ev)=>{
-   const base64=ev.target.result;
-   const res=await api('/api/campanas/parse-excel',{method:'POST',body:JSON.stringify({dataBase64:base64})});
-   document.getElementById('numerosTxt').value=res.numeros.join(', ');
-   document.getElementById('excelInfo').innerText='✅ Detectados '+res.total+' números válidos 57 3xx - Preview: '+res.preview.slice(0,3).join(', ');
+
+async function pausarCamp(id){ await fetch(`/api/campanas/${id}/pausa`, { method:'POST', headers:{Authorization:'Bearer '+token}}); cargarHistorial(); }
+async function continuarCamp(id){ await fetch(`/api/campanas/${id}/continuar`, { method:'POST', headers:{Authorization:'Bearer '+token}}); cargarHistorial(); alert('Reanudada - Mira logs Railway V160'); }
+
+document.getElementById('campExcel').addEventListener('change', async (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev)=>{
+    try{
+      const b64 = ev.target.result;
+      const r = await fetch('/api/campanas/parse-excel', { method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+token}, body: JSON.stringify({ dataBase64: b64 }) });
+      const j = await r.json();
+      numerosDetectados = j.numeros || [];
+      document.getElementById('excelCount').textContent = `${numerosDetectados.length} números`;
+      document.getElementById('excelPreview').textContent = numerosDetectados.slice(0,5).join(', ') + (numerosDetectados.length>5?'...':'');
+      console.log('Numeros:', numerosDetectados);
+    }catch(err){ alert('Error leyendo Excel'); }
   };
   reader.readAsDataURL(file);
- }catch(err){ document.getElementById('excelInfo').innerText='❌ Error leyendo Excel: '+err.message; }
 });
-async function enviarCamp(){
- const plantilla=document.getElementById('plantillaSel').value;
- const nombre=document.getElementById('campNombre').value;
- const varsTxt=document.getElementById('variablesTxt').value.trim();
- let variables = varsTxt? varsTxt.split(',').map(s=>s.trim()).filter(Boolean) : [];
- let numeros=[];
- const txt=document.getElementById('numerosTxt').value.trim();
- if(txt){ numeros=numeros.concat(txt.split(/[\n,;\s]+/).map(s=>s.trim()).filter(Boolean)); }
- numeros=[...new Set(numeros.map(n=>n.replace(/\D/g,'')).filter(n=>n.length>=10))];
- if(!plantilla||!numeros.length){alert('Falta plantilla y números');return;}
- document.getElementById('campProgress').innerText='📢 Enviando '+numeros.length+' con '+plantilla+' vars:'+JSON.stringify(variables)+'... V140 reintenta solo';
- try{
-  const r=await api('/api/campanas',{method:'POST',body:JSON.stringify({nombre,plantilla,numeros,variables})});
-  document.getElementById('campProgress').innerHTML='✅ Campaña <b>'+r.id+'</b> creada '+r.total+' - Enviando background - V140 reintenta idiomas/variables<br><button class="btn btn-yellow" style="margin-top:6px" onclick="verHist(\''+r.id+'\')">👁️ Ver números y errores META</button>';
-  load(); setTimeout(()=>closeModal(),1200);
- }catch(e){ document.getElementById('campProgress').innerText='❌ Error: '+(e.error||e.message); }
-}
-load(); setInterval(load,5000);
-</script></body></html>
+
+document.getElementById('btnEnviarCamp').addEventListener('click', async ()=>{
+  const sel = document.getElementById('campPlantilla');
+  const manual = document.getElementById('plantillaManual').value.trim();
+  let plantilla = manual || sel.value;
+  if(!plantilla || plantilla.includes('Cargando')) plantilla = 'acol_invitacion_congreso';
+
+  const nombre = document.getElementById('campNombre').value || plantilla;
+  const varsRaw = document.getElementById('campVariables').value.trim();
+  let variables = varsRaw? varsRaw.split(',').map(s=>s.trim()).filter(Boolean) : ['Cliente','Congreso ACOL','Bogotá'];
+  while(variables.length < 3) variables.push(variables[0]);
+
+  if(!numerosDetectados.length){ alert('Sube un Excel primero'); return; }
+
+  document.getElementById('campStatus').textContent = '🚀 Enviando... revisa Railway logs V160';
+  try{
+    const r = await fetch('/api/campanas', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', Authorization:'Bearer '+token},
+      body: JSON.stringify({ nombre, plantilla, numeros: numerosDetectados, variables })
+    });
+    const j = await r.json();
+    if(j.ok){
+      document.getElementById('campStatus').innerHTML = `✅ Campaña creada ID: ${j.id} - Total: ${j.total} - Mira logs V160`;
+      cargarHistorial();
+    }else{
+      document.getElementById('campStatus').textContent = '❌ Error: ' + j.error;
+    }
+  }catch(e){ document.getElementById('campStatus').textContent = '❌ Error red'; }
+});
+
+cargarPlantillas(); cargarHistorial();
+</script>
