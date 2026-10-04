@@ -1,4 +1,4 @@
-// KLIDO v146 FIX CAMPAÑAS DEFINITIVO - TU V145 + ENVIO SIEMPRE (SIN DAÑAR MENSAJES)
+// KLIDO v147 FIX CAMPAÑAS - HEADER+BODY + LOG FULL ERROR - SIN DAÑAR MENSAJES (TU V146)
 import express from 'express'; import cors from 'cors'; import pg from 'pg'; import jwt from 'jsonwebtoken'; import bcrypt from 'bcryptjs'; import path from 'path'; import { fileURLToPath } from 'url'; import * as XLSX from 'xlsx'; import http from 'http'; import { Server } from 'socket.io';
 const __filename=fileURLToPath(import.meta.url); const __dirname=path.dirname(__filename);
 const app=express(); const server=http.createServer(app); const io=new Server(server,{cors:{origin:"*", methods:["GET","POST"]}});
@@ -16,13 +16,30 @@ await pgPool.query(`CREATE TABLE IF NOT EXISTS asesores (id TEXT PRIMARY KEY, ag
 await pgPool.query(`CREATE TABLE IF NOT EXISTS soporte_klido (id SERIAL PRIMARY KEY, agencia_id TEXT, mensaje TEXT, fecha BIGINT)`);
 await pgPool.query(`ALTER TABLE mensajes_klido ADD COLUMN IF NOT EXISTS media_id TEXT`); await pgPool.query(`ALTER TABLE mensajes_klido ADD COLUMN IF NOT EXISTS mime TEXT`); await pgPool.query(`ALTER TABLE mensajes_klido ADD COLUMN IF NOT EXISTS url TEXT`); await pgPool.query(`ALTER TABLE mensajes_klido ADD COLUMN IF NOT EXISTS direccion TEXT`);
 await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS bloque_actual INT DEFAULT 0`); await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS programada BIGINT`); await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS numeros JSONB DEFAULT '[]'`); await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS historial JSONB DEFAULT '[]'`); await pgPool.query(`ALTER TABLE campanas_klido ADD COLUMN IF NOT EXISTS pausada BOOLEAN DEFAULT false`);
-console.log('✅ V146 DB OK + migracion campanas');
+console.log('✅ V147 DB OK - MENSAJES INTACTOS + migracion campanas');
 } initDB();
 function auth(req,res,next){ const h=req.headers.authorization; if(!h) return res.status(401).json({error:'No token'}); try{ req.user=jwt.verify(h.replace('Bearer ',''),JWT); next(); }catch{ res.status(401).json({error:'Token invalido'}); }}
 async function getEmp(id){ if(!id){ return {id:'default', phone:PHONE_ENV, waba:WABA_ENV, token:TOKEN_ENV, plan:'basico'}; } const {rows}=await pgPool.query('SELECT * FROM agencias WHERE id=$1',[id]); let r=rows[0]; if(!r){ const {rows:all}=await pgPool.query('SELECT * FROM agencias ORDER BY creado ASC LIMIT 1'); r=all[0]; } if(!r) return {id:'default', phone:PHONE_ENV, waba:WABA_ENV, token:TOKEN_ENV, plan:'basico'}; return {id:r.id, phone:r.phone_id||PHONE_ENV, waba:r.waba_id||WABA_ENV, token:r.meta_token||TOKEN_ENV, plan:r.plan||'basico', nombre:r.nombre, activo:r.plan_activo}; }
 function normalizaNumeros(arr){ let out=[]; (arr||[]).forEach(raw=>{ String(raw||'').split(/[,;\n|]+/).forEach(p=>{ let d=p.replace(/\D/g,''); if(d.endsWith('.0')) d=d.slice(0,-2); if(d.length===10&&d.startsWith('3')) d='57'+d; if(d.length===12&&d.startsWith('57')) out.push(d); if(d.length>12){ const m=d.match(/3\d{9}/g); if(m) m.forEach(x=>out.push('57'+x)); } }); }); return [...new Set(out)].filter(n=>/^57[3]\d{9}$/.test(n)); }
 function extraeEmails(arr){ let out=[]; const re=/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g; (arr||[]).forEach(raw=>{ const ms=String(raw).match(re); if(ms) out.push(...ms); }); return [...new Set(out.map(e=>e.toLowerCase()))]; }
-async function getMeta(p,emp){ try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=250`); const j=await r.json(); const t=j.data?.find(x=>x.name===p); if(!t) return null; let v=[]; (t.components||[]).forEach(c=>{ const txt=c.text||''; if(txt){ [...txt.matchAll(/\{\{([^}]+)\}\}/g)].forEach(m=>v.push(m[1].trim())); } }); return {language:t.language,varNames:v}; }catch{ return null; }}
+
+// --- V147 MEJORADO: LEE HEADER + BODY Y LOGUEA TODO ---
+async function getMeta(p,emp){
+ try{
+  const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba}/message_templates?access_token=${emp.token}&limit=250`);
+  const j=await r.json();
+  const t=j.data?.find(x=>x.name===p);
+  if(!t){ console.log(`❌ Plantilla ${p} no existe en Meta`); return null; }
+  let vars=[];
+  (t.components||[]).forEach(c=>{
+    const txt=c.text||'';
+    if(txt){ [...txt.matchAll(/\{\{([^}]+)\}\}/g)].forEach(m=>vars.push({name:m[1].trim(), type:c.type, text:txt})); }
+  });
+  console.log(`🧩 RAW TEMPLATE ${p}:`, JSON.stringify(t).slice(0,1200));
+  return {language:t.language,varNames:vars.map(v=>v.name), varsFull:vars, components:t.components};
+ }catch(e){ console.log('getMeta error', e.message); return null; }
+}
+
 app.post('/api/auth/login',async(req,res)=>{ try{ const {email,password}=req.body; const {rows}=await pgPool.query('SELECT * FROM agencias WHERE email=$1',[email]); if(!rows[0]){ const {rows:as}=await pgPool.query('SELECT * FROM asesores WHERE email=$1',[email]); if(!as[0]) return res.status(404).json({error:'No existe'}); if(!await bcrypt.compare(password,as[0].password||'')) return res.status(401).json({error:'Clave mala'}); return res.json({ok:true,token:jwt.sign({agenciaId:as[0].agencia_id, asesorId:as[0].id, rol:'worker'},JWT), rol:'worker'}); } if(!await bcrypt.compare(password,rows[0].password)) return res.status(401).json({error:'Clave mala'}); res.json({ok:true,token:jwt.sign({agenciaId:rows[0].id, rol:'admin'},JWT), rol:'admin'}); }catch(e){ res.status(500).json({error:e.message}); }});
 app.get('/api/config',auth,async(req,res)=>{ const emp=await getEmp(req.user.agenciaId); res.json({phoneId:emp.phone, wabaId:emp.waba, tieneToken:emp.token.length>50, plan:emp.plan}); });
 app.post('/api/config',auth,async(req,res)=>{ await pgPool.query('UPDATE agencias SET phone_id=$1,waba_id=$2,meta_token=$3 WHERE id=$4',[req.body.phoneId,req.body.wabaId,req.body.metaToken,req.user.agenciaId]); res.json({ok:true}); });
@@ -38,7 +55,7 @@ app.post('/api/mensajes/:clienteId',auth,async(req,res)=>{
     let j=await resp.json();
     if(j.error && (j.error.code===131047 || j.error.code===470)){
       const plantilla='acol_invitacion_congreso'; const meta=await getMeta(plantilla, emp);
-      if(meta){ const tpl={name:plantilla, language:{code:meta.language||'es_CO'}, components:[{type:'body', parameters: [{type:'text', text:contenido.slice(0,80)}]}]}; resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'template',template:tpl})}); j=await resp.json(); }
+      if(meta){ const tpl={name:plantilla, language:{code:meta.language}, components:[{type:'body', parameters: [{type:'text', text:contenido.slice(0,80)}]}]}; resp=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify({messaging_product:'whatsapp',to:cl[0].telefono,type:'template',template:tpl})}); j=await resp.json(); }
     }
     if(j.error) return res.status(400).json({error:j.error.message, detalle:j.error});
     await pgPool.query('INSERT INTO mensajes_klido (agencia_id,cliente_id,telefono,tipo,contenido,timestamp,direccion) VALUES ($1,$2,$3,$4,$5,$6,$7)',[req.user.agenciaId,req.params.clienteId,cl[0].telefono,'text',contenido,Date.now(),'saliente']);
@@ -46,43 +63,57 @@ app.post('/api/mensajes/:clienteId',auth,async(req,res)=>{
   }catch(e){ res.status(500).json({error:e.message}); }
 });
 app.post('/api/campanas/parse-excel',auth,async(req,res)=>{ try{ const {dataBase64}=req.body; const buffer=Buffer.from((dataBase64||'').split(',').pop()||'', 'base64'); const wb=XLSX.read(buffer,{type:'buffer'}); let nums=[], emails=[]; wb.SheetNames.forEach(n=>{ const ws=wb.Sheets[n]; const json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}); json.forEach(r=>{ r.forEach(c=>{ nums.push(...normalizaNumeros([String(c)])); emails.push(...extraeEmails([String(c)])); }); }); }); res.json({ok:true, numeros:[...new Set(nums)], emails:[...new Set(emails)]}); }catch(e){ res.status(500).json({error:e.message}); }});
+
+// --- V147 PROCESA CAMPAÑAS QUE MANDA SIEMPRE ---
 async function procesaWPP(id){
   try{
     const {rows}=await pgPool.query('SELECT * FROM campanas_klido WHERE id=$1',[id]); if(!rows[0]) return; let c=rows[0];
     if(c.programada && Number(c.programada)>Date.now()){ setTimeout(()=>procesaWPP(id), Number(c.programada)-Date.now()); return; }
     let nums=c.numeros; if(typeof nums==='string') try{ nums=JSON.parse(nums); }catch{ nums=[]; } nums=normalizaNumeros(nums);
     const emp=await getEmp(c.agencia_id); const meta=await getMeta(c.plantilla, emp);
-    console.log(`🧩 Plantilla ${c.plantilla} vars detectadas:`, meta?.varNames, 'idioma', meta?.language);
     if(!meta){ await pgPool.query('UPDATE campanas_klido SET estado=$1 WHERE id=$2',['error_plantilla',id]); return; }
     let vars=[]; try{ const h=typeof c.historial==='string'?JSON.parse(c.historial):c.historial; vars=h?.[0]?.variables||[]; }catch{}
     if(!vars.length) vars=['Cliente'];
     const esperados = meta.varNames.length || 1;
     while(vars.length < esperados) vars.push(vars[0]||'Cliente');
     vars = vars.slice(0, esperados);
-    console.log(`🧩 Vars finales (${esperados}):`, vars);
-    console.log(`🚀 Campaña ${id} ${c.plantilla} total:${nums.length}`);
+    console.log(`🧩 Vars finales (${esperados}):`, vars, 'idioma detectado:', meta.language);
     for(let i=c.bloque_actual||0;i<nums.length;i++){
       const {rows:st}=await pgPool.query('SELECT pausada FROM campanas_klido WHERE id=$1',[id]); if(st[0]?.pausada){ await pgPool.query('UPDATE campanas_klido SET bloque_actual=$1 WHERE id=$2',[i,id]); return; }
+      let paramIdx=0;
+      const components = meta.components.map(comp=>{
+        if(comp.type==='HEADER'){
+          const matches=[... (comp.text||'').matchAll(/\{\{([^}]+)\}\}/g)];
+          if(!matches.length) return null;
+          return {type:'header', parameters: matches.map(()=>({type:'text', text:String(vars[paramIdx++]||'Cliente').slice(0,100)}))};
+        }
+        if(comp.type==='BODY'){
+          const matches=[... (comp.text||'').matchAll(/\{\{([^}]+)\}\}/g)];
+          if(!matches.length) return null;
+          return {type:'body', parameters: matches.map(()=>({type:'text', text:String(vars[paramIdx++]||'Cliente').slice(0,100)}))};
+        }
+        return null;
+      }).filter(Boolean);
+      if(!components.length) components.push({type:'body', parameters: vars.map(v=>({type:'text', text:String(v).slice(0,100)}))});
+      const payload={ messaging_product:'whatsapp', to:nums[i], type:'template', template:{ name:c.plantilla, language:{code:meta.language}, components } };
+      console.log(`📤 Payload ${nums[i]}:`, JSON.stringify(payload).slice(0,900));
       try{
-        const payload={ messaging_product:'whatsapp', to:nums[i], type:'template', template:{ name:c.plantilla, language:{code:meta.language||'es_CO'}, components:[{type:'body', parameters: vars.map(v=>({type:'text', text:String(v).slice(0,100)}))}] } };
         const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify(payload)});
-        const j=await r.json(); if(j.error) throw j.error;
+        const j=await r.json();
+        console.log(`📨 Meta resp ${nums[i]}:`, JSON.stringify(j).slice(0,1200));
+        if(j.error) throw j.error;
         await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1, bloque_actual=$1 WHERE id=$2',[i+1,id]);
-        console.log(`✅ ${nums[i]} OK wamid ${j.messages?.[0]?.id}`);
+        console.log(`✅ ${nums[i]} OK`);
       }catch(e){
-        try{
-          const payload2={ messaging_product:'whatsapp', to:nums[i], type:'template', template:{ name:c.plantilla, language:{code:meta.language||'es_CO'}, components:[{type:'body', parameters: meta.varNames.map((n,idx)=>({type:'text', text:String(vars[idx]||'Cliente').slice(0,100), parameter_name:n}))}] } };
-          const r2=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${emp.token}`},body:JSON.stringify(payload2)});
-          const j2=await r2.json(); if(j2.error) throw j2.error;
-          await pgPool.query('UPDATE campanas_klido SET enviados=enviados+1, bloque_actual=$1 WHERE id=$2',[i+1,id]);
-          console.log(`✅ ${nums[i]} OK fallback`);
-        }catch(e2){ console.log(`❌ Fallo ${nums[i]} ${e2.message}`); await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1 WHERE id=$1',[id]); }
+        console.log(`❌ Fallo FULL ${nums[i]}:`, JSON.stringify(e).slice(0,1500));
+        await pgPool.query('UPDATE campanas_klido SET fallidos=fallidos+1 WHERE id=$1',[id]);
       }
       await new Promise(r=>setTimeout(r,2000));
     }
     await pgPool.query('UPDATE campanas_klido SET estado=$1,terminada=$2 WHERE id=$3',['terminada',Date.now(),id]); console.log(`🏁 Campaña ${id} terminada`);
   }catch(e){ console.log('❌ procesaWPP error', e.message, e.stack); }
 }
+
 app.post('/api/campanas',auth,async(req,res)=>{
   try{
     const {nombre,plantilla,numeros,variables,programada}=req.body; if(!plantilla) return res.status(400).json({error:'Falta plantilla'});
@@ -113,7 +144,7 @@ app.post('/webhook',async(req,res)=>{
     io.emit('new_message',{agencia_id:agenciaId}); console.log(`📩 RECIBIDO ${from} ${tipo}`);
   }catch(e){ console.log('❌ webhook error',e.message); }
 });
-app.get('/api/health',(req,res)=>res.json({ok:true, version:'v146-fix-campanas-definitivo'})); app.get('/health',(req,res)=>res.json({ok:true}));
+app.get('/api/health',(req,res)=>res.json({ok:true, version:'v147-fix-campanas-header'})); app.get('/health',(req,res)=>res.json({ok:true}));
 app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 io.on('connection',s=>{ s.on('join_agencia',id=>s.join(`agencia_${id}`)); });
-const PORT=process.env.PORT||3000; server.listen(PORT,()=>console.log(`🚀 V146 FIX CAMPAÑAS DEFINITIVO - PORT ${PORT}`));
+const PORT=process.env.PORT||3000; server.listen(PORT,()=>console.log(`🚀 V147 FIX CAMPAÑAS HEADER - PORT ${PORT} - MENSAJES INTACTOS`));
