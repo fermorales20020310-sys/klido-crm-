@@ -1,13 +1,13 @@
 // KLIDO v157 - PLANTILLA APROBADA - FIX META GRAPH API & COMPONENTS & FLEXIBLE PHONE NORMALIZATION
-import express from 'express';
-import cors from 'cors';
-import pg from 'pg';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import * as XLSX from 'xlsx';
-import http from 'http';
+import express from 'express'; 
+import cors from 'cors'; 
+import pg from 'pg'; 
+import jwt from 'jsonwebtoken'; 
+import bcrypt from 'bcryptjs'; 
+import path from 'path'; 
+import { fileURLToPath } from 'url'; 
+import * as XLSX from 'xlsx'; 
+import http from 'http'; 
 import { Server } from 'socket.io';
 
 const __filename = fileURLToPath(import.meta.url); 
@@ -75,7 +75,6 @@ function normalizaNumeros(arr) {
   (arr || []).forEach(raw => { 
     if (raw === null || raw === undefined) return;
 
-    // Convertir notación científica de Excel (ej: 3.10123e+09)
     let valStr = String(raw).trim();
     if (valStr.includes('e') || valStr.includes('E')) {
       const num = Number(valStr);
@@ -88,19 +87,15 @@ function normalizaNumeros(arr) {
 
       if (!d) return;
 
-      // Celular Colombia de 10 dígitos (ej: 3101234567)
       if (d.length === 10 && d.startsWith('3')) {
         out.push('57' + d);
       } 
-      // Celular Colombia de 12 dígitos con código de país 57 (ej: 573101234567)
       else if (d.length === 12 && d.startsWith('573')) {
         out.push(d);
       } 
-      // Números internacionales válidos (entre 8 y 15 dígitos)
       else if (d.length >= 8 && d.length <= 15) {
         out.push(d);
       } 
-      // Múltiples celulares seguidos dentro de la misma celda
       else if (d.length > 12) { 
         const m = d.match(/3\d{9}/g); 
         if (m) m.forEach(x => out.push('57' + x)); 
@@ -108,7 +103,6 @@ function normalizaNumeros(arr) {
     }); 
   }); 
 
-  // Retorna el listado limpio sin duplicados
   return [...new Set(out)]; 
 }
 
@@ -154,13 +148,14 @@ async function procesaWPP(id) {
       vars = h?.[0]?.variables || []; 
     } catch {}
 
-    // FIX META: Construcción correcta de componentes sin parameter_name
+    // FIX META: Incluye parameter_name exigido por la API de Meta Graph
     let components = [];
     if (vars.length > 0 && vars[0]) {
       components.push({
         type: 'body',
-        parameters: vars.map(v => ({
+        parameters: vars.map((v, idx) => ({
           type: 'text',
+          parameter_name: String(idx + 1),
           text: String(v || 'Cliente').slice(0, 100)
         }))
       });
@@ -290,7 +285,7 @@ app.post('/api/mensajes/:clienteId', auth, async (req, res) => {
           language: { code: meta.language }, 
           components: [{
             type: 'body', 
-            parameters: [{ type: 'text', text: contenido.slice(0, 80) }]
+            parameters: [{ type: 'text', parameter_name: '1', text: contenido.slice(0, 80) }]
           }]
         }; 
         resp = await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`, {
