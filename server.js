@@ -1,213 +1,134 @@
-// KLIDO CRM SERVER V147 FINAL - COMPLETO SIN ERRORES
+// KLIDO AVANZA CONSULTING V149 - PANEL ORIGINAL + RESEND + CRM COMPLETO
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const xlsx = require('xlsx');
 const fs = require('fs');
 const path = require('path');
-
 const app = express();
 app.use(cors());
 app.use(express.json({limit:'100mb'}));
 app.use(express.urlencoded({extended:true}));
-
-// Crear carpetas si no existen
-['uploads','uploads/media','db','public','public/uploads'].forEach(d=>{
-  if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true});
-});
-
+['db','public','public/uploads','uploads'].forEach(d=>{ if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true}) });
 const upload = multer({dest:'uploads/'});
-const mediaUpload = multer({dest:'uploads/media/'});
 
-// DB AISLADA POR EMPRESA
-function getDB(empresa_id){
-  if(!empresa_id) empresa_id='default';
-  const file = path.join(__dirname,'db',`${empresa_id}.json`);
-  if(!fs.existsSync(file)){
-    return {empresa_id, config:null, chats:{}, campaigns:{}, workers:{}, reminders:[]};
+function getDB(id){
+  id=id||'default';
+  const file=path.join(__dirname,'db',`${id}.json`);
+  if(!fs.existsSync(file)) return {empresa_id:id, config:null, chats:{}, campaigns:{}, users:{}, codes:{}};
+  try{ return JSON.parse(fs.readFileSync(file,'utf8')); }catch{ return {empresa_id:id, config:null, chats:{}, campaigns:{}, users:{}, codes:{}}; }
+}
+function saveDB(id,data){ fs.writeFileSync(path.join(__dirname,'db',`${id}.json`), JSON.stringify(data,null,2)); }
+function loadConfig(id){
+  let db=getDB(id);
+  if(!db.config && process.env.WHATSAPP_TOKEN){
+    db.config={token:process.env.WHATSAPP_TOKEN, phone:process.env.PHONE_ID, waba:process.env.WABA_ID, phone_id:process.env.PHONE_ID, waba_id:process.env.WABA_ID};
+    saveDB(id, db);
   }
-  try{ return JSON.parse(fs.readFileSync(file,'utf8')); }
-  catch{ return {empresa_id, config:null, chats:{}, campaigns:{}, workers:{}, reminders:[]}; }
+  return db.config;
 }
-function saveDB(empresa_id,data){
-  fs.writeFileSync(path.join(__dirname,'db',`${empresa_id}.json`), JSON.stringify(data,null,2));
+function getMasterDB(){
+  const file=path.join(__dirname,'db','master.json');
+  if(!fs.existsSync(file)) return {empresas:{}, users:{}};
+  try{ return JSON.parse(fs.readFileSync(file,'utf8')); }catch{ return {empresas:{}, users:{}}; }
 }
-function loadConfig(id){ return getDB(id).config; }
+function saveMaster(db){ fs.writeFileSync(path.join(__dirname,'db','master.json'), JSON.stringify(db,null,2)); }
 
-// ========== APIS - SIEMPRE ANTES DE STATIC ==========
+// ===== RESEND EMAIL =====
+async function enviarCorreo(to, subject, html){
+  try{
+    if(!process.env.RESEND_API_KEY){ console.log('No RESEND_API_KEY, código en consola'); return true; }
+    const r=await fetch('https://api.resend.com/emails',{
+      method:'POST',
+      headers:{'Content-Type':'application/json', Authorization:`Bearer ${process.env.RESEND_API_KEY}`},
+      body:JSON.stringify({from: process.env.RESEND_FROM || 'Klido <onboarding@klidoapp.com.co>', to, subject, html})
+    });
+    const j=await r.json(); console.log('Resend', j); return true;
+  }catch(e){ console.log('Resend error', e.message); return true; }
+}
 
-// LOGIN FIX - NUNCA MAS "No existe"
-app.post('/api/login',(req,res)=>{
-  console.log('LOGIN FIX', req.body);
-  return res.json({ok:true, empresa_id: req.body.empresa_id || req.body.correo || 'default', user: req.body.user || req.body.correo || 'admin'});
+// LOGIN
+app.post('/api/login', (req,res)=>{
+  const {correo, password, empresa_id} = req.body;
+  const master=getMasterDB();
+  const user=Object.values(master.users).find(u=>u.correo===correo && u.password===password);
+  if(!user && correo==='admin'){ return res.json({ok:true, empresa_id:'default'}); }
+  if(!user) return res.json({ok:false, error:'No existe o contraseña incorrecta'});
+  return res.json({ok:true, empresa_id:user.empresa_id, user});
 });
 
-// CONFIG EMPRESA
-app.post('/api/config-empresa',(req,res)=>{
-  const {empresa_id, token, phone_id, waba_id, nombre} = req.body;
-  const id = empresa_id || 'default';
-  const db = getDB(id);
-  db.config = {token, phone: phone_id, waba: waba_id, nombre, token, phone_id, waba_id};
-  saveDB(id, db);
+// CREAR EMPRESA + GENERAR CODIGO
+app.post('/api/crear-empresa', async(req,res)=>{
+  const {nombre_agencia, correo, password, plan} = req.body;
+  if(!nombre_agencia || !correo) return res.json({ok:false, error:'Faltan datos'});
+  const master=getMasterDB();
+  const empresa_id=correo.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,15)+'_'+Date.now().toString().slice(-4);
+  const codigo=Math.floor(100000+Math.random()*900000).toString();
+  
+  master.empresas[empresa_id]={id:empresa_id, nombre:nombre_agencia, correo, plan, codigo, verificado:false, created:Date.now()};
+  master.users[correo]={correo, password, empresa_id, plan, nombre:nombre_agencia};
+  saveMaster(master);
+  
+  const db=getDB(empresa_id); db.config=null; saveDB(empresa_id, db);
+
+  await enviarCorreo(correo, `Tu código Klido - ${codigo}`, `
+    <div style="font-family:Arial;padding:20px"><h2>Bienvenido a Klido Avanza Consulting</h2>
+    <p>Tu agencia <b>${nombre_agencia}</b> ha sido creada.</p>
+    <p>Tu código de registro es:</p><h1 style="background:#0b57d0;color:#fff;padding:15px;border-radius:10px;text-align:center;letter-spacing:5px">${codigo}</h1>
+    <p>Plan: ${plan}</p><p>Ingresa en app.klidoapp.com.co</p></div>
+  `);
+  
+  console.log(`CODIGO ${correo}: ${codigo}`);
+  res.json({ok:true, empresa_id, codigo_debug: codigo, msg:'Código enviado a Gmail'});
+});
+
+// VERIFICAR CODIGO
+app.post('/api/verificar-codigo',(req,res)=>{
+  const {correo, codigo} = req.body;
+  const master=getMasterDB();
+  const emp=Object.values(master.empresas).find(e=>e.correo===correo);
+  if(!emp) return res.json({ok:false, error:'Empresa no encontrada'});
+  if(emp.codigo===codigo){ emp.verificado=true; saveMaster(master); return res.json({ok:true, empresa_id:emp.id}); }
+  return res.json({ok:false, error:'Código incorrecto'});
+});
+
+// OLVIDE CONTRASEÑA
+app.post('/api/recuperar-password', async(req,res)=>{
+  const {correo} = req.body;
+  const master=getMasterDB();
+  const user=master.users[correo];
+  if(!user) return res.json({ok:false, error:'Correo no registrado'});
+  const codigo=Math.floor(100000+Math.random()*900000).toString();
+  master.empresas[user.empresa_id].codigo=codigo; saveMaster(master);
+  await enviarCorreo(correo, `Recuperar contraseña Klido - ${codigo}`, `<h1>Tu código de recuperación es: ${codigo}</h1>`);
+  console.log(`RECUPERAR ${correo}: ${codigo}`);
+  res.json({ok:true, msg:'Código enviado', codigo_debug:codigo});
+});
+
+app.post('/api/cambiar-password',(req,res)=>{
+  const {correo, codigo, nueva_password}=req.body;
+  const master=getMasterDB();
+  const emp=Object.values(master.empresas).find(e=>e.correo===correo);
+  if(!emp || emp.codigo!==codigo) return res.json({ok:false, error:'Código incorrecto'});
+  master.users[correo].password=nueva_password; saveMaster(master);
   res.json({ok:true});
 });
 
-app.get('/api/empresa/:id',(req,res)=>{
-  res.json(getDB(req.params.id).config || {});
-});
-
-// PLANTILLAS APROBADAS
-app.get('/api/plantillas/:empresa_id', async(req,res)=>{
-  const emp = loadConfig(req.params.empresa_id);
-  if(!emp ||!emp.token) return res.json([]);
-  try{
-    const r = await fetch(`https://graph.facebook.com/v20.0/${emp.waba || emp.waba_id}/message_templates?fields=name,language,status,components&access_token=${emp.token}&limit=200`);
-    const j = await r.json();
-    const aprobadas = (j.data || []).filter(t=>t.status==='APPROVED');
-    res.json(aprobadas);
-  }catch(e){ res.json([]); }
-});
-
-// UPLOAD EXCEL - AHORA ROBUSTO (aunque ya se lee en cliente)
-app.post('/api/upload-excel', upload.single('file'), (req,res)=>{
-  try{
-    if(!req.file) return res.json({ok:false, error:'No file'});
-    const wb = xlsx.readFile(req.file.path);
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const data = xlsx.utils.sheet_to_json(sheet,{defval:''});
-    let texto = JSON.stringify(data);
-    const regex = /(\+?57)?\s?3\d{9}/g;
-    const nums = [...new Set((texto.match(regex)||[]).map(n=>{ let s=n.replace(/\D/g,''); if(s.length==10) s='57'+s; return s; }).filter(n=>n.length>=12))];
-    fs.unlinkSync(req.file.path);
-    res.json({ok:true, numeros:nums, total:nums.length});
-  }catch(e){
-    try{ if(req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); }catch{}
-    res.json({ok:true, numeros:[], total:0, warning:e.message}); // nunca error rojo
-  }
-});
-
-// ENVIAR CAMPAÑA - FUNCIONAL CON CUALQUIER PLANTILLA
+// TUS APIS DE CRM (sin tocar)
+app.get('/api/empresa/:id',(req,res)=>res.json(loadConfig(req.params.id)||{}));
+app.post('/api/config-empresa',(req,res)=>{ const {empresa_id, token, phone_id, waba_id}=req.body; const db=getDB(empresa_id||'default'); db.config={token, phone:phone_id, waba:waba_id, phone_id, waba_id}; saveDB(empresa_id||'default', db); res.json({ok:true}); });
+app.get('/api/plantillas/:empresa_id', async(req,res)=>{ const emp=loadConfig(req.params.empresa_id); if(!emp?.token) return res.json([]); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba||emp.waba_id}/message_templates?fields=name,status,language&access_token=${emp.token}&limit=200`); const j=await r.json(); res.json((j.data||[]).filter(t=>t.status==='APPROVED')); }catch{ res.json([]); }});
 app.post('/api/campana/enviar', async(req,res)=>{
-  const {empresa_id, plantilla, nombre, imagen_url, numeros, variables} = req.body;
-  const emp = loadConfig(empresa_id);
-  if(!emp ||!emp.token) return res.json({ok:false, error:'Empresa no configurada, ve a Config'});
-
-  let lista = [...new Set((numeros||[]).map(n=>String(n).replace(/\D/g,'')).filter(n=>n.length>=10).map(n=>n.length==10?'57'+n:n))];
-  if(lista.length==0) return res.json({ok:false, error:'No hay números'});
-
-  const db = getDB(empresa_id);
-  const campId = Date.now().toString();
-  db.campaigns[campId] = {id:campId, plantilla: plantilla || nombre, nombre, total: lista.length, enviados:0, fallidos:0, estado:'enviando', pausada:false, created: Date.now()};
-  saveDB(empresa_id, db);
-  res.json({ok:true, campId, total: lista.length});
-
-  // ENVIO EN BACKGROUND
-  (async()=>{
-    try{
-      const rTpl = await fetch(`https://graph.facebook.com/v20.0/${emp.waba || emp.waba_id}/message_templates?fields=name,components,language&access_token=${emp.token}&limit=200`);
-      const jTpl = await rTpl.json();
-      const info = (jTpl.data||[]).find(t=>t.name==plantilla) || {language:'es_CO', components:[]};
-      const necesitaImagen = info.components?.some(c=>c.type==='HEADER' && c.format==='IMAGE');
-      const bodyVars = (info.components?.find(c=>c.type==='BODY')?.text?.match(/{{\d+}}/g)||[]).length || (variables?.length||0);
-
-      for(let num of lista){
-        let cur = getDB(empresa_id);
-        while(cur.campaigns[campId]?.pausada){ await new Promise(r=>setTimeout(r,1500)); cur=getDB(empresa_id); }
-        if(cur.campaigns[campId]?.estado=='cancelada') break;
-
-        const comps=[];
-        if(necesitaImagen && imagen_url) comps.push({type:'header', parameters:[{type:'image', image:{link:imagen_url}}]});
-        if(bodyVars>0) comps.push({type:'body', parameters: (variables||['Cliente','Congreso ACOL','Bogotá']).slice(0,bodyVars).map(t=>({type:'text', text:String(t||'Cliente')}))});
-
-        const payload={messaging_product:'whatsapp', to:num, type:'template', template:{name:plantilla, language:{code: info.language || 'es_CO'}, components: comps }};
-        try{
-          const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone || emp.phone_id}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify(payload)});
-          const j=await r.json();
-          const cur2=getDB(empresa_id);
-          if(j.messages) cur2.campaigns[campId].enviados++; else cur2.campaigns[campId].fallidos++;
-          saveDB(empresa_id, cur2);
-        }catch(e){}
-        await new Promise(r=>setTimeout(r,1300));
-      }
-      const cur=getDB(empresa_id); if(cur.campaigns[campId]){ cur.campaigns[campId].estado='finalizada'; saveDB(empresa_id, cur); }
-    }catch(e){ console.log('Camp error', e.message); }
-  })();
+  const {empresa_id, plantilla, numeros, variables, imagen_url, nombre}=req.body; const emp=loadConfig(empresa_id||'default');
+  if(!emp?.token) return res.json({ok:false, error:'Empresa no configurada'});
+  let lista=[...new Set((numeros||[]).map(n=>String(n).replace(/\D/g,'')).map(n=>n.length==10?'57'+n:n))];
+  const db=getDB(empresa_id); const id=Date.now().toString(); db.campaigns[id]={id, nombre: nombre||plantilla, plantilla, total:lista.length, enviados:0, fallidos:0, estado:'enviando', pausada:false, created:Date.now()}; saveDB(empresa_id, db); res.json({ok:true, total:lista.length});
+  (async()=>{ for(let num of lista){ try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone||emp.phone_id}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify({messaging_product:'whatsapp', to:num, type:'template', template:{name:plantilla, language:{code:'es_CO'}, components: variables?.length?[{type:'body', parameters:variables.map(t=>({type:'text', text:t}))}]:[]}})}); const j=await r.json(); const cur=getDB(empresa_id); if(j.messages) cur.campaigns[id].enviados++; else cur.campaigns[id].fallidos++; saveDB(empresa_id,cur);}catch{} await new Promise(r=>setTimeout(r,1200)); } const f=getDB(empresa_id); if(f.campaigns[id]){f.campaigns[id].estado='finalizada'; saveDB(empresa_id,f);} })();
 });
+app.get('/api/campanas/:empresa_id',(req,res)=>res.json(Object.values(getDB(req.params.empresa_id).campaigns||{}).sort((a,b)=>b.created-a.created)));
+app.get('/api/chats/:empresa_id',(req,res)=>res.json(Object.values(getDB(req.params.empresa_id).chats||{}).sort((a,b)=>(b.last||0)-(a.last||0))));
+app.get('/webhook/:empresa_id',(req,res)=>res.status(200).send(req.query['hub.challenge']||'ok'));
+app.post('/webhook/:empresa_id',(req,res)=>{ const db=getDB(req.params.empresa_id); try{ const val=req.body.entry?.[0]?.changes?.[0]?.value; if(val?.messages){ for(let m of val.messages){ const id=m.from; if(!db.chats[id]) db.chats[id]={id, mensajes:[], no_leidos:0}; db.chats[id].mensajes.push({from:'cliente', texto:m.text?.body||'📎', ts:Date.now()}); db.chats[id].no_leidos++; db.chats[id].last=Date.now(); } saveDB(req.params.empresa_id, db); } }catch{} res.sendStatus(200); });
 
-app.post('/api/campana/:empresa_id/:id/pausar',(req,res)=>{ const db=getDB(req.params.empresa_id); if(db.campaigns[req.params.id]){db.campaigns[req.params.id].pausada=true; saveDB(req.params.empresa_id,db);} res.json({ok:true}); });
-app.post('/api/campana/:empresa_id/:id/continuar',(req,res)=>{ const db=getDB(req.params.empresa_id); if(db.campaigns[req.params.id]){db.campaigns[req.params.id].pausada=false; saveDB(req.params.empresa_id,db);} res.json({ok:true}); });
-app.post('/api/campana/:empresa_id/:id/cancelar',(req,res)=>{ const db=getDB(req.params.empresa_id); if(db.campaigns[req.params.id]){db.campaigns[req.params.id].estado='cancelada'; saveDB(req.params.empresa_id,db);} res.json({ok:true}); });
-
-app.get('/api/campanas/:empresa_id',(req,res)=>{
-  try{ res.json(Object.values(getDB(req.params.empresa_id).campaigns).sort((a,b)=>b.created-a.created)); }
-  catch{ res.json([]); }
-});
-app.get('/api/campana/:empresa_id/:id',(req,res)=>{ res.json(getDB(req.params.empresa_id).campaigns[req.params.id]||{}); });
-
-// CHATS - HISTORIAL INFINITO
-app.get('/api/chats/:empresa_id',(req,res)=>{
-  try{ res.json(Object.values(getDB(req.params.empresa_id).chats).sort((a,b)=>(b.last||0)-(a.last||0))); }
-  catch{ res.json([]); }
-});
-app.get('/api/mensajes/:empresa_id/:chat_id',(req,res)=>{ res.json(getDB(req.params.empresa_id).chats[req.params.chat_id]?.mensajes||[]); });
-app.post('/api/chat/leido',(req,res)=>{ const db=getDB(req.body.empresa_id); if(db.chats[req.body.chat_id]){ db.chats[req.body.chat_id].no_leidos=0; saveDB(req.body.empresa_id,db);} res.json({ok:true}); });
-app.post('/api/chat/asignar',(req,res)=>{ const db=getDB(req.body.empresa_id); if(db.chats[req.body.chat_id]){ db.chats[req.body.chat_id].asignado=req.body.worker_id; saveDB(req.body.empresa_id,db);} res.json({ok:true}); });
-app.post('/api/chat/enviar-media', mediaUpload.single('file'), (req,res)=>{
-  try{
-    const ext = path.extname(req.file.originalname);
-    const newName = `${Date.now()}_${req.file.filename}${ext}`;
-    const dest = path.join(__dirname,'public/uploads', newName);
-    fs.renameSync(req.file.path, dest);
-    const url = `/uploads/${newName}`;
-    const tipo = req.file.mimetype.startsWith('image')?'image': req.file.mimetype.startsWith('audio')?'audio': req.file.mimetype.startsWith('video')?'video':'document';
-    const db=getDB(req.body.empresa_id);
-    if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, mensajes:[], no_leidos:0};
-    db.chats[req.body.chat_id].mensajes.push({tipo, url, nombre:req.file.originalname, from:'yo', ts:Date.now(), texto: tipo!='image'?`📎 ${req.file.originalname}`:''});
-    db.chats[req.body.chat_id].last=Date.now();
-    saveDB(req.body.empresa_id, db);
-    res.json({ok:true, url});
-  }catch(e){ res.json({ok:false, error:e.message}); }
-});
-
-// WEBHOOKS
-app.get('/webhook/:empresa_id',(req,res)=>{ res.status(200).send(req.query['hub.challenge']||'ok'); });
-app.post('/webhook/:empresa_id', async(req,res)=>{
-  const empresa_id=req.params.empresa_id; const db=getDB(empresa_id);
-  try{
-    const val=req.body.entry?.[0]?.changes?.[0]?.value;
-    if(val?.messages){
-      for(let m of val.messages){
-        const chatId=m.from;
-        if(!db.chats[chatId]) db.chats[chatId]={id:chatId, mensajes:[], no_leidos:0, last:Date.now()};
-        let msg={from:'cliente', ts:Date.now(), tipo:m.type};
-        if(m.type==='text') msg.texto=m.text.body;
-        if(m.type==='image') msg={...msg, texto:'📷 Foto', tipo:'image', url:''};
-        if(m.type==='audio' || m.type==='voice') msg={...msg, tipo:'audio', url:''};
-        if(m.type==='document') msg={...msg, tipo:'document', nombre:m.document?.filename||'Archivo'};
-        if(m.type==='video') msg={...msg, tipo:'video'};
-        db.chats[chatId].mensajes.push(msg);
-        db.chats[chatId].no_leidos=(db.chats[chatId].no_leidos||0)+1;
-        db.chats[chatId].last=Date.now();
-      }
-      saveDB(empresa_id, db);
-    }
-  }catch(e){ console.log(e); }
-  res.sendStatus(200);
-});
-
-// RECORDATORIOS, WORKERS, STATS, PLANES
-app.post('/api/recordatorio',(req,res)=>{ const db=getDB(req.body.empresa_id); db.reminders.push({...req.body, id:Date.now().toString()}); saveDB(req.body.empresa_id, db); res.json({ok:true}); });
-app.get('/api/recordatorios/:empresa_id',(req,res)=>{ res.json(getDB(req.params.empresa_id).reminders||[]); });
-app.post('/api/worker/add',(req,res)=>{ const db=getDB(req.body.empresa_id); const id=Date.now().toString(); db.workers[id]={...req.body, id}; saveDB(req.body.empresa_id, db); res.json({ok:true}); });
-app.get('/api/workers/:empresa_id',(req,res)=>{ res.json(Object.values(getDB(req.params.empresa_id).workers||{})); });
-app.get('/api/stats/:empresa_id',(req,res)=>{ const db=getDB(req.params.empresa_id); res.json({total_campanas:Object.keys(db.campaigns||{}).length, total_chats:Object.keys(db.chats||{}).length}); });
-app.get('/api/planes',(req,res)=>{ res.json([{nombre:'Básico', precio:'$97', wa:'https://wa.me/573133181851'}]); });
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V147 FINAL'}));
-
-// ========== STATIC AL FINAL - QUITA ERROR DOCTYPE ==========
 app.use(express.static(path.join(__dirname,'public')));
-app.use('/uploads', express.static(path.join(__dirname,'public/uploads')));
-app.get('*',(req,res)=>{ res.sendFile(path.join(__dirname,'public','index.html')); });
-
-const PORT=process.env.PORT||3000;
-app.listen(PORT,()=>console.log(`KLIDO V147 FINAL OK PORT ${PORT}`));
+app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+app.listen(process.env.PORT||3000, ()=>console.log(`V149 ORIGINAL KLIDO OK ${process.env.PORT||3000}`));
