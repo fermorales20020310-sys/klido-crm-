@@ -1,4 +1,4 @@
-// KLIDO V166 FINAL - 15 DIAS + ACOL CONGRESO NAMED + ALION + FIX UNDEFINED + VOLUMEN
+// KLIDO V167 FINAL - FIX 132001 IDIOMA REAL + ACOL NAMED + VOLUMEN INTACTO
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -28,7 +28,7 @@ function loadConfig(id){
   if(envPhone){ db.config.phone = envPhone; db.config.phone_id = envPhone; }
   if(envWaba){ db.config.waba = envWaba; db.config.waba_id = envWaba; }
   if(envToken || envPhone) saveDB(id, db);
-  console.log(`V166 CONFIG [${id}]: PHONE=${db.config.phone} WABA=${db.config.waba} TOKEN=${db.config.token?'SI':'NO'}`);
+  console.log(`V167 CONFIG [${id}]: PHONE=${db.config.phone} WABA=${db.config.waba} TOKEN=${db.config.token?'SI':'NO'}`);
   return db.config;
 }
 
@@ -43,7 +43,7 @@ const PLANES = {
 
 async function enviarCorreo(to,subject,html){ try{if(!process.env.RESEND_API_KEY) return true; await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${process.env.RESEND_API_KEY}`},body:JSON.stringify({from:process.env.RESEND_FROM||'Klido <onboarding@klidoapp.com.co>',to,subject,html})}); return true;}catch{return true;} }
 
-app.get('/api/debug/config/:empresa_id',(req,res)=>{ const c=loadConfig(req.params.empresa_id); res.json({V:'V166', env_phone:process.env.PHONE_NUMBER_ID, env_waba:process.env.WABA_ID, env_token_exists:!!process.env.WHATSAPP_TOKEN, config_usada:c, db_path:DB_PATH}) });
+app.get('/api/debug/config/:empresa_id',(req,res)=>{ const c=loadConfig(req.params.empresa_id); res.json({V:'V167', env_phone:process.env.PHONE_NUMBER_ID, env_waba:process.env.WABA_ID, env_token_exists:!!process.env.WHATSAPP_TOKEN, config_usada:c, db_path:DB_PATH}) });
 app.post('/api/login',(req,res)=>{ const c=String(req.body.correo||'').trim().toLowerCase(); const m=getMasterDB(); const u=Object.values(m.users).find(x=>String(x.correo||'').toLowerCase()===c && x.password===req.body.password); if(!u && c==='admin') return res.json({ok:true,empresa_id:'default'}); if(!u) return res.json({ok:false,error:'No existe'}); res.json({ok:true,empresa_id:u.empresa_id,user:u}); });
 app.post('/api/crear-empresa',async(req,res)=>{ const {nombre_agencia,correo,password,plan}=req.body; const cl=String(correo).trim().toLowerCase(); const m=getMasterDB(); const eid=cl.replace(/[^a-z0-9]/g,'').substring(0,15)+'_'+Date.now().toString().slice(-4); const cod=Math.floor(100000+Math.random()*900000).toString(); m.empresas[eid]={id:eid,nombre:nombre_agencia,correo:cl,plan:plan||'Basico',codigo:cod,verificado:false,created:Date.now()}; m.users[cl]={correo:cl,password,empresa_id:eid,plan:plan||'Basico',nombre:nombre_agencia}; saveMaster(m); const db=getDB(eid); db.config={}; saveDB(eid,db); await enviarCorreo(cl,`Tu código Klido - ${cod}`,`<h1>${cod}</h1>`); console.log(`CODIGO ${cl}: ${cod}`); res.json({ok:true,empresa_id:eid,codigo_debug:cod}); });
 app.post('/api/verificar-codigo',(req,res)=>{ const cl=String(req.body.correo||'').trim().toLowerCase(); const co=String(req.body.codigo||'').trim(); const m=getMasterDB(); const e=Object.values(m.empresas).find(x=>String(x.correo||'').toLowerCase()===cl); if(!e) return res.json({ok:false,error:'Empresa no encontrada'}); if(String(e.codigo).trim()===co){e.verificado=true; saveMaster(m); return res.json({ok:true,empresa_id:e.id});} res.json({ok:false,error:'Código incorrecto'}); });
@@ -54,19 +54,30 @@ app.get('/api/empresa/:id',(req,res)=>res.json(loadConfig(req.params.id)||{}));
 app.post('/api/config-empresa',(req,res)=>{ const {empresa_id,token,phone_id,waba_id}=req.body; const db=getDB(empresa_id||'default'); db.config={token,phone:phone_id,waba:waba_id,phone_id,waba_id}; saveDB(empresa_id||'default',db); res.json({ok:true}); });
 app.get('/api/plantillas/:empresa_id',async(req,res)=>{ const emp=loadConfig(req.params.empresa_id); if(!emp?.token) return res.json([]); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba||emp.waba_id}/message_templates?fields=name,status,language&access_token=${emp.token}&limit=200`); const j=await r.json(); res.json((j.data||[]).filter(t=>t.status==='APPROVED')); }catch{res.json([]);} });
 
-// --- CAMPAÑA FIX ACOL + ALION + IMAGEN FIJA ---
+// --- CAMPAÑA V167 FIX 132001 + NAMED ACOL/ALION ---
 app.post('/api/campana/enviar', async(req,res)=>{
   const {empresa_id, plantilla, numeros, variables, nombre}=req.body;
   const emp=loadConfig(empresa_id||'default');
-  if(!emp?.token ||!emp?.phone) return res.json({ok:false, error:`Falta token o phone_id. Token=${!!emp.token} Phone=${emp.phone}`});
+  if(!emp?.token ||!emp?.phone) return res.json({ok:false, error:`Falta token o phone_id. Phone=${emp.phone} Token=${!!emp.token}`});
   let lista=[...new Set((numeros||[]).map(n=>String(n).replace(/\D/g,'')).map(n=>n.length==10?'57'+n:n).filter(n=>n.length>=10))];
   if(!lista.length) return res.json({ok:false, error:'No hay números válidos'});
 
-  const isNamedTemplate = String(plantilla).toLowerCase().includes('acol') || String(plantilla).toLowerCase().includes('alion');
-  const paramName = String(plantilla).toLowerCase().includes('acol')? 'nombre_cliente' : 'nombre_cliente';
+  // Detecta idioma real de la plantilla para no mandar en_US si solo existe en es_CO
+  let idiomaReal = 'es_CO';
+  try{
+    const rt=await fetch(`https://graph.facebook.com/v20.0/${emp.waba||emp.waba_id}/message_templates?fields=name,language,status&access_token=${emp.token}&limit=200`);
+    const jt=await rt.json();
+    const found = (jt.data||[]).find(t=>t.name===plantilla.trim() && t.status==='APPROVED');
+    if(found) idiomaReal = found.language;
+    console.log(`V167 Plantilla ${plantilla} idioma real: ${idiomaReal}`);
+  }catch(e){ console.log('V167 no pudo leer idioma, usa es_CO', e.message); }
 
+  const isNamedTemplate = String(plantilla).toLowerCase().includes('acol') || String(plantilla).toLowerCase().includes('alion');
+  const paramName = 'nombre_cliente';
   let primer = lista[0];
-  for(let lang of ['es_CO','es','en_US']){
+  const langsToTry = [idiomaReal, 'es_CO', 'es', 'es_MX'].filter((v,i,a)=>a.indexOf(v)===i);
+
+  for(let lang of langsToTry){
     try{
       let components = [];
       if(variables && variables.length && String(variables[0]||'').trim()!==''){
@@ -77,10 +88,10 @@ app.post('/api/campana/enviar', async(req,res)=>{
         }
       }
       const payload={ messaging_product:'whatsapp', to:primer, type:'template', template:{name:plantilla.trim(), language:{code:lang}, components} };
-      console.log(`V166 ${isNamedTemplate?'NAMED':'NUMBERED'} ENVIANDO ${primer} PHONE_ID ${emp.phone} LANG ${lang} PLANTILLA ${plantilla} VARS`, JSON.stringify(components));
+      console.log(`V167 ${isNamedTemplate?'NAMED':'NUM'} TRY ${lang} PHONE_ID ${emp.phone} PLANTILLA ${plantilla} VARS`, JSON.stringify(components));
       const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify(payload)});
       const j=await r.json();
-      console.log('V166 RESPUESTA META:', JSON.stringify(j));
+      console.log(`V167 RESP ${lang}:`, JSON.stringify(j));
       if(j.messages){
         const db=getDB(empresa_id); const id=Date.now().toString();
         db.campaigns[id]={id, nombre: nombre||plantilla, plantilla, total:lista.length, enviados:lista.length, fallidos:0, estado:'finalizada', created:Date.now(), ultimo_error:'OK '+lang+' '+j.messages[0].id+' '+(isNamedTemplate?'NAMED':'NUM')};
@@ -92,11 +103,10 @@ app.post('/api/campana/enviar', async(req,res)=>{
           }
         })();
         return res.json({ok:true, total:lista.length, meta:j, idioma_usado:lang, modo:isNamedTemplate?'NAMED':'NUMBERED'});
-      } else {
-        if(lang==='en_US') return res.json({ok:false, error:j.error?.message || JSON.stringify(j), detalle:j, config_usada:emp});
       }
-    }catch(e){ console.log('V166 ERROR', e.message); if(lang==='en_US') return res.json({ok:false, error:e.message}); }
+    }catch(e){ console.log('V167 ERROR', e.message); }
   }
+  return res.json({ok:false, error:`Plantilla ${plantilla} no existe en ${langsToTry.join(', ')}. Idioma real detectado: ${idiomaReal}. Verifica en Meta que esté APPROVED.`, detalle:{idiomaReal, tried:langsToTry}});
 });
 
 app.get('/api/campanas/:empresa_id',(req,res)=>res.json(Object.values(getDB(req.params.empresa_id).campaigns||{}).sort((a,b)=>b.created-a.created)));
@@ -118,4 +128,4 @@ app.post('/webhook/:empresa_id',(req,res)=>{ const eid=req.params.empresa_id; co
 app.post('/api/chat/responder-ia',(req,res)=>{ const {empresa_id,texto_cliente}=req.body; const m=getMasterDB(); const emp=m.empresas[empresa_id]; const plan=PLANES[emp?.plan||'Basico']; if(!plan.ia) return res.json({ok:false,error:'IA solo Premium y Gold'}); res.json({ok:true,ia:true,respuesta:`Hola! Soy la IA de Klido. (${texto_cliente?.slice(0,50)})`,boton_agente:plan.boton_agente}); });
 app.use(express.static(path.join(__dirname,'public')));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(process.env.PORT||3000, ()=>console.log(`V166 OK ${process.env.PORT||3000} PHONE ${process.env.PHONE_NUMBER_ID} PATH ${DB_PATH}`));
+app.listen(process.env.PORT||3000, ()=>console.log(`V167 OK ${process.env.PORT||3000} PHONE ${process.env.PHONE_NUMBER_ID} PATH ${DB_PATH}`));
