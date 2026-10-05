@@ -1,4 +1,4 @@
-// KLIDO V170 - FIX DEFINITIVO ACOL - HEADER IMAGE + BODY CON NOMBRE - LOG 132012 CORREGIDO
+// KLIDO V171 - ACOL FINAL - IMAGEN LOCAL /acol-congreso.jpg - AUTO HOST
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -21,14 +21,14 @@ function loadConfig(id){
   if(envPhone){ db.config.phone = envPhone; db.config.phone_id = envPhone; }
   if(envWaba){ db.config.waba = envWaba; db.config.waba_id = envWaba; }
   if(envToken || envPhone) saveDB(id, db);
-  console.log(`V170 CONFIG [${id}]: PHONE=${db.config.phone} WABA=${db.config.waba} TOKEN=${db.config.token?'SI':'NO'}`);
+  console.log(`V171 CONFIG [${id}]: PHONE=${db.config.phone} WABA=${db.config.waba} TOKEN=${db.config.token?'SI':'NO'}`);
   return db.config;
 }
 function getMasterDB(){ const f=path.join(DB_PATH,'master.json'); if(!fs.existsSync(f)) return {empresas:{}, users:{}}; try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return {empresas:{}, users:{}}}};
 function saveMaster(db){ fs.writeFileSync(path.join(DB_PATH,'master.json'), JSON.stringify(db,null,2)); }
 const PLANES = { Basico:{nombre:'BÁSICO',max_conversaciones:2000,max_trabajadores:2,campañas_wpp_excel:true,campañas_wpp_manual:true,campañas_gmail:false,ia:false,boton_agente:false,llamadas:false,seguimiento_llamadas:false,metricas:false}, Premium:{nombre:'PREMIUM',max_conversaciones:8000,max_trabajadores:5,campañas_wpp_excel:true,campañas_wpp_manual:true,campañas_gmail:false,ia:true,boton_agente:true,llamadas:false,seguimiento_llamadas:false,metricas:true}, Gold:{nombre:'GOLD ILIMITADO',max_conversaciones:9999999,max_trabajadores:999,campañas_wpp_excel:true,campañas_wpp_manual:true,campañas_gmail:true,ia:true,boton_agente:true,llamadas:true,seguimiento_llamadas:true,metricas:true} };
 async function enviarCorreo(to,subject,html){ try{if(!process.env.RESEND_API_KEY) return true; await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${process.env.RESEND_API_KEY}`},body:JSON.stringify({from:process.env.RESEND_FROM||'Klido <onboarding@klidoapp.com.co>',to,subject,html})}); return true;}catch{return true;} }
-app.get('/api/debug/config/:empresa_id',(req,res)=>{ const c=loadConfig(req.params.empresa_id); res.json({V:'V170-FINAL-132012-FIX', config_usada:c}) });
+app.get('/api/debug/config/:empresa_id',(req,res)=>{ const c=loadConfig(req.params.empresa_id); res.json({V:'V171-ACOL-LOCAL-IMAGE', config_usada:c, host:req.get('host')}) });
 app.get('/api/plantillas/:empresa_id',async(req,res)=>{
   const emp=loadConfig(req.params.empresa_id);
   const fallback = [{name:'acol_invitacion_congreso', status:'APPROVED', language:'es_CO'}];
@@ -50,7 +50,7 @@ app.get('/api/mi-plan/:empresa_id',(req,res)=>{ const m=getMasterDB(); let emp=m
 app.get('/api/empresa/:id',(req,res)=>res.json(loadConfig(req.params.id)||{}));
 app.post('/api/config-empresa',(req,res)=>{ const {empresa_id,token,phone_id,waba_id}=req.body; const db=getDB(empresa_id||'default'); db.config={token,phone:phone_id,waba:waba_id,phone_id,waba_id}; saveDB(empresa_id||'default',db); res.json({ok:true}); });
 
-// FIX 132012 - TU PLANTILLA PIDE IMAGE DINAMICA + NOMBRE
+// ENVIO FINAL ACOL - IMAGEN LOCAL DE TU PROPIO SERVIDOR
 app.post('/api/campana/enviar', async(req,res)=>{
   const {empresa_id, plantilla, numeros, variables, nombre, imagen_url}=req.body;
   const emp=loadConfig(empresa_id||'default');
@@ -60,7 +60,10 @@ app.post('/api/campana/enviar', async(req,res)=>{
   let idiomaReal='es_CO';
   try{ const rt=await fetch(`https://graph.facebook.com/v21.0/${emp.waba||emp.waba_id}/message_templates?fields=name,language,status&access_token=${emp.token}&limit=200`); const jt=await rt.json(); const f=(jt.data||[]).find(t=>t.name===plantilla.trim() && t.status==='APPROVED'); if(f) idiomaReal=f.language; }catch{}
   const varTexto = String((variables&&variables[0])||'').trim()||'Carlos';
-  const imgLink = (imagen_url||'').trim() || 'https://i.ibb.co/5XqR5cJy/acol-congreso.jpg';
+  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+  const host = req.get('host');
+  const localImg = `${proto}://${host}/acol-congreso.jpg`;
+  const imgLink = (imagen_url||'').trim() || localImg;
   const payload={
     messaging_product:'whatsapp',
     to:lista[0],
@@ -74,15 +77,15 @@ app.post('/api/campana/enviar', async(req,res)=>{
       ]
     }
   };
-  console.log(`V170 ENVIO FINAL FIX 132012 ${idiomaReal} PLANTILLA ${plantilla} IMG ${imgLink} VAR ${varTexto}`);
+  console.log(`V171 ENVIO FINAL ACOL LOCAL ${idiomaReal} IMG ${imgLink} VAR ${varTexto}`);
   try{
     const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify(payload)});
     const j=await r.json();
-    console.log(`V170 RESP:`, JSON.stringify(j));
+    console.log(`V171 RESP:`, JSON.stringify(j));
     if(j.messages){
       const db=getDB(empresa_id); const id=Date.now().toString(); db.campaigns[id]={id, nombre:nombre||plantilla, plantilla, total:lista.length, enviados:lista.length, fallidos:0, estado:'finalizada', created:Date.now()}; saveDB(empresa_id,db);
-      (async()=>{ for(let i=1;i<lista.length;i++){ try{ await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify({...payload, to:lista[i]})}); }catch{} await new Promise(r=>setTimeout(r,1300)); } })();
-      return res.json({ok:true, total:lista.length, meta:j, modo:'HEADER_IMAGE+BODY_NAMED'});
+      (async()=>{ for(let i=1;i<lista.length;i++){ try{ const pl={...payload, to:lista[i]}; await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify(pl)}); }catch{} await new Promise(r=>setTimeout(r,1300)); } })();
+      return res.json({ok:true, total:lista.length, meta:j, modo:'LOCAL_IMAGE', img_usada:imgLink});
     } else { return res.json({ok:false, error:j.error?.message||JSON.stringify(j), detalle:j, payload_enviado:payload}); }
   }catch(e){ return res.json({ok:false, error:e.message}); }
 });
@@ -106,4 +109,4 @@ app.post('/webhook/:empresa_id',(req,res)=>{ const eid=req.params.empresa_id; co
 app.post('/api/chat/responder-ia',(req,res)=>{ res.json({ok:true,respuesta:`Hola!`}); });
 app.use(express.static(path.join(__dirname,'public')));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(process.env.PORT||3000, ()=>console.log(`V170 FINAL 132012 FIX OK ${process.env.PORT||3000}`));
+app.listen(process.env.PORT||3000, ()=>console.log(`V171 ACOL LOCAL IMAGE OK ${process.env.PORT||3000}`));
