@@ -1,83 +1,162 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Campañas V162 FIX</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<style>body{background:#f6f7fb;font-family:Inter,Arial;margin:0;padding:20px}.card{background:#fff;border-radius:20px;padding:20px;max-width:900px;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.08)}input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0}.btn{padding:12px;border:none;border-radius:10px;font-weight:800;cursor:pointer;width:100%}.btn-blue{background:#0b57d0;color:#fff}.config{background:#fff3cd;border:1px solid #ffc107;padding:14px;border-radius:12px;margin-bottom:14px}</style>
-</head><body><div class="card">
-<div id="configBox" class="config">
-<h3 style="margin:0">⚙️ CONFIGURAR EMPRESA (1 vez)</h3>
-<div style="font-size:12px">Si te dice "Empresa no configurada" es aquí.</div>
-<input id="cfg_token" placeholder="Token de Meta (EAAG...)">
-<input id="cfg_phone" placeholder="Phone ID (ej: 123456789)">
-<input id="cfg_waba" placeholder="WABA ID (ej: 987654321)">
-<button class="btn" style="background:#111;color:#fff" onclick="guardarConfig()">Guardar Config y Continuar</button>
-<div id="cfgStatus" style="font-size:12px;margin-top:6px"></div>
+<title>Klido Campañas V163 - Final</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;font-family:Inter}body{margin:0;background:#f5f6fa;padding:20px}
+.card{max-width:900px;margin:0 auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;margin:6px 0;font-size:13px}
+.btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:900;cursor:pointer}
+.btn-blue{background:#0b57d0;color:#fff}.btn-dark{background:#111;color:#fff}
+.tab{display:inline-block;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:800;font-size:12px;border:1px solid #ddd;margin-right:6px}
+.tab.active{background:#111;color:#fff}
+.hist{margin-top:16px;border-top:1px solid #eee;padding-top:12px}
+.row{display:flex;gap:8px}
+.badge{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:900}
+</style></head><body>
+<div class="card">
+<h3 style="margin:0">🎯 Campañas V163 - Klido Avanza Consulting</h3>
+<div id="planInfo" style="font-size:11px;background:#fff3cd;padding:8px;border-radius:8px;margin:8px 0">Cargando plan...</div>
+
+<div style="margin:10px 0">
+<span class="tab active" onclick="switchTab('wpp')" id="tabWpp">📱 WPP (Excel / Número)</span>
+<span class="tab" onclick="switchTab('gmail')" id="tabGmail">📧 Gmail (Solo Gold)</span>
+<span class="tab" onclick="switchTab('segmento')" id="tabSeg">👥 Por Segmentación</span>
 </div>
 
-<h3>🎯 Campañas V162</h3>
-<input id="nombre" placeholder="Nombre campaña">
-<select id="plantillaSelect"><option>Cargando plantillas...</option></select>
-<input id="plantillaManual" placeholder="Plantilla manual: acol_invitacion_congreso" value="acol_invitacion_congreso">
-<input id="vars" placeholder="Variables {{1}},{{2}}" value="fer">
+<input id="nombreCamp" placeholder="Nombre campaña ej: Invitación Congreso ACOL">
+<select id="plantillaSel"><option>Cargando plantillas aprobadas...</option></select>
+<div id="varsBox"></div>
+
+<!-- OPCION 1: ESCRIBIR NUMEROS -->
+<div id="boxManual" style="border:2px solid #111;border-radius:12px;padding:12px;margin:8px 0">
+<b>✍️ Opción 1: Escribir números manual (Básico, Premium, Gold)</b>
+<textarea id="numerosManual" rows="4" placeholder="Escribe números con 57, uno por línea o separado por coma:
+573001112233
+573002223344
+3201234567
+3007654321"></textarea>
+<span style="font-size:11px;color:#666">Puedes pegar 10 o 2000 números, se corrige a 57 automático</span>
+</div>
+
+<!-- OPCION 2: EXCEL -->
+<div style="border:1px dashed #999;border-radius:12px;padding:12px;margin:8px 0">
+<b>📊 Opción 2: Subir Excel (Básico, Premium, Gold)</b>
 <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
-<div id="excelInfo" style="background:#e8f5e9;padding:8px;border-radius:8px;font-size:13px">Sube Excel</div>
-<div id="preview" style="font-size:11px;max-height:80px;overflow:auto;background:#f9f9f9;padding:6px;border-radius:8px;margin:8px 0"></div>
-<button class="btn btn-blue" onclick="enviar()">🚀 Enviar campaña ahora</button>
-<div id="historial" style="margin-top:14px"></div>
+<div id="excelPreview" style="font-size:11px;color:#666;margin-top:6px">Sube Excel con columna telefono / numero / whatsapp</div>
+<button class="btn btn-dark" style="margin-top:6px;padding:8px" onclick="leerExcel()">📥 Sube Excel y cargar números</button>
+</div>
+
+<!-- OPCION 3: SEGMENTACION -->
+<div id="boxSegmento" style="border:1px solid #0b57d0;border-radius:12px;padding:12px;margin:8px 0;display:none">
+<b>👥 Opción 3: Enviar por segmentación (Cliente / Nuevo / Interesado / Campaña)</b>
+<div class="row">
+<select id="segSel"><option value="">Todos</option><option>Cliente</option><option>Nuevo</option><option>Interesado</option><option>Campaña</option></select>
+<button class="btn btn-dark" style="width:auto;padding:10px 14px" onclick="cargarPorSegmento()">Cargar números de ese segmento</button>
+</div>
+<div id="segCount" style="font-size:11px;margin-top:6px"></div>
+</div>
+
+<div style="background:#f9f9f9;padding:10px;border-radius:10px;margin:10px 0">
+<b>Total números listos: <span id="totalNums">0</span></b> <span id="listaNumsPreview" style="font-size:11px;color:#666;display:block;max-height:60px;overflow:auto"></span>
+</div>
+
+<button class="btn btn-blue" onclick="enviarCampana()">🚀 Enviar campaña ahora (Meta Cloud API)</button>
+<div id="status" style="margin-top:10px;font-size:12px"></div>
+
+<div class="hist">
+<h4>📜 Historial de campañas</h4>
+<div id="historial">Cargando historial...</div>
+</div>
+
+<div style="margin-top:12px"><a href="crm.html" style="font-size:12px">← Volver a bandeja</a></div>
 </div>
 
 <script>
-let nums=[];
 const empresa_id=localStorage.getItem('empresa_id')||'default';
+let numerosFinal=[]; let MI_PLAN=null; let currentTab='wpp';
 
-async function cargarConfig(){
-  const r=await fetch(`/api/empresa/${empresa_id}`); const j=await r.json();
-  if(j && j.token){ 
-    document.getElementById('configBox').style.display='none';
-    document.getElementById('cfgStatus').innerText='✅ Configurada';
-  } else {
-    document.getElementById('configBox').style.display='block';
-    document.getElementById('cfgStatus').innerText='❌ Falta configurar - pega token';
-  }
-  return j;
+async function init(){
+  const rp=await fetch(`/api/mi-plan/${empresa_id}`); MI_PLAN=await rp.json();
+  document.getElementById('planInfo').innerHTML=`🔒 PLAN ${MI_PLAN.plan.toUpperCase()} - ${MI_PLAN.usado_conversaciones}/${MI_PLAN.max_conversaciones} chats - Campañas WPP: ✅ - Gmail: ${MI_PLAN.campañas_gmail?'✅':'🔒 Solo Gold'} - IA: ${MI_PLAN.ia?'✅':'🔒'}`;
+  // plantillas
+  const r=await fetch(`/api/plantillas/${empresa_id}`); const plantillas=await r.json();
+  if(!plantillas.length){ document.getElementById('plantillaSel').innerHTML=`<option value="">No hay plantillas aprobadas - Crea en Meta</option>`; }
+  else{ document.getElementById('plantillaSel').innerHTML=plantillas.map(p=>`<option value="${p.name}">${p.name} (${p.language}) - ${p.status}</option>`).join(''); }
+  cargarHistorial();
 }
-async function guardarConfig(){
-  const token=document.getElementById('cfg_token').value.trim();
-  const phone_id=document.getElementById('cfg_phone').value.trim();
-  const waba_id=document.getElementById('cfg_waba').value.trim();
-  if(!token||!phone_id) return alert('Pega token y phone_id');
-  const r=await fetch('/api/config-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id, token, phone_id, waba_id, nombre:empresa_id})});
-  const j=await r.json();
-  if(j.ok){ alert('✅ Config guardada'); document.getElementById('configBox').style.display='none'; cargarPlantillas(); }
+function switchTab(t){
+  currentTab=t;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById(t==='wpp'?'tabWpp':t==='gmail'?'tabGmail':'tabSeg').classList.add('active');
+  document.getElementById('boxSegmento').style.display=t==='segmento'?'block':'none';
+  if(t==='gmail' && !MI_PLAN.campañas_gmail){ alert('🔒 Campañas Gmail solo Gold Ilimitado. Tu plan '+MI_PLAN.plan+' no incluye.'); switchTab('wpp'); }
 }
+function actualizarPreview(){
+  const nums=numerosFinal;
+  document.getElementById('totalNums').innerText=nums.length;
+  document.getElementById('listaNumsPreview').innerText=nums.slice(0,20).join(', ')+(nums.length>20?'...':'');
 
-function extraerNumeros(text){
-  const m=text.match(/(\+?57)?\s?3\d{9}/g)||[];
-  return [...new Set(m.map(n=>{let s=n.replace(/\D/g,''); if(s.length==10) s='57'+s; return s;}).filter(n=>n.length>=12))];
 }
-document.getElementById('excelFile').addEventListener('change', async e=>{
-  const data=await e.target.files[0].arrayBuffer(); const wb=XLSX.read(data);
-  let txt=''; wb.SheetNames.forEach(n=>txt+=JSON.stringify(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1}))+' ');
-  nums=extraerNumeros(txt);
-  document.getElementById('excelInfo').innerText=`✅ ${nums.length} números - Listo`;
-  document.getElementById('preview').innerText=nums.slice(0,30).join(', ');
+document.getElementById('numerosManual').addEventListener('input', e=>{
+  const txt=e.target.value;
+  const lista=txt.split(/[\n,;\s]+/).map(n=>n.replace(/\D/g,'')).filter(n=>n.length>=10).map(n=>n.length==10?'57'+n:n);
+  const uniq=[...new Set(lista)];
+  numerosFinal=uniq;
+  actualizarPreview();
 });
 
-async function cargarPlantillas(){
-  try{ const r=await fetch(`/api/plantillas/${empresa_id}`); const j=await r.json();
-    document.getElementById('plantillaSelect').innerHTML=j.length?j.map(t=>`<option value="${t.name}">${t.name}</option>`).join(''):'<option value="">Escribe manual abajo</option>';
-  }catch{ document.getElementById('plantillaSelect').innerHTML='<option>Error - escribe manual</option>'; }
+function leerExcel(){
+  const file=document.getElementById('excelFile').files[0]; if(!file) return alert('Selecciona Excel');
+  const reader=new FileReader();
+  reader.onload=(evt)=>{
+    const data=new Uint8Array(evt.target.result); const wb=XLSX.read(data,{type:'array'});
+    const sheet=wb.Sheets[wb.SheetNames[0]]; const json=XLSX.utils.sheet_to_json(sheet, {header:1});
+    // busca columna que parezca telefono
+    let nums=[];
+    json.forEach(row=>{
+      row.forEach(cell=>{
+        const str=String(cell||'').replace(/\D/g,'');
+        if(str.length>=10 && str.length<=13) nums.push(str.length==10?'57'+str:str);
+      });
+    });
+    numerosFinal=[...new Set(nums)];
+    document.getElementById('excelPreview').innerText=`Excel leído: ${numerosFinal.length} números encontrados`;
+    actualizarPreview();
+  };
+  reader.readAsArrayBuffer(file);
 }
-async function enviar(){
-  const cfg=await cargarConfig();
-  if(!cfg.token) return alert('Primero configura empresa arriba');
-  const plantilla=document.getElementById('plantillaManual').value||document.getElementById('plantillaSelect').value;
-  if(nums.length==0) return alert('Sube Excel primero');
-  const variables=document.getElementById('vars').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const r=await fetch('/api/campana/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id, plantilla, nombre:document.getElementById('nombre').value, numeros:nums, variables})});
+
+async function cargarPorSegmento(){
+  const seg=document.getElementById('segSel').value;
+  const r=await fetch(`/api/chats/${empresa_id}`); const chats=await r.json();
+  let filtrados=seg? chats.filter(c=> (c.cliente?.segmento||'Nuevo')===seg) : chats;
+  const nums=filtrados.map(c=>c.id);
+  numerosFinal=[...new Set(nums)];
+  document.getElementById('segCount').innerText=`Segmento ${seg||'Todos'}: ${filtrados.length} chats encontrados`;
+  actualizarPreview();
+  switchTab('wpp');
+}
+
+async function enviarCampana(){
+  const plantilla=document.getElementById('plantillaSel').value;
+  const nombre=document.getElementById('nombreCamp').value||plantilla;
+  if(!plantilla) return alert('Selecciona plantilla aprobada');
+  if(!numerosFinal.length) return alert('Escribe números manual o sube Excel o carga por segmentación Cliente/Nuevo/Interesado/Campaña');
+  if(numerosFinal.length + MI_PLAN.usado_conversaciones > MI_PLAN.max_conversaciones && MI_PLAN.plan!=='Gold'){
+    return alert(`⛔ Límite: tu plan ${MI_PLAN.plan} solo permite ${MI_PLAN.max_conversaciones} conversaciones y ya tienes ${MI_PLAN.usado_conversaciones}. Tienes ${numerosFinal.length} números nuevos. Mejora a Gold ilimitado`);
+  }
+  document.getElementById('status').innerText=`Enviando ${numerosFinal.length} mensajes con plantilla ${plantilla}...`;
+  const r=await fetch('/api/campana/enviar',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({empresa_id, plantilla, numeros:numerosFinal, nombre, variables:[]})});
   const j=await r.json();
-  if(j.ok) alert(`✅ Enviando ${j.total}`); else alert('Error: '+j.error);
+  if(!j.ok) document.getElementById('status').innerText='❌ '+j.error;
+  else { document.getElementById('status').innerText=`✅ Campaña iniciada: ${j.total} números`; cargarHistorial(); }
 }
-cargarConfig(); cargarPlantillas();
-fetch(`/api/campanas/${empresa_id}`).then(r=>r.json()).then(j=>{document.getElementById('historial').innerHTML=j.map(c=>`<div>${c.plantilla} - ${c.enviados}/${c.total} - ${c.estado}</div>`).join('')});
+
+async function cargarHistorial(){
+  const r=await fetch(`/api/campanas/${empresa_id}`); const list=await r.json();
+  document.getElementById('historial').innerHTML=list.length? list.map(c=>`<div style="padding:8px;border:1px solid #eee;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><div><b>${c.nombre}</b> - ${c.plantilla}<br><span style="font-size:11px">${new Date(c.created).toLocaleString()} - Total: ${c.total} - Enviados: ${c.enviados} - Fallidos: ${c.fallidos} - <span class="badge" style="background:${c.estado==='finalizada'?'#0a7a2a':'#ffcc00'};color:${c.estado==='finalizada'?'#fff':'#000'}">${c.estado}</span></span></div></div>`).join('') : 'No hay campañas aún';
+}
+
+init();
 </script>
 </body></html>
