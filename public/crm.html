@@ -1,174 +1,166 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KLIDO CRM</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Klido V155 - Bandeja + Ficha + Planes</title>
 <style>
-*{box-sizing:border-box;font-family:Inter,system-ui}body{margin:0;background:#f6f7fb;display:flex;height:100vh;overflow:hidden}
-.sidebar{width:68px;background:#111;display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:14px}
-.sidebar img.logo{width:36px;height:36px;border-radius:8px;background:#fff;object-fit:contain}
-.icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:20px}
-.icon.active{background:#fff;color:#111}.online-dot{width:10px;height:10px;background:red;border-radius:50%;border:2px solid #111;margin-top:-8px}
-.yellow{background:#FFD600;color:#111!important;font-weight:700}
-.chats{width:340px;background:#fff;border-right:1px solid #eee;display:flex;flex-direction:column}
-.chats-header{padding:14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid #eee}
-.chats-list{overflow:auto;flex:1}
-.chat-item{padding:12px 14px;display:flex;gap:10px;cursor:pointer;border-bottom:1px solid #f2f2f2;position:relative}
-.chat-item:hover{background:#fafafa}.chat-item.active{background:#f0f0f0}
-.dot{width:10px;height:10px;background:red;border-radius:50%;position:absolute;right:12px;top:14px}
-.avatar{width:42px;height:42px;background:#111;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
-.main{flex:1;display:flex;flex-direction:column;background:#e5ddd5}
-.main-header{padding:12px 16px;background:#fff;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px}
-.messages{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:8px}
-.bubble{max-width:65%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.4}
-.bubble.yo{align-self:flex-end;background:#dcf8c6;border-bottom-right-radius:4px}
-.bubble.cliente{align-self:flex-start;background:#fff;border-bottom-left-radius:4px}
-.bubble img{max-width:240px;border-radius:12px;display:block;margin-top:6px}
-.inputbar{padding:12px;background:#fff;display:flex;gap:8px;align-items:center}
-.inputbar input{flex:1;padding:12px;border:1px solid #ddd;border-radius:24px}
-.btn{padding:10px 16px;border:none;border-radius:20px;cursor:pointer;font-weight:600}
-.panel{width:320px;background:#fff;border-left:1px solid #eee;padding:16px;overflow:auto;display:none}
-.panel.open{display:block}
-audio{width:200px}
-</style>
-</head>
-<body>
+*{box-sizing:border-box;font-family:Inter,system-ui}body{margin:0;display:flex;height:100vh;background:#f5f5f5;overflow:hidden}
+.side{width:60px;background:#121212;display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:14px}
+.side button{width:40px;height:40px;border:none;border-radius:12px;cursor:pointer;display:grid;place-items:center;font-size:20px}
+.side button.active{background:#fff;color:#000}
+.list{width:340px;background:#fff;border-right:1px solid #e5e5e5;display:flex;flex-direction:column}
+.main{flex:1;background:#e9ddd3;display:flex;flex-direction:column;position:relative}
+.topbar{height:56px;background:#fff;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;padding:0 14px;gap:8px}
+.chip{padding:8px 14px;border-radius:20px;border:1px solid #e5e5e5;background:#f2f2f2;font-weight:700;cursor:pointer;font-size:12px}
+.ficha{position:absolute;top:56px;right:0;width:380px;height:calc(100% - 56px);background:#fff;border-left:1px solid #e5e5e5;transform:translateX(100%);transition:.3s;z-index:10;overflow:auto;padding:16px}
+.ficha.open{transform:translateX(0)}
+.planBanner{padding:8px 12px;font-size:11px;font-weight:800;display:flex;justify-content:space-between}
+.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:900}
+.badge-Cliente{background:#0a7a2a;color:#fff}.badge-Nuevo{background:#1d325e;color:#fff}.badge-Interesado{background:#7a5a00;color:#fff}.badge-Campaña{background:#5a3a7a;color:#fff}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin:4px 0;font-size:13px}
+label{font-size:10px;font-weight:800;color:#666;margin-top:8px;display:block;letter-spacing:.5px}
+.btn{width:100%;padding:12px;border:none;border-radius:10px;font-weight:900;cursor:pointer;margin-top:8px}
+.btn-blue{background:#111;color:#fff}.btn-green{background:#25d366;color:#fff}
+.chatItem{padding:12px;border-bottom:1px solid #f0f0f0;cursor:pointer;display:flex;gap:10px}.chatItem:hover{background:#f9f9f9}
+</style></head><body>
 
-<div class="sidebar">
-<img src="logo.png" class="logo" onerror="this.style.display='none'">
-<div class="icon active" onclick="setTab('bandeja')" title="Bandeja">💬</div>
-<div class="online-dot" id="onlineDot"></div>
-<div class="icon yellow" onclick="location.href='campanas.html'" title="Campañas">📢</div>
-<div class="icon" onclick="setTab('calendario')" title="Recordatorios">📅</div>
-<div class="icon" onclick="setTab('admin')" title="Admin">⚙️</div>
-<div class="icon" style="margin-top:auto;background:#25D366" onclick="window.open('https://wa.me/573133181851','_blank')" title="Ayuda">💚</div>
+<div class="side">
+<button class="active" title="Bandeja Entrante" onclick="location.href='crm.html'">💬</button>
+<button title="Config API Cloud" onclick="location.href='config.html'">☁️</button>
+<button title="Campañas" style="background:#ffcc00" onclick="location.href='campanas.html'">📢</button>
+<button title="Calendario" onclick="location.href='calendario.html'">📅</button>
+<button title="Configuración" onclick="location.href='configuracion.html'">⚙️</button>
+<button title="Planes" onclick="location.href='planes.html'" style="margin-top:auto">📦</button>
 </div>
 
-<div class="chats">
-<div class="chats-header">
-<input id="searchChat" placeholder="Buscar chat..." style="flex:1;padding:10px;border-radius:20px;border:1px solid #ddd">
-<select id="empresa_id" style="padding:8px;border-radius:10px"><option value="default">default</option></select>
+<div class="list">
+<div style="padding:10px;display:flex;gap:8px">
+<input id="search" placeholder="Buscar chat..." style="flex:1;padding:10px;border-radius:20px;border:1px solid #ddd">
+<select id="empresaSel" style="width:90px;border-radius:20px"><option>default</option></select>
 </div>
-<div id="chatsList" class="chats-list"></div>
+<div id="planBanner" class="planBanner" style="background:#fff3cd;border-bottom:1px solid #ffe69c">Cargando plan...</div>
+<div id="listaChats" style="overflow:auto;flex:1"></div>
+<div style="padding:8px;border-top:1px solid #eee;font-size:11px;color:#666">
+<div>✅ WPP Excel/Manual</div>
+<div id="fGmail">🔒 Gmail (Gold)</div>
+<div id="fIA">🔒 IA + Botón agente (Premium/Gold)</div>
+<div id="fLlamadas">🔒 Llamadas Meta reflejadas (Gold)</div>
+</div>
 </div>
 
 <div class="main">
-<div class="main-header">
-<div id="chatName">Selecciona un chat</div>
-<div style="margin-left:auto;display:flex;gap:8px">
-<button class="btn" onclick="togglePanel('info')">Segmentar</button>
-<button class="btn" onclick="togglePanel('recordatorio')">⏰ Recordatorio</button>
-<select id="asignarWorker"></select>
-<button class="btn" onclick="asignarChat()">Asignar</button>
-</div>
-</div>
-<div id="messages" class="messages"></div>
-<div class="inputbar">
-<label style="cursor:pointer">📎<input type="file" id="fileInput" hidden></label>
-<input id="msgInput" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter') enviarMensaje()">
-<button class="btn" style="background:#111;color:#fff" onclick="enviarMensaje()">Enviar</button>
+<div class="topbar">
+<div style="display:flex;align-items:center;gap:8px"><b id="chatTitle">Selecciona un chat</b><span id="chatPlanInfo" style="font-size:11px;color:#666"></span></div>
+<div style="display:flex;gap:8px">
+<button class="chip" onclick="toggleFicha('segmentar')">Segmentar</button>
+<button class="chip" onclick="toggleFicha('recordatorio')">⏰ Recordatorio</button>
+<button class="chip" onclick="toggleFicha('asignar')">Asignar</button>
+<button class="chip" onclick="toggleFicha('llamada')">📞 Llamada</button>
 </div>
 </div>
 
-<div id="panelInfo" class="panel">
-<h3>Segmentación cliente</h3>
-<input id="segEtiqueta" placeholder="Etiqueta Ej: Cliente VIP">
-<input id="segNota" placeholder="Nota">
-<button class="btn" style="background:#111;color:#fff;width:100%" onclick="guardarSegmentacion()">Guardar</button>
-<h3 style="margin-top:20px">Planes</h3>
-<div id="planes"></div>
+<div id="chatArea" style="flex:1;overflow:auto;padding:20px;display:grid;place-items:center;color:#8a7a6a">
+Selecciona un chat de la izquierda para ver mensajes y ficha del cliente
 </div>
 
-<div id="panelRecordatorio" class="panel">
-<h3>Recordatorio + Notificación</h3>
-<input type="datetime-local" id="recFecha">
-<textarea id="recTexto" placeholder="Ej: Llamar a cliente seguimiento"></textarea>
-<button class="btn" style="background:#111;color:#fff;width:100%" onclick="crearRecordatorio()">Crear recordatorio</button>
-<div id="listaRecordatorios" style="margin-top:12px"></div>
+<div style="padding:12px;background:#fff;border-top:1px solid #e5e5e5;display:flex;gap:8px">
+<input id="msgInput" placeholder="Escribe un mensaje..." style="flex:1;border-radius:24px"><button onclick="enviarMsg()" style="padding:10px 18px;border-radius:20px;background:#111;color:#fff;border:none;font-weight:800">Enviar</button>
+</div>
+
+<div id="ficha" class="ficha"></div>
 </div>
 
 <script>
-let empresa_id='default', chatActual=null, chats=[], audioNotif=new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_0c8c3e1d6f.mp3');
+const empresa_id=localStorage.getItem('empresa_id')||'default';
+document.getElementById('empresaSel').value=empresa_id;
+let chatActual=null; let chatsData=[]; let MI_PLAN=null; let fichaMode='segmentar';
 
-function getEmpresa(){return document.getElementById('empresa_id').value||'default';}
+async function cargarPlan(){
+  const r=await fetch(`/api/mi-plan/${empresa_id}`); const p=await r.json(); MI_PLAN=p;
+  document.getElementById('planBanner').innerHTML=`<div>🔒 PLAN ${p.plan.toUpperCase()} - ${p.usado_conversaciones}/${p.max_conversaciones} chats - ${p.usado_trabajadores}/${p.max_trabajadores} trab</div><div>${p.limite_alcanzado?'⛔ LÍMITE':''}</div>`;
+  document.getElementById('planBanner').style.background=p.limite_alcanzado?'#ffcccc':'#fff3cd';
+  document.getElementById('fGmail').innerText=p.campañas_gmail?'✅ Campañas Gmail': '🔒 Campañas Gmail (Gold)';
+  document.getElementById('fIA').innerText=p.ia?`✅ IA + Botón agente`:'🔒 IA + Botón agente (Premium/Gold)';
+  document.getElementById('fLlamadas').innerText=p.llamadas?'✅ Llamadas Meta reflejadas + Seguimiento':'🔒 Llamadas Meta reflejadas (Gold)';
+  if(p.limite_alcanzado) document.getElementById('chatArea').innerHTML=`<div style="background:#ff0000;color:#fff;padding:20px;border-radius:12px;text-align:center"><b>⛔ Límite ${p.max_conversaciones} conversaciones alcanzado</b><br>Tu plan ${p.plan} no permite más chats.<br><button onclick="location.href='planes.html'" style="margin-top:10px;padding:8px 14px;border:none;border-radius:8px">Mejorar a ${p.plan==='Basico'?'Premium':'Gold'}</button></div>`;
+}
 
 async function cargarChats(){
-  empresa_id=getEmpresa();
-  const r=await fetch(`/api/chats/${empresa_id}`); chats=await r.json();
-  const q=document.getElementById('searchChat').value.toLowerCase();
-  const list=document.getElementById('chatsList'); list.innerHTML='';
-  chats.filter(c=>!q||c.id.includes(q)).forEach(c=>{
-    const div=document.createElement('div'); div.className='chat-item'+(chatActual===c.id?' active':'');
-    div.innerHTML=`<div class="avatar">${c.id.slice(-2)}</div><div><b>${c.id}</b><div style="font-size:12px;color:#666">${(c.mensajes?.slice(-1)[0]?.texto||'').slice(0,30)}</div></div>${c.no_leidos>0?`<div class="dot" id="dot-${c.id}"></div>`:''}`;
-    div.onclick=()=>abrirChat(c.id); list.appendChild(div);
-  });
-  if(chats.some(c=>c.no_leidos>0)){ try{audioNotif.play();}catch{} if(Notification.permission==='granted') new Notification('Nuevo mensaje Klido'); }
+  const r=await fetch(`/api/chats/${empresa_id}`); const chats=await r.json(); chatsData=chats;
+  const q=document.getElementById('search').value.toLowerCase();
+  let lista=q? chats.filter(c=> (c.id.toLowerCase().includes(q) || (c.cliente?.nombre||'').toLowerCase().includes(q) || (c.cliente?.empresa||'').toLowerCase().includes(q))) : chats;
+  document.getElementById('listaChats').innerHTML=lista.map(c=>{
+    const cli=c.cliente||{}; const seg=cli.segmento||'Nuevo';
+    return `<div class="chatItem" onclick="abrirChat('${c.id}')">
+      <div style="width:40px;height:40px;background:#121212;color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:800">${(cli.nombre||c.id).slice(0,2).toUpperCase()}</div>
+      <div style="flex:1;overflow:hidden"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">${cli.nombre||c.id}</b><span class="badge badge-${seg}">${seg}</span></div>
+      <div style="font-size:11px;color:#666">${cli.empresa||''} ${cli.etiquetas?'• '+cli.etiquetas:''}</div>
+      <div style="font-size:11px;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.mensajes?.slice(-1)[0]?.texto||''}</div></div>
+      ${c.no_leidos?'<div style="width:8px;height:8px;background:red;border-radius:50%"></div>':''}
+    </div>`;
+  }).join('');
 }
 
+function toggleFicha(mode){
+  if(!chatActual) return alert('Selecciona un chat primero');
+  fichaMode=mode||'segmentar';
+  document.getElementById('ficha').classList.toggle('open');
+  if(document.getElementById('ficha').classList.contains('open')) renderFicha();
+}
+function renderFicha(){
+  const c=chatsData.find(x=>x.id===chatActual)?.cliente||{nombre:'',empresa:'',email:'',ciudad:'',segmento:'Nuevo',estado:'Nuevo',industria:'ACOL',etiquetas:'',valor_est:'',notas:'',asignado:''};
+  if(fichaMode==='segmentar'){
+    document.getElementById('ficha').innerHTML=`
+      <h3 style="margin:0">📋 Ficha Cliente</h3><span style="font-size:11px;color:#666">Segmentación: Cliente / Nuevo / Interesado / Campaña</span>
+      <label>Nombre</label><input id="f_nombre" value="${c.nombre||''}">
+      <label>Empresa</label><input id="f_empresa" value="${c.empresa||''}">
+      <label>Email</label><input id="f_email" value="${c.email||''}">
+      <label>Ciudad</label><input id="f_ciudad" value="${c.ciudad||''}">
+      <label>SEGMENTACIÓN (como pediste)</label>
+      <select id="f_segmento" style="border:2px solid #111"><option>Cliente</option><option>Nuevo</option><option>Interesado</option><option>Campaña</option></select>
+      <label>Estado</label><select id="f_estado"><option>Nuevo</option><option>En negociación</option><option>Ganado</option><option>Perdido</option></select>
+      <label>Industria</label><select id="f_industria"><option>ACOL</option><option>Salud</option><option>Legal</option><option>Retail</option><option>Tech</option></select>
+      <label>Etiquetas</label><input id="f_etiquetas" value="${c.etiquetas||''}" placeholder="Congreso 2026, etc">
+      <label>Valor estimado</label><input id="f_valor_est" value="${c.valor_est||''}">
+      <label>Notas internas</label><textarea id="f_notas" rows="3">${c.notas||''}</textarea>
+      <button class="btn btn-blue" onclick="guardarFicha()">💾 Guardar ficha</button>
+    `;
+    document.getElementById('f_segmento').value=c.segmento||'Nuevo';
+    document.getElementById('f_estado').value=c.estado||'Nuevo';
+    document.getElementById('f_industria').value=c.industria||'ACOL';
+  }else if(fichaMode==='recordatorio'){
+    document.getElementById('ficha').innerHTML=`<h3>⏰ Recordatorio</h3><input id="rec_titulo" placeholder="Ej: Llamar mañana 10am"><input id="rec_fecha" type="datetime-local"><button class="btn btn-blue" onclick="crearRec()">Crear recordatorio</button><div id="recLista" style="margin-top:12px"></div>`;
+    cargarRecs();
+  }else if(fichaMode==='asignar'){
+    document.getElementById('ficha').innerHTML=`<h3>👥 Asignar trabajador</h3><div id="trabLista"></div><input id="trab_nombre" placeholder="Nombre trabajador"><input id="trab_correo" placeholder="Correo"><button class="btn btn-blue" onclick="crearTrab()">Agregar (Plan: ${MI_PLAN?.plan} ${MI_PLAN?.usado_trabajadores}/${MI_PLAN?.max_trabajadores})</button>`;
+    cargarTrab();
+  }else if(fichaMode==='llamada'){
+    const puede=MI_PLAN?.llamadas;
+    document.getElementById('ficha').innerHTML= puede? `<h3>📞 Registrar llamada (Número reflejado Meta)</h3><input id="ll_num" value="${chatActual}"><input id="ll_dur" placeholder="Duración ej: 3m 20s"><select id="ll_est"><option>realizada</option><option>no contestada</option><option>seguimiento</option></select><textarea id="ll_nota" placeholder="Nota de llamada"></textarea><button class="btn btn-green" onclick="registrarLlamada()">📞 Guardar llamada con seguimiento</button><div id="llLista" style="margin-top:10px"></div>` : `<div style="background:#fff3cd;padding:12px;border-radius:10px">🔒 Llamadas solo para plan Gold Ilimitado. Tu plan ${MI_PLAN?.plan} no incluye llamadas con número reflejado Meta.<br><button class="btn btn-blue" onclick="location.href='planes.html'">Mejorar a Gold</button></div>`;
+    if(puede) cargarLlamadas();
+  }
+}
+async function guardarFicha(){
+  const data={nombre:document.getElementById('f_nombre').value, empresa:document.getElementById('f_empresa').value, email:document.getElementById('f_email').value, ciudad:document.getElementById('f_ciudad').value, segmento:document.getElementById('f_segmento').value, estado:document.getElementById('f_estado').value, industria:document.getElementById('f_industria').value, etiquetas:document.getElementById('f_etiquetas').value, valor_est:document.getElementById('f_valor_est').value, notas:document.getElementById('f_notas').value};
+  await fetch('/api/cliente/guardar',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({empresa_id, chat_id:chatActual, cliente:data})});
+  alert('✅ Guardado como '+data.segmento); cargarChats(); toggleFicha();
+}
 async function abrirChat(id){
-  chatActual=id; await fetch('/api/chat/leido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:getEmpresa(),chat_id:id})});
-  document.getElementById('chatName').innerText=id;
-  const r=await fetch(`/api/mensajes/${getEmpresa()}/${id}`); const msgs=await r.json();
-  const box=document.getElementById('messages'); box.innerHTML='';
-  msgs.forEach(m=>{
-    const d=document.createElement('div'); d.className='bubble '+(m.from==='yo'?'yo':'cliente');
-    let html='';
-    if(m.texto) html+=`<div>${m.texto}</div>`;
-    if(m.tipo==='image') html+=`<img src="${m.url||''}" onclick="window.open(this.src)">`;
-    if(m.tipo==='audio') html+=`<audio controls src="${m.url}"></audio>`;
-    if(m.tipo==='document') html+=`<a href="${m.url}" target="_blank">📄 ${m.nombre||'Archivo'}</a>`;
-    if(m.tipo==='video') html+=`<video controls src="${m.url}" style="max-width:240px;border-radius:12px"></video>`;
-    d.innerHTML=html; box.appendChild(d);
-  });
-  box.scrollTop=box.scrollHeight; cargarChats();
+  chatActual=id;
+  document.getElementById('chatTitle').innerText=id;
+  const r=await fetch(`/api/mensajes/${empresa_id}/${id}`); const msgs=await r.json();
+  const cli=chatsData.find(c=>c.id===id)?.cliente;
+  document.getElementById('chatArea').innerHTML=`${cli?`<div style="background:#fff;padding:8px 12px;border-radius:10px;margin-bottom:10px;font-size:11px;display:flex;gap:8px"><span class="badge badge-${cli.segmento||'Nuevo'}">${cli.segmento||'Nuevo'}</span> ${cli.empresa||''} ${cli.etiquetas||''}</div>`:''}<div style="display:flex;flex-direction:column;gap:8px">${msgs.map(m=>`<div style="padding:10px 14px;border-radius:16px;max-width:70%;font-size:13px;${m.from==='yo'?'background:#111;color:#fff;align-self:flex-end':'background:#fff;align-self:flex-start;box-shadow:0 1px 2px rgba(0,0,0,.1)'}">${m.texto||'📎'}</div>`).join('')}</div>`;
+  fetch('/api/chat/leido',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({empresa_id, chat_id:id})});
 }
+async function crearRec(){ const titulo=document.getElementById('rec_titulo').value; const fecha=document.getElementById('rec_fecha').value; await fetch('/api/recordatorio',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({empresa_id, chat_id:chatActual, titulo, fecha: new Date(fecha).getTime()})}); alert('Recordatorio creado'); cargarRecs(); }
+async function cargarRecs(){ const r=await fetch(`/api/recordatorios/${empresa_id}`); const list=await r.json(); document.getElementById('recLista').innerHTML=list.filter(x=>x.chat_id===chatActual).map(x=>`<div style="padding:8px;border:1px solid #eee;border-radius:8px;margin:4px 0;font-size:11px">${x.titulo} - ${new Date(x.fecha).toLocaleString()}</div>`).join(''); }
+async function cargarTrab(){ const r=await fetch(`/api/trabajadores/${empresa_id}`); const list=await r.json(); document.getElementById('trabLista').innerHTML=list.map(t=>`<div style="padding:8px;border:1px solid #eee;border-radius:8px;display:flex;justify-content:space-between"><span>${t.nombre} (${t.correo||''})</span><span onclick="borrarTrab('${t.id}')" style="cursor:pointer">🗑️</span></div>`).join('')||'Sin trabajadores'; }
+async function crearTrab(){ const nombre=document.getElementById('trab_nombre').value; const correo=document.getElementById('trab_correo').value; const r=await fetch('/api/trabajador/crear',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({empresa_id, nombre, correo})}); const j=await r.json(); if(!j.ok) alert(j.error); else cargarTrab(); }
+async function borrarTrab(id){ await fetch(`/api/trabajador/${empresa_id}/${id}`,{method:'DELETE'}); cargarTrab(); }
+async function registrarLlamada(){ const numero=document.getElementById('ll_num').value; const duracion=document.getElementById('ll_dur').value; const estado=document.getElementById('ll_est').value; const nota=document.getElementById('ll_nota').value; await fetch('/api/llamada/registrar',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({empresa_id, chat_id:chatActual, numero, duracion, estado, nota})}); alert('📞 Llamada guardada con número reflejado Meta'); cargarLlamadas(); }
+async function cargarLlamadas(){ const r=await fetch(`/api/llamadas/${empresa_id}`); const list=await r.json(); const el=document.getElementById('llLista'); if(el) el.innerHTML=list.filter(x=>x.chat_id===chatActual).map(x=>`<div style="padding:6px;border:1px solid #eee;border-radius:8px;font-size:11px">📞 ${x.estado} ${x.duracion} - ${x.nota} - ${new Date(x.fecha).toLocaleString()} - Refleja Meta: ${x.refleja_meta?'Sí':''}</div>`).join(''); }
+async function enviarMsg(){ const texto=document.getElementById('msgInput').value; if(!texto||!chatActual) return; document.getElementById('msgInput').value=''; const emp=await fetch(`/api/empresa/${empresa_id}`).then(r=>r.json()); if(!emp.token) return alert('Configura API Cloud'); await fetch(`https://graph.facebook.com/v20.0/${emp.phone||emp.phone_id}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify({messaging_product:'whatsapp', to:chatActual, type:'text', text:{body:texto}})}); const dbMsg={from:'yo', texto, ts:Date.now()}; const r=await fetch(`/api/chats/${empresa_id}`).then(r=>r.json()); abrirChat(chatActual); }
 
-async function enviarMensaje(){
-  const texto=document.getElementById('msgInput').value.trim(); if(!texto||!chatActual) return;
-  const emp=getEmpresa(); const cfg=await fetch(`/api/empresa/${emp}`).then(r=>r.json());
-  // Envía a Meta
-  await fetch(`https://graph.facebook.com/v20.0/${cfg.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${cfg.token}`},body:JSON.stringify({messaging_product:'whatsapp',to:chatActual,type:'text',text:{body:texto}})});
-  // Guarda local para historial infinito
-  const dbChat=await fetch('/api/chat/enviar-media',{method:'POST'}); // dummy para mantener flujo
-  // Guardado local simple
-  const r=await fetch(`/api/chats/${emp}`); // recarga
-  document.getElementById('msgInput').value='';
-  abrirChat(chatActual);
-}
-
-document.getElementById('fileInput').addEventListener('change', async e=>{
-  const fd=new FormData(); fd.append('file', e.target.files[0]); fd.append('empresa_id', getEmpresa()); fd.append('chat_id', chatActual);
-  await fetch('/api/chat/enviar-media',{method:'POST',body:fd}); abrirChat(chatActual);
-});
-
-function togglePanel(id){ document.getElementById('panelInfo').classList.remove('open'); document.getElementById('panelRecordatorio').classList.remove('open'); if(id==='info') document.getElementById('panelInfo').classList.toggle('open'); if(id==='recordatorio') document.getElementById('panelRecordatorio').classList.toggle('open'); }
-function setTab(t){ if(t==='bandeja') cargarChats(); if(t==='calendario') togglePanel('recordatorio'); if(t==='admin') location.href='campanas.html'; }
-
-async function crearRecordatorio(){
-  const fecha=document.getElementById('recFecha').value; const texto=document.getElementById('recTexto').value;
-  await fetch('/api/recordatorio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:getEmpresa(),fecha,texto,chat_id:chatActual})});
-  alert('Recordatorio creado, enviará notificación'); cargarRecordatorios();
-  // Notificación browser
-  const diff=new Date(fecha)-new Date(); if(diff>0) setTimeout(()=>{ new Notification('⏰ Recordatorio: '+texto); audioNotif.play(); }, diff);
-}
-async function cargarRecordatorios(){
-  const r=await fetch(`/api/recordatorios/${getEmpresa()}`); const data=await r.json();
-  document.getElementById('listaRecordatorios').innerHTML=data.map(rr=>`<div style="padding:8px;border-bottom:1px solid #eee"><b>${rr.fecha}</b><br>${rr.texto}<br><small>${rr.chat_id||''}</small></div>`).join('');
-}
-async function asignarChat(){
-  const worker=document.getElementById('asignarWorker').value; if(!worker||!chatActual) return;
-  await fetch('/api/chat/asignar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:getEmpresa(),chat_id:chatActual,worker_id:worker})}); alert('Chat asignado');
-}
-async function cargarWorkers(){
-  const r=await fetch(`/api/workers/${getEmpresa()}`); const w=await r.json();
-  document.getElementById('asignarWorker').innerHTML=w.map(x=>`<option value="${x.id}">${x.nombre||x.id}</option>`).join('');
-}
-async function cargarPlanes(){ const r=await fetch('/api/planes'); const p=await r.json(); document.getElementById('planes').innerHTML=p.map(pl=>`<div style="padding:10px;border:1px solid #eee;border-radius:12px;margin:6px 0"><b>${pl.nombre}</b> ${pl.precio}<br><a href="${pl.wa}" target="_blank" style="background:#25D366;color:#fff;padding:6px 10px;border-radius:20px;text-decoration:none;display:inline-block;margin-top:6px">Comprar por WPP</a></div>`).join(''); }
-
-setInterval(cargarChats, 3000);
-document.getElementById('empresa_id').addEventListener('change', ()=>{cargarChats();cargarWorkers();cargarRecordatorios();cargarPlanes();});
-cargarChats();cargarWorkers();cargarRecordatorios();cargarPlanes();
-if(Notification.permission!=='granted') Notification.requestPermission();
+document.getElementById('search').addEventListener('input', cargarChats);
+cargarPlan().then(cargarChats);
+setInterval(cargarChats, 4000);
 </script>
-</body>
-</html>
+</body></html>
