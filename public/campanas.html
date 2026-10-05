@@ -1,103 +1,83 @@
-<!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Campañas v161 FIX</title>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Campañas V162 FIX</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<style>body{background:#f6f7fb;font-family:Inter,Arial;margin:0;padding:20px}.card{background:#fff;border-radius:20px;padding:20px;max-width:900px;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.08)} input,select{width:100%;padding:13px;border:1px solid #ddd;border-radius:12px;margin:8px 0}.btn{padding:13px 18px;border:none;border-radius:12px;font-weight:700;cursor:pointer}.btn-blue{background:#0b57d0;color:#fff;width:100%}.badge{background:#e8f5e9;padding:8px 12px;border-radius:10px;font-size:13px;display:block;margin:8px 0}</style>
-</head><body>
-<div class="card">
-<h3>🎯 Campañas v161 - Envía CUALQUIER EXCEL</h3>
+<style>body{background:#f6f7fb;font-family:Inter,Arial;margin:0;padding:20px}.card{background:#fff;border-radius:20px;padding:20px;max-width:900px;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.08)}input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0}.btn{padding:12px;border:none;border-radius:10px;font-weight:800;cursor:pointer;width:100%}.btn-blue{background:#0b57d0;color:#fff}.config{background:#fff3cd;border:1px solid #ffc107;padding:14px;border-radius:12px;margin-bottom:14px}</style>
+</head><body><div class="card">
+<div id="configBox" class="config">
+<h3 style="margin:0">⚙️ CONFIGURAR EMPRESA (1 vez)</h3>
+<div style="font-size:12px">Si te dice "Empresa no configurada" es aquí.</div>
+<input id="cfg_token" placeholder="Token de Meta (EAAG...)">
+<input id="cfg_phone" placeholder="Phone ID (ej: 123456789)">
+<input id="cfg_waba" placeholder="WABA ID (ej: 987654321)">
+<button class="btn" style="background:#111;color:#fff" onclick="guardarConfig()">Guardar Config y Continuar</button>
+<div id="cfgStatus" style="font-size:12px;margin-top:6px"></div>
+</div>
 
-<label>NOMBRE CAMPAÑA</label>
-<input id="nombre" placeholder="Ej: Promo GOLD Marzo - Congreso">
-
-<label>PLANTILLA META (APPROVED)</label>
-<select id="plantillaSelect"><option value="">Cargando...</option></select>
-<input id="plantillaManual" placeholder="Si dice Cargando... escribe: acol_invitacion_congreso">
-
-<label>VARIABLES {{1}} {{2}} {{3}} - OPCIONAL</label>
-<input id="vars" placeholder="Ej: Fer, Congreso ACOL, Bogotá" value="fer">
-
-<label style="color:#0a7d00;font-weight:700">SUBIR EXCEL - CUALQUIER ORDEN, CUALQUIER HOJA</label>
+<h3>🎯 Campañas V162</h3>
+<input id="nombre" placeholder="Nombre campaña">
+<select id="plantillaSelect"><option>Cargando plantillas...</option></select>
+<input id="plantillaManual" placeholder="Plantilla manual: acol_invitacion_congreso" value="acol_invitacion_congreso">
+<input id="vars" placeholder="Variables {{1}},{{2}}" value="fer">
 <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
-<span id="excelInfo" class="badge">📁 Sube cualquier Excel - Detecta teléfonos automáticamente (10 dígitos con 3 o 57+3)</span>
-
-<div id="numerosPreview" style="max-height:120px;overflow:auto;background:#f9f9f9;padding:10px;border-radius:10px;font-size:12px;margin:10px 0"></div>
-
-<button class="btn btn-blue" onclick="enviar()">🚀 Enviar campaña ahora (cualquier plantilla)</button>
-<button class="btn" onclick="location.href='crm.html'" style="margin-top:8px">Cancelar</button>
-
-<h4 style="margin-top:20px">Historial campañas</h4>
-<div id="historial">Cargando...</div>
+<div id="excelInfo" style="background:#e8f5e9;padding:8px;border-radius:8px;font-size:13px">Sube Excel</div>
+<div id="preview" style="font-size:11px;max-height:80px;overflow:auto;background:#f9f9f9;padding:6px;border-radius:8px;margin:8px 0"></div>
+<button class="btn btn-blue" onclick="enviar()">🚀 Enviar campaña ahora</button>
+<div id="historial" style="margin-top:14px"></div>
 </div>
 
 <script>
-let numerosFinales=[];
+let nums=[];
 const empresa_id=localStorage.getItem('empresa_id')||'default';
 
-function extraerNumeros(texto){
-  const regex=/(\+?57)?\s?3\d{9}/g;
-  const matches=texto.match(regex)||[];
-  return [...new Set(matches.map(n=>n.replace(/\D/g,'').replace(/^57/,'').length==10?'57'+n.replace(/\D/g,'').slice(-10):n.replace(/\D/g,'')))].filter(n=>n.length>=12);
+async function cargarConfig(){
+  const r=await fetch(`/api/empresa/${empresa_id}`); const j=await r.json();
+  if(j && j.token){ 
+    document.getElementById('configBox').style.display='none';
+    document.getElementById('cfgStatus').innerText='✅ Configurada';
+  } else {
+    document.getElementById('configBox').style.display='block';
+    document.getElementById('cfgStatus').innerText='❌ Falta configurar - pega token';
+  }
+  return j;
+}
+async function guardarConfig(){
+  const token=document.getElementById('cfg_token').value.trim();
+  const phone_id=document.getElementById('cfg_phone').value.trim();
+  const waba_id=document.getElementById('cfg_waba').value.trim();
+  if(!token||!phone_id) return alert('Pega token y phone_id');
+  const r=await fetch('/api/config-empresa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id, token, phone_id, waba_id, nombre:empresa_id})});
+  const j=await r.json();
+  if(j.ok){ alert('✅ Config guardada'); document.getElementById('configBox').style.display='none'; cargarPlantillas(); }
 }
 
-// LEE EXCEL EN EL NAVEGADOR - ESTO QUITA TU ERROR
-document.getElementById('excelFile').addEventListener('change', async (e)=>{
-  const file=e.target.files[0]; if(!file) return;
-  document.getElementById('excelInfo').innerText='Leyendo...';
-  try{
-    const data=await file.arrayBuffer();
-    const wb=XLSX.read(data);
-    let todoTexto='';
-    wb.SheetNames.forEach(name=>{
-      const sheet=wb.Sheets[name];
-      todoTexto+=JSON.stringify(XLSX.utils.sheet_to_json(sheet,{header:1}))+ ' ';
-    });
-    numerosFinales=extraerNumeros(todoTexto);
-    if(numerosFinales.length==0){
-      // fallback: lee celdas una por una
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const json=XLSX.utils.sheet_to_json(ws,{defval:''});
-      json.forEach(row=>{ Object.values(row).forEach(v=>{ numerosFinales.push(...extraerNumeros(String(v))) }) });
-      numerosFinales=[...new Set(numerosFinales)];
-    }
-    document.getElementById('excelInfo').innerText=`✅ ${numerosFinales.length} números detectados - Listo para enviar`;
-    document.getElementById('numerosPreview').innerText=numerosFinales.slice(0,50).join(', ') + (numerosFinales.length>50?'...':'' );
-  }catch(err){
-    console.log(err);
-    document.getElementById('excelInfo').innerText='❌ Error leyendo Excel local, pero intento manual: escribe números en variables';
-    alert('Error leyendo Excel: '+err.message+' - Prueba guardarlo como.xlsx limpio');
-  }
+function extraerNumeros(text){
+  const m=text.match(/(\+?57)?\s?3\d{9}/g)||[];
+  return [...new Set(m.map(n=>{let s=n.replace(/\D/g,''); if(s.length==10) s='57'+s; return s;}).filter(n=>n.length>=12))];
+}
+document.getElementById('excelFile').addEventListener('change', async e=>{
+  const data=await e.target.files[0].arrayBuffer(); const wb=XLSX.read(data);
+  let txt=''; wb.SheetNames.forEach(n=>txt+=JSON.stringify(XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1}))+' ');
+  nums=extraerNumeros(txt);
+  document.getElementById('excelInfo').innerText=`✅ ${nums.length} números - Listo`;
+  document.getElementById('preview').innerText=nums.slice(0,30).join(', ');
 });
 
 async function cargarPlantillas(){
-  try{
-    const r=await fetch(`/api/plantillas/${empresa_id}`);
-    const j=await r.json();
-    const sel=document.getElementById('plantillaSelect');
-    if(!j || j.length==0){ sel.innerHTML='<option value="">No cargó - escribe manual abajo</option>'; return; }
-    sel.innerHTML=j.map(t=>`<option value="${t.name}">${t.name} (${t.status})</option>`).join('');
-  }catch(e){
-    document.getElementById('plantillaSelect').innerHTML='<option>Error cargando - escribe manual</option>';
-  }
-}
-async function cargarHistorial(){
-  try{
-    const r=await fetch(`/api/campanas/${empresa_id}`);
-    const j=await r.json();
-    document.getElementById('historial').innerHTML=j.length?j.map(c=>`<div style="padding:8px;border-bottom:1px solid #eee">${c.plantilla||c.nombre} - ${c.enviados||0}/${c.total} - ${c.estado}</div>`).join(''):'Sin campañas';
-  }catch{ document.getElementById('historial').innerHTML='Historial vacío'; }
+  try{ const r=await fetch(`/api/plantillas/${empresa_id}`); const j=await r.json();
+    document.getElementById('plantillaSelect').innerHTML=j.length?j.map(t=>`<option value="${t.name}">${t.name}</option>`).join(''):'<option value="">Escribe manual abajo</option>';
+  }catch{ document.getElementById('plantillaSelect').innerHTML='<option>Error - escribe manual</option>'; }
 }
 async function enviar(){
-  const plantilla=document.getElementById('plantillaManual').value.trim() || document.getElementById('plantillaSelect').value;
-  if(!plantilla) return alert('Escribe plantilla: acol_invitacion_congreso');
-  if(numerosFinales.length==0) return alert('Sube Excel primero, no detecté números');
+  const cfg=await cargarConfig();
+  if(!cfg.token) return alert('Primero configura empresa arriba');
+  const plantilla=document.getElementById('plantillaManual').value||document.getElementById('plantillaSelect').value;
+  if(nums.length==0) return alert('Sube Excel primero');
   const variables=document.getElementById('vars').value.split(',').map(s=>s.trim()).filter(Boolean);
-  if(variables.length==0) variables.push('Cliente','Congreso ACOL','Bogotá');
-  const nombre=document.getElementById('nombre').value||'Campaña';
-  const res=await fetch('/api/campana/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id,plantilla,nombre,variables,numeros:numerosFinales,imagen_url:''})});
-  const j=await res.json();
-  if(j.ok){ alert(`✅ Campaña ${j.total} números enviada`); cargarHistorial(); } else alert('Error: '+(j.error||''));
+  const r=await fetch('/api/campana/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id, plantilla, nombre:document.getElementById('nombre').value, numeros:nums, variables})});
+  const j=await r.json();
+  if(j.ok) alert(`✅ Enviando ${j.total}`); else alert('Error: '+j.error);
 }
-cargarPlantillas(); cargarHistorial();
+cargarConfig(); cargarPlantillas();
+fetch(`/api/campanas/${empresa_id}`).then(r=>r.json()).then(j=>{document.getElementById('historial').innerHTML=j.map(c=>`<div>${c.plantilla} - ${c.enviados}/${c.total} - ${c.estado}</div>`).join('')});
 </script>
 </body></html>
