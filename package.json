@@ -1,6 +1,6 @@
 {
-  "name": "klido-crm-v166",
-  "version": "166.0.0",
+  "name": "klido-crm-v167",
+  "version": "167.0.0",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "dependencies": {
