@@ -1,4 +1,4 @@
-// KLIDO V170 - SERVER QUE SI SIRVE - FIX DEFINITIVO ACOL
+// KLIDO V170 - SERVER QUE SI SIRVE - FIX ACOL IMAGEN FIJA EN PLANTILLA
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -37,9 +37,8 @@ const PLANES = {
 
 async function enviarCorreo(to,subject,html){ try{if(!process.env.RESEND_API_KEY) return true; await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${process.env.RESEND_API_KEY}`},body:JSON.stringify({from:process.env.RESEND_FROM||'Klido <onboarding@klidoapp.com.co>',to,subject,html})}); return true;}catch{return true;} }
 
-app.get('/api/debug/config/:empresa_id',(req,res)=>{ const c=loadConfig(req.params.empresa_id); res.json({V:'V170', PATH:DB_PATH, config_usada:c}) });
+app.get('/api/debug/config/:empresa_id',(req,res)=>{ const c=loadConfig(req.params.empresa_id); res.json({V:'V170-FIX-IMG-FIJA', PATH:DB_PATH, config_usada:c}) });
 
-// FIX PLANTILLAS DEFINITIVO - Si Meta falla, devuelve ACOL igual
 app.get('/api/plantillas/:empresa_id',async(req,res)=>{
   const emp=loadConfig(req.params.empresa_id);
   const fallback = [
@@ -47,7 +46,6 @@ app.get('/api/plantillas/:empresa_id',async(req,res)=>{
     {name:'acol_inv_congreso', status:'APPROVED', language:'es_CO'}
   ];
   if(!emp?.token ||!emp?.waba &&!emp?.waba_id){
-    console.log(`PLANTILLAS SIN TOKEN, devolviendo fallback`);
     return res.json(fallback);
   }
   try{
@@ -60,7 +58,6 @@ app.get('/api/plantillas/:empresa_id',async(req,res)=>{
       const ok=j.data.filter(t=>t.status==='APPROVED');
       if(ok.length>0) return res.json(ok);
     }
-    console.log(`PLANTILLAS META vacio o error, usando fallback`);
     return res.json(fallback);
   }catch(e){
     console.log(`PLANTILLAS ERROR: ${e.message}, usando fallback`);
@@ -74,7 +71,6 @@ app.post('/api/verificar-codigo',(req,res)=>{ const cl=String(req.body.correo||'
 app.post('/api/recuperar-password',async(req,res)=>{ const cl=String(req.body.correo||'').trim().toLowerCase(); const m=getMasterDB(); const u=m.users[cl]||Object.values(m.users).find(x=>String(x.correo||'').toLowerCase()===cl); if(!u) return res.json({ok:false,error:'No registrado'}); const cod=Math.floor(100000+Math.random()*900000).toString(); if(m.empresas[u.empresa_id]){m.empresas[u.empresa_id].codigo=cod; saveMaster(m);} await enviarCorreo(cl,`Recuperar ${cod}`,`<h1>${cod}</h1>`); res.json({ok:true,codigo_debug:cod}); });
 app.post('/api/cambiar-password',(req,res)=>{ const cl=String(req.body.correo||'').trim().toLowerCase(); const m=getMasterDB(); const e=Object.values(m.empresas).find(x=>String(x.correo||'').toLowerCase()===cl); if(!e || String(e.codigo).trim()!==String(req.body.codigo).trim()) return res.json({ok:false,error:'Código incorrecto'}); const k=Object.keys(m.users).find(x=>x.toLowerCase()===cl)||cl; if(m.users[k]){m.users[k].password=req.body.nueva_password; saveMaster(m);} res.json({ok:true}); });
 
-// FIX PLAN - Forzar GOLD para ACOL
 app.get('/api/mi-plan/:empresa_id',(req,res)=>{
   const m=getMasterDB();
   let emp=m.empresas[req.params.empresa_id]||Object.values(m.empresas).find(e=>e.id===req.params.empresa_id)||{plan:'Gold', nombre:'ACOL'};
@@ -88,8 +84,9 @@ app.get('/api/mi-plan/:empresa_id',(req,res)=>{
 app.get('/api/empresa/:id',(req,res)=>res.json(loadConfig(req.params.id)||{}));
 app.post('/api/config-empresa',(req,res)=>{ const {empresa_id,token,phone_id,waba_id}=req.body; const db=getDB(empresa_id||'default'); db.config={token,phone:phone_id,waba:waba_id,phone_id,waba_id}; saveDB(empresa_id||'default',db); res.json({ok:true}); });
 
+// FIX DEFINITIVO ACOL - IMAGEN YA ESTA EN LA PLANTILLA, NO SE MANDA HEADER
 app.post('/api/campana/enviar', async(req,res)=>{
-  const {empresa_id, plantilla, numeros, variables, nombre, imagen_url}=req.body;
+  const {empresa_id, plantilla, numeros, variables, nombre}=req.body;
   const emp=loadConfig(empresa_id||'default');
   if(!emp?.token ||!emp?.phone) return res.json({ok:false, error:`Falta token o phone_id. Phone=${emp.phone}`});
   let lista=[...new Set((numeros||[]).map(n=>String(n).replace(/\D/g,'')).map(n=>n.length==10?'57'+n:n).filter(n=>n.length>=10))];
@@ -102,7 +99,6 @@ app.post('/api/campana/enviar', async(req,res)=>{
     if(f) idiomaReal=f.language;
   }catch{}
   const varTexto = String((variables&&variables[0])||'').trim()||'Carlos';
-  const imgLink = (imagen_url||'').trim() || 'https://i.ibb.co/5XqR5cJy/acol-congreso.jpg';
   let primer=lista[0];
   const payload={
     messaging_product:'whatsapp',
@@ -112,12 +108,11 @@ app.post('/api/campana/enviar', async(req,res)=>{
       name:plantilla.trim(),
       language:{code:idiomaReal},
       components:[
-        { type:'header', parameters:[{ type:'image', image:{ link: imgLink } }] },
-        { type:'body', parameters:[{ type:'text', text:varTexto, parameter_name:'nombre_cliente' }] }
+        { type:'body', parameters:[{ type:'text', text:varTexto }] }
       ]
     }
   };
-  console.log(`V170 ENVIO ${idiomaReal} PHONE ${emp.phone} PLANTILLA ${plantilla} IMG ${imgLink} VAR ${varTexto}`);
+  console.log(`V170 ENVIO ${idiomaReal} PHONE ${emp.phone} PLANTILLA ${plantilla} VAR ${varTexto} MODO=SIN-IMG-FIJA-EN-PLANTILLA`);
   try{
     const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify(payload)});
     const j=await r.json();
@@ -127,7 +122,7 @@ app.post('/api/campana/enviar', async(req,res)=>{
       db.campaigns[id]={id, nombre:nombre||plantilla, plantilla, total:lista.length, enviados:lista.length, fallidos:0, estado:'finalizada', created:Date.now(), ultimo_error:`OK ${idiomaReal} ${j.messages[0].id}`};
       saveDB(empresa_id,db);
       (async()=>{ for(let i=1;i<lista.length;i++){ try{ await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify({...payload, to:lista[i]})}); }catch{} await new Promise(r=>setTimeout(r,1300)); } })();
-      return res.json({ok:true, total:lista.length, meta:j, idioma_usado:idiomaReal, modo:'HEADER_IMAGE+NAMED'});
+      return res.json({ok:true, total:lista.length, meta:j, idioma_usado:idiomaReal, modo:'SIN-HEADER-IMG'});
     } else {
       return res.json({ok:false, error:j.error?.message||JSON.stringify(j), detalle:j, payload_enviado:payload});
     }
@@ -153,4 +148,4 @@ app.post('/webhook/:empresa_id',(req,res)=>{ const eid=req.params.empresa_id; co
 app.post('/api/chat/responder-ia',(req,res)=>{ const {empresa_id,texto_cliente}=req.body; const m=getMasterDB(); const emp=m.empresas[empresa_id]; const plan=PLANES[emp?.plan||'Basico']; if(!plan.ia) return res.json({ok:false,error:'IA solo Premium y Gold'}); res.json({ok:true,ia:true,respuesta:`Hola! Soy la IA de Klido. (${texto_cliente?.slice(0,50)})`,boton_agente:plan.boton_agente}); });
 app.use(express.static(path.join(__dirname,'public')));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(process.env.PORT||3000, ()=>console.log(`V170 OK ${process.env.PORT||3000} PHONE ${process.env.PHONE_NUMBER_ID} PATH ${DB_PATH}`));
+app.listen(process.env.PORT||3000, ()=>console.log(`V170 FIX IMG FIJA OK ${process.env.PORT||3000}`));
