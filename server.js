@@ -1,4 +1,4 @@
-// KLIDO V163 FINAL - LEE TUS VARIABLES DE LA FOTO Y MANDA CAMPAÑA
+// KLIDO V164 FINAL FIX UNDEFINED - LEE TUS VARIABLES DE LA FOTO Y MANDA CAMPAÑA
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -8,22 +8,32 @@ app.use(cors());
 app.use(express.json({limit:'100mb'}));
 app.use(express.urlencoded({extended:true}));
 
-const DB_PATH = fs.existsSync('/app/db') ? '/app/db' : path.join(__dirname,'db');
+const DB_PATH = fs.existsSync('/app/db')? '/app/db' : path.join(__dirname,'db');
 [DB_PATH,'public','public/uploads','uploads'].forEach(d=>{if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true})});
 
 function getDB(id){ const f=path.join(DB_PATH,`${id||'default'}.json`); if(!fs.existsSync(f)) return {empresa_id:id, config:null, chats:{}, campaigns:{}, workers:{}, reminders:[], gmail_campaigns:{}, calls:{}, users:{}, codes:{}}; try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return {empresa_id:id, config:null, chats:{}, campaigns:{}, workers:{}, reminders:[], gmail_campaigns:{}, calls:{}, users:{}, codes:{}}}};
 function saveDB(id,d){ fs.writeFileSync(path.join(DB_PATH,`${id||'default'}.json`), JSON.stringify(d,null,2)); }
+
+// --- ESTE ES EL FIX V164 QUE QUITA EL ERROR UNDEFINED ---
 function loadConfig(id){
-  // ESTO LEE TUS VARIABLES DE LA FOTO
-  let envConfig = null;
-  if(process.env.WHATSAPP_TOKEN){
-    envConfig = { token: process.env.WHATSAPP_TOKEN, phone: process.env.PHONE_NUMBER_ID, waba: process.env.WABA_ID, phone_id: process.env.PHONE_NUMBER_ID, waba_id: process.env.WABA_ID };
-  }
-  let db=getDB(id);
-  if(!db.config && envConfig){ db.config=envConfig; saveDB(id,db); return envConfig; }
-  if(db.config && envConfig && !db.config.token){ db.config = envConfig; saveDB(id,db); return envConfig; }
-  return db.config || envConfig;
+  const envToken = process.env.WHATSAPP_TOKEN;
+  const envPhone = process.env.PHONE_NUMBER_ID;
+  const envWaba = process.env.WABA_ID;
+
+  let db = getDB(id);
+  if(!db.config) db.config = {};
+
+  // Forzamos siempre las variables de Railway que me mostraste en la foto
+  if(envToken) db.config.token = envToken;
+  if(envPhone) { db.config.phone = envPhone; db.config.phone_id = envPhone; }
+  if(envWaba) { db.config.waba = envWaba; db.config.waba_id = envWaba; }
+
+  saveDB(id, db);
+
+  console.log(`V164 CONFIG ${id}: PHONE=${db.config.phone} WABA=${db.config.waba} TOKEN=${db.config.token? 'SI' : 'NO'}`);
+  return db.config;
 }
+
 function getMasterDB(){ const f=path.join(DB_PATH,'master.json'); if(!fs.existsSync(f)) return {empresas:{}, users:{}}; try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return {empresas:{}, users:{}}}};
 function saveMaster(db){ fs.writeFileSync(path.join(DB_PATH,'master.json'), JSON.stringify(db,null,2)); }
 const PLANES = {
@@ -43,33 +53,30 @@ app.get('/api/empresa/:id',(req,res)=>res.json(loadConfig(req.params.id)||{}));
 app.post('/api/config-empresa',(req,res)=>{ const {empresa_id,token,phone_id,waba_id}=req.body; const db=getDB(empresa_id||'default'); db.config={token,phone:phone_id,waba:waba_id,phone_id,waba_id}; saveDB(empresa_id||'default',db); res.json({ok:true}); });
 app.get('/api/plantillas/:empresa_id',async(req,res)=>{ const emp=loadConfig(req.params.empresa_id); if(!emp?.token) return res.json([]); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba||emp.waba_id}/message_templates?fields=name,status,language&access_token=${emp.token}&limit=200`); const j=await r.json(); res.json((j.data||[]).filter(t=>t.status==='APPROVED')); }catch{res.json([]);} });
 
-// CAMPAÑA QUE SI ENVIA - FIX IMAGEN FIJA
 app.post('/api/campana/enviar', async(req,res)=>{
   const {empresa_id, plantilla, numeros, variables, nombre}=req.body;
   const emp=loadConfig(empresa_id||'default');
-  if(!emp?.token || !emp?.phone) return res.json({ok:false, error:'Falta token o phone_id - Revisa Variables en Railway'});
+  if(!emp?.token ||!emp?.phone) return res.json({ok:false, error:'Falta token o phone_id - Revisa Variables en Railway'});
   let lista=[...new Set((numeros||[]).map(n=>String(n).replace(/\D/g,'')).map(n=>n.length==10?'57'+n:n))];
   if(!lista.length) return res.json({ok:false, error:'No hay números'});
-  
+
   let primer = lista[0];
   for(let lang of ['es_CO','es','en_US']){
     try{
       let components = [];
       if(variables && variables.length) components.push({type:'body', parameters:variables.map(t=>({type:'text', text:String(t)}))});
-      // NO mandamos header con imagen si la plantilla ya tiene imagen fija
       const payload={ messaging_product:'whatsapp', to:primer, type:'template', template:{name:plantilla.trim(), language:{code:lang}, components} };
-      console.log(`V163 ENVIANDO ${primer} LANG ${lang}`);
-      const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone||emp.phone_id}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify(payload)});
+      console.log(`V164 ENVIANDO ${primer} CON PHONE_ID ${emp.phone} LANG ${lang}`);
+      const r=await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify(payload)});
       const j=await r.json();
-      console.log('V163 RESPUESTA:', JSON.stringify(j));
+      console.log('V164 RESPUESTA:', JSON.stringify(j));
       if(j.messages){
         const db=getDB(empresa_id); const id=Date.now().toString();
         db.campaigns[id]={id, nombre: nombre||plantilla, plantilla, total:lista.length, enviados:lista.length, fallidos:0, estado:'finalizada', created:Date.now(), ultimo_error:'OK '+lang+' ID '+j.messages[0].id};
         saveDB(empresa_id,db);
-        // manda el resto
         (async()=>{
           for(let i=1;i<lista.length;i++){
-            try{ await fetch(`https://graph.facebook.com/v20.0/${emp.phone||emp.phone_id}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify({...payload, to:lista[i]})}); }catch{}
+            try{ await fetch(`https://graph.facebook.com/v20.0/${emp.phone}/messages`,{method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${emp.token}`}, body:JSON.stringify({...payload, to:lista[i]})}); }catch{}
             await new Promise(r=>setTimeout(r,1200));
           }
         })();
@@ -100,4 +107,4 @@ app.post('/webhook/:empresa_id',(req,res)=>{ const eid=req.params.empresa_id; co
 app.post('/api/chat/responder-ia',(req,res)=>{ const {empresa_id,texto_cliente}=req.body; const m=getMasterDB(); const emp=m.empresas[empresa_id]; const plan=PLANES[emp?.plan||'Basico']; if(!plan.ia) return res.json({ok:false,error:'IA solo Premium y Gold'}); res.json({ok:true,ia:true,respuesta:`Hola! Soy la IA de Klido. (${texto_cliente?.slice(0,50)})`,boton_agente:plan.boton_agente}); });
 app.use(express.static(path.join(__dirname,'public')));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(process.env.PORT||3000, ()=>console.log(`V163 OK ${process.env.PORT||3000} PHONE ${process.env.PHONE_NUMBER_ID} PATH ${DB_PATH}`));
+app.listen(process.env.PORT||3000, ()=>console.log(`V164 OK ${process.env.PORT||3000} PHONE ${process.env.PHONE_NUMBER_ID} PATH ${DB_PATH}`));
