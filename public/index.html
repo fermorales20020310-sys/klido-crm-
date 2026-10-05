@@ -1,62 +1,64 @@
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html>
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Klido CRM</title>
+<title>Klido</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui;display:flex;height:100vh;overflow:hidden;background:#111b21}
-#sidebar{width:360px;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column}
-#chat-list{flex:1;overflow-y:auto}
-.item{padding:12px 14px;border-bottom:1px solid #f2f2f2;cursor:pointer;display:flex;gap:10px}
-.item.active{background:#e9edef}
-.avatar{width:38px;height:38px;border-radius:50%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
-.bubble{max-width:65%;padding:8px 12px;border-radius:8px;font-size:14px;word-break:break-word;box-shadow:0 1px .5px rgba(0,0,0,.13)}
-.cliente{align-self:flex-start;background:#fff}
-.agente{align-self:flex-end;background:#d9fdd3}
-#chat-area{flex:1;display:flex;flex-direction:column;background:#efeae2}
-#chat-header{height:56px;padding:0 16px;background:#f0f2f5;border-bottom:1px solid #ddd;display:flex;align-items:center;font-weight:700}
-#chat-mensajes{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:6px}
-#chat-input{height:62px;background:#f0f2f5;display:flex;align-items:center;gap:8px;padding:0 12px}
-#input-mensaje{flex:1;padding:11px 16px;border-radius:22px;border:0;outline:none}
-#btn-enviar{border:0;background:#000;color:#fff;border-radius:22px;padding:10px 18px;font-weight:700;cursor:pointer}
+body{margin:0;font-family:Arial;display:flex;height:100vh}
+#l{width:340px;border-right:1px solid #ccc;overflow:auto;background:#fff}
+#r{flex:1;display:flex;flex-direction:column;background:#e5ddd5}
+#h{padding:12px;background:#f0f0f0;border-bottom:1px solid #ccc;font-weight:bold}
+#m{flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:8px}
+.i{padding:10px;border-bottom:1px solid #eee;cursor:pointer}
+.i b{display:block}
+.b{padding:8px 12px;border-radius:8px;max-width:70%;font-size:14px}
+.c{background:#fff;align-self:flex-start}
+.a{background:#dcf8c6;align-self:flex-end}
+#in{display:flex;padding:8px;background:#f0f0f0;gap:6px}
+#t{flex:1;padding:10px;border-radius:20px;border:1px solid #ccc}
+#s{padding:10px 16px;border-radius:20px;border:0;background:#000;color:#fff}
 </style>
 </head>
 <body>
-<div id="sidebar"><div id="chat-list"></div></div>
-<div id="chat-area">
-<div id="chat-header">Selecciona un chat</div>
-<div id="chat-mensajes"></div>
-<div id="chat-input"><input id="input-mensaje" placeholder="Escribe un mensaje..."><button id="btn-enviar">Enviar</button></div>
+<div id="l"></div>
+<div id="r">
+<div id="h">Selecciona chat</div>
+<div id="m"></div>
+<div id="in"><input id="t" placeholder="Escribe..."><button id="s">Enviar</button></div>
 </div>
 <script>
-let empresa_id = localStorage.getItem('empresa_id') || 'fermorales20020gmailcom_1234';
-let chatActivo=null;
-async function cargarChats(){
- const r=await fetch(`/api/chats/${empresa_id}`); const chats=await r.json();
- const list=document.getElementById('chat-list'); list.innerHTML='';
- chats.forEach(c=>{
-  const div=document.createElement('div'); div.className='item'+(chatActivo===c.id?' active':'');
-  div.innerHTML=`<div class="avatar">57</div><div><b>${c.id}</b><div style="font-size:12px;color:#666">${(c.mensajes?.slice(-1)[0]?.texto||'').slice(0,35)}</div></div>`;
-  div.onclick=()=>abrirChat(c.id); list.appendChild(div);
+var eid=localStorage.getItem('empresa_id')||'default';
+var cur=null;
+function loadChats(){
+ fetch('/api/chats/'+eid).then(r=>r.json()).then(chats=>{
+  var l=document.getElementById('l');l.innerHTML='';
+  chats.forEach(function(c){
+   var d=document.createElement('div');d.className='i';
+   d.innerHTML='<b>'+c.id+'</b><span style="font-size:12px;color:#666">'+((c.mensajes&&c.mensajes.slice(-1)[0]&&c.mensajes.slice(-1)[0].texto)||'').substring(0,30)+'</span>';
+   d.onclick=function(){openChat(c.id)};l.appendChild(d);
+  });
  });
 }
-async function abrirChat(id){
- chatActivo=id; document.getElementById('chat-header').textContent=id;
- await fetch('/api/chat/leido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id,chat_id:id})});
- const r=await fetch(`/api/mensajes/${empresa_id}/${id}`); const msgs=await r.json();
- const cont=document.getElementById('chat-mensajes'); cont.innerHTML='';
- msgs.forEach(m=>{ const d=document.createElement('div'); d.className='bubble '+(m.from==='agente'?'agente':'cliente'); d.textContent=m.texto; cont.appendChild(d); });
- cont.scrollTop=cont.scrollHeight;
+function openChat(id){
+ cur=id;document.getElementById('h').innerText=id;
+ fetch('/api/chat/leido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:eid,chat_id:id})});
+ fetch('/api/mensajes/'+eid+'/'+id).then(r=>r.json()).then(msgs=>{
+  var m=document.getElementById('m');m.innerHTML='';
+  msgs.forEach(function(x){
+   var b=document.createElement('div');b.className='b '+(x.from==='agente'?'a':'c');b.innerText=x.texto;m.appendChild(b);
+  });
+  m.scrollTop=m.scrollHeight;
+ });
 }
-async function enviar(){
- const input=document.getElementById('input-mensaje'); const txt=input.value.trim(); if(!txt||!chatActivo) return;
- const cont=document.getElementById('chat-mensajes'); const b=document.createElement('div'); b.className='bubble agente'; b.textContent=txt; cont.appendChild(b); cont.scrollTop=cont.scrollHeight; input.value='';
- await fetch('/api/mensaje/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id,chat_id:chatActivo,texto:txt})});
+function send(){
+ var inp=document.getElementById('t');var txt=inp.value.trim();if(!txt||!cur)return;
+ var m=document.getElementById('m');var b=document.createElement('div');b.className='b a';b.innerText=txt;m.appendChild(b);m.scrollTop=m.scrollHeight;inp.value='';
+ fetch('/api/mensaje/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:eid,chat_id:cur,texto:txt})});
 }
-document.getElementById('btn-enviar').onclick=enviar;
-document.getElementById('input-mensaje').addEventListener('keydown',e=>{ if(e.key==='Enter') enviar(); });
-setInterval(cargarChats,4000); cargarChats();
+document.getElementById('s').onclick=send;
+document.getElementById('t').addEventListener('keydown',function(e){if(e.key==='Enter')send();});
+setInterval(loadChats,5000);loadChats();
 </script>
 </body>
 </html>
