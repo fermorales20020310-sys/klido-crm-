@@ -1,4 +1,4 @@
-// KLIDO AVANZA CONSULTING V154 - TU SERVER ORIGINAL + PLANES REALES + FICHA CLIENTE
+// KLIDO AVANZA CONSULTING V155 - TU V154 ARREGLADO - FIX EMPRESA NO ENCONTRADA
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -65,72 +65,80 @@ async function enviarCorreo(to, subject, html){
   }catch(e){ console.log('Resend error', e.message); return true; }
 }
 
-// LOGIN (TUYO ORIGINAL)
+// LOGIN - FIX MINUSCULAS
 app.post('/api/login', (req,res)=>{
-  const {correo, password, empresa_id} = req.body;
+  const {correo, password} = req.body;
+  const correoLimpio = String(correo||'').trim().toLowerCase();
   const master=getMasterDB();
-  const user=Object.values(master.users).find(u=>u.correo===correo && u.password===password);
-  if(!user && correo==='admin'){ return res.json({ok:true, empresa_id:'default'}); }
+  const user=Object.values(master.users).find(u=> String(u.correo||'').toLowerCase()===correoLimpio && u.password===password);
+  if(!user && correoLimpio==='admin'){ return res.json({ok:true, empresa_id:'default'}); }
   if(!user) return res.json({ok:false, error:'No existe o contraseña incorrecta'});
   return res.json({ok:true, empresa_id:user.empresa_id, user});
 });
 
-// CREAR EMPRESA + GENERAR CODIGO (TUYO ORIGINAL)
+// CREAR EMPRESA - FIX GUARDA TODO EN MINUSCULAS
 app.post('/api/crear-empresa', async(req,res)=>{
   const {nombre_agencia, correo, password, plan} = req.body;
   if(!nombre_agencia ||!correo) return res.json({ok:false, error:'Faltan datos'});
+  const correoLimpio = String(correo).trim().toLowerCase();
   const master=getMasterDB();
-  const empresa_id=correo.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,15)+'_'+Date.now().toString().slice(-4);
+  const empresa_id=correoLimpio.replace(/[^a-z0-9]/g,'').substring(0,15)+'_'+Date.now().toString().slice(-4);
   const codigo=Math.floor(100000+Math.random()*900000).toString();
 
-  master.empresas[empresa_id]={id:empresa_id, nombre:nombre_agencia, correo, plan: plan||'Basico', codigo, verificado:false, created:Date.now()};
-  master.users[correo]={correo, password, empresa_id, plan: plan||'Basico', nombre:nombre_agencia};
+  master.empresas[empresa_id]={id:empresa_id, nombre:nombre_agencia, correo:correoLimpio, plan: plan||'Basico', codigo, verificado:false, created:Date.now()};
+  master.users[correoLimpio]={correo:correoLimpio, password, empresa_id, plan: plan||'Basico', nombre:nombre_agencia};
   saveMaster(master);
 
   const db=getDB(empresa_id); db.config=null; saveDB(empresa_id, db);
 
-  await enviarCorreo(correo, `Tu código Klido - ${codigo}`, `
+  await enviarCorreo(correoLimpio, `Tu código Klido - ${codigo}`, `
     <div style="font-family:Arial;padding:20px"><h2>Bienvenido a Klido Avanza Consulting</h2>
     <p>Tu agencia <b>${nombre_agencia}</b> ha sido creada.</p>
     <p>Tu código de registro es:</p><h1 style="background:#0b57d0;color:#fff;padding:15px;border-radius:10px;text-align:center;letter-spacing:5px">${codigo}</h1>
     <p>Plan: ${plan}</p><p>Ingresa en app.klidoapp.com.co</p></div>
   `);
 
-  console.log(`CODIGO ${correo}: ${codigo}`);
+  console.log(`CODIGO ${correoLimpio}: ${codigo}`);
   res.json({ok:true, empresa_id, codigo_debug: codigo, msg:'Código enviado a Gmail'});
 });
 
+// VERIFICAR CODIGO - FIX DEFINITIVO EMPRESA NO ENCONTRADA
 app.post('/api/verificar-codigo',(req,res)=>{
   const {correo, codigo} = req.body;
+  const correoLimpio = String(correo||'').trim().toLowerCase();
+  const codigoLimpio = String(codigo||'').trim();
   const master=getMasterDB();
-  const emp=Object.values(master.empresas).find(e=>e.correo===correo);
+  const emp=Object.values(master.empresas).find(e=> String(e.correo||'').trim().toLowerCase()===correoLimpio);
   if(!emp) return res.json({ok:false, error:'Empresa no encontrada'});
-  if(emp.codigo===codigo){ emp.verificado=true; saveMaster(master); return res.json({ok:true, empresa_id:emp.id}); }
+  if(String(emp.codigo).trim()===codigoLimpio){ emp.verificado=true; saveMaster(master); return res.json({ok:true, empresa_id:emp.id}); }
   return res.json({ok:false, error:'Código incorrecto'});
 });
 
 app.post('/api/recuperar-password', async(req,res)=>{
   const {correo} = req.body;
+  const correoLimpio = String(correo||'').trim().toLowerCase();
   const master=getMasterDB();
-  const user=master.users[correo];
+  const user=master.users[correoLimpio] || Object.values(master.users).find(u=> String(u.correo||'').toLowerCase()===correoLimpio);
   if(!user) return res.json({ok:false, error:'Correo no registrado'});
   const codigo=Math.floor(100000+Math.random()*900000).toString();
-  master.empresas[user.empresa_id].codigo=codigo; saveMaster(master);
-  await enviarCorreo(correo, `Recuperar contraseña Klido - ${codigo}`, `<h1>Tu código de recuperación es: ${codigo}</h1>`);
-  console.log(`RECUPERAR ${correo}: ${codigo}`);
+  if(master.empresas[user.empresa_id]){ master.empresas[user.empresa_id].codigo=codigo; saveMaster(master); }
+  await enviarCorreo(correoLimpio, `Recuperar contraseña Klido - ${codigo}`, `<h1>Tu código de recuperación es: ${codigo}</h1>`);
+  console.log(`RECUPERAR ${correoLimpio}: ${codigo}`);
   res.json({ok:true, msg:'Código enviado', codigo_debug:codigo});
 });
 
 app.post('/api/cambiar-password',(req,res)=>{
   const {correo, codigo, nueva_password}=req.body;
+  const correoLimpio = String(correo||'').trim().toLowerCase();
   const master=getMasterDB();
-  const emp=Object.values(master.empresas).find(e=>e.correo===correo);
-  if(!emp || emp.codigo!==codigo) return res.json({ok:false, error:'Código incorrecto'});
-  master.users[correo].password=nueva_password; saveMaster(master);
+  const emp=Object.values(master.empresas).find(e=> String(e.correo||'').trim().toLowerCase()===correoLimpio);
+  if(!emp || String(emp.codigo).trim()!==String(codigo).trim()) return res.json({ok:false, error:'Código incorrecto'});
+  const userKey = Object.keys(master.users).find(k=>k.toLowerCase()===correoLimpio) || correoLimpio;
+  if(master.users[userKey]){ master.users[userKey].password=nueva_password; saveMaster(master); }
   res.json({ok:true});
 });
 
-// ===== NUEVO: CHECK PLAN CON LIMITES REALES =====
+// ===== CHECK PLAN CON LIMITES REALES =====
 app.get('/api/mi-plan/:empresa_id',(req,res)=>{
   const master=getMasterDB();
   const empresa_id=req.params.empresa_id;
@@ -156,10 +164,8 @@ app.get('/api/empresa/:id',(req,res)=>res.json(loadConfig(req.params.id)||{}));
 app.post('/api/config-empresa',(req,res)=>{ const {empresa_id, token, phone_id, waba_id}=req.body; const db=getDB(empresa_id||'default'); db.config={token, phone:phone_id, waba:waba_id, phone_id, waba_id}; saveDB(empresa_id||'default', db); res.json({ok:true}); });
 app.get('/api/plantillas/:empresa_id', async(req,res)=>{ const emp=loadConfig(req.params.empresa_id); if(!emp?.token) return res.json([]); try{ const r=await fetch(`https://graph.facebook.com/v20.0/${emp.waba||emp.waba_id}/message_templates?fields=name,status,language&access_token=${emp.token}&limit=200`); const j=await r.json(); res.json((j.data||[]).filter(t=>t.status==='APPROVED')); }catch{ res.json([]); }});
 
-// ===== CAMPAÑAS WPP CON VALIDACION DE PLAN =====
 app.post('/api/campana/enviar', async(req,res)=>{
-  const {empresa_id, plantilla, numeros, variables, imagen_url, nombre}=req.body;
-  const emp=loadConfig(empresa_id||'default');
+  const {empresa_id, plantilla, numeros, variables, imagen_url, nombre}=req.body; const emp=loadConfig(empresa_id||'default');
   if(!emp?.token) return res.json({ok:false, error:'Empresa no configurada - Configura API Cloud'});
   const master=getMasterDB();
   const empresa=master.empresas[empresa_id]; const plan=PLANES[empresa?.plan||'Basico'];
@@ -170,7 +176,6 @@ app.post('/api/campana/enviar', async(req,res)=>{
 });
 app.get('/api/campanas/:empresa_id',(req,res)=>res.json(Object.values(getDB(req.params.empresa_id).campaigns||{}).sort((a,b)=>b.created-a.created)));
 
-// ===== NUEVO: CAMPAÑAS GMAIL (SOLO GOLD) =====
 app.post('/api/campana/gmail/enviar', async(req,res)=>{
   const {empresa_id, asunto, html, emails}=req.body;
   const master=getMasterDB(); const emp=master.empresas[empresa_id]; const plan=PLANES[emp?.plan||'Basico'];
@@ -181,7 +186,6 @@ app.post('/api/campana/gmail/enviar', async(req,res)=>{
   (async()=>{ for(let email of emails){ await enviarCorreo(email, asunto, html); const cur=getDB(empresa_id); cur.gmail_campaigns[id].enviados++; saveDB(empresa_id, cur); await new Promise(r=>setTimeout(r,800)); } const f=getDB(empresa_id); f.gmail_campaigns[id].estado='finalizada'; saveDB(empresa_id,f); })();
 });
 
-// ===== NUEVO: FICHA CLIENTE CON TUS 4 SEGMENTOS =====
 app.post('/api/cliente/guardar',(req,res)=>{
   const {empresa_id, chat_id, cliente}=req.body;
   const db=getDB(empresa_id);
@@ -193,7 +197,6 @@ app.post('/api/cliente/guardar',(req,res)=>{
   res.json({ok:true});
 });
 
-// ===== NUEVO: TRABAJADORES CON LIMITE POR PLAN =====
 app.post('/api/trabajador/crear',(req,res)=>{
   const {empresa_id, nombre, correo} = req.body;
   const master=getMasterDB(); const emp=master.empresas[empresa_id]; const plan=PLANES[emp?.plan||'Basico'];
@@ -207,7 +210,6 @@ app.post('/api/trabajador/crear',(req,res)=>{
 app.get('/api/trabajadores/:empresa_id',(req,res)=>res.json(Object.values(getDB(req.params.empresa_id).workers||{})));
 app.delete('/api/trabajador/:empresa_id/:id',(req,res)=>{ const db=getDB(req.params.empresa_id); delete db.workers[req.params.id]; saveDB(req.params.empresa_id, db); res.json({ok:true}); });
 
-// ===== NUEVO: LLAMADAS CON NUMERO REFLEJADO META + SEGUIMIENTO (GOLD) =====
 app.post('/api/llamada/registrar',(req,res)=>{
   const {empresa_id, chat_id, numero, duracion, estado, nota}=req.body;
   const master=getMasterDB(); const emp=master.empresas[empresa_id]; const plan=PLANES[emp?.plan||'Basico'];
@@ -219,14 +221,12 @@ app.post('/api/llamada/registrar',(req,res)=>{
 });
 app.get('/api/llamadas/:empresa_id',(req,res)=>res.json(Object.values(getDB(req.params.empresa_id).calls||{}).sort((a,b)=>b.fecha-a.fecha)));
 
-// ===== NUEVO: CALENDARIO + RECORDATORIOS =====
 app.post('/api/recordatorio',(req,res)=>{
   const {empresa_id, chat_id, titulo, fecha, tipo}=req.body;
   const db=getDB(empresa_id); db.reminders.push({id:Date.now().toString(), chat_id, titulo, fecha: fecha||Date.now()+86400000, tipo: tipo||'seguimiento', hecho:false}); saveDB(empresa_id, db); res.json({ok:true});
 });
 app.get('/api/recordatorios/:empresa_id',(req,res)=>res.json((getDB(req.params.empresa_id).reminders||[]).sort((a,b)=>a.fecha-b.fecha)));
 
-// ===== NUEVO: ESTADISTICAS + METRICAS =====
 app.get('/api/stats/:empresa_id',(req,res)=>{
   const db=getDB(req.params.empresa_id);
   const chats=Object.values(db.chats||{});
@@ -241,7 +241,6 @@ app.get('/api/stats/:empresa_id',(req,res)=>{
   });
 });
 
-// CHATS Y WEBHOOK (TUYO ORIGINAL + LIMITE 2000)
 app.get('/api/chats/:empresa_id',(req,res)=>res.json(Object.values(getDB(req.params.empresa_id).chats||{}).sort((a,b)=>(b.last||0)-(a.last||0))));
 app.get('/api/mensajes/:empresa_id/:chat_id',(req,res)=>res.json(getDB(req.params.empresa_id).chats[req.params.chat_id]?.mensajes||[]));
 app.post('/api/chat/leido',(req,res)=>{ const db=getDB(req.body.empresa_id); if(db.chats[req.body.chat_id]){db.chats[req.body.chat_id].no_leidos=0; saveDB(req.body.empresa_id,db);} res.json({ok:true}); });
@@ -269,7 +268,6 @@ app.post('/webhook/:empresa_id',(req,res)=>{
   res.sendStatus(200);
 });
 
-// IA + BOTON PASAR A AGENTE (PREMIUM Y GOLD)
 app.post('/api/chat/responder-ia',(req,res)=>{
   const {empresa_id, chat_id, texto_cliente}=req.body;
   const master=getMasterDB(); const emp=master.empresas[empresa_id]; const plan=PLANES[emp?.plan||'Basico'];
@@ -280,4 +278,4 @@ app.post('/api/chat/responder-ia',(req,res)=>{
 
 app.use(express.static(path.join(__dirname,'public')));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(process.env.PORT||3000, ()=>console.log(`V154 PLANES REALES OK ${process.env.PORT||3000}`));
+app.listen(process.env.PORT||3000, ()=>console.log(`V155 FIX OK ${process.env.PORT||3000}`));
