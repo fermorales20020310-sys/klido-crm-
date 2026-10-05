@@ -1,4 +1,4 @@
-// KLIDO AVANZA CONSULTING V155 - TU V154 ARREGLADO - FIX EMPRESA NO ENCONTRADA
+// KLIDO AVANZA CONSULTING V156 - TU V155 + VOLUMEN /app/db MULTIAGENCIA FIX DEFINITIVO
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -8,16 +8,21 @@ const app = express();
 app.use(cors());
 app.use(express.json({limit:'100mb'}));
 app.use(express.urlencoded({extended:true}));
-['db','public','public/uploads','uploads'].forEach(d=>{ if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true}) });
+
+// ===== FIX VOLUMEN RAILWAY MULTIAGENCIA =====
+const DB_PATH = fs.existsSync('/app/db')? '/app/db' : path.join(__dirname,'db');
+[DB_PATH, 'public','public/uploads','uploads'].forEach(d=>{ if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true}) });
+console.log(`DB_PATH activo: ${DB_PATH}`);
+
 const upload = multer({dest:'uploads/'});
 
 function getDB(id){
   id=id||'default';
-  const file=path.join(__dirname,'db',`${id}.json`);
+  const file=path.join(DB_PATH,`${id}.json`);
   if(!fs.existsSync(file)) return {empresa_id:id, config:null, chats:{}, campaigns:{}, workers:{}, reminders:[], gmail_campaigns:{}, calls:{}, users:{}, codes:{}};
   try{ return JSON.parse(fs.readFileSync(file,'utf8')); }catch{ return {empresa_id:id, config:null, chats:{}, campaigns:{}, workers:{}, reminders:[], gmail_campaigns:{}, calls:{}, users:{}, codes:{}}; }
 }
-function saveDB(id,data){ fs.writeFileSync(path.join(__dirname,'db',`${id}.json`), JSON.stringify(data,null,2)); }
+function saveDB(id,data){ fs.writeFileSync(path.join(DB_PATH,`${id}.json`), JSON.stringify(data,null,2)); }
 function loadConfig(id){
   let db=getDB(id);
   if(!db.config && process.env.WHATSAPP_TOKEN){
@@ -27,11 +32,11 @@ function loadConfig(id){
   return db.config;
 }
 function getMasterDB(){
-  const file=path.join(__dirname,'db','master.json');
+  const file=path.join(DB_PATH,'master.json');
   if(!fs.existsSync(file)) return {empresas:{}, users:{}};
   try{ return JSON.parse(fs.readFileSync(file,'utf8')); }catch{ return {empresas:{}, users:{}}; }
 }
-function saveMaster(db){ fs.writeFileSync(path.join(__dirname,'db','master.json'), JSON.stringify(db,null,2)); }
+function saveMaster(db){ fs.writeFileSync(path.join(DB_PATH,'master.json'), JSON.stringify(db,null,2)); }
 
 // ===== TUS PLANES REALES COMO LOS VENDES =====
 const PLANES = {
@@ -278,4 +283,4 @@ app.post('/api/chat/responder-ia',(req,res)=>{
 
 app.use(express.static(path.join(__dirname,'public')));
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.listen(process.env.PORT||3000, ()=>console.log(`V155 FIX OK ${process.env.PORT||3000}`));
+app.listen(process.env.PORT||3000, ()=>console.log(`V156 VOLUMEN /app/db OK ${process.env.PORT||3000} - PATH ${DB_PATH}`));
