@@ -1,109 +1,61 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Klido Avanza Consulting - CRM Oficial Meta</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Klido</title>
 <style>
-*{box-sizing:border-box;font-family:Inter,system-ui}body{margin:0;display:flex;min-height:100vh;background:#fff}
-.left{width:58%;background:radial-gradient(120% 120% at 20% 20%,#0a2a7a 0%,#061a4a 40%,#020b24 100%);color:#fff;padding:40px 44px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-.left::after{content:'';position:absolute;top:-50px;right:-100px;width:500px;height:500px;background:rgba(0,80,255,.15);border-radius:50%;filter:blur(60px)}
-.logo{display:flex;align-items:center;gap:12px;font-weight:900;font-size:28px;letter-spacing:1px}.logo img{width:56px;height:56px;background:#fff;border-radius:14px;padding:6px}
-.big{font-size:52px;line-height:0.95;font-weight:900;margin-top:40px;max-width:520px}.big span{color:#6fa8ff}
-.desc{margin-top:18px;max-width:520px;color:#b9c6e6;line-height:1.5;font-size:15px}
-.badge-cert{margin-top:18px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);padding:10px 14px;border-radius:12px;display:inline-flex;gap:8px;font-size:12px;font-weight:700}
-.bottom-badges{display:flex;gap:10px;margin-top:40px}.bottom-badges div{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600}
-.right{width:42%;padding:26px 28px;background:#f7f8fb;display:flex;flex-direction:column}
-.tabs{display:flex;background:#e8ecf5;border-radius:14px;padding:5px;gap:5px}.tab{flex:1;padding:10px;border:none;border-radius:10px;font-weight:800;cursor:pointer}.tab.active{background:#111;color:#fff}.tab.inactive{background:transparent}
-.form{margin-top:18px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
-input,select{width:100%;padding:13px;border:1px solid #e2e6f0;border-radius:12px;margin:7px 0;font-size:14px}
-.plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}.plan{border:1px solid #e2e6f0;border-radius:14px;padding:10px;text-align:center;cursor:pointer;font-size:12px}.plan.sel{border:2px solid #0b57d0;background:#f0f6ff}
-.btn{width:100%;padding:14px;border:none;border-radius:12px;background:#111;color:#fff;font-weight:900;cursor:pointer;margin-top:10px}
-.link{font-size:12px;color:#0b57d0;cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block}
-@media(max-width:900px){body{flex-direction:column}.left,.right{width:100%}.big{font-size:36px}}
+body{margin:0;font-family:system-ui;display:flex;height:100vh;overflow:hidden}
+#sidebar{width:380px;border-right:1px solid #ddd;display:flex;flex-direction:column;background:#fff}
+#chat-list{flex:1;overflow-y:auto}
+.chat-item{padding:12px 15px;border-bottom:1px solid #f0f0f0;cursor:pointer;display:flex;gap:10px}
+.chat-item:hover{background:#f5f5f5}
+.chat-item.active{background:#e9edef}
+#chat-area{flex:1;display:flex;flex-direction:column;background:#efeae2}
+#chat-header{padding:15px;background:#f0f2f5;border-bottom:1px solid #ddd;font-weight:bold}
+#chat-mensajes{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:8px;background:#efeae2 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')}
+.bubble{max-width:65%;padding:8px 12px;border-radius:8px;font-size:14px;line-height:1.3;word-break:break-word;box-shadow:0 1px 0.5px rgba(0,0,0,.13)}
+.cliente{align-self:flex-start;background:#fff;border-top-left-radius:0}
+.agente{align-self:flex-end;background:#d9fdd3;border-top-right-radius:0}
+#chat-input{padding:10px;display:flex;gap:10px;background:#f0f2f5}
+#input-mensaje{flex:1;padding:12px 15px;border-radius:25px;border:1px solid #ddd;outline:none}
+#btn-enviar{background:#000;color:#fff;border:0;border-radius:25px;padding:0 22px;cursor:pointer;font-weight:bold}
 </style></head><body>
-<div class="left">
-<div><div class="logo"><img src="logo.png" onerror="this.style.background='#fff'"> KLIDO <span style="font-size:12px;letter-spacing:3px;font-weight:400;margin-left:4px">AVANZA CONSULTING</span></div>
-<div class="big">El mejor CRM que tu empresa <span>puede tener.</span></div>
-<div class="desc"><b>Klido Avanza Consulting — CRM empresarial multiagencia para API oficial de Meta (WhatsApp Business API).</b><br>Gestiona todas tus agencias, números, equipos, campañas y ventas desde un solo lugar.</div>
-<div class="badge-cert">✓ MULTIAGENCIA CERTIFICADA META API OFICIAL</div>
+<div id="sidebar">
+  <div style="padding:10px"><input id="buscar" placeholder="Buscar chat..." style="width:100%;padding:10px;border-radius:20px;border:1px solid #ddd"></div>
+  <div id="chat-list"></div>
 </div>
-<div class="bottom-badges"><div>✓ Seguro y confiable</div><div>✓ WhatsApp Business API</div><div>✓ Soporte Avanza Consulting</div></div>
-</div>
-<div class="right">
-<div class="tabs"><button id="tabLogin" class="tab active" onclick="showLogin()">Ingresar</button><button id="tabReg" class="tab inactive" onclick="showReg()">Crear empresa</button></div>
-
-<div id="loginBox" class="form">
-<h3 style="margin:0">Ingresar a tu agencia</h3>
-<input id="login_correo" placeholder="Correo del administrador">
-<input id="login_pass" type="password" placeholder="Contraseña">
-<button class="btn" onclick="login()">Ingresar</button>
-<span class="link" onclick="showForgot()">¿Olvide mi contraseña? Recuperar con código Gmail</span>
-<div id="loginMsg" style="font-size:12px;margin-top:8px"></div>
-</div>
-
-<div id="regBox" class="form" style="display:none">
-<h3 style="margin:0">Registrar nueva agencia</h3>
-<input id="reg_nombre" placeholder="Nombre de la agencia / empresa">
-<input id="reg_correo" placeholder="Correo del administrador">
-<input id="reg_pass" type="password" placeholder="Crear contraseña admin">
-<label style="font-size:11px;font-weight:700;margin-top:8px;display:block">Selecciona tu plan - Anual + Mantenimiento trimestral aparte</label>
-<div class="plans">
-<div class="plan sel" data-plan="Basico" onclick="selPlan(this)"><b>Básico</b><br><b>$800.000/año</b><div style="color:#0b57d0">+ $80.000/trim mant.</div><div>3 asesores API Meta</div></div>
-<div class="plan" data-plan="Premium" onclick="selPlan(this)"><b>Premium + IA</b><br><b>$1.400.000/año</b><div style="color:#0b57d0">+ $95.000/trim mant.</div><div>10 asesores IA incluida</div></div>
-<div class="plan" data-plan="Gold" onclick="selPlan(this)"><b>Gold + IA + Llamadas</b><br><b>$2.400.000/año</b><div style="color:#0b57d0">+ $120.000/trim</div><div>Ilimitados IA + Llamadas</div></div>
-</div>
-<label style="font-size:11px"><input type="checkbox" id="terms" checked> Acepto Términos y Condiciones y entiendo que el mantenimiento trimestral es adicional al pago anual.</label>
-<button class="btn" onclick="crearEmpresa()">Crear empresa y generar código →</button>
-<div id="regMsg" style="font-size:12px;margin-top:8px"></div>
-<div id="codigoBox" style="display:none;margin-top:10px"><input id="codigo_input" placeholder="Ingresa código de 6 dígitos que llegó a tu Gmail"><button class="btn" style="background:#0b57d0" onclick="verificarCodigo()">Verificar código</button></div>
-</div>
-
-<div id="forgotBox" class="form" style="display:none">
-<h3>Recuperar contraseña</h3>
-<input id="forgot_correo" placeholder="Tu correo registrado">
-<button class="btn" onclick="recuperar()">Generar código y enviar a Gmail (Resend)</button>
-<div id="forgotCodigoBox" style="display:none"><input id="forgot_codigo" placeholder="Código recibido"><input id="forgot_newpass" type="password" placeholder="Nueva contraseña"><button class="btn" onclick="cambiarPass()">Cambiar contraseña</button></div>
-<div id="forgotMsg" style="font-size:12px;margin-top:8px"></div>
-<span class="link" onclick="showLogin()">Volver a ingresar</span>
-</div>
-
+<div id="chat-area">
+  <div id="chat-header">Selecciona un chat</div>
+  <div id="chat-mensajes"></div>
+  <div id="chat-input">
+    <input id="input-mensaje" placeholder="Escribe un mensaje...">
+    <button id="btn-enviar">Enviar</button>
+  </div>
 </div>
 <script>
-let planSel='Basico'; let correoTemp='';
-function selPlan(el){ document.querySelectorAll('.plan').forEach(p=>p.classList.remove('sel')); el.classList.add('sel'); planSel=el.dataset.plan; }
-function showLogin(){ document.getElementById('loginBox').style.display='block'; document.getElementById('regBox').style.display='none'; document.getElementById('forgotBox').style.display='none'; document.getElementById('tabLogin').className='tab active'; document.getElementById('tabReg').className='tab inactive'; }
-function showReg(){ document.getElementById('regBox').style.display='block'; document.getElementById('loginBox').style.display='none'; document.getElementById('forgotBox').style.display='none'; document.getElementById('tabReg').className='tab active'; document.getElementById('tabLogin').className='tab inactive'; }
-function showForgot(){ document.getElementById('forgotBox').style.display='block'; document.getElementById('loginBox').style.display='none'; document.getElementById('regBox').style.display='none'; }
-
-async function login(){
-  const correo=document.getElementById('login_correo').value.trim(); const password=document.getElementById('login_pass').value.trim();
-  const r=await fetch('/api/login',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo, password, empresa_id: correo})});
-  const j=await r.json();
-  if(j.ok){ localStorage.setItem('empresa_id', j.empresa_id||correo); location.href='crm.html'; } else document.getElementById('loginMsg').innerText='❌ '+j.error;
+let empresa_id = localStorage.getItem('empresa_id') || 'fermorales20020gmailcom_1234';
+let chatActivo=null;
+async function cargarChats(){
+  const r=await fetch(`/api/chats/${empresa_id}`); const chats=await r.json();
+  const list=document.getElementById('chat-list'); list.innerHTML='';
+  chats.forEach(c=>{
+    const div=document.createElement('div'); div.className='chat-item';
+    div.innerHTML=`<div style="background:#000;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px">57</div><div><div style="font-weight:bold">${c.id}</div><div style="font-size:12px;color:#666">${(c.mensajes[c.mensajes.length-1]?.texto||'').slice(0,35)}</div></div>`;
+    div.onclick=()=>abrirChat(c.id); list.appendChild(div);
+  });
 }
-async function crearEmpresa(){
-  const nombre_agencia=document.getElementById('reg_nombre').value.trim();
-  const correo=document.getElementById('reg_correo').value.trim();
-  const password=document.getElementById('reg_pass').value.trim();
-  if(!document.getElementById('terms').checked) return alert('Acepta términos');
-  document.getElementById('regMsg').innerText='Generando código y enviando a Gmail...';
-  const r=await fetch('/api/crear-empresa',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({nombre_agencia, correo, password, plan:planSel})});
-  const j=await r.json();
-  if(j.ok){ correoTemp=correo; document.getElementById('regMsg').innerHTML=`✅ Código enviado a ${correo}. Revisa Gmail (Resend). DEBUG: ${j.codigo_debug}`; document.getElementById('codigoBox').style.display='block'; } else document.getElementById('regMsg').innerText='❌ '+j.error;
+async function abrirChat(id){
+  chatActivo=id; document.getElementById('chat-header').textContent=id;
+  await fetch('/api/chat/leido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id,chat_id:id})});
+  const r=await fetch(`/api/mensajes/${empresa_id}/${id}`); const msgs=await r.json();
+  const cont=document.getElementById('chat-mensajes'); cont.innerHTML='';
+  msgs.forEach(m=>{
+    const b=document.createElement('div'); b.className='bubble '+(m.from==='agente'?'agente':'cliente'); b.textContent=m.texto; cont.appendChild(b);
+  });
+  cont.scrollTop=cont.scrollHeight;
 }
-async function verificarCodigo(){
-  const codigo=document.getElementById('codigo_input').value.trim();
-  const r=await fetch('/api/verificar-codigo',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:correoTemp, codigo})});
-  const j=await r.json();
-  if(j.ok){ localStorage.setItem('empresa_id', j.empresa_id); location.href='crm.html'; } else alert(j.error);
-}
-async function recuperar(){
-  const correo=document.getElementById('forgot_correo').value.trim(); correoTemp=correo;
-  const r=await fetch('/api/recuperar-password',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo})});
-  const j=await r.json();
-  if(j.ok){ document.getElementById('forgotMsg').innerText=`Código enviado a ${correo} DEBUG:${j.codigo_debug}`; document.getElementById('forgotCodigoBox').style.display='block'; } else document.getElementById('forgotMsg').innerText=j.error;
-}
-async function cambiarPass(){
-  const codigo=document.getElementById('forgot_codigo').value.trim(); const nueva_password=document.getElementById('forgot_newpass').value.trim();
-  const r=await fetch('/api/cambiar-password',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({correo:correoTemp, codigo, nueva_password})});
-  const j=await r.json(); if(j.ok){ alert('Contraseña cambiada'); showLogin(); } else alert(j.error);
-}
-</script>
-</body></html>
+document.getElementById('btn-enviar').onclick=async()=>{
+  const input=document.getElementById('input-mensaje'); const txt=input.value.trim(); if(!txt||!chatActivo) return;
+  const cont=document.getElementById('chat-mensajes');
+  const b=document.createElement('div'); b.className='bubble agente'; b.textContent=txt; cont.appendChild(b); cont.scrollTop=cont.scrollHeight; input.value='';
+  await fetch('/api/mensaje/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id,chat_id:chatActivo,texto:txt})});
+};
+setInterval(cargarChats,3000);
+cargarChats();
+</script></body></html>
