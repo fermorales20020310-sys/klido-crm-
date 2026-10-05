@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Klido Campañas V163 - Final</title>
+<title>Klido Campañas V165 - Final ACOL + ALION</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;font-family:Inter}body{margin:0;background:#f5f6fa;padding:20px}
@@ -12,9 +12,10 @@ input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px soli
 .hist{margin-top:16px;border-top:1px solid #eee;padding-top:12px}
 .row{display:flex;gap:8px}
 .badge{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:900}
+.var-input{background:#fffbe6;border:1px solid #f0d000}
 </style></head><body>
 <div class="card">
-<h3 style="margin:0">🎯 Campañas V163 - Klido Avanza Consulting</h3>
+<h3 style="margin:0">🎯 Campañas V165 - Klido Avanza Consulting</h3>
 <div id="planInfo" style="font-size:11px;background:#fff3cd;padding:8px;border-radius:8px;margin:8px 0">Cargando plan...</div>
 
 <div style="margin:10px 0">
@@ -24,8 +25,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px soli
 </div>
 
 <input id="nombreCamp" placeholder="Nombre campaña ej: Invitación Congreso ACOL">
-<select id="plantillaSel"><option>Cargando plantillas aprobadas...</option></select>
-<div id="varsBox"></div>
+<select id="plantillaSel" onchange="onPlantillaChange()"><option>Cargando plantillas aprobadas...</option></select>
+<div id="varsBox" style="margin:8px 0"></div>
 
 <!-- OPCION 1: ESCRIBIR NUMEROS -->
 <div id="boxManual" style="border:2px solid #111;border-radius:12px;padding:12px;margin:8px 0">
@@ -33,9 +34,8 @@ input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px soli
 <textarea id="numerosManual" rows="4" placeholder="Escribe números con 57, uno por línea o separado por coma:
 573001112233
 573002223344
-3201234567
-3007654321"></textarea>
-<span style="font-size:11px;color:#666">Puedes pegar 10 o 2000 números, se corrige a 57 automático</span>
+3201234567"></textarea>
+<span style="font-size:11px;color:#666">Se corrige a 57 automático</span>
 </div>
 
 <!-- OPCION 2: EXCEL -->
@@ -48,10 +48,10 @@ input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px soli
 
 <!-- OPCION 3: SEGMENTACION -->
 <div id="boxSegmento" style="border:1px solid #0b57d0;border-radius:12px;padding:12px;margin:8px 0;display:none">
-<b>👥 Opción 3: Enviar por segmentación (Cliente / Nuevo / Interesado / Campaña)</b>
+<b>👥 Opción 3: Enviar por segmentación</b>
 <div class="row">
 <select id="segSel"><option value="">Todos</option><option>Cliente</option><option>Nuevo</option><option>Interesado</option><option>Campaña</option></select>
-<button class="btn btn-dark" style="width:auto;padding:10px 14px" onclick="cargarPorSegmento()">Cargar números de ese segmento</button>
+<button class="btn btn-dark" style="width:auto;padding:10px 14px" onclick="cargarPorSegmento()">Cargar</button>
 </div>
 <div id="segCount" style="font-size:11px;margin-top:6px"></div>
 </div>
@@ -61,13 +61,12 @@ input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px soli
 </div>
 
 <button class="btn btn-blue" onclick="enviarCampana()">🚀 Enviar campaña ahora (Meta Cloud API)</button>
-<div id="status" style="margin-top:10px;font-size:12px"></div>
+<div id="status" style="margin-top:10px;font-size:12px;white-space:pre-wrap"></div>
 
 <div class="hist">
-<h4>📜 Historial de campañas</h4>
-<div id="historial">Cargando historial...</div>
+<h4>📜 Historial</h4>
+<div id="historial">Cargando...</div>
 </div>
-
 <div style="margin-top:12px"><a href="crm.html" style="font-size:12px">← Volver a bandeja</a></div>
 </div>
 
@@ -77,86 +76,96 @@ let numerosFinal=[]; let MI_PLAN=null; let currentTab='wpp';
 
 async function init(){
   const rp=await fetch(`/api/mi-plan/${empresa_id}`); MI_PLAN=await rp.json();
-  document.getElementById('planInfo').innerHTML=`🔒 PLAN ${MI_PLAN.plan.toUpperCase()} - ${MI_PLAN.usado_conversaciones}/${MI_PLAN.max_conversaciones} chats - Campañas WPP: ✅ - Gmail: ${MI_PLAN.campañas_gmail?'✅':'🔒 Solo Gold'} - IA: ${MI_PLAN.ia?'✅':'🔒'}`;
-  // plantillas
+  document.getElementById('planInfo').innerHTML=`🔒 PLAN ${MI_PLAN.plan.toUpperCase()} - ${MI_PLAN.usado_conversaciones}/${MI_PLAN.max_conversaciones} chats - WPP: ✅ - Gmail: ${MI_PLAN.campañas_gmail?'✅':'🔒 Gold'} - IA: ${MI_PLAN.ia?'✅':'🔒'}`;
   const r=await fetch(`/api/plantillas/${empresa_id}`); const plantillas=await r.json();
-  if(!plantillas.length){ document.getElementById('plantillaSel').innerHTML=`<option value="">No hay plantillas aprobadas - Crea en Meta</option>`; }
-  else{ document.getElementById('plantillaSel').innerHTML=plantillas.map(p=>`<option value="${p.name}">${p.name} (${p.language}) - ${p.status}</option>`).join(''); }
+  if(!plantillas.length){ document.getElementById('plantillaSel').innerHTML=`<option value="">No hay plantillas aprobadas</option>`; }
+  else{ document.getElementById('plantillaSel').innerHTML=plantillas.map(p=>`<option value="${p.name}">${p.name} (${p.language})</option>`).join(''); onPlantillaChange(); }
   cargarHistorial();
 }
+
+function onPlantillaChange(){
+  const sel=document.getElementById('plantillaSel').value||'';
+  const box=document.getElementById('varsBox');
+  if(sel.includes('acol_invitacion_congreso') || sel.includes('alion')){
+    box.innerHTML=`<div style="background:#fffbe6;padding:10px;border-radius:10px;border:1px solid #f0d000"><b>⚠️ Esta plantilla es NAMED: {{nombre_cliente}}</b><br><input id="var_nombre_cliente" class="var-input" placeholder="Ej: Carlos - Nombre del cliente ({{nombre_cliente}})"><span style="font-size:11px">Deja vacío para usar "Hola" por defecto, o escribe el nombre. Para Excel, deja este campo vacío y se usará la columna nombre si existe.</span></div>`;
+  } else if(sel){
+    box.innerHTML=`<div style="background:#f5f6fa;padding:10px;border-radius:10px"><b>Variables de plantilla (si pide {{1}}, {{2}})</b><input id="var_1" placeholder="{{1}} - Ej: Carlos"><input id="var_2" placeholder="{{2}} - opcional"><input id="var_3" placeholder="{{3}} - opcional"><span style="font-size:11px">Deja vacío si tu plantilla no tiene variables o tiene imagen fija</span></div>`;
+  } else box.innerHTML='';
+}
+
 function switchTab(t){
   currentTab=t;
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.getElementById(t==='wpp'?'tabWpp':t==='gmail'?'tabGmail':'tabSeg').classList.add('active');
   document.getElementById('boxSegmento').style.display=t==='segmento'?'block':'none';
-  if(t==='gmail' && !MI_PLAN.campañas_gmail){ alert('🔒 Campañas Gmail solo Gold Ilimitado. Tu plan '+MI_PLAN.plan+' no incluye.'); switchTab('wpp'); }
+  if(t==='gmail' && MI_PLAN &&!MI_PLAN.campañas_gmail){ alert('🔒 Gmail solo Gold. Tu plan '+MI_PLAN.plan); switchTab('wpp'); }
 }
 function actualizarPreview(){
-  const nums=numerosFinal;
-  document.getElementById('totalNums').innerText=nums.length;
-  document.getElementById('listaNumsPreview').innerText=nums.slice(0,20).join(', ')+(nums.length>20?'...':'');
-
+  document.getElementById('totalNums').innerText=numerosFinal.length;
+  document.getElementById('listaNumsPreview').innerText=numerosFinal.slice(0,20).join(', ')+(numerosFinal.length>20?'...':'');
 }
 document.getElementById('numerosManual').addEventListener('input', e=>{
-  const txt=e.target.value;
-  const lista=txt.split(/[\n,;\s]+/).map(n=>n.replace(/\D/g,'')).filter(n=>n.length>=10).map(n=>n.length==10?'57'+n:n);
-  const uniq=[...new Set(lista)];
-  numerosFinal=uniq;
-  actualizarPreview();
+  const lista=e.target.value.split(/[\n,;\s]+/).map(n=>n.replace(/\D/g,'')).filter(n=>n.length>=10).map(n=>n.length==10?'57'+n:n);
+  numerosFinal=[...new Set(lista)]; actualizarPreview();
 });
-
 function leerExcel(){
   const file=document.getElementById('excelFile').files[0]; if(!file) return alert('Selecciona Excel');
   const reader=new FileReader();
   reader.onload=(evt)=>{
     const data=new Uint8Array(evt.target.result); const wb=XLSX.read(data,{type:'array'});
     const sheet=wb.Sheets[wb.SheetNames[0]]; const json=XLSX.utils.sheet_to_json(sheet, {header:1});
-    // busca columna que parezca telefono
     let nums=[];
-    json.forEach(row=>{
-      row.forEach(cell=>{
-        const str=String(cell||'').replace(/\D/g,'');
-        if(str.length>=10 && str.length<=13) nums.push(str.length==10?'57'+str:str);
-      });
-    });
+    json.forEach(row=>{ row.forEach(cell=>{ const str=String(cell||'').replace(/\D/g,''); if(str.length>=10 && str.length<=13) nums.push(str.length==10?'57'+str:str); }); });
     numerosFinal=[...new Set(nums)];
-    document.getElementById('excelPreview').innerText=`Excel leído: ${numerosFinal.length} números encontrados`;
+    document.getElementById('excelPreview').innerText=`Excel: ${numerosFinal.length} números`;
     actualizarPreview();
   };
   reader.readAsArrayBuffer(file);
 }
-
 async function cargarPorSegmento(){
   const seg=document.getElementById('segSel').value;
   const r=await fetch(`/api/chats/${empresa_id}`); const chats=await r.json();
   let filtrados=seg? chats.filter(c=> (c.cliente?.segmento||'Nuevo')===seg) : chats;
-  const nums=filtrados.map(c=>c.id);
-  numerosFinal=[...new Set(nums)];
-  document.getElementById('segCount').innerText=`Segmento ${seg||'Todos'}: ${filtrados.length} chats encontrados`;
-  actualizarPreview();
-  switchTab('wpp');
+  numerosFinal=[...new Set(filtrados.map(c=>c.id))];
+  document.getElementById('segCount').innerText=`${filtrados.length} chats`;
+  actualizarPreview(); switchTab('wpp');
 }
-
 async function enviarCampana(){
   const plantilla=document.getElementById('plantillaSel').value;
   const nombre=document.getElementById('nombreCamp').value||plantilla;
-  if(!plantilla) return alert('Selecciona plantilla aprobada');
-  if(!numerosFinal.length) return alert('Escribe números manual o sube Excel o carga por segmentación Cliente/Nuevo/Interesado/Campaña');
-  if(numerosFinal.length + MI_PLAN.usado_conversaciones > MI_PLAN.max_conversaciones && MI_PLAN.plan!=='Gold'){
-    return alert(`⛔ Límite: tu plan ${MI_PLAN.plan} solo permite ${MI_PLAN.max_conversaciones} conversaciones y ya tienes ${MI_PLAN.usado_conversaciones}. Tienes ${numerosFinal.length} números nuevos. Mejora a Gold ilimitado`);
-  }
-  document.getElementById('status').innerText=`Enviando ${numerosFinal.length} mensajes con plantilla ${plantilla}...`;
-  const r=await fetch('/api/campana/enviar',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({empresa_id, plantilla, numeros:numerosFinal, nombre, variables:[]})});
-  const j=await r.json();
-  if(!j.ok) document.getElementById('status').innerText='❌ '+j.error;
-  else { document.getElementById('status').innerText=`✅ Campaña iniciada: ${j.total} números`; cargarHistorial(); }
-}
+  if(!plantilla) return alert('Selecciona plantilla');
+  if(!numerosFinal.length) return alert('Agrega números');
 
+  // ARMAR VARIABLES CORRECTAS PARA V165 NAMED
+  let variables=[];
+  if(plantilla.includes('acol_invitacion_congreso') || plantilla.includes('alion')){
+    const v=document.getElementById('var_nombre_cliente')?.value?.trim();
+    variables = [v||'Hola']; // si dejas vacío manda Hola, si pones Carlos manda Carlos
+  } else {
+    const v1=document.getElementById('var_1')?.value?.trim();
+    const v2=document.getElementById('var_2')?.value?.trim();
+    const v3=document.getElementById('var_3')?.value?.trim();
+    if(v1) variables.push(v1);
+    if(v2) variables.push(v2);
+    if(v3) variables.push(v3);
+  }
+
+  if(numerosFinal.length + MI_PLAN.usado_conversaciones > MI_PLAN.max_conversaciones && MI_PLAN.plan!=='Gold'){
+    return alert(`⛔ Límite plan ${MI_PLAN.plan}`);
+  }
+  document.getElementById('status').innerText=`Enviando ${numerosFinal.length} con ${plantilla} vars=[${variables.join(', ')}]...`;
+  try{
+    const r=await fetch('/api/campana/enviar',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({empresa_id, plantilla, numeros:numerosFinal, nombre, variables})});
+    const j=await r.json();
+    console.log(j);
+    if(!j.ok) document.getElementById('status').innerText='❌ '+j.error+'\n'+JSON.stringify(j.detalle||j, null, 2);
+    else { document.getElementById('status').innerText=`✅ ${j.total} enviados - Modo: ${j.modo||j.idioma_usado} - ID ${j.meta?.messages?.[0]?.id}`; cargarHistorial(); }
+  }catch(e){ document.getElementById('status').innerText='❌ Error red: '+e.message; }
+}
 async function cargarHistorial(){
   const r=await fetch(`/api/campanas/${empresa_id}`); const list=await r.json();
-  document.getElementById('historial').innerHTML=list.length? list.map(c=>`<div style="padding:8px;border:1px solid #eee;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><div><b>${c.nombre}</b> - ${c.plantilla}<br><span style="font-size:11px">${new Date(c.created).toLocaleString()} - Total: ${c.total} - Enviados: ${c.enviados} - Fallidos: ${c.fallidos} - <span class="badge" style="background:${c.estado==='finalizada'?'#0a7a2a':'#ffcc00'};color:${c.estado==='finalizada'?'#fff':'#000'}">${c.estado}</span></span></div></div>`).join('') : 'No hay campañas aún';
+  document.getElementById('historial').innerHTML=list.length? list.map(c=>`<div style="padding:8px;border:1px solid #eee;border-radius:8px;margin:6px 0"><b>${c.nombre}</b> - ${c.plantilla}<br><span style="font-size:11px">${new Date(c.created).toLocaleString()} - Total: ${c.total} - <span class="badge" style="background:#0a7a2a;color:#fff">${c.estado}</span> - ${c.ultimo_error||''}</span></div>`).join('') : 'No hay campañas';
 }
-
 init();
 </script>
 </body></html>
