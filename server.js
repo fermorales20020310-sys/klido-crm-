@@ -1,4 +1,4 @@
-// KLIDO V244 - FIX WORKER db.campaigns is not iterable + TODO TU V243 SIN DAÑAR
+// KLIDO V245 - FIX 132012 Parameter format + FIX is not iterable - TODO V244 SIN DAÑAR
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -42,10 +42,9 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V244 FIX WORKER FULL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V244 FIX WORKER db.campaigns is not iterable - WEBHOOK klido123 FULL', time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V245 FIX 132012 FULL'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V245 FIX 132012 + is not iterable - WEBHOOK klido123 FULL', time:Date.now(), planes:PLANES}));
 
-// ===== WEBHOOK VERIFICACION - TOKEN klido123 =====
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
     console.log('✅ WEBHOOK VERIFICADO CON META - token klido123 OK');
@@ -57,7 +56,6 @@ const verifyHook=(req,res)=>{
 app.get('/webhook',verifyHook);
 app.get('/webhook/:empresa_id',verifyHook);
 
-// ===== WEBHOOK V244 - FULL HISTORIAL + FOTOS + AUDIOS REPRODUCIBLES + ARCHIVOS =====
 async function handleWebhook(body){
   try{
     if(body.object!=='whatsapp_business_account') return;
@@ -164,7 +162,6 @@ async function handleWebhook(body){
 app.post('/webhook',(req,res)=>{ res.sendStatus(200); handleWebhook(req.body); });
 app.post('/webhook/:empresa_id',(req,res)=>{ res.sendStatus(200); handleWebhook(req.body); });
 
-// === TODO LO TUYO V242 SIN DAÑAR ===
 app.post('/api/empresa/registrar', async (req,res)=>{
   const {nombre,email,pass,plan}=req.body;
   if(!nombre||!email||!pass) return res.json({ok:false, error:'Faltan datos'});
@@ -324,7 +321,6 @@ app.post('/api/campaigns/create',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
   const planInfo=PLANES[db.plan]||PLANES.basico;
   if(req.body.tipo==='gmail' &&!planInfo.gmail) return res.json({ok:false, error:`⛔ Gmail solo Gold`});
-  // FIX - asegurar array
   if(!Array.isArray(db.campaigns)) db.campaigns = db.campaigns? Object.values(db.campaigns) : [];
   const existing=db.campaigns.length;
   if(existing>=planInfo.envios && planInfo.envios!==999) return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas`});
@@ -347,17 +343,15 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== FIX V244 - WORKER ROBUSTO - SOPORTA ARRAY Y OBJETO =====
+// ===== FIX V245 - WORKER ROBUSTO + FIX 132012 =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
       let db; try{ db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); }catch{continue;}
       if(!db.campaigns) continue;
-      // FIX: convertir objeto a array si es necesario
       const campaignsList = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
       if(campaignsList.length===0) continue;
       let changed=false;
-      // Si estaba como objeto, convertir a array permanente
       if(!Array.isArray(db.campaigns)){
         db.campaigns = campaignsList;
         changed=true;
@@ -373,8 +367,20 @@ async function processCampaigns(){
           for(const num of batch){
             try{
               let payload={messaging_product:'whatsapp', to:String(num).replace(/\D/g,''), type:'template', template:{name:camp.template_name, language:{code:camp.template_lang||'es'}, components:[]}};
-              if(camp.header_image) payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:camp.header_image}}]});
-              if(camp.variables && camp.variables.filter(v=>v).length>0) payload.template.components.push({type:'body', parameters:camp.variables.filter(v=>v).map(v=>({type:'text', text:String(v||' ')}))});
+
+              // === FIX V245 - 132012 - SOLO ENVIAR HEADER SI ES https:// VALIDO ===
+              const hImg = String(camp.header_image||'').trim();
+              if(hImg && hImg.startsWith('https://')){
+                payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
+              }
+              // Si header_image está vacío o es /media/... NO se envía header, así no da 132012 cuando la plantilla ya tiene imagen fija
+
+              // === FIX VARIABLES - solo enviar si hay variables reales ===
+              const vars = (camp.variables||[]).filter(v=> v!==undefined && v!==null && String(v).trim()!=='');
+              if(vars.length>0){
+                payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text:String(v)}))});
+              }
+
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
               if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
@@ -392,7 +398,6 @@ async function processCampaigns(){
 }
 setInterval(processCampaigns, 60000); processCampaigns();
 
-// AUTO-SYNC PLANTILLAS
 async function syncPlantillasTodas(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -457,4 +462,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V244 FIX WORKER db.campaigns is not iterable OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V245 FIX 132012 Parameter format OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
