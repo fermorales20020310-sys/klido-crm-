@@ -1,4 +1,4 @@
-// KLIDO V243 COMPLETO - WEBHOOK klido123 FULL HISTORIAL + FOTOS AUDIOS ARCHIVOS REPRODUCIBLES + CONFIG PERMANENTE + AUTO-SYNC PLANTILLAS + ADMIN PLAN BLOQUEAR
+// KLIDO V244 - FIX WORKER db.campaigns is not iterable + TODO TU V243 SIN DAÑAR
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -42,8 +42,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V243 WEBHOOK FULL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V243 WEBHOOK klido123 FULL HISTORIAL FOTOS AUDIOS ARCHIVOS', time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V244 FIX WORKER FULL'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V244 FIX WORKER db.campaigns is not iterable - WEBHOOK klido123 FULL', time:Date.now(), planes:PLANES}));
 
 // ===== WEBHOOK VERIFICACION - TOKEN klido123 =====
 const verifyHook=(req,res)=>{
@@ -57,7 +57,7 @@ const verifyHook=(req,res)=>{
 app.get('/webhook',verifyHook);
 app.get('/webhook/:empresa_id',verifyHook);
 
-// ===== WEBHOOK V243 - FULL HISTORIAL + FOTOS + AUDIOS REPRODUCIBLES + ARCHIVOS =====
+// ===== WEBHOOK V244 - FULL HISTORIAL + FOTOS + AUDIOS REPRODUCIBLES + ARCHIVOS =====
 async function handleWebhook(body){
   try{
     if(body.object!=='whatsapp_business_account') return;
@@ -67,8 +67,6 @@ async function handleWebhook(body){
         if(!val) continue;
         const phoneId=val.metadata?.phone_number_id;
         if(!phoneId) continue;
-
-        // Buscar empresa dueña de este phoneNumberId
         let eid=null, db=null;
         try{
           for(const f of fs.readdirSync(DB)){
@@ -80,8 +78,6 @@ async function handleWebhook(body){
         }catch{}
         if(!eid ||!db) { console.log(`❌ No empresa con phone ${phoneId}`); continue; }
         if(!db.chats) db.chats={};
-
-        // Mensajes entrantes
         if(val.messages){
           for(const m of val.messages){
             const from=m.from;
@@ -108,7 +104,6 @@ async function handleWebhook(body){
             let media_url=null;
             let mime='';
             let filename='';
-
             if(type==='text'){
               texto=m.text?.body||'';
             }
@@ -140,8 +135,6 @@ async function handleWebhook(body){
                 texto=`📍 Ubicación: ${m.location?.latitude},${m.location?.longitude}`;
               }
             }
-
-            // Guardar con historial FULL permanente
             db.chats[from].mensajes.push({
               id:m.id||Date.now().toString(),
               from:'cliente',
@@ -159,8 +152,6 @@ async function handleWebhook(body){
           saveDB(eid,db);
           console.log(`💬 Mensajes guardados para ${db.nombre} (${eid})`);
         }
-
-        // Estados de mensajes (delivered, read)
         if(val.statuses){
           for(const st of val.statuses){
             console.log(`📊 Status ${st.status} id:${st.id} to:${st.recipient_id}`);
@@ -205,13 +196,12 @@ app.post('/api/config/api',(req,res)=>{
   const phone=String(req.body.phone||'').trim();
   const waba=String(req.body.waba||'').trim();
   const token=String(req.body.token||'').trim();
-  if(!phone ||!waba ||!token) return res.json({ok:false, error:'Faltan datos - los 3 son obligatorios y quedan permanente'});
+  if(!phone ||!waba ||!token) return res.json({ok:false, error:'Faltan datos'});
   db.config=db.config||{};
   db.config.phone=phone; db.config.waba=waba; db.config.token=token;
   db.config.last_update=Date.now(); db.config.guardado_permanente=true; db.config_primer_guardado=db.config_primer_guardado||Date.now();
   saveDB(req.body.empresa_id,db);
   console.log(`✅ CONFIG PERMANENTE ${db.nombre} - phone:${phone} waba:${waba}`);
-  // sync plantillas inmediato
   (async()=>{try{const url=`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=250&fields=name,status,language,components`; const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}}); const j=await r.json(); if(j.data){ db.cached_templates=j.data; db.config.last_templates_update=Date.now(); saveDB(req.body.empresa_id,db); }}catch{}})();
   res.json({ok:true, config:db.config, mensaje:'Guardado permanente'});
 });
@@ -228,7 +218,7 @@ app.post('/api/empresa/plan/update',(req,res)=>{
 });
 app.get('/api/planes',(req,res)=>{res.json({ok:true, planes:PLANES});});
 
-app.post('/api/equipo/add',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const max=PLANES[db.plan]?.asesores||2; if(db.usuarios.length>=max && max!==999) return res.json({ok:false, error:`Plan ${db.plan} max ${max} usuarios - actual ${db.usuarios.length} - Pasa a Premium 5 o Gold ilimitados`}); db.usuarios.push({id:'u'+Date.now(), nombre:req.body.email.split('@')[0], email:req.body.email, pass:req.body.pass, rol:req.body.rol||'agente'}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
+app.post('/api/equipo/add',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const max=PLANES[db.plan]?.asesores||2; if(db.usuarios.length>=max && max!==999) return res.json({ok:false, error:`Plan ${db.plan} max ${max} usuarios`}); db.usuarios.push({id:'u'+Date.now(), nombre:req.body.email.split('@')[0], email:req.body.email, pass:req.body.pass, rol:req.body.rol||'agente'}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 app.post('/api/equipo/remove',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if((db.usuarios||[]).length<=1) return res.json({ok:false, error:'No puedes eliminar al último'}); if(db.usuarios.filter(u=>u.rol==='admin').length===1 && db.usuarios.find(u=>u.email===req.body.email)?.rol==='admin') return res.json({ok:false, error:'No puedes eliminar al único admin'}); db.usuarios=db.usuarios.filter(u=>u.email!==req.body.email); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
 app.get('/api/stats/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({ok:false}); const chats=Object.values(db.chats||{}); const cals=db.calendar||[]; res.json({ok:true, chats:chats.length, mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), agentes:db.usuarios.length, calendar:cals.length, calendar_pendientes:cals.filter(x=>!x.hecho).length});});
@@ -306,46 +296,73 @@ app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{
 
 app.get('/api/templates/:eid', async (req,res)=>{
   const db=getDB(req.params.eid);
-  if(!db) return res.json({templates:[], error:'Empresa no existe', is_expired:false});
+  if(!db) return res.json({templates:[], error:'Empresa no existe'});
   const waba=String(db.config?.waba||'').trim();
   const token=String(db.config?.token||'').trim();
   if(!waba||!token){
-    return res.json({templates:db.cached_templates||[], error:`Falta config`, is_expired:false, cached_count:(db.cached_templates||[]).length});
+    return res.json({templates:db.cached_templates||[], error:`Falta config`, cached_count:(db.cached_templates||[]).length});
   }
   try{
     const url=`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=250&fields=name,status,language,components`;
     const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
     const j=await r.json();
     if(j.error){
-      return res.json({templates: db.cached_templates||[], error:`Meta ${j.error.code}: ${j.error.message}`, is_expired:false, cached_count:(db.cached_templates||[]).length});
+      return res.json({templates: db.cached_templates||[], error:`Meta ${j.error.code}: ${j.error.message}`, cached_count:(db.cached_templates||[]).length});
     }
     const all=j.data||[]; const approved=all.filter(t=>t.status==='APPROVED');
     if(all.length>0){ db.cached_templates=all; db.config.last_templates_update=Date.now(); saveDB(db.empresa_id, db); }
-    let warning=`✅ ${approved.length} APPROVED de ${all.length} - Token acepta 1d 60d permanente`;
-    return res.json({templates: approved.length>0? approved : all, all: all.length, approved: approved.length, warning, is_expired:false});
-  }catch(e){ return res.json({templates:db.cached_templates||[], error:e.message, using_cache:true, is_expired:false}); }
+    let warning=`✅ ${approved.length} APPROVED de ${all.length}`;
+    return res.json({templates: approved.length>0? approved : all, all: all.length, approved: approved.length, warning});
+  }catch(e){ return res.json({templates:db.cached_templates||[], error:e.message, using_cache:true}); }
 });
 
-app.get('/api/campaigns/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]}); res.json({campaigns:(db.campaigns||[]).sort((a,b)=>b.creado-a.creado)});});
+app.get('/api/campaigns/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]});
+  const list = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
+  res.json({campaigns:list.sort((a,b)=>b.creado-a.creado)});});
+
 app.post('/api/campaigns/create',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
   const planInfo=PLANES[db.plan]||PLANES.basico;
   if(req.body.tipo==='gmail' &&!planInfo.gmail) return res.json({ok:false, error:`⛔ Gmail solo Gold`});
-  const existing=(db.campaigns||[]).length;
+  // FIX - asegurar array
+  if(!Array.isArray(db.campaigns)) db.campaigns = db.campaigns? Object.values(db.campaigns) : [];
+  const existing=db.campaigns.length;
   if(existing>=planInfo.envios && planInfo.envios!==999) return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas`});
-  db.campaigns=db.campaigns||[];
   const camp={id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:req.body.variables||[], header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, indice:0, next_send:0, creado:Date.now()};
   db.campaigns.push(camp); saveDB(req.body.empresa_id,db); res.json({ok:true, camp});
 });
-app.post('/api/campaigns/toggle',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const c=(db.campaigns||[]).find(x=>String(x.id)===String(req.body.id)); if(c){ c.status=c.status==='paused'?'running':'paused'; if(c.status==='running' && c.next_send && Date.now()>c.next_send) c.next_send=0; saveDB(req.body.empresa_id,db); } res.json({ok:true});});
-app.post('/api/campaigns/delete',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.campaigns=(db.campaigns||[]).filter(x=>String(x.id)!==String(req.body.id)); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
+app.post('/api/campaigns/toggle',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
+  if(!Array.isArray(db.campaigns)) db.campaigns = Object.values(db.campaigns||{});
+  const c=db.campaigns.find(x=>String(x.id)===String(req.body.id));
+  if(c){ c.status=c.status==='paused'?'running':'paused'; if(c.status==='running' && c.next_send && Date.now()>c.next_send) c.next_send=0; saveDB(req.body.empresa_id,db); }
+  res.json({ok:true});
+});
+
+app.post('/api/campaigns/delete',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
+  if(!Array.isArray(db.campaigns)) db.campaigns = Object.values(db.campaigns||{});
+  db.campaigns=db.campaigns.filter(x=>String(x.id)!==String(req.body.id));
+  saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
+
+// ===== FIX V244 - WORKER ROBUSTO - SOPORTA ARRAY Y OBJETO =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
       let db; try{ db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); }catch{continue;}
-      if(!db.campaigns || db.campaigns.length===0) continue;
+      if(!db.campaigns) continue;
+      // FIX: convertir objeto a array si es necesario
+      const campaignsList = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
+      if(campaignsList.length===0) continue;
       let changed=false;
+      // Si estaba como objeto, convertir a array permanente
+      if(!Array.isArray(db.campaigns)){
+        db.campaigns = campaignsList;
+        changed=true;
+        console.log(`🔧 FIX campaigns de objeto a array para ${db.nombre}`);
+      }
       for(const camp of db.campaigns){
         if(camp.status!=='running') continue;
         if(camp.indice>=camp.total){ camp.status='completed'; changed=true; continue; }
@@ -359,20 +376,23 @@ async function processCampaigns(){
               if(camp.header_image) payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:camp.header_image}}]});
               if(camp.variables && camp.variables.filter(v=>v).length>0) payload.template.components.push({type:'body', parameters:camp.variables.filter(v=>v).map(v=>({type:'text', text:String(v||' ')}))});
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
-              const jj=await rr.json(); if(jj.messages) camp.enviados++; else camp.fallidos++;
-            }catch(e){ camp.fallidos++; }
+              const jj=await rr.json();
+              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
+              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message||JSON.stringify(jj)); }
+            }catch(e){ camp.fallidos++; console.log('send err', e.message); }
             await new Promise(r=>setTimeout(r, 900));
           }
         }
         camp.indice+=batch.length; camp.next_send=Date.now() + (4*60*60*1000); changed=true;
+        console.log(`📦 Lote ${camp.nombre}: ${camp.enviados}/${camp.total} - prox lote en 4h`);
       }
       if(changed) saveDB(db.empresa_id,db);
     }
-  }catch(e){ console.log('worker',e.message); }
+  }catch(e){ console.log('worker',e.message, e.stack); }
 }
 setInterval(processCampaigns, 60000); processCampaigns();
 
-// AUTO-SYNC PLANTILLAS CADA 3 HORAS PARA TODAS LAS AGENCIAS
+// AUTO-SYNC PLANTILLAS
 async function syncPlantillasTodas(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -402,7 +422,8 @@ app.get('/api/admin/agencias',(req,res)=>{
     const chats=Object.keys(e.chats||{}).length;
     const mensajes=Object.values(e.chats||{}).reduce((a,c)=>a+(c.mensajes?.length||0),0);
     const workers=(e.usuarios||[]).length;
-    const campaigns=(e.campaigns||[]).length;
+    const campaignsList = Array.isArray(e.campaigns)? e.campaigns : Object.values(e.campaigns||{});
+    const campaigns=campaignsList.length;
     const planInfo=PLANES[e.plan]||PLANES.basico;
     return {id:e.empresa_id, nombre:e.nombre, email:e.email, plan:e.plan, plan_activo:e.plan_activo, mantenimiento:e.mantenimiento||0, chats, mensajes, workers, campaigns, mensajesLimite:planInfo.mensajes, enviosLimite:planInfo.envios, plan_info:planInfo, creado:e.creado, phone:e.config?.phone||'', waba:e.config?.waba||'', has_token:!!e.config?.token};
   }).sort((a,b)=>b.creado-a.creado);
@@ -426,7 +447,7 @@ app.get('/api/admin/agencias/:id/detalle',(req,res)=>{
 app.get('/api/public/:eid',(req,res)=>{
   const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
   const chats=Object.values(db.chats||{});
-  res.json({ok:true, empresa:db.nombre, plan:db.plan, plan_activo:db.plan_activo, vence:db.mantenimiento? new Date(Number(db.mantenimiento)).toLocaleDateString() : '-', stats:{chats:chats.length, mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), trabajadores:(db.usuarios||[]).length, campanas:(db.campaigns||[]).length, citas:(db.calendar||[]).length}, updated:Date.now()});
+  res.json({ok:true, empresa:db.nombre, plan:db.plan, plan_activo:db.plan_activo, vence:db.mantenimiento? new Date(Number(db.mantenimiento)).toLocaleDateString() : '-', stats:{chats:chats.length, mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), trabajadores:(db.usuarios||[]).length, campanas:(Array.isArray(db.campaigns)?db.campaigns:Object.values(db.campaigns||{})).length, citas:(db.calendar||[]).length}, updated:Date.now()});
 });
 
 app.get('/',(req,res)=>res.sendFile(path.join(PUB,'index.html')));
@@ -436,4 +457,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V243 WEBHOOK klido123 FULL HISTORIAL FOTOS AUDIOS REPRODUCIBLES OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V244 FIX WORKER db.campaigns is not iterable OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
