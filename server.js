@@ -1,4 +1,4 @@
-// KLIDO V245 - FIX 132012 Parameter format + FIX is not iterable - TODO V244 SIN DAÑAR
+// KLIDO V246 - FIX 1 VARIABLE + FIX 132012 + FIX is not iterable - TU V245 SIN DAÑAR
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -42,8 +42,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V245 FIX 132012 FULL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V245 FIX 132012 + is not iterable - WEBHOOK klido123 FULL', time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V246 FIX 1 VAR FULL'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V246 FIX 1 VAR + 132012 + is not iterable - WEBHOOK klido123 FULL', time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -343,7 +343,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== FIX V245 - WORKER ROBUSTO + FIX 132012 =====
+// ===== V246 - WORKER FINAL - 1 VAR + NO HEADER + NO 132012 =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -355,7 +355,7 @@ async function processCampaigns(){
       if(!Array.isArray(db.campaigns)){
         db.campaigns = campaignsList;
         changed=true;
-        console.log(`🔧 FIX campaigns de objeto a array para ${db.nombre}`);
+        console.log(`🔧 FIX campaigns objeto a array ${db.nombre}`);
       }
       for(const camp of db.campaigns){
         if(camp.status!=='running') continue;
@@ -368,29 +368,48 @@ async function processCampaigns(){
             try{
               let payload={messaging_product:'whatsapp', to:String(num).replace(/\D/g,''), type:'template', template:{name:camp.template_name, language:{code:camp.template_lang||'es'}, components:[]}};
 
-              // === FIX V245 - 132012 - SOLO ENVIAR HEADER SI ES https:// VALIDO ===
+              // NO ENVIAR HEADER - tu plantilla ACOL ya tiene la imagen dentro de Meta
               const hImg = String(camp.header_image||'').trim();
               if(hImg && hImg.startsWith('https://')){
                 payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
               }
-              // Si header_image está vacío o es /media/... NO se envía header, así no da 132012 cuando la plantilla ya tiene imagen fija
 
-              // === FIX VARIABLES - solo enviar si hay variables reales ===
-              const vars = (camp.variables||[]).filter(v=> v!==undefined && v!==null && String(v).trim()!=='');
-              if(vars.length>0){
-                payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text:String(v)}))});
+              // V246 - TU PLANTILLA SOLO 1 VARIABLE {{1}} - AUTO AJUSTE
+              let expectedVars = 1;
+              try{
+                const tpl = (db.cached_templates||[]).find(t=> t.name===camp.template_name);
+                if(tpl){
+                  const body = (tpl.components||[]).find(c=> c.type==='BODY');
+                  if(body?.text){
+                    const matches = body.text.match(/{{\d+}}/g);
+                    if(matches) expectedVars = matches.length;
+                  }
+                }
+              }catch{}
+
+              // Solo coge la primera variable (nombre), ignora la segunda
+              let vars = (camp.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='');
+              vars = vars.slice(0, expectedVars);
+              if(vars.length < expectedVars){
+                while(vars.length < expectedVars) vars.push(' ');
               }
+
+              if(vars.length>0){
+                payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text: v || ' '}))});
+              }
+
+              console.log(`📤 Enviando ${camp.template_name} a ${num} - espera ${expectedVars} var, mando:`, vars);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
               if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
-              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message||JSON.stringify(jj)); }
+              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,300)); }
             }catch(e){ camp.fallidos++; console.log('send err', e.message); }
             await new Promise(r=>setTimeout(r, 900));
           }
         }
         camp.indice+=batch.length; camp.next_send=Date.now() + (4*60*60*1000); changed=true;
-        console.log(`📦 Lote ${camp.nombre}: ${camp.enviados}/${camp.total} - prox lote en 4h`);
+        console.log(`📦 Lote ${camp.nombre}: ${camp.enviados}/${camp.total} - prox en 4h`);
       }
       if(changed) saveDB(db.empresa_id,db);
     }
@@ -462,4 +481,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V245 FIX 132012 Parameter format OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V246 FIX 1 VAR - 132012 FIX OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
