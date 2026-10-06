@@ -1,9 +1,118 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO ADMIN V128</title><style>body{font-family:Arial;background:#0a1931;color:#fff;padding:16px}.card{background:#fff;color:#0a1931;padding:14px;border-radius:12px;margin:10px 0}.mora{border:3px solid #ef4444}.ok{border:3px solid #22c55e} button{padding:8px 12px;border-radius:8px;border:0;font-weight:800;cursor:pointer;margin:3px}</style></head><body>
-<h2>KLIDO ADMIN V128 - 3133181851</h2><div id="lista">Cargando...</div>
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO ADMIN V242 - 3133181851</title><style>
+body{font-family:Inter,Arial;background:#0a1931;color:#fff;padding:16px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:center;background:#132a52;padding:12px 16px;border-radius:12px;margin-bottom:12px}
+.card{background:#fff;color:#0a1931;padding:14px;border-radius:12px;margin:12px 0;box-shadow:0 2px 8px #0003}
+.mora{border:3px solid #ef4444}.ok{border:3px solid #22c55e}.gold{border:3px solid #f59e0b}
+button{padding:8px 12px;border-radius:8px;border:0;font-weight:800;cursor:pointer;margin:3px;font-size:12px}
+.badge{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:800;color:#fff}
+.badge-basico{background:#64748b}.badge-premium{background:#3b82f6}.badge-gold{background:#f59e0b;color:#000}
+.bar{height:8px;background:#e2e8f0;border-radius:10px;overflow:hidden;margin:4px 0}.fill{height:8px;background:#3b82f6}
+input{padding:8px;border-radius:8px;border:1px solid #2a3a5c;margin:3px}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:99;padding:20px}
+.modalBox{background:#0f172a;color:#fff;border:1px solid #1e2a4a;border-radius:14px;padding:18px;max-width:800px;width:100%;max-height:90vh;overflow:auto}
+</style></head><body>
+<div class="top"><h2 style="margin:0">KLIDO ADMIN V242 - 3133181851 - PLAN SEGUN PAGO</h2><div><input id="search" placeholder="Buscar email o nombre..." oninput="filtrar()" style="width:240px"><button onclick="cargar()" style="background:#3b82f6;color:#fff">🔄 Recargar</button><button onclick="window.open('/public-view.html','_blank')" style="background:#22c55e;color:#fff">👁️ Vista Pública</button></div></div>
+<div id="statsTop" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px"></div>
+<div id="lista">Cargando agencias...</div>
+
+<div id="modal" class="modal" onclick="if(event.target===this) this.style.display='none'"><div class="modalBox"><div style="display:flex;justify-content:space-between"><h3 id="modalTitle">Detalle</h3><button onclick="modal.style.display='none'" style="background:#ef4444;color:#fff">✕</button></div><div id="modalBody"></div></div></div>
+
 <script>
-const token=localStorage.getItem('klido_token'); if(!token){alert('Logueate primero en /'); location.href='/';}
-async function cargar(){const r=await fetch('/api/admin/agencias',{headers:{Authorization:'Bearer '+token}}); const j=await r.json(); let h=''; j.agencias.forEach(a=>{const venc=a.mantenimiento&&Date.now()>Number(a.mantenimiento); const mora=!a.plan_activo||venc; h+=`<div class="card ${mora?'mora':'ok'}"><b>${a.nombre}</b> (${a.email})<br>ID:${a.id} | Plan:${(a.plan||'').toUpperCase()} | Activo:${a.plan_activo?'SI':'NO MORA'}<br>Vence:${a.mantenimiento?new Date(Number(a.mantenimiento)).toLocaleDateString():'-'}<br><button style="background:#22c55e;color:#fff" onclick="act('${a.id}','${a.plan}',90)">✅ ACTIVAR 90 DÍAS</button><button onclick="act('${a.id}','basico',90)">BÁSICO</button><button onclick="act('${a.id}','premium',90)">PREMIUM</button><button onclick="act('${a.id}','gold',90)">GOLD</button><button style="background:#ef4444;color:#fff" onclick="bloq('${a.id}')">🚫 BLOQUEAR</button></div>`}); document.getElementById('lista').innerHTML=h;}
-async function act(id,plan,dias){if(!confirm('Activar '+id+' '+plan+' '+dias+' dias?'))return; const r=await fetch('/api/admin/agencias/'+id+'/activar',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({plan,dias})}); const j=await r.json(); alert(j.mensaje||j.error); cargar();}
-async function bloq(id){if(!confirm('Bloquear '+id+' por mora?'))return; const r=await fetch('/api/admin/agencias/'+id+'/bloquear',{method:'POST',headers:{Authorization:'Bearer '+token}}); const j=await r.json(); alert(j.mensaje); cargar();}
+let allAgencias=[];
+const token=localStorage.getItem('klido_token')||localStorage.getItem('klido_empresa')||'admin';
+async function cargar(){
+  const r=await fetch('/api/admin/agencias',{headers:{Authorization:'Bearer '+token}});
+  const j=await r.json();
+  allAgencias=j.agencias||[];
+  const total=allAgencias.length;
+  const activos=allAgencias.filter(a=>a.plan_activo).length;
+  const mora=total-activos;
+  const gold=allAgencias.filter(a=>a.plan==='gold').length;
+  document.getElementById('statsTop').innerHTML=`<div class="card ok"><b>Total Agencias:</b> ${total}</div><div class="card ok"><b>Activos:</b> ${activos}</div><div class="card mora"><b>En Mora:</b> ${mora}</div><div class="card gold"><b>Gold:</b> ${gold}</div>`;
+  render(allAgencias);
+}
+function render(list){
+  let h='';
+  list.forEach(a=>{
+    const venc=a.mantenimiento&&Date.now()>Number(a.mantenimiento);
+    const mora=!a.plan_activo||venc;
+    const badgeClass='badge-'+a.plan;
+    const planInfo=a.plan_info||{};
+    h+=`<div class="card ${mora?'mora':a.plan==='gold'?'gold':'ok'}">
+      <div style="display:flex;justify-content:space-between"><div><b style="font-size:16px">${a.nombre}</b> (${a.email}) <span class="badge ${badgeClass}">${(a.plan||'').toUpperCase()} ${a.plan==='gold'?'⭐':''}</span> ${a.plan_activo?'<span class="badge" style="background:#22c55e">ACTIVO</span>':'<span class="badge" style="background:#ef4444">BLOQUEADO</span>'}<br>
+      <span style="font-size:11px;color:#64748b">ID:${a.id} | Phone:${a.phone||'-'} | WABA:${a.waba? a.waba.slice(0,8)+'...': '-'} | Token:${a.has_token?'SI':'NO'} | Vence:${a.mantenimiento?new Date(Number(a.mantenimiento)).toLocaleDateString():'-'} | Creado:${a.creado? new Date(a.creado).toLocaleDateString(): '-'}</span></div>
+      <div style="text-align:right"><button onclick="generarLink('${a.id}')" style="background:#0a1931;color:#fff">🔗 Link Público</button></div></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin:10px 0;background:#f1f5f9;padding:10px;border-radius:10px">
+        <div><b>💬 Chats:</b> ${a.chats}<br><b>📩 Mensajes:</b> ${a.mensajes}<br><div class="bar"><div class="fill" style="width:${Math.min(100,a.consumoMensajes)}%;background:${a.consumoMensajes>80?'#ef4444':'#3b82f6'}"></div></div><span style="font-size:10px">${a.mensajes}/${a.mensajesLimite===999999?'∞':a.mensajesLimite} (${a.consumoMensajes}%)</span></div>
+        <div><b>👥 Trabajadores:</b> ${a.workers}/${a.plan_info?.asesores===999?'∞':a.plan_info?.asesores}<br><b>🔔 Campañas:</b> ${a.campaigns}/${a.enviosLimite===999?'∞':a.enviosLimite}<br><div class="bar"><div class="fill" style="width:${Math.min(100,a.consumoEnvios)}%;background:${a.consumoEnvios>80?'#ef4444':'#f59e0b'}"></div></div><span style="font-size:10px">${a.campaigns}/${a.enviosLimite===999?'∞':a.enviosLimite} (${a.consumoEnvios}%)</span></div>
+        <div><b>IA:</b> ${planInfo.ia?'✅ SI':'❌ NO'}<br><b>Gmail:</b> ${planInfo.gmail?'✅ SI':'❌ NO'}<br><b>Llamadas:</b> ${planInfo.llamadas?'✅ SI':'❌ NO'}</div>
+        <div><b>Consumo Plan:</b><br>Mensajes: ${a.mensajes} / ${a.mensajesLimite===999999?'Ilimitados':a.mensajesLimite}<br>Envios: ${a.campaigns} / ${a.enviosLimite===999?'Ilimitados':a.enviosLimite}<br>Trabajadores: ${a.workers} / ${a.plan_info?.asesores===999?'Ilimitados':a.plan_info?.asesores}</div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <button style="background:#22c55e;color:#fff" onclick="act('${a.id}','${a.plan}',90)">✅ ACTIVAR 90 DÍAS</button>
+        <button style="background:#22c55e;color:#fff" onclick="act('${a.id}','${a.plan}',30)">30 DÍAS</button>
+        <button style="background:#3b82f6;color:#fff" onclick="act('${a.id}','basico',90)">BÁSICO $800k</button>
+        <button style="background:#3b82f6;color:#fff" onclick="act('${a.id}','premium',90)">PREMIUM $1.3M</button>
+        <button style="background:#f59e0b;color:#000" onclick="act('${a.id}','gold',90)">GOLD $2.4M</button>
+        <button style="background:#ef4444;color:#fff" onclick="bloq('${a.id}')">🚫 BLOQUEAR MORA</button>
+        <button style="background:#0a1931;color:#fff;border:1px solid #22c55e" onclick="desbloq('${a.id}')">🔓 DESBLOQUEAR</button>
+        <button style="background:#8b5cf6;color:#fff" onclick="verMetricas('${a.id}')">📊 MÉTRICAS</button>
+        <button style="background:#06b6d4;color:#fff" onclick="verTrabajadores('${a.id}')">👥 TRABAJADORES</button>
+        <button style="background:#0a1931;color:#fff" onclick="verConsumo('${a.id}')">📈 CONSUMO</button>
+      </div>
+      <div style="margin-top:8px"><span style="font-size:11px;background:#0a1931;color:#fff;padding:4px 8px;border-radius:8px">Link público: <a href="/public-view.html?eid=${a.id}" target="_blank" style="color:#93c5fd">/public-view.html?eid=${a.id}</a> - Tiempo real cada 5s</span></div>
+    </div>`;
+  });
+  document.getElementById('lista').innerHTML=h||'Sin agencias';
+}
+function filtrar(){const q=document.getElementById('search').value.toLowerCase(); render(allAgencias.filter(a=>a.nombre.toLowerCase().includes(q)||a.email.toLowerCase().includes(q)||a.id.toLowerCase().includes(q)));}
+
+async function act(id,plan,dias){if(!confirm(`Cambiar ${id} a ${plan.toUpperCase()} por ${dias} días?`))return; const r=await fetch('/api/admin/agencias/'+id+'/activar',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({plan,dias,admin:'admin 3133181851'})}); const j=await r.json(); alert(j.mensaje||j.error); cargar();}
+async function bloq(id){if(!confirm('Bloquear '+id+' por mora? Cliente no podrá entrar hasta pagar'))return; const r=await fetch('/api/admin/agencias/'+id+'/bloquear',{method:'POST',headers:{Authorization:'Bearer '+token}}); const j=await r.json(); alert(j.mensaje); cargar();}
+async function desbloq(id){if(!confirm('Desbloquear '+id+'?'))return; const r=await fetch('/api/admin/agencias/'+id+'/desbloquear',{method:'POST',headers:{Authorization:'Bearer '+token}}); const j=await r.json(); alert(j.mensaje); cargar();}
+
+async function verMetricas(id){
+  const r=await fetch('/api/admin/agencias/'+id+'/detalle'); const j=await r.json(); if(!j.ok) return alert('Error');
+  const m=j.metrics;
+  document.getElementById('modalTitle').innerText=`📊 Métricas - ${j.nombre} - Plan ${m.plan.toUpperCase()}`;
+  document.getElementById('modalBody').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="background:#1e293b;padding:12px;border-radius:10px"><b>Total Chats:</b> ${m.total_chats}<br><b>Mensajes:</b> ${m.total_mensajes}<br><b>No leídos:</b> ${m.no_leidos}</div>
+    <div style="background:#1e293b;padding:12px;border-radius:10px"><b>Clientes:</b> ${m.clientes}<br><b>Interesados:</b> ${m.interesados}<br><b>Nuevos:</b> ${m.nuevo}</div>
+    <div style="background:#1e293b;padding:12px;border-radius:10px"><b>Citas:</b> ${m.calendar} | Pend:${m.calendar_pendientes} | Hechas:${m.calendar_hechos}</div>
+    <div style="background:#1e293b;padding:12px;border-radius:10px"><b>Plan:</b> ${m.plan} | Activo:${m.plan_activo?'SI':'NO'}<br><b>Vence:</b> ${m.vence?new Date(Number(m.vence)).toLocaleDateString():'-'}<br><b>Limites:</b> ${m.plan_info.mensajes} msgs / ${m.plan_info.envios} envios / ${m.plan_info.asesores} users</div>
+  </div>
+  <h4>Campañas (${(j.campaigns||[]).length})</h4><div style="max-height:200px;overflow:auto">${(j.campaigns||[]).map(c=>`<div style="background:#0b1020;padding:8px;border-radius:8px;margin:4px 0;font-size:12px">${c.nombre} - ${c.tipo} - ${c.enviados||0}/${c.total} - ${c.status}</div>`).join('')||'Sin campañas'}</div>
+  <button onclick="generarLink('${id}')" style="background:#f59e0b;color:#000;width:100%;margin-top:10px">🔗 Generar Link Público Tiempo Real</button>`;
+  modal.style.display='flex';
+}
+async function verTrabajadores(id){
+  const r=await fetch('/api/admin/agencias/'+id+'/detalle'); const j=await r.json();
+  document.getElementById('modalTitle').innerText=`👥 Trabajadores - ${j.nombre}`;
+  document.getElementById('modalBody').innerHTML=`<div>${(j.usuarios||[]).map(u=>`<div style="background:#1e293b;padding:10px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>👤 ${u.email} - ${u.rol} - ${u.nombre}</span><span>Plan max ${j.metrics.plan_info.asesores} users</span></div>`).join('')}</div><div style="margin-top:10px">Total: ${(j.usuarios||[]).length}/${j.metrics.plan_info.asesores===999?'∞':j.metrics.plan_info.asesores} - Consumo: ${Math.round(((j.usuarios||[]).length/(j.metrics.plan_info.asesores===999?100:j.metrics.plan_info.asesores))*100)}%</div>`;
+  modal.style.display='flex';
+}
+async function verConsumo(id){
+  const r=await fetch('/api/admin/agencias/'+id+'/detalle'); const j=await r.json(); const m=j.metrics; const pi=m.plan_info;
+  const consumoMsg= pi.mensajes===999999?0: Math.round((m.total_mensajes/pi.mensajes)*100);
+  const consumoEnv= pi.envios===999?0: Math.round(((j.campaigns||[]).length/pi.envios)*100);
+  const consumoUsers= pi.asesores===999?0: Math.round(((j.usuarios||[]).length/pi.asesores)*100);
+  document.getElementById('modalTitle').innerText=`📈 Consumo Plan - ${j.nombre} - ${m.plan.toUpperCase()}`;
+  document.getElementById('modalBody').innerHTML=`<div style="background:#1e293b;padding:14px;border-radius:12px">
+    <div><b>Mensajes:</b> ${m.total_mensajes} / ${pi.mensajes===999999?'Ilimitados':pi.mensajes} - ${consumoMsg}%<div class="bar" style="height:12px"><div class="fill" style="width:${Math.min(100,consumoMsg)}%;background:${consumoMsg>80?'#ef4444':'#22c55e'};height:12px"></div></div></div><br>
+    <div><b>Envíos masivos:</b> ${(j.campaigns||[]).length} / ${pi.envios===999?'Ilimitados':pi.envios} - ${consumoEnv}%<div class="bar" style="height:12px"><div class="fill" style="width:${Math.min(100,consumoEnv)}%;background:${consumoEnv>80?'#ef4444':'#f59e0b'};height:12px"></div></div></div><br>
+    <div><b>Trabajadores:</b> ${(j.usuarios||[]).length} / ${pi.asesores===999?'Ilimitados':pi.asesores} - ${consumoUsers}%<div class="bar" style="height:12px"><div class="fill" style="width:${Math.min(100,consumoUsers)}%;background:${consumoUsers>80?'#ef4444':'#3b82f6'};height:12px"></div></div></div><br>
+    <div><b>Funciones:</b> IA:${pi.ia?'✅':'❌'} Gmail:${pi.gmail?'✅':'❌'} Llamadas:${pi.llamadas?'✅':'❌'}</div><br>
+    <div><b>Vence:</b> ${m.vence? new Date(Number(m.vence)).toLocaleDateString() : 'Sin fecha'} - ${m.plan_activo?'<span style="color:#22c55e">ACTIVO</span>':'<span style="color:#ef4444">BLOQUEADO MORA</span>'}</div>
+  </div>`;
+  modal.style.display='flex';
+}
+function generarLink(id){
+  const link=`${location.origin}/public-view.html?eid=${id}`;
+  navigator.clipboard.writeText(link);
+  prompt('🔗 Link público en tiempo real - Compártelo - Se actualiza cada 5s - Vista sin login:', link);
+  window.open(link,'_blank');
+}
 cargar();
 </script></body></html>
