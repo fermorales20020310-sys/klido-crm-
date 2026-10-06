@@ -1,4 +1,4 @@
-// KLIDO V231 FIX HEALTHCHECK FAILED - CORRIGE SINTAXIS Y FORM-DATA - PASA DEPLOY
+// KLIDO V232 FIX - ACEPTA TOKEN 1 DIA, 60 DIAS Y PERMANENTE - RECOMIENDA PERMANENTE PERO CARGA CON TODOS
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -42,9 +42,8 @@ const PLANES={
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
 
-// HEALTH - DEBE RESPONDER RAPIDO PARA QUE NO FALLE NETWORK HEALTHCHECK
-app.get('/health',(req,res)=>res.status(200).send('OK V231'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V231', time:Date.now()}));
+app.get('/health',(req,res)=>res.status(200).send('OK V232'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V232', time:Date.now()}));
 
 const verifyHook=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
 app.get('/webhook',verifyHook); app.get('/webhook/:empresa_id',verifyHook);
@@ -154,7 +153,6 @@ app.post('/api/chat/tag/add',(req,res)=>{const db=getDB(req.body.empresa_id); co
 app.post('/api/chat/tag/remove',(req,res)=>{const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false}); c.tags=(c.tags||[]).filter(x=>x!==req.body.tag); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 app.post('/api/mensaje/enviar',async(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if(!db.config?.phone||!db.config?.token) return res.json({ok:false, error:'Configura API'}); try{const r=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:String(req.body.chat_id).replace(/\D/g,''), type:'text', text:{body:req.body.texto}})}); const j=await r.json(); if(j.error) return res.json({ok:false, error:j.error.message}); if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, nombre:req.body.chat_id, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo'}; db.chats[req.body.chat_id].mensajes.push({from:'agente', texto:req.body.texto, type:'text', ts:Date.now()}); db.chats[req.body.chat_id].last=Date.now(); db.chats[req.body.chat_id].no_leidos=0; saveDB(req.body.empresa_id,db); res.json({ok:true});}catch(e){res.json({ok:false, error:e.message});}});
 
-// MEDIA - USA FORM-DATA NATIVO, NO REQUIRE FORM-DATA EXTERNO
 app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
   const chatId=req.body.chat_id;
@@ -186,26 +184,84 @@ app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{
   }catch(e){res.json({ok:false, error:e.message});}
 });
 
+// FIX V232 - ACEPTA TOKEN 1 DIA, 60 DIAS Y PERMANENTE - CARGA PLANTILLAS CON TODOS
 app.get('/api/templates/:eid', async (req,res)=>{
   const db=getDB(req.params.eid); if(!db) return res.json({templates:[], error:'Empresa no existe'});
   const {waba, token}=db.config||{};
   if(!waba||!token){
-    return res.json({templates:db.cached_templates||[], warning:'Usando cache - falta token o waba', error:'Falta WABA o Token'});
+    return res.json({templates:db.cached_templates||[], warning:'Usando cache - falta token o waba', error:'Falta WABA o Token', is_expired:false});
   }
   try{
+    // Intenta cargar plantillas con cualquier token (1 dia, 60 dias, permanente)
     const r=await fetch(`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=250&fields=name,status,language,components`,{headers:{Authorization:`Bearer ${token}`}});
     const j=await r.json();
+
     if(j.error){
-      const isExpired=j.error.code===190 || (j.error.message||'').toLowerCase().includes('expired');
-      if(isExpired){
-        return res.json({templates:db.cached_templates||[], error:`Token expirado: ${j.error.message}. Genera token PERMANENTE no temporal.`, code:190, is_expired:true, cached_count:(db.cached_templates||[]).length, raw:j});
+      const msg=(j.error.message||'').toLowerCase();
+      const isRealExpired = j.error.code===190 && msg.includes('expired') &&!msg.includes('expires');
+
+      // Si el token expiro REALMENTE, devuelve cache pero NO bloquea, permite seguir
+      if(isRealExpired){
+        return res.json({
+          templates:db.cached_templates||[],
+          error:`Token expirado real: ${j.error.message}. Genera uno nuevo (1 día, 60 días o permanente sirven, recomendado permanente)`,
+          code:190,
+          is_expired:false, // CAMBIO CLAVE: NO BLOQUEAR FRONT
+          is_real_expired:true,
+          token_type:'expirado',
+          warning:'⚠️ Token expirado - genera nuevo. Aceptamos 1 día, 60 días o permanente (recomendado permanente)',
+          cached_count:(db.cached_templates||[]).length,
+          raw:j
+        });
       }
-      return res.json({templates:db.cached_templates||[], error:j.error.message, raw:j, cached_count:(db.cached_templates||[]).length});
+
+      // Otros errores (permisos, waba mal) - devuelve cache y permite continuar
+      return res.json({
+        templates:db.cached_templates||[],
+        error:j.error.message,
+        raw:j,
+        cached_count:(db.cached_templates||[]).length,
+        is_expired:false, // NO BLOQUEAR
+        warning:`Error Meta: ${j.error.message} - usando cache ${ (db.cached_templates||[]).length } plantillas`
+      });
     }
+
     const approved=j.data?.filter(t=>t.status==='APPROVED')||[];
     if(approved.length>0){ db.cached_templates=approved; db.config.last_templates_update=Date.now(); saveDB(db.empresa_id, db); }
-    return res.json({templates:approved, all:j.data?.length||0, cached:false});
-  }catch(e){ res.json({templates:db.cached_templates||[], error:e.message, using_cache:true}); }
+
+    // DETECTA TIPO DE TOKEN VIA DEBUG (opcional, si no puede, asume valido)
+    let token_type='válido (1 día, 60 días o permanente)';
+    let warning=null;
+
+    // Intenta saber expiracion via debug_token si hay APP_ID y APP_SECRET
+    try{
+      const APP_ID=(process.env.META_APP_ID||'').trim();
+      const APP_SECRET=(process.env.META_APP_SECRET||'').trim();
+      if(APP_ID && APP_SECRET){
+        const appToken=`${APP_ID}|${APP_SECRET}`;
+        const dbg=await fetch(`https://graph.facebook.com/v20.0/debug_token?input_token=${token}&access_token=${appToken}`);
+        const dj=await dbg.json();
+        if(dj.data){
+          const exp=dj.data.expires_at||0;
+          if(exp===0){ token_type='permanente ♾️ (recomendado)'; }
+          else{
+            const hours=Math.round((exp*1000 - Date.now())/3600000);
+            if(hours<=24) { token_type=`1 día (expira en ${hours}h)`; warning='⚠️ Token de 1 día detectado - ✅ FUNCIONA pero recomendado cambiar a permanente Nunca Expira para no reconectar cada día'; }
+            else if(hours<=1440){ token_type=`60 días (expira en ${Math.round(hours/24)} días)`; warning='⚠️ Token de 60 días detectado - ✅ FUNCIONA pero recomendado permanente Nunca Expira'; }
+            else { token_type=`permanente / largo`; }
+          }
+        }
+      } else {
+        // Sin APP_ID no podemos saber, pero igual aceptamos
+        warning='✅ Token aceptado (1 día, 60 días o permanente). Recomendado: usa permanente Nunca Expira para no reconectar';
+      }
+    }catch(e){ warning='✅ Token aceptado - Recomendado permanente'; }
+
+    return res.json({templates:approved, all:j.data?.length||0, cached:false, token_type, warning, is_expired:false});
+
+  }catch(e){
+    res.json({templates:db.cached_templates||[], error:e.message, using_cache:true, is_expired:false, warning:'Usando cache - error temporal: '+e.message});
+  }
 });
 
 app.get('/api/campaigns/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]}); res.json({campaigns:(db.campaigns||[]).sort((a,b)=>b.creado-a.creado)});});
@@ -253,4 +309,4 @@ app.get('/crm',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
 app.get('/crm.html',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V231 FIX HEALTHCHECK OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V232 FIX TOKEN 1 DIA 60 DIAS PERMANENTE OK en 0.0.0.0:${PORT}`));
