@@ -1,390 +1,225 @@
-// KLIDO V240 COMPLETO - SIN DAÑAR - FIX PLANTILLAS LEE 1 DIA 60 DIAS PERMANENTE + GMAIL SOLO GOLD + HISTORIAL PAUSAR CONTINUAR
-const express=require('express');
-const cors=require('cors');
-const fs=require('fs');
-const path=require('path');
-const multer=require('multer');
-const upload=multer({dest:'/tmp'});
-const app=express();
-app.use(cors());
-app.use(express.json({limit:'50mb'}));
-app.use(express.urlencoded({extended:true}));
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter;background:#0b1020;color:#e2e8f0;height:100vh;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;padding:10px}.topbar{height:74px;background:#131b2e;border:1px solid #1e2a4a;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.menu{width:240px;background:#0f172a;border-right:1px solid #1e2a4a;padding:12px;display:flex;flex-direction:column;gap:3px;overflow:auto}
+.m{padding:11px 12px;border-radius:10px;color:#94a3b8;cursor:pointer;font-size:13.5px;display:flex;gap:10px;transition:0.15s;user-select:none;border:1px solid transparent;background:transparent}
+.m:hover{background:#1e293b!important;color:#fff!important}
+.m.active{background:#3b82f6!important;color:#fff!important;font-weight:700;border-color:#3b82f6!important}
+.api-input{width:100%;padding:9px 11px;border-radius:8px;border:1px solid #2a3a5c;background:#0b1020;color:#fff;margin:5px 0;font-size:13px}
+.teamCard{background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
+.view{position:absolute;inset:0;background:#0f172a;z-index:5;display:none;flex-direction:column;padding:20px;overflow:auto}
+.inbox{width:380px;background:#0f172a;border-right:1px solid #1e2a4a;display:flex;flex-direction:column}
+.chat{flex:1;background:#0f172a;display:flex;flex-direction:column}.msgs{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:10px}
+.b{max-width:70%;padding:11px 14px;border-radius:16px;font-size:13px}.b.cli{background:#1e293b;align-self:flex-start}.b.age{background:#bfdbfe;color:#0f172a;align-self:flex-end}
+.profile{width:360px;background:#0f172a;border-left:1px solid #1e2a4a;padding:14px;overflow:auto;display:none}.profile.show{display:block}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}.kpiCard{background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:14px}
+.planCard{background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:18px;text-align:center}.planBtn{background:#3b82f6;border:0;padding:11px;border-radius:10px;color:#fff;font-weight:700;width:100%;cursor:pointer;margin-top:12px}
+.wpp-float{position:fixed;bottom:20px;right:20px;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px #0006;z-index:999;cursor:pointer}
+.wpp-logo-only{width:72px;height:72px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px #0004}
+</style></head><body>
+<div class="app">
+<div class="topbar"><div style="display:flex;align-items:center;gap:14px"><img src="/logo.png" style="width:58px;height:58px;border-radius:12px;background:#fff;padding:4px"><div><div style="display:flex;gap:6px"><span style="font-size:26px;font-weight:900">KLIDO</span><span style="font-size:15px;font-weight:600;color:#cbd5e1">Avanza Consulting</span></div><div style="font-size:10px;color:#93c5fd;font-weight:800">API OFICIAL META</div></div></div><div style="display:flex;gap:12px;align-items:center"><span id="userEmail" style="font-size:12px;color:#94a3b8"></span><button onclick="salir()" style="background:#ef4444;border:0;padding:7px 14px;border-radius:8px;color:#fff;font-weight:700;cursor:pointer">Salir</button></div></div>
+<div style="flex:1;display:flex;background:#131b2e;border:1px solid #1e2a4a;border-top:0;border-radius:0 0 14px 14px;overflow:hidden">
+<div class="menu" id="sideMenu">
+<div style="font-size:10px;color:#64748b;margin:8px;font-weight:700">MENU</div>
+<div class="m active" id="mInbox" onclick="showView('inbox')">📥 Inbox</div>
+<div class="m" id="mCamp" onclick="showView('camp')">🔔 Campaigns</div>
+<div class="m" id="mPlan" onclick="showView('plan')">💳 Planes</div>
+<div class="m" id="mCal" onclick="showView('calendar')">📅 Calendario <span id="calCount" style="margin-left:auto;background:#ef4444;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;display:none">0</span></div>
+<div class="m" id="mStats" onclick="showView('stats')">📊 Estadísticas</div>
+<div class="m" id="mMetrics" onclick="showView('metrics')">📈 Métricas</div>
+<div class="m" id="mTeam" onclick="showView('team')">👥 Equipos</div>
+<div class="m" id="mConfig" onclick="showView('config')">⚙️ Configuración</div>
+<div style="font-size:10px;color:#64748b;margin:14px 8px 6px">SUPPORT</div>
+<div class="m" id="mSupport" onclick="showView('support')">💡 Help Center / Soporte</div>
+<div style="margin-top:auto;padding:8px;background:#1e293b;border:1px solid #2a3a5c;border-radius:12px"><div id="planBadge" style="font-size:11px;font-weight:700">Plan básico</div><div style="font-size:10px;color:#64748b">Gestiona tu suscripción</div></div>
+</div>
 
-const PUB=path.join(__dirname,'public');
-if(!fs.existsSync(PUB)) fs.mkdirSync(PUB,{recursive:true});
-const PUB_MEDIA=path.join(PUB,'media');
-if(!fs.existsSync(PUB_MEDIA)) fs.mkdirSync(PUB_MEDIA,{recursive:true});
-app.use(express.static(PUB));
+<div id="inboxArea" style="display:flex;flex:1">
+<div class="inbox"><div style="padding:12px 14px;display:flex;justify-content:space-between"><b>Inbox</b><span id="countInbox" style="font-size:11px;color:#94a3b8">0 chats</span></div><div style="padding:0 12px"><input id="q" class="api-input" placeholder="Buscar..." oninput="loadChats()"></div><div id="list" style="flex:1;overflow:auto"></div></div>
+<div class="chat"><div style="height:60px;border-bottom:1px solid #1e2a4a;display:flex;align-items:center;padding:0 14px;gap:10px"><div id="hAv" style="width:36px;height:36px;border-radius:50%;background:#a5b4fc;color:#000;display:flex;align-items:center;justify-content:center;font-weight:700">SN</div><div><div id="hName" style="font-weight:700;font-size:14px">Selecciona un chat</div><div style="font-size:11px;color:#22c55e">WhatsApp Business API</div></div></div><div class="msgs" id="msgs"><div style="text-align:center;color:#64748b;margin-top:80px">Selecciona conversación</div></div><div style="padding:10px 12px;border-top:1px solid #1e2a4a;display:flex;gap:10px"><input id="txt" class="api-input" style="margin:0;flex:1;border-radius:22px" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()"><button style="width:38px;height:38px;border-radius:50%;background:#3b82f6;border:0;color:#fff" onclick="sendMsg()">▶</button></div></div>
+<div class="profile show" id="profilePanel"><div style="display:flex;justify-content:space-between"><b>Customer Profile</b><span onclick="profilePanel.classList.remove('show')" style="cursor:pointer">✕</span></div><div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-direction:column;margin-top:10px"><div id="pAv" style="width:56px;height:56px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">SN</div><div id="pNameEdit" contenteditable="true" style="font-weight:700">-</div><div id="pPhone" style="font-size:11px;color:#94a3b8"></div></div><select id="pEstado" class="api-input" onchange="saveProfile()"><option value="nuevo">nuevo</option><option value="cliente">cliente</option><option value="interesado">interesado</option></select><input id="pNombre" class="api-input" placeholder="Nombre" onblur="saveProfile()"><input id="pCiudad" class="api-input" placeholder="Ciudad" onblur="saveProfile()"><input id="pProfesion" class="api-input" placeholder="Cargo" onblur="saveProfile()"><input id="pEmpresa" class="api-input" placeholder="Empresa" onblur="saveProfile()"><select id="pOrigen" class="api-input" onchange="saveProfile()"><option value="">Origen</option><option value="campana">Campaña</option><option value="afiliado">Afiliado</option></select><input id="pCamp" class="api-input" placeholder="Campaña" onblur="saveProfile()"><textarea id="pNotes" class="api-input" style="min-height:70px" onblur="saveProfile()"></textarea><div id="pTags"></div><div style="display:flex;gap:6px"><input id="newTag" class="api-input" style="flex:1" placeholder="Tag"><button onclick="addTag()" style="background:#3b82f6;border:0;padding:8px 12px;border-radius:8px;color:#fff">+</button></div><select id="pAgendaEstado" class="api-input"><option value="">--</option><option value="pendiente">Pendiente</option><option value="agendado">Agendado</option></select><input id="pAgendaFecha" type="datetime-local" class="api-input"><input id="pAgendaNota" class="api-input" placeholder="Nota"><button onclick="agendarCliente()" style="width:100%;background:#f59e0b;border:0;padding:9px;border-radius:8px;color:#000;font-weight:800">+ Agendar</button></div>
+</div>
 
-const DB='/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
-const S=s=>String(s||'').replace(/[^a-z0-9_\-@.]/gi,'').slice(0,80);
-const getDB=id=>{const f=path.join(DB,`${S(id)}.json`); if(!fs.existsSync(f)) return null; try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return null}};
-const saveDB=(id,d)=>fs.writeFileSync(path.join(DB,`${S(id)}.json`),JSON.stringify(d,null,2));
-const genCode=()=>Math.floor(100000+Math.random()*900000).toString();
+<div id="mainFull" style="flex:1;position:relative;display:none">
 
-async function sendEmail(to, subject, html){
-  const API_KEY=(process.env.RESEND_API_KEY||process.env.RESEND_API||'').trim();
-  let FROM=(process.env.RESEND_FROM||process.env.SOPORTE_EMAIL||'soporte@klidoapp.com.co').trim();
-  if(FROM &&!FROM.includes('<')) FROM=`KLIDO Avanza Consulting <${FROM}>`;
-  if(!FROM.includes('<')) FROM=`KLIDO <soporte@klidoapp.com.co>`;
-  if(!API_KEY) return {ok:false};
-  try{
-    const r=await fetch('https://api.resend.com/emails',{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${API_KEY}`},body:JSON.stringify({from:FROM, to, subject, html})});
-    return await r.json();
-  }catch(e){return {ok:false};}
-}
+<div class="view" id="planView" style="background:#0b1020"><h2>Planes KLIDO - Anual</h2><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px">
+<div class="planCard"><div style="font-weight:700">Básico</div><div style="font-size:28px;font-weight:900;margin:8px 0">$800.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $80.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ 1 envio masivo</div><div>✅ 2 usuarios</div><div>✅ 1000 mensajes</div><div>❌ Sin IA</div></div><button class="planBtn" onclick="elegirPlan('basico')">Empezar Básico</button></div>
+<div class="planCard"><div style="font-weight:700">Premium ⭐</div><div style="font-size:28px;font-weight:900;margin:8px 0">$1.300.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $95.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ 5 envios simultáneos</div><div>✅ 5 usuarios</div><div>✅ IA incluida</div><div>✅ Soporte prioritario</div></div><button class="planBtn" onclick="elegirPlan('premium')">Empezar Premium</button></div>
+<div class="planCard"><div style="font-weight:700">Gold</div><div style="font-size:28px;font-weight:900;margin:8px 0">$2.400.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $130.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ Envíos ilimitados</div><div>✅ Usuarios ilimitados</div><div>✅ IA + Pánico humano</div><div>✅ Llamada directa</div></div><button class="planBtn" onclick="elegirPlan('gold')">Empezar Gold</button></div>
+</div></div>
 
-const PLANES={
-  basico:{nombre:'Básico', precio:800000, trim:80000, asesores:3},
-  premium:{nombre:'Premium + IA', precio:1400000, trim:95000, asesores:10},
-  gold:{nombre:'Gold + IA + Llamadas', precio:2400000, trim:120000, asesores:999}
-};
+<div class="view" id="configView" style="background:#0b1020"><div style="display:flex;justify-content:space-between"><h2>⚙️ Configuración - Todo sobre KLIDO</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+<div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#3b82f6;margin:0 0 8px">📥 Mensajes</h3><p style="font-size:12px;color:#cbd5e1">API Oficial Meta, fotos, videos, audios reproducibles, documentos. Inbox Todos/No leídos punto rojo desaparece al responder. Customer profile solo bandeja. Tags, notas.</p></div>
+<div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#22c55e;margin:0 0 8px">📊 Estadísticas</h3><p style="font-size:12px;color:#cbd5e1">Graficadas Chart.js, mismos datos métricas, chats por trabajador barras, estado dona, seguimiento línea. Total chats, recordatorios, equipo.</p></div>
+<div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#f59e0b;margin:0 0 8px">📈 Métricas</h3><p style="font-size:12px;color:#cbd5e1">Resultados por trabajador, número chats, avance %, seguimiento, mensajes enviados, no leídos. Grupal % atendidos.</p></div>
+<div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="margin:0 0 8px">🔔 Campaigns</h3><p style="font-size:12px;color:#cbd5e1">Excel cualquier columna cualquier orden regex, 50 cada 4h anti-baneo, pausar/continuar, historial progreso, plantillas APPROVED válidas sin importar variables/fotos/cuerpo. Gmail solo Gold bloqueado en Básico.</p></div>
+</div>
+<div style="margin-top:16px;background:#131b2e;border:1px solid #3b82f6;border-radius:14px;padding:16px"><h3>💳 Planes y Funciones</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px"><div style="background:#0b1020;padding:12px;border-radius:10px"><b>Básico $800k + $80k trim</b><br>• 1 envío<br>• 2 usuarios<br>• 1000 mensajes<br>• Sin IA</div><div style="background:#0b1020;padding:12px;border-radius:10px;border:1px solid #3b82f6"><b>Premium $1.3M + $95k ⭐</b><br>• 5 envíos<br>• 5 usuarios<br>• IA<br>• Soporte prio</div><div style="background:#0b1020;padding:12px;border-radius:10px"><b>Gold $2.4M + $130k</b><br>• Ilimitados<br>• Usuarios ilimit<br>• IA + Pánico<br>• Llamada + Gmail</div></div></div>
+<div style="margin-top:16px;background:#131b2e;border:1px solid #ef4444;border-radius:14px;padding:16px"><h3 style="color:#f59e0b;margin:0 0 8px">🔑 Token Meta, WABA ID, Phone - Solo admin ve - Acepta 1 día 60 días permanente</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:11px"><div style="background:#0b1020;padding:10px;border-radius:8px"><b>TOKEN</b><br>Acepta 1 día, 60 días y permanente. Recomendado permanente Nunca Expira. Guarda en base, trabajadores usan cache sin verlo.</div><div style="background:#0b1020;padding:10px;border-radius:8px"><b>WABA ID</b><br>ID cuenta WhatsApp Business no Business ID. Si pones Business ID sale 0 plantillas.</div><div style="background:#0b1020;padding:10px;border-radius:8px"><b>PHONE ID</b><br>ID número no el número. Para enviar y webhook.</div></div><button onclick="openApi()" style="margin-top:12px;background:#3b82f6;border:0;padding:10px 16px;border-radius:8px;color:#fff;font-weight:700">🔑 Configurar API (Admin)</button></div>
+</div>
 
-const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V240'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V240', time:Date.now()}));
+<div class="view" id="supportView" style="background:#0b1020"><div style="display:flex;justify-content:space-between"><h2>💡 Help Center / Soporte KLIDO</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+<div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3>📞 Contacto Directo</h3><p style="font-size:12px;color:#cbd5e1">Soporte prioritario KLIDO Avanza Consulting</p>
+<div style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:12px">
+<a href="https://wa.me/573133181851?text=Hola%20soporte%20KLIDO" target="_blank" class="wpp-logo-only" title="Soporte WhatsApp"><svg viewBox="0 0 32 32" width="36" height="36" fill="white"><path d="M16 3C9.373 3 4 8.373 4 15c0 2.251.59 4.36 1.63 6.19L4 29l8.07-1.56A11.94 11.94 0 0016 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.514 0 10 4.486 10 10s-4.486 10-10 10c-1.95 0-3.77-.56-5.31-1.52l-.38-.23-4.8.93.97-4.67-.25-.39A9.94 9.94 0 016 15c0-5.514 4.486-10 10-10zm-3.5 5.5c-.28 0-.72.1-1.1.5-.38.4-1.45 1.42-1.45 3.46s1.48 4.01 1.69 4.29c.21.28 2.91 4.45 7.06 6.24.34.14.61.22.82.28.34.11.65.09.89.06.27-.04.82-.34.94-.66.12-.33.12-.61.08-.67-.04-.06-.14-.09-.29-.15s-.89-.44-1.03-.49c-.14-.05-.24-.08-.34.08-.1.16-.39.49-.48.59-.09.1-.18.11-.33.04-.15-.07-.64-.24-1.22-.76-.45-.4-.76-.9-.85-1.05-.09-.16-.01-.24.07-.32.07-.07.15-.18.23-.27.07-.09.1-.15.15-.25.05-.1.02-.19-.01-.26-.03-.07-.34-.82-.47-1.12-.12-.29-.25-.34-.25h-.29c-.1 0-.26.04-.4.19-.14.15-.53.52-.53 1.27s.54 1.47.62 1.57c.07.1 1.06 1.62 2.57 2.27.36.15.64.24.86.31.36.11.69.1.95.06.29-.04.89-.36 1.01-.72.12-.35.12-.66.08-.72-.04-.06-.14-.1-.29-.16z"/></svg></a>
+<span style="font-size:11px;color:#94a3b8">Toca el logo para hablar con soporte - 24/7</span>
+</div>
+<div style="margin-top:18px;background:#0b1020;padding:12px;border-radius:10px;font-size:12px"><b>Email:</b> soporte@klidoapp.com.co<br><b>Horario:</b> Soporte 24/7</div>
+</div>
+<div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3>❓ Preguntas Frecuentes</h3><div style="font-size:11px;line-height:18px;color:#cbd5e1"><b>¿Plantillas no cargan?</b> Verifica WABA ID (no Business ID) y token con whatsapp_business_management. Aceptamos 1 día, 60 días y permanente.<br><br><b>¿50 cada 4h?</b> Anti-baneo Meta.<br><br><b>¿Token visible?</b> Solo admin.<br><br><b>¿Eliminar único admin?</b> No deja.<br><br><b>¿Excel cualquier columna?</b> Sí, regex cualquier hoja.</div></div>
+</div>
+</div>
 
-const verifyHook=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
-app.get('/webhook',verifyHook); app.get('/webhook/:empresa_id',verifyHook);
+<div class="view" id="calView"><div style="display:flex;justify-content:space-between;align-items:center"><h2>📅 Calendario - Trabajadores organizados y Citas</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div id="calList" style="margin-top:12px"></div></div>
 
-async function handleWebhook(body){
-  try{
-    const val=body.entry?.[0]?.changes?.[0]?.value; if(!val) return;
-    const phoneId=val.metadata?.phone_number_id;
-    let eid=null;
-    try{for(const f of fs.readdirSync(DB)){try{const j=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); if(String(j.config?.phone)===String(phoneId)) eid=j.empresa_id;}catch{}}}catch{}
-    if(!eid) return;
-    let db=getDB(eid); if(!db) return; if(!db.chats) db.chats={};
-    if(val.messages){
-      for(const m of val.messages){
-        const from=m.from;
-        if(!db.chats[from]){
-          db.chats[from]={id:from, nombre:val.contacts?.[0]?.profile?.name||from, mensajes:[], notas:[], tags:['Nuevo'], no_leidos:0, last:Date.now(), estado:'nuevo', origen:'', campana:'', empresa:'', email:'', ciudad:'', profesion:''};
-        }
-        let texto=''; let type=m.type||'text'; let media_url=null; let mime=''; let filename='';
-        if(type==='text'){ texto=m.text.body; }
-        else{
-          texto=m[type]?.caption||'📎 '+type;
-          const mediaId=m[type]?.id; mime=m[type]?.mime_type||''; filename=m[type]?.filename||'';
-          if(mediaId && db.config?.token){
-            try{
-              const rr=await fetch(`https://graph.facebook.com/v20.0/${mediaId}`,{headers:{Authorization:`Bearer ${db.config.token}`}});
-              const jj=await rr.json();
-              if(jj.url){
-                const mediaResp=await fetch(jj.url,{headers:{Authorization:`Bearer ${db.config.token}`}});
-                const buffer=Buffer.from(await mediaResp.arrayBuffer());
-                const ext=(mime.split('/')[1]||'bin').split(';')[0];
-                const fname=Date.now()+'_'+mediaId+'.'+ext;
-                fs.writeFileSync(path.join(PUB_MEDIA, fname), buffer);
-                media_url='/media/'+fname;
-              }
-            }catch(e){}
-          }
-        }
-        db.chats[from].mensajes.push({from:'cliente', texto, type, media_url, mime, filename, ts:Date.now()});
-        db.chats[from].no_leidos=(db.chats[from].no_leidos||0)+1;
-        db.chats[from].last=Date.now();
-      }
-      saveDB(eid,db);
-    }
-  }catch(e){console.log('hook err',e.message);}
-}
-app.post('/webhook',(req,res)=>{handleWebhook(req.body); res.sendStatus(200);});
-app.post('/webhook/:empresa_id',(req,res)=>{handleWebhook(req.body); res.sendStatus(200);});
+<div class="view" id="statsView"><div style="display:flex;justify-content:space-between"><h2>📊 Estadísticas</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div class="kpi"><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">CHATS</div><div id="sChats" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">RECORDATORIOS</div><div id="sCals" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">PENDIENTES</div><div id="sSeg" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">EQUIPO</div><div id="sTeam" style="font-size:28px;font-weight:800">0</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px"><div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px"><canvas id="chartTrabajador"></canvas></div><div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px"><canvas id="chartEstado"></canvas></div></div></div>
+<div class="view" id="metricsView"><div style="display:flex;justify-content:space-between"><h2>📈 Métricas</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div id="metricsKpi" class="kpi"></div><div id="metricsWorkers"></div><div id="metricsGeneral"></div></div>
+<div class="view" id="teamView"><div style="display:flex;justify-content:space-between"><h2>👥 Equipos</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:14px;margin:12px 0;display:flex;gap:8px"><input id="eqEmail" class="api-input" style="flex:1" placeholder="Email"><input id="eqPass" class="api-input" style="flex:1" placeholder="Pass" type="password"><select id="eqRol" class="api-input" style="width:120px"><option value="agente">Agente</option><option value="admin">Admin</option></select><button onclick="addWorker()" style="background:#3b82f6;border:0;padding:9px 16px;border-radius:8px;color:#fff;font-weight:700">+ Añadir</button></div><div id="teamList"></div></div>
 
-app.post('/api/empresa/registrar', async (req,res)=>{
-  const {nombre,email,pass,plan}=req.body;
-  if(!nombre||!email||!pass) return res.json({ok:false, error:'Faltan datos'});
-  const empresa_id=`${S(email)}_${Date.now()}`;
-  const codigo=genCode();
-  const db={empresa_id, nombre, email, plan:plan||'basico', plan_activo:false, codigo_activacion:codigo, creado:Date.now(), config:{phone:'', waba:'', token:'', last_update:0}, cached_templates:[], usuarios:[{id:'admin', nombre:'Admin', email, pass, rol:'admin'}], chats:{}, reset_codes:[], calendar:[], campaigns:[]};
-  saveDB(empresa_id,db);
-  const html=`<div style="font-family:Arial;background:#0b1020;color:#fff;padding:28px;border-radius:14px"><h2>KLIDO</h2><div style="font-size:36px;letter-spacing:6px;background:#fff;color:#000;padding:14px;border-radius:10px;text-align:center;font-weight:800">${codigo}</div></div>`;
-  const sent=await sendEmail(email, `KLIDO - Código ${codigo}`, html);
-  res.json({ok:true, empresa_id, sent});
-});
-app.post('/api/empresa/activar',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if(String(db.codigo_activacion)!==String(req.body.codigo).trim()) return res.json({ok:false, error:'Código incorrecto'}); db.plan_activo=true; saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/login',(req,res)=>{for(const f of fs.readdirSync(DB)){try{const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); const u=db.usuarios.find(x=>x.email===req.body.email && x.pass===req.body.pass); if(u){ if(!db.plan_activo) return res.json({ok:false, bloqueado:true, empresa_id:db.empresa_id}); return res.json({ok:true, user:u, empresa_id:db.empresa_id, plan:db.plan, nombre:db.nombre});}}catch{} } res.json({ok:false});});
-app.post('/api/auth/forgot', async (req,res)=>{for(const f of fs.readdirSync(DB)){try{const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); const u=db.usuarios.find(x=>x.email===req.body.email); if(u){const code=genCode(); db.reset_codes=db.reset_codes||[]; db.reset_codes.push({code, email:req.body.email, ts:Date.now(), usado:false}); saveDB(db.empresa_id,db); const sent=await sendEmail(req.body.email, `KLIDO - Código ${code}`, `<div>Código: ${code}</div>`); return res.json({ok:true, sent});}}catch{}} res.json({ok:false});});
-app.post('/api/auth/reset',(req,res)=>{for(const f of fs.readdirSync(DB)){try{const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); const rc=(db.reset_codes||[]).find(c=>c.email===req.body.email && c.code===String(req.body.code).trim() &&!c.usado && Date.now()-c.ts < 900000); if(rc){const u=db.usuarios.find(x=>x.email===req.body.email); u.pass=req.body.newPass; rc.usado=true; saveDB(db.empresa_id,db); return res.json({ok:true});}}catch{}} res.json({ok:false});});
+<div class="view" id="campView" style="padding:0;display:none"><div style="padding:20px;overflow:auto;height:100%">
+<div style="display:flex;justify-content:space-between"><h2>🔔 Campaigns - Plantillas Aprobadas API Oficial</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
+<p style="font-size:12px;color:#94a3b8">Acepta token 1 día, 60 días y permanente - Recomendado permanente pero todos cargan plantillas - Gmail solo Gold bloqueado en Básico</p>
+<div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:14px;padding:16px;margin:12px 0">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><input id="campNombre" class="api-input" placeholder="Nombre campaña"><select id="campTipo" class="api-input" onchange="toggleTipo()"><option value="whatsapp">WhatsApp - Acepta 1d 60d permanente</option><option value="gmail">Gmail Gold - Solo Gold (Básico bloqueado)</option></select></div>
+<div id="whatsappBlock"><div style="margin-top:12px"><label style="font-size:11px;color:#22c55e;font-weight:700">✅ Plantillas - Seguimiento variables y header</label><div style="display:flex;gap:8px"><select id="campTemplate" class="api-input" style="flex:1" onchange="onTemplateChange()"><option>Cargando plantillas aprobadas...</option></select><button onclick="loadTemplates()" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:8px 12px;border-radius:8px">🔄 Recargar</button></div><div id="templateInfo" style="font-size:11px;color:#93c5fd;margin-top:6px;background:#0b1020;padding:8px;border-radius:8px">Cargando...</div></div><div id="varBlock" style="margin-top:10px;background:#0b1020;padding:8px;border-radius:8px"></div></div>
+<div id="gmailBlock" style="display:none"><input id="gmailSubject" class="api-input" placeholder="Asunto Gmail Gold"><textarea id="gmailBody" class="api-input" style="min-height:80px" placeholder="Cuerpo Gmail Gold"></textarea><div style="font-size:10px;color:#f59e0b">⛔ Gmail solo Gold - Básico bloqueado</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px"><div style="background:#0b1020;border:1px dashed #3b82f6;border-radius:12px;padding:12px"><b>📊 Excel cualquier columna</b><input type="file" id="excelFile" accept=".xlsx,.xls,.csv" onchange="parseExcel()" style="margin-top:8px"><div id="excelResult" style="font-size:12px;color:#22c55e"></div></div><div style="background:#0b1020;border:1px dashed #f59e0b;border-radius:12px;padding:12px"><b>✍️ Manual</b><textarea id="manualNums" class="api-input" style="min-height:90px" oninput="parseManual()"></textarea><div id="manualResult"></div></div></div>
+<div style="margin-top:12px;background:#0f172a;border:1px solid #3b82f6;border-radius:10px;padding:12px;display:flex;justify-content:space-between"><b id="totalNums">0 contactos - 50 cada 4h anti-baneo</b><button onclick="crearCamp()" style="background:#22c55e;border:0;padding:12px 22px;border-radius:10px;color:#000;font-weight:800">🚀 Crear y Enviar</button></div>
+</div>
+<div style="padding:20px"><h3 style="margin:0 0 10px">📜 Historial de campañas - Pausar / Continuar - Seguimiento</h3><div id="campHistory" style="max-height:400px;overflow:auto"></div></div>
+</div></div>
 
-app.get('/api/config/:eid',(req,res)=>{
-  const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
-  const role=req.query.role||'agente';
-  const cfg=db.config||{phone:'',waba:'',token:''};
-  if(role==='admin'){
-    res.json({ok:true, config:cfg, is_admin:true});
-  } else {
-    res.json({ok:true, config:{phone:cfg.phone||'', waba:cfg.waba? cfg.waba.slice(0,6)+'...'+cfg.waba.slice(-4) : '', token: cfg.token? '•••••• guardado (solo admin ve)' : '', has_token:!!cfg.token}, is_admin:false, cached_templates:db.cached_templates||[]});
+</div>
+</div>
+</div>
+
+<a href="https://wa.me/573133181851?text=Hola%20soporte%20KLIDO" target="_blank" class="wpp-float" title="Soporte"><svg viewBox="0 0 32 32" width="30" height="30" fill="white"><path d="M16 3C9.373 3 4 8.373 4 15c0 2.251.59 4.36 1.63 6.19L4 29l8.07-1.56A11.94 11.94 0 0016 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.514 0 10 4.486 10 10s-4.486 10-10 10c-1.95 0-3.77-.56-5.31-1.52l-.38-.23-4.8.93.97-4.67-.25-.39A9.94 9.94 0 016 15c0-5.514 4.486-10 10-10zm-3.5 5.5c-.28 0-.72.1-1.1.5-.38.4-1.45 1.42-1.45 3.46s1.48 4.01 1.69 4.29c.21.28 2.91 4.45 7.06 6.24.34.14.61.22.82.28.34.11.65.09.89.06.27-.04.82-.34.94-.66.12-.33.12-.61.08-.67-.04-.06-.14-.09-.29-.15s-.89-.44-1.03-.49c-.14-.05-.24-.08-.34.08-.1.16-.39.49-.48.59-.09.1-.18.11-.33.04-.15-.07-.64-.24-1.22-.76-.45-.4-.76-.9-.85-1.05-.09-.16-.01-.24.07-.32.07-.07.15-.18.23-.27.07-.09.1-.15.15-.25.05-.1.02-.19-.01-.26-.03-.07-.34-.82-.47-1.12-.12-.29-.25-.34-.25h-.29c-.1 0-.26.04-.4.19-.14.15-.53.52-.53 1.27s.54 1.47.62 1.57c.07.1 1.06 1.62 2.57 2.27.36.15.64.24.86.31.36.11.69.1.95.06.29-.04.89-.36 1.01-.72.12-.35.12-.66.08-.72-.04-.06-.14-.1-.29-.16z"/></svg></a>
+
+<div id="apiModal" style="display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center;z-index:99"><div style="background:#131b2e;border:1px solid #1e2a4a;padding:18px;border-radius:14px;width:440px"><h3>🔑 Settings API - Solo admin - Acepta 1 día 60 días permanente</h3><div id="apiCurrent" style="font-size:11px;background:#0b1020;padding:8px;border-radius:8px;margin-bottom:8px;color:#94a3b8"></div><div id="apiAdminOnly"><input id="apiPhone" class="api-input" placeholder="Phone Number ID"><input id="apiWaba" class="api-input" placeholder="WABA ID (no Business ID)"><input id="apiToken" class="api-input" placeholder="Token 1 día / 60 días / permanente - recomendado permanente"></div><div id="apiMsg" style="font-size:12px;color:#22c55e;margin:8px 0"></div><button onclick="saveApi()" style="background:#22c55e;border:0;padding:9px;border-radius:8px;color:#fff;width:100%">Guardar en base - Acepta todos</button><button onclick="apiModal.style.display='none';showView('inbox')" style="background:#1e293b;border:0;padding:9px;border-radius:8px;color:#fff;width:100%;margin-top:6px">Cerrar</button></div></div>
+
+<script>
+let S={}, curChat=null, allChats=[], detected=[], templates=[], excelNums=[], manualNums=[], chart1=null, chart2=null;
+function init(){const eid=localStorage.getItem('klido_empresa'); const u=localStorage.getItem('klido_user'); if(!eid||!u){location.href='/'; return;} S={eid, user:JSON.parse(u)}; document.getElementById('userEmail').innerText=S.user.email+' ('+S.user.rol+')'; document.getElementById('planBadge').innerText='Plan '+(localStorage.getItem('klido_plan')||'básico'); loadChats(); loadConfigAndTemplates(); setInterval(loadChats,5000);}
+function clearMenu(){ document.querySelectorAll('#sideMenu.m').forEach(el=>el.classList.remove('active')); }
+function showView(v){
+  clearMenu();
+  document.querySelectorAll('.view').forEach(e=>e.style.display='none');
+  document.getElementById('inboxArea').style.display='none';
+  document.getElementById('mainFull').style.display='none';
+  const prof=document.getElementById('profilePanel'); if(prof) prof.classList.remove('show');
+  const idMap={inbox:'mInbox', camp:'mCamp', plan:'mPlan', calendar:'mCal', stats:'mStats', metrics:'mMetrics', team:'mTeam', config:'mConfig', support:'mSupport'};
+  const activeEl=document.getElementById(idMap[v]); if(activeEl) activeEl.classList.add('active');
+  if(v==='inbox'){ document.getElementById('inboxArea').style.display='flex'; document.getElementById('profilePanel').classList.add('show'); }
+  else{
+    document.getElementById('mainFull').style.display='flex';
+    const viewId=v+'View'; const viewEl=document.getElementById(viewId); if(viewEl) viewEl.style.display='flex';
+    if(v==='camp') document.getElementById('campView').style.display='block';
+    if(v==='calendar') loadCalendar();
+    if(v==='stats') loadStatsGrafica();
+    if(v==='metrics') loadMetricsWorkers();
+    if(v==='team') loadTeam();
+    if(v==='camp'){ loadCampHistory(); loadTemplates(); }
   }
-});
-app.post('/api/config/api',(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  db.config={phone:String(req.body.phone||'').trim(), waba:String(req.body.waba||'').trim(), token:String(req.body.token||'').trim(), last_update:Date.now()};
-  saveDB(req.body.empresa_id,db);
-  res.json({ok:true, config:db.config});
-});
-
-app.get('/api/empresas',(req,res)=>{try{res.json(fs.readdirSync(DB).filter(f=>f.endsWith('.json')).map(f=>{try{return JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'))}catch{return null}}).filter(Boolean).map(e=>({empresa_id:e.empresa_id, nombre:e.nombre, email:e.email, plan:e.plan, activo:e.plan_activo, phone:e.config?.phone, chats:Object.keys(e.chats||{}).length})));}catch{res.json([]);}});
-app.get('/api/empresa/info/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({ok:false}); res.json({ok:true, empresa_id:db.empresa_id, nombre:db.nombre, email:db.email, plan:db.plan, plan_activo:db.plan_activo, usuarios:db.usuarios, config:{phone:db.config?.phone||'', waba:db.config?.waba?db.config.waba.slice(0,6)+'...':'', has_token:!!db.config?.token}, chats_count:Object.keys(db.chats||{}).length});});
-app.post('/api/equipo/add',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const max=PLANES[db.plan]?.asesores||3; if(db.usuarios.length>=max && max!==999) return res.json({ok:false, error:`Plan ${db.plan} max ${max}`}); db.usuarios.push({id:'u'+Date.now(), nombre:req.body.email.split('@')[0], email:req.body.email, pass:req.body.pass, rol:req.body.rol||'agente'}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/equipo/remove',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if((db.usuarios||[]).length<=1) return res.json({ok:false, error:'No puedes eliminar al último'}); if(db.usuarios.filter(u=>u.rol==='admin').length===1 && db.usuarios.find(u=>u.email===req.body.email)?.rol==='admin') return res.json({ok:false, error:'No puedes eliminar al único admin'}); db.usuarios=db.usuarios.filter(u=>u.email!==req.body.email); saveDB(req.body.empresa_id,db); res.json({ok:true});});
-
-app.get('/api/stats/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({ok:false}); const chats=Object.values(db.chats||{}); const cals=db.calendar||[]; res.json({ok:true, chats:chats.length, mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), agentes:db.usuarios.length, calendar:cals.length, calendar_pendientes:cals.filter(x=>!x.hecho).length});});
-app.get('/api/metrics/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({}); const chats=Object.values(db.chats||{}); const estados={}; chats.forEach(c=>estados[c.estado||'nuevo']=(estados[c.estado||'nuevo']||0)+1); res.json({ok:true, total_chats:chats.length, no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), estados, clientes:chats.filter(x=>x.estado==='cliente').length, interesados:chats.filter(x=>x.estado==='interesado').length, nuevo:chats.filter(x=>x.estado==='nuevo'||!x.estado).length});});
-app.get('/api/equipo/stats/:eid',(req,res)=>{
-  const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
-  const chats=Object.values(db.chats||{}); const cals=db.calendar||[]; const usuarios=db.usuarios||[]; const total=chats.length||1;
-  const individuales=usuarios.map((u,i)=>({email:u.email, rol:u.rol, chats_atendidos:Math.floor(total/usuarios.length)+(i===0?total%usuarios.length:0), avance:Math.min(100, 60+(i*13)%40), seguimiento:cals.filter((_,idx)=>idx%usuarios.length===i).length, mensajes:Math.floor(chats.reduce((a,c)=>a+c.mensajes.filter(m=>m.from==='agente').length,0)/Math.max(usuarios.length,1))}));
-  const grupal={total_chats:total, atendidos:Math.max(0, total - chats.reduce((a,c)=>a+(c.no_leidos||0),0)), porcentaje: total? Math.round((Math.max(0, total - chats.reduce((a,c)=>a+(c.no_leidos||0),0))/total)*100):0, total_recordatorios:cals.length, recordatorios_hechos:cals.filter(x=>x.hecho).length, recordatorios_pendientes:cals.filter(x=>!x.hecho).length};
-  res.json({ok:true, grupal, individuales});
-});
-
-app.get('/api/calendar/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json([]); res.json(db.calendar||[]);});
-app.post('/api/calendar/agendar',(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  const chat=db.chats?.[req.body.chat_id]; if(!chat) return res.json({ok:false});
-  db.calendar=db.calendar||[]; chat.tags=chat.tags||[];
-  if(req.body.estado_agenda==='pendiente' &&!chat.tags.includes('Pendiente')) chat.tags.push('Pendiente');
-  if(req.body.estado_agenda==='agendado'){ const label=`Agendado ${req.body.fecha?new Date(req.body.fecha).toLocaleDateString():''}`; if(!chat.tags.some(t=>t.toLowerCase().includes('agendado'))) chat.tags.push(label); }
-  db.calendar.push({
-    id:Date.now().toString(), chat_id:req.body.chat_id, chat_nombre:chat.nombre||req.body.chat_id,
-    estado_agenda:req.body.estado_agenda, date:req.body.fecha||new Date().toISOString(), nota:req.body.nota||'', hecho:false,
-    empresa:chat.empresa||'', ciudad:chat.ciudad||'', profesion:chat.profesion||'', origen:chat.origen||'', campana:chat.campana||'', tags:chat.tags||[], email:chat.email||'', telefono:req.body.chat_id
-  });
-  saveDB(req.body.empresa_id,db); res.json({ok:true});
-});
-app.post('/api/calendar/hecho',(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  const c=(db.calendar||[]).find(x=>String(x.id)===String(req.body.id)); if(c){ c.hecho=!c.hecho; saveDB(req.body.empresa_id,db); }
-  res.json({ok:true});
-});
-app.post('/api/calendar/delete',(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  db.calendar=(db.calendar||[]).filter(x=>String(x.id)!==String(req.body.id)); saveDB(req.body.empresa_id,db); res.json({ok:true});
-});
-
-app.get('/api/chats/:eid/:uid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json([]); res.json(Object.values(db.chats||{}).map(c=>({id:c.id, nombre:c.nombre||c.id, tags:c.tags||['Nuevo'], no_leidos:c.no_leidos||0, last:c.last||0, mensajes:c.mensajes||[]})).sort((a,b)=>b.last-a.last));});
-app.get('/api/mensajes/:eid/:cid',(req,res)=>{const db=getDB(req.params.eid); const c=db?.chats?.[req.params.cid]; if(!c) return res.json({mensajes:[], profile:{}}); res.json({mensajes:(c.mensajes||[]).sort((a,b)=>a.ts-b.ts), profile:{id:c.id, nombre:c.nombre, email:c.email||'', empresa:c.empresa||'', ciudad:c.ciudad||'', profesion:c.profesion||'', campana:c.campana||'', origen:c.origen||'', estado:c.estado||'nuevo', tags:c.tags||[], notas:c.notas||[]}});});
-app.post('/api/chat/leido',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false}); db.chats[req.body.chat_id].no_leidos=0; saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/chat/profile',(req,res)=>{const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false}); c.nombre=req.body.nombre||c.nombre; c.ciudad=req.body.ciudad||c.ciudad; c.profesion=req.body.profesion||c.profesion; c.email=req.body.email||c.email; c.empresa=req.body.empresa||c.empresa; c.estado=req.body.estado||c.estado; c.origen=req.body.origen||c.origen; c.campana=req.body.campana||c.campana; if(req.body.notas) c.notas=[{texto:req.body.notas, ts:Date.now()}]; saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/chat/tag/add',(req,res)=>{const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false}); c.tags=c.tags||[]; if(!c.tags.includes(req.body.tag)) c.tags.push(req.body.tag); saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/chat/tag/remove',(req,res)=>{const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false}); c.tags=(c.tags||[]).filter(x=>x!==req.body.tag); saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/mensaje/enviar',async(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if(!db.config?.phone||!db.config?.token) return res.json({ok:false, error:'Configura API'}); try{const r=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:String(req.body.chat_id).replace(/\D/g,''), type:'text', text:{body:req.body.texto}})}); const j=await r.json(); if(j.error) return res.json({ok:false, error:j.error.message}); if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, nombre:req.body.chat_id, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo'}; db.chats[req.body.chat_id].mensajes.push({from:'agente', texto:req.body.texto, type:'text', ts:Date.now()}); db.chats[req.body.chat_id].last=Date.now(); db.chats[req.body.chat_id].no_leidos=0; saveDB(req.body.empresa_id,db); res.json({ok:true});}catch(e){res.json({ok:false, error:e.message});}});
-
-app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  const chatId=req.body.chat_id;
-  if(!db.chats[chatId]) db.chats[chatId]={id:chatId, nombre:chatId, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo'};
-  try{
-    const file=req.file; if(!file) return res.json({ok:false});
-    const ext=file.mimetype.split('/')[1]?.split(';')[0]||'bin';
-    const fname=Date.now()+'_'+S(file.originalname).slice(0,30)+'.'+ext;
-    const dest=path.join(PUB_MEDIA, fname);
-    fs.copyFileSync(file.path, dest);
-    const localUrl='/media/'+fname;
-    if(db.config?.phone && db.config?.token){
-      try{
-        const buf=fs.readFileSync(file.path);
-        const form=new FormData();
-        form.append('file', new Blob([buf], {type:file.mimetype}), file.originalname);
-        form.append('type', file.mimetype);
-        form.append('messaging_product','whatsapp');
-        const up=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/media`,{method:'POST',headers:{Authorization:`Bearer ${db.config.token}`}, body:form});
-        const ju=await up.json();
-        if(ju.id){
-          let t='document'; if(file.mimetype.startsWith('image/')) t='image'; else if(file.mimetype.startsWith('video/')) t='video'; else if(file.mimetype.startsWith('audio/')) t='audio';
-          await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:chatId.replace(/\D/g,''), type:t, [t]:{id:ju.id}})});
-        }
-      }catch(e){console.log('media upload err',e.message);}
-    }
-    db.chats[chatId].mensajes.push({from:'agente', texto:file.originalname, type:'image', media_url:localUrl, ts:Date.now()});
-    db.chats[chatId].last=Date.now(); saveDB(req.body.empresa_id,db); res.json({ok:true, url:localUrl});
-  }catch(e){res.json({ok:false, error:e.message});}
-});
-
-// FIX V240 - ACEPTA TOKEN 1 DIA, 60 DIAS Y PERMANENTE - LEE PLANTILLAS Y NO BLOQUEA FRONT - MUESTRA DEBUG PARA TU FOTO "NO HAY APROBADAS"
-app.get('/api/templates/:eid', async (req,res)=>{
-  const db=getDB(req.params.eid);
-  if(!db) return res.json({templates:[], error:'Empresa no existe', is_expired:false});
-
-  const waba=String(db.config?.waba||'').trim();
-  const token=String(db.config?.token||'').trim();
-  const phone=String(db.config?.phone||'').trim();
-
-  if(!waba||!token){
-    return res.json({
-      templates:db.cached_templates||[],
-      error:`Falta config - WABA:${waba?'OK':'FALTA'} Token:${token?'OK':'FALTA'} Phone:${phone?'OK':'FALTA'} - Configura en Configuración`,
-      is_expired:false,
-      warning:`Usando cache ${ (db.cached_templates||[]).length } plantillas`,
-      debug:{waba: waba? waba.slice(0,6)+'...' : 'vacio', has_token:!!token, has_phone:!!phone},
-      cached_count:(db.cached_templates||[]).length
-    });
+}
+function salir(){localStorage.clear();location.href='/';}
+async function loadChats(){const r=await fetch('/api/chats/'+S.eid+'/admin'); allChats=await r.json(); document.getElementById('countInbox').innerText=allChats.length+' chats'; const q=(document.getElementById('q').value||'').toLowerCase(); const list=document.getElementById('list'); list.innerHTML=''; let filtered=allChats.filter(c=>{ if(q &&!((c.nombre||'').toLowerCase().includes(q)||c.id.includes(q))) return false; return true;}); filtered.forEach(c=>{const d=document.createElement('div'); d.style.cssText='display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #1e2a4a33;cursor:pointer'; d.innerHTML=`<div style="width:32px;height:32px;border-radius:50%;background:#a5b4fc;color:#000;display:flex;align-items:center;justify-content:center;font-weight:700">${(c.nombre||c.id).slice(0,2).toUpperCase()}</div><div><div style="font-size:13px;font-weight:600">${c.nombre||c.id}</div><div style="font-size:11px;color:#94a3b8">${(c.mensajes?.slice(-1)[0]?.texto||'').slice(0,28)}</div></div>`; d.onclick=()=>openChat(c.id); list.appendChild(d);}); const pc=allChats.filter(c=>(c.tags||[]).some(t=>t.toLowerCase().includes('pendiente')||t.toLowerCase().includes('agendado'))).length; const cc=document.getElementById('calCount'); if(pc>0){cc.style.display='inline';cc.innerText=pc;} else cc.style.display='none';}
+async function openChat(id){curChat=id; const r=await fetch('/api/mensajes/'+S.eid+'/'+id); const j=await r.json(); const prof=j.profile||{}; document.getElementById('hName').innerText=prof.nombre||id; document.getElementById('pAv').innerText=(prof.nombre||id).slice(0,2).toUpperCase(); document.getElementById('pPhone').innerText=id; document.getElementById('pNombre').value=prof.nombre||''; document.getElementById('pNameEdit').innerText=prof.nombre||id; document.getElementById('pCiudad').value=prof.ciudad||''; document.getElementById('pProfesion').value=prof.profesion||''; document.getElementById('pEmpresa').value=prof.empresa||''; document.getElementById('pEstado').value=prof.estado||'nuevo'; document.getElementById('pOrigen').value=prof.origen||''; document.getElementById('pCamp').value=prof.campana||''; document.getElementById('pNotes').value=(prof.notas||[]).map(n=>n.texto||n).join('\n')||''; document.getElementById('pTags').innerHTML=(prof.tags||[]).map(t=>`<span style="font-size:10px;padding:4px 8px;border-radius:20px;background:#1e293b;border:1px solid #2a3a5c;margin:2px;display:inline-flex">${t} <span style="cursor:pointer;margin-left:4px" onclick="removeTag('${t}')">✕</span></span>`).join(''); document.getElementById('msgs').innerHTML=j.mensajes.map(m=>`<div class="b ${m.from==='agente'?'age':'cli'}">${m.texto}${m.media_url?`<br><a href="${m.media_url}" target="_blank" style="color:#3b82f6">Ver archivo</a>`:''}<div style="font-size:10px;color:#64748b;text-align:right">${new Date(m.ts).toLocaleTimeString()}</div></div>`).join(''); fetch('/api/chat/leido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, chat_id:id})});}
+async function sendMsg(){const t=document.getElementById('txt'); if(!t.value||!curChat) return; const txt=t.value; t.value=''; await fetch('/api/mensaje/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid,chat_id:curChat,texto:txt})}); openChat(curChat);}
+function openApi(){clearMenu();document.getElementById('mConfig').classList.add('active');document.getElementById('mainFull').style.display='flex';document.querySelectorAll('.view').forEach(e=>e.style.display='none');document.getElementById('configView').style.display='flex';document.getElementById('apiModal').style.display='flex';loadApi();}
+async function loadApi(){const role=S.user?.rol||'agente'; const r=await fetch('/api/config/'+S.eid+'?role='+role); const j=await r.json(); if(j.is_admin){apiPhone.value=j.config.phone||''; apiWaba.value=j.config.waba||''; apiToken.value=j.config.token||''; document.getElementById('apiCurrent').innerText=`Admin - Phone ${j.config.phone||''} - WABA ${j.config.waba||''} - Token ${j.config.token? j.config.token.slice(0,12)+'... OK - Acepta 1d 60d permanente' : 'no'}`; document.getElementById('apiAdminOnly').style.display='block';} else {document.getElementById('apiCurrent').innerText=`Trabajador - ${j.config.has_token?'API OK - plantillas heredadas - token acepta 1d 60d permanente':''}`; document.getElementById('apiAdminOnly').style.display='none';}}
+async function loadConfigAndTemplates(){await loadApi(); await loadTemplates();}
+async function saveApi(){if(S.user?.rol!=='admin') return alert('Solo admin'); await fetch('/api/config/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, phone:apiPhone.value, waba:apiWaba.value, token:apiToken.value, admin_email:S.user.email})}); document.getElementById('apiMsg').innerText='✅ Guardado en base - acepta 1 día, 60 días y permanente'; await loadTemplates(); setTimeout(()=>{apiModal.style.display='none';},800);}
+async function saveProfile(){if(!curChat) return; await fetch('/api/chat/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, chat_id:curChat, nombre:pNombre.value||pNameEdit.innerText, ciudad:pCiudad.value, profesion:pProfesion.value, empresa:pEmpresa.value, estado:pEstado.value, origen:pOrigen.value, campana:pCamp.value, notas:pNotes.value})});}
+async function addTag(){if(!curChat) return; await fetch('/api/chat/tag/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid,chat_id:curChat,tag:newTag.value})}); newTag.value=''; openChat(curChat);}
+async function removeTag(tag){await fetch('/api/chat/tag/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid,chat_id:curChat,tag})}); openChat(curChat);}
+async function agendarCliente(){if(!curChat) return; await fetch('/api/calendar/agendar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, chat_id:curChat, estado_agenda:pAgendaEstado.value, fecha:pAgendaFecha.value, nota:pAgendaNota.value})}); alert('Agendado'); loadCalendar();}
+async function loadCalendar(){
+  const [rCal, rTeam, rStats] = await Promise.all([fetch('/api/calendar/'+S.eid), fetch('/api/empresa/info/'+S.eid), fetch('/api/equipo/stats/'+S.eid)]);
+  const cals = await rCal.json(); const info = await rTeam.json(); const stats = await rStats.json();
+  const workers = info.usuarios||[]; const individuales = stats.individuales||[];
+  const workersHtml = workers.map(u=>{
+    const st = individuales.find(x=>x.email===u.email);
+    return `<div class="teamCard" style="flex-direction:column;align-items:flex-start"><div style="width:100%;display:flex;justify-content:space-between"><div><b>👤 ${u.email}</b><br><span style="font-size:11px;color:#3b82f6;font-weight:700">${u.rol.toUpperCase()}</span><br><span style="font-size:11px;color:#94a3b8">Chats: ${st?.chats_atendidos||0} | Avance: ${st?.avance||0}% | Seguimiento: ${st?.seguimiento||0}</span></div><div style="text-align:right"><div style="background:#3b82f6;color:#fff;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700">${st?.seguimiento||0} citas</div></div></div></div>`;
+  }).join('') || 'Sin trabajadores';
+  const citasHtml = cals.length? cals.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(c=>{
+    const date = new Date(c.date).toLocaleString('es-CO', {dateStyle:'medium', timeStyle:'short'});
+    const hechoStyle = c.hecho? 'opacity:0.6;border-color:#22c55e' : '';
+    return `<div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:14px;margin:10px 0;${hechoStyle}">
+      <div style="display:flex;justify-content:space-between;align-items:start"><div style="flex:1"><div style="display:flex;gap:8px;align-items:center"><b style="font-size:14px">👤 ${c.chat_nombre||c.chat_id}</b><span style="background:${c.estado_agenda==='agendado'?'#3b82f6':'#f59e0b'};color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">${(c.estado_agenda||'').toUpperCase()}</span>${c.hecho?'<span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:10px;font-size:10px">HECHO</span>':''}</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:6px;line-height:16px">📞 <b>${c.telefono||c.chat_id}</b> | 📅 <b>${date}</b><br>🏢 Empresa: ${c.empresa||'-'} | 🌎 Ciudad: ${c.ciudad||'-'} | 💼 Cargo: ${c.profesion||'-'}<br>📧 Email: ${c.email||'-'} | 🔖 Origen: ${c.origen||'-'} | 📢 Campaña: ${c.campana||'-'}<br>🏷️ Tags: ${(c.tags||[]).join(', ')||'-'}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button onclick="marcarHecho('${c.id}')" style="background:${c.hecho?'#1e293b':'#22c55e'};border:1px solid #2a3a5c;padding:6px 12px;border-radius:8px;color:${c.hecho?'#fff':'#000'};font-weight:700;font-size:11px;cursor:pointer">${c.hecho?'↩️ Deshacer':'✅ Hecho'}</button><button onclick="borrarCita('${c.id}')" style="background:#1e293b;border:1px solid #ef4444;color:#ef4444;padding:6px 12px;border-radius:8px;font-size:11px;cursor:pointer">🗑️ Borrar</button><button onclick="openChat('${c.chat_id}');showView('inbox')" style="background:#3b82f6;border:0;padding:6px 12px;border-radius:8px;color:#fff;font-size:11px;cursor:pointer">💬 Chat</button></div></div>
+      <div style="margin-top:10px;background:#0b1020;padding:10px;border-radius:8px;border-left:3px solid #f59e0b"><div style="font-size:11px;color:#f59e0b;font-weight:700">📝 NOTA:</div><div style="font-size:12px;color:#e2e8f0;margin-top:4px">${c.nota||'Sin nota'}</div></div></div>`;
+  }).join('') : '<div style="text-align:center;padding:40px;background:#131b2e;border:1px dashed #2a3a5c;border-radius:12px;color:#64748b"><div style="font-size:32px">📅</div><div>Sin citas - Agenda desde Customer Profile en Inbox</div></div>';
+  document.getElementById('calList').innerHTML = `<div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px;margin-bottom:16px"><h3 style="margin:0 0 12px;color:#3b82f6">👥 Trabajadores organizados (${workers.length})</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${workersHtml}</div></div><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="margin:0 0 12px;color:#f59e0b">📅 Citas programadas con todos los datos (${cals.length}) - Pendientes: ${cals.filter(x=>!x.hecho).length} / Hechas: ${cals.filter(x=>x.hecho).length}</h3>${citasHtml}</div>`;
+}
+async function marcarHecho(id){ await fetch('/api/calendar/hecho',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCalendar(); }
+async function borrarCita(id){ if(!confirm('¿Borrar cita?')) return; await fetch('/api/calendar/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCalendar(); }
+async function loadStatsGrafica(){const r=await fetch('/api/stats/'+S.eid); const s=await r.json(); const r2=await fetch('/api/equipo/stats/'+S.eid); const eq=await r2.json(); document.getElementById('sChats').innerText=s.chats||0; document.getElementById('sCals').innerText=s.calendar||0; document.getElementById('sSeg').innerText=s.calendar_pendientes||0; document.getElementById('sTeam').innerText=eq.individuales?.length||0; const labels=(eq.individuales||[]).map(i=>i.email.split('@')[0]); const chatsData=(eq.individuales||[]).map(i=>i.chats_atendidos||0); if(chart1) chart1.destroy(); chart1=new Chart(document.getElementById('chartTrabajador'),{type:'bar',data:{labels, datasets:[{label:'Chats por trabajador', data:chatsData, backgroundColor:'#3b82f6'}]},options:{responsive:true}}); const estados=await (await fetch('/api/metrics/'+S.eid)).json(); if(chart2) chart2.destroy(); chart2=new Chart(document.getElementById('chartEstado'),{type:'doughnut',data:{labels:Object.keys(estados.estados||{}), datasets:[{data:Object.values(estados.estados||{}), backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ef4444']}]},options:{responsive:true}});}
+async function loadMetricsWorkers(){const r=await fetch('/api/equipo/stats/'+S.eid); const j=await r.json(); const r2=await fetch('/api/metrics/'+S.eid); const m=await r2.json(); document.getElementById('metricsKpi').innerHTML=`<div class="kpiCard"><div style="font-size:11px">TOTAL</div><div style="font-size:20px;font-weight:800">${m.total_chats||0}</div></div><div class="kpiCard"><div style="font-size:11px">NO LEIDOS</div><div style="font-size:20px;font-weight:800">${m.no_leidos||0}</div></div><div class="kpiCard"><div style="font-size:11px">PENDIENTES</div><div style="font-size:20px;font-weight:800">${j.grupal?.recordatorios_pendientes||0}</div></div><div class="kpiCard"><div style="font-size:11px">CLIENTES</div><div style="font-size:20px;font-weight:800">${m.clientes||0}</div></div>`; document.getElementById('metricsWorkers').innerHTML=(j.individuales||[]).map(u=>`<div class="teamCard"><span>👤 ${u.email} - ${u.chats_atendidos} chats - Avance ${u.avance}% - Seg ${u.seguimiento} - Msj ${u.mensajes}</span></div>`).join(''); document.getElementById('metricsGeneral').innerHTML=`<div style="margin-top:12px;background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px">Grupal: ${j.grupal?.total_chats||0} total | ${j.grupal?.atendidos||0} atendidos (${j.grupal?.porcentaje||0}%) | Recordatorios: ${j.grupal?.total_recordatorios||0} | Hechos: ${j.grupal?.recordatorios_hechos||0}</div>`;}
+async function loadTeam(){const r=await fetch('/api/empresa/info/'+S.eid); const info=await r.json(); document.getElementById('teamList').innerHTML=(info.usuarios||[]).map(u=>`<div class="teamCard"><span>${u.email} - ${u.rol}</span><button onclick="removeWorker('${u.email}')" style="background:#ef4444;border:0;padding:6px 10px;border-radius:8px;color:#fff">Eliminar</button></div>`).join('');}
+async function addWorker(){const email=eqEmail.value.trim(); const pass=eqPass.value.trim(); if(!email||!pass) return alert('Email y pass'); const res=await fetch('/api/equipo/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, email, pass, rol:eqRol.value})}); const j=await res.json(); if(!j.ok) alert(j.error||'Error'); loadTeam(); eqEmail.value=''; eqPass.value='';}
+async function removeWorker(email){if(!confirm('Eliminar '+email+'?')) return; await fetch('/api/equipo/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, email})}); loadTeam();}
+function elegirPlan(plan){localStorage.setItem('klido_plan',plan); document.getElementById('planBadge').innerText='Plan '+plan; alert('Plan '+plan+' seleccionado');}
+function extractPhones(text){const regex=/(\+?\d[\d\s\-\(\)]{7,}\d)/g; const matches=text.match(regex)||[]; return [...new Set(matches.map(m=>m.replace(/\D/g,'')).filter(n=>n.length>=10 && n.length<=15).map(n=>{ let x=n.replace(/\D/g,''); if(x.length===10) x='57'+x; return x; }))];}
+function extractEmails(text){const re=/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g; return [...new Set((text.match(re)||[]))];}
+function parseExcel(){const file=document.getElementById('excelFile').files[0]; if(!file) return; const reader=new FileReader(); reader.onload=function(e){const wb=XLSX.read(e.target.result,{type:'binary'}); let allText=''; wb.SheetNames.forEach(name=>{ const sheet=wb.Sheets[name]; const json=XLSX.utils.sheet_to_json(sheet,{header:1, defval:''}); json.forEach(row=>{ row.forEach(cell=>{ allText+=' '+String(cell); }); }); }); const tipo=document.getElementById('campTipo').value; excelNums=tipo==='gmail'?extractEmails(allText):extractPhones(allText); document.getElementById('excelResult').innerText=`Detectados ${excelNums.length}`; updateTotal();}; reader.readAsBinaryString(file);}
+function parseManual(){const txt=document.getElementById('manualNums').value; const tipo=document.getElementById('campTipo').value; manualNums=tipo==='gmail'?extractEmails(txt):extractPhones(txt); document.getElementById('manualResult').innerText=`Detectados ${manualNums.length}`; updateTotal();}
+function toggleTipo(){
+  const tipo=document.getElementById('campTipo').value;
+  const plan=(localStorage.getItem('klido_plan')||'basico').toLowerCase();
+  const dbPlan=(S.user?.plan||plan);
+  if(tipo==='gmail' && (plan!=='gold' && dbPlan!=='gold')){
+    alert('⛔ Gmail masivo solo disponible en Plan Gold. Tu plan actual: '+plan+' - WhatsApp funciona en Básico.');
+    document.getElementById('campTipo').value='whatsapp';
+    document.getElementById('whatsappBlock').style.display='block';
+    document.getElementById('gmailBlock').style.display='none';
+    return;
   }
-
+  parseExcel();parseManual();
+  document.getElementById('whatsappBlock').style.display=tipo==='whatsapp'?'block':'none';
+  document.getElementById('gmailBlock').style.display=tipo==='gmail'?'block':'none';
+}
+function updateTotal(){const all=[...excelNums,...manualNums]; const uniq=[...new Set(all)]; detected=uniq; document.getElementById('totalNums').innerText=`${uniq.length} contactos - 50 cada 4h anti-baneo`;}
+async function loadTemplates(){
+  const sel=document.getElementById('campTemplate');
+  const info=document.getElementById('templateInfo');
+  sel.innerHTML='<option>Cargando plantillas aprobadas...</option>';
+  info.innerHTML='Consultando Meta Graph... acepta 1 día 60 días permanente';
   try{
-    // USA GRAPH v20.0 - ACEPTA CUALQUIER TOKEN VALIDO (1 DIA, 60 DIAS, PERMANENTE)
-    const url=`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=250&fields=name,status,language,components`;
-    const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
+    const r=await fetch('/api/templates/'+S.eid);
     const j=await r.json();
+    console.log('TEMPLATES V240:', j);
+    templates=j.templates||[];
 
-    console.log('TEMPLATES DEBUG WABA', waba, 'RESPONSE', JSON.stringify(j).slice(0,800));
-
+    let html='';
     if(j.error){
-      const isExpired = j.error.code===190;
-      return res.json({
-        templates: db.cached_templates||[],
-        error: `Meta error code ${j.error.code}: ${j.error.message}. WABA usado: ${waba}. Revisa que tu WABA ID sea el ID de cuenta WhatsApp Business (no Business Manager ID) y que el token tenga permiso whatsapp_business_management y whatsapp_business_messaging.`,
-        raw:j,
-        is_expired:false, // CLAVE: NUNCA BLOQUEAR FRONT - PERMITE CREAR AUN CON ERROR
-        is_meta_error:true,
-        warning: isExpired? `⚠️ Token expirado real (190) - genera nuevo (aceptamos 1 día, 60 días, permanente recomendado permanente). Cache: ${ (db.cached_templates||[]).length } plantillas` : `⚠️ Error Meta usando cache ${ (db.cached_templates||[]).length }: ${j.error.message}`,
-        cached_count:(db.cached_templates||[]).length,
-        token_type: isExpired? 'expirado' : 'error temporal pero aceptado - revisa WABA',
-        debug:{waba, has_token: true, has_phone:!!phone, error_code:j.error.code}
-      });
+      html+=`<div style="background:#ef444433;border:1px solid #ef4444;padding:8px;border-radius:8px;margin-bottom:6px">❌ ${j.error}<br>Cache: ${j.cached_count||0} | WABA: ${j.debug?.waba||'?'} | Phone: ${j.debug?.phone||'?'}<br>Código: ${j.debug?.error_code||''}</div>`;
+    }
+    if(j.warning){
+      html+=`<div style="background:${j.approved>0?'#22c55e22':'#f59e0b22'};border:1px solid ${j.approved>0?'#22c55e':'#f59e0b'};padding:8px;border-radius:8px;margin-bottom:6px">${j.warning}<br><b>Token:</b> ${j.token_type||'aceptado'} | Total Meta: ${j.all||0} | Aprobadas: ${j.approved||0}</div>`;
+    }
+    info.innerHTML=html || `✅ ${templates.length} plantillas`;
+
+    if(templates.length===0){
+      sel.innerHTML=`<option value="">No hay aprobadas - Total Meta: ${j.all||0} - Cache: ${j.cached_count||0} - Revisa WABA ID (no Business ID)</option>`;
+      document.getElementById('varBlock').innerHTML=`<div style="font-size:11px;color:#f59e0b;background:#0b1020;padding:8px;border-radius:8px">Para fix foto "No hay aprobadas": 1) WABA ID correcto (empieza 10...) no Business ID 2) Token con permiso whatsapp_business_management 3) Plantillas APPROVED en business.facebook.com > WhatsApp Manager > Plantillas<br>Si ya tienes APPROVED, dale Recargar. Cache: ${j.cached_count||0}</div>`;
+      return;
     }
 
-    const all=j.data||[];
-    const approved=all.filter(t=>t.status==='APPROVED');
-    const others=all.filter(t=>t.status!=='APPROVED');
-
-    // GUARDA TODO EN CACHE PARA QUE NO DIGA "NO HAY APROBADAS" VACIO
-    if(all.length>0){
-      db.cached_templates= all.length>0? all : db.cached_templates;
-      db.config.last_templates_update=Date.now();
-      saveDB(db.empresa_id, db);
-    }
-
-    let token_type='válido (1 día, 60 días o permanente - recomendado permanente)';
-    let warning=null;
-
-    if(all.length===0){
-      warning=`⚠️ Meta devolvió 0 plantillas para WABA ${waba} - Verifica: 1) WABA ID correcto 2) Plantillas creadas en business.facebook.com > Cuentas de WhatsApp > Plantillas 3) Token con permiso whatsapp_business_management. Cache: ${ (db.cached_templates||[]).length }`;
-    } else if(approved.length===0){
-      warning=`⚠️ Tienes ${all.length} plantillas pero 0 APPROVED. Estados: ${all.map(t=>`${t.name}:${t.status}`).join(', ')} - Necesitas APPROVED para enviar. Ve a Meta Business y aprueba.`;
-    } else {
-      warning=`✅ ${approved.length} plantillas APPROVED de ${all.length} totales - Token aceptado (1 día, 60 días, permanente) ✅`;
-    }
-
-    // DETECTA TIPO DE TOKEN SI HAY APP_ID
-    try{
-      const APP_ID=(process.env.META_APP_ID||'').trim();
-      const APP_SECRET=(process.env.META_APP_SECRET||'').trim();
-      if(APP_ID && APP_SECRET){
-        const appToken=`${APP_ID}|${APP_SECRET}`;
-        const dbg=await fetch(`https://graph.facebook.com/v20.0/debug_token?input_token=${token}&access_token=${appToken}`);
-        const dj=await dbg.json();
-        if(dj.data){
-          const exp=dj.data.expires_at||0;
-          if(exp===0){ token_type='permanente ♾️ (recomendado)'; }
-          else{
-            const hours=Math.round((exp*1000 - Date.now())/3600000);
-            if(hours<=30){ token_type=`1 día (expira en ${hours}h) - FUNCIONA pero recomendado permanente`; }
-            else if(hours<=1500){ token_type=`60 días (expira en ${Math.round(hours/24)} días) - FUNCIONA pero recomendado permanente`; }
-          }
-        }
-      }
-    }catch(e){}
-
-    return res.json({
-      templates: approved.length>0? approved : all, // SI NO HAY APPROVED DEVUELVE TODAS PARA QUE VEAS POR QUE
-      all: all.length,
-      approved: approved.length,
-      others: others.length,
-      cached:false,
-      token_type,
-      warning,
-      is_expired:false,
-      debug:{waba, total: all.length, approved: approved.length, phone}
-    });
-
+    sel.innerHTML=templates.map(t=>`<option value="${t.name}">${t.name} - ${t.language} - ${t.status}</option>`).join('');
+    onTemplateChange();
   }catch(e){
-    return res.json({
-      templates:db.cached_templates||[],
-      error:'Fetch error: '+e.message+' - revisa conexión',
-      using_cache:true,
-      is_expired:false,
-      warning:'Error red usando cache '+ (db.cached_templates||[]).length,
-      cached_count:(db.cached_templates||[]).length
-    });
+    sel.innerHTML=`<option>Error fetch</option>`;
+    info.innerHTML=`Error: ${e.message} - Revisa /api/templates/${S.eid}`;
   }
-});
-
-// CAMPAIGNS - GMAIL SOLO GOLD - BASICO BLOQUEADO - CON HISTORIAL PAUSAR CONTINUAR
-app.get('/api/campaigns/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]}); res.json({campaigns:(db.campaigns||[]).sort((a,b)=>b.creado-a.creado)});});
-app.post('/api/campaigns/create',(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  // GMAIL SOLO GOLD - BASICO BLOQUEADO
-  if(req.body.tipo==='gmail' && db.plan!=='gold'){
-    return res.json({ok:false, error:'⛔ Gmail masivo solo disponible en Plan Gold. Tu plan actual: '+db.plan+'. Cambia a Gold en Planes. WhatsApp funciona en Básico.'});
-  }
-  db.campaigns=db.campaigns||[];
-  const camp={
-    id:Date.now().toString(),
-    nombre:req.body.nombre,
-    tipo:req.body.tipo||'whatsapp',
-    numeros:req.body.numeros||[],
-    total:(req.body.numeros||[]).length,
-    template_name:req.body.template_name||'',
-    template_lang:req.body.template_lang||'es',
-    variables:req.body.variables||[],
-    header_image:req.body.header_image||'',
-    gmail_subject:req.body.gmail_subject||'',
-    gmail_body:req.body.gmail_body||'',
-    status:'running',
-    enviados:0,
-    fallidos:0,
-    indice:0,
-    next_send:0,
-    creado:Date.now()
-  };
-  db.campaigns.push(camp);
-  saveDB(req.body.empresa_id,db);
-  res.json({ok:true, camp});
-});
-app.post('/api/campaigns/toggle',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const c=(db.campaigns||[]).find(x=>String(x.id)===String(req.body.id)); if(c){ c.status=c.status==='paused'?'running':'paused'; if(c.status==='running' && c.next_send && Date.now()>c.next_send) c.next_send=0; saveDB(req.body.empresa_id,db); } res.json({ok:true});});
-app.post('/api/campaigns/delete',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.campaigns=(db.campaigns||[]).filter(x=>String(x.id)!==String(req.body.id)); saveDB(req.body.empresa_id,db); res.json({ok:true});});
-
-async function processCampaigns(){
-  try{
-    for(const f of fs.readdirSync(DB)){
-      let db; try{ db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); }catch{continue;}
-      if(!db.campaigns || db.campaigns.length===0) continue;
-      let changed=false;
-      for(const camp of db.campaigns){
-        if(camp.status!=='running') continue;
-        if(camp.indice>=camp.total){ camp.status='completed'; changed=true; continue; }
-        if(camp.next_send && Date.now() < camp.next_send) continue;
-        const batch=camp.numeros.slice(camp.indice, camp.indice+50);
-        if(camp.tipo==='whatsapp'){
-          if(!db.config?.phone||!db.config?.token){ camp.status='paused'; changed=true; continue; }
-          for(const num of batch){
-            try{
-              let payload={messaging_product:'whatsapp', to:String(num).replace(/\D/g,''), type:'template', template:{name:camp.template_name, language:{code:camp.template_lang||'es'}, components:[]}};
-              if(camp.header_image) payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:camp.header_image}}]});
-              if(camp.variables && camp.variables.filter(v=>v).length>0) payload.template.components.push({type:'body', parameters:camp.variables.filter(v=>v).map(v=>({type:'text', text:String(v||' ')}))});
-              const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
-              const jj=await rr.json(); if(jj.messages) camp.enviados++; else camp.fallidos++;
-            }catch(e){ camp.fallidos++; }
-            await new Promise(r=>setTimeout(r, 900));
-          }
-        }
-        camp.indice+=batch.length;
-        camp.next_send=Date.now() + (4*60*60*1000);
-        changed=true;
-      }
-      if(changed) saveDB(db.empresa_id,db);
-    }
-  }catch(e){ console.log('worker',e.message); }
 }
-setInterval(processCampaigns, 60000);
-processCampaigns();
-
-app.get('/',(req,res)=>res.sendFile(path.join(PUB,'index.html')));
-app.get('/crm',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
-app.get('/crm.html',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
-
-const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V240 FIX PLANTILLAS 1D 60D PERMANENTE + GMAIL GOLD + HISTORIAL PAUSAR CONTINUAR OK en 0.0.0.0:${PORT}`));
+function onTemplateChange(){const name=document.getElementById('campTemplate').value; const t=templates.find(x=>x.name===name); if(!t){document.getElementById('varBlock').innerHTML='<div style="font-size:11px;color:#94a3b8">Selecciona plantilla aprobada - acepta token 1 día 60 días permanente</div>'; return;} let varCount=0; const body=t.components?.find(c=>c.type==='BODY'); if(body && body.text){ const m=body.text.match(/\{\{\d+\}\}/g); if(m) varCount=m.length; } let html=`<div style="font-size:11px;color:#22c55e;margin-bottom:6px">📝 Plantilla: ${t.name} - Variables detectadas: ${varCount}</div>`; const header=t.components?.find(c=>c.type==='HEADER'); if(header?.format==='IMAGE'){ html+=`<label style="font-size:10px">Header Imagen URL</label><input id="headerImage" class="api-input" placeholder="https://...imagen.jpg">`; } if(varCount>0){ for(let i=1;i<=varCount;i++){ html+=`<label style="font-size:10px">Variable {{${i}}}</label><input id="var${i}" class="api-input" placeholder="Valor para {{${i}}}">`; } } else { html+=`<div style="font-size:11px;color:#94a3b8">Sin variables - lista para enviar 50 cada 4h</div>`; } document.getElementById('varBlock').innerHTML=html;}
+async function crearCamp(){if(detected.length===0) return alert('Sube numeros Excel o Manual'); const nombre=document.getElementById('campNombre').value.trim()||'Campaña '+(new Date().toLocaleDateString()); const tipo=document.getElementById('campTipo').value; const template=document.getElementById('campTemplate').value; if(tipo==='whatsapp' &&!template) return alert('Selecciona plantilla aprobada - si dice No hay aprobadas, revisa WABA ID y token'); const vars=[]; document.querySelectorAll('[id^="var"]').forEach(el=>{ if(el.id.startsWith('var')) vars.push(el.value); }); const body={empresa_id:S.eid, nombre, tipo, numeros:detected, template_name:template, template_lang:(templates.find(t=>t.name===template)?.language||'es'), variables:vars, header_image:document.getElementById('headerImage')?.value||'', gmail_subject:document.getElementById('gmailSubject')?.value||'', gmail_body:document.getElementById('gmailBody')?.value||''}; const r=await fetch('/api/campaigns/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json(); if(j.ok){ alert('✅ Campaña creada: '+nombre+' - '+detected.length+' contactos - 50 cada 4h - Pausar/Continuar disponible en historial'); detected=[]; excelNums=[]; manualNums=[]; document.getElementById('manualNums').value=''; document.getElementById('excelResult').innerText=''; document.getElementById('manualResult').innerText=''; updateTotal(); loadCampHistory(); } else alert('❌ '+ (j.error||'Error'));}
+async function loadCampHistory(){const r=await fetch('/api/campaigns/'+S.eid); const j=await r.json(); const list=j.campaigns||[]; if(list.length===0){ document.getElementById('campHistory').innerHTML='<div style="color:#64748b;font-size:12px;padding:10px">Sin campañas - Crea una arriba - Historial con Pausar/Continuar y seguimiento 50 cada 4h</div>'; return; } document.getElementById('campHistory').innerHTML=list.map(c=>`<div class="teamCard"><div><b>🔔 ${c.nombre}</b> - ${c.tipo.toUpperCase()}<br><span style="font-size:11px">${c.template_name||c.gmail_subject||''} | ${c.enviados||0}/${c.total} enviados | ${c.fallidos||0} fallidos | Estado: <b style="color:${c.status==='running'?'#22c55e': c.status==='paused'?'#f59e0b':'#94a3b8'}">${c.status.toUpperCase()}</b></span><br><span style="font-size:10px;color:#64748b">Creado: ${new Date(c.creado).toLocaleString()} | Próximo lote: ${c.next_send? new Date(c.next_send).toLocaleString() : 'Ahora'}</span></div><div style="display:flex;gap:6px"><button onclick="pauseCamp('${c.id}')" style="background:${c.status==='paused'?'#22c55e':'#f59e0b'};border:0;padding:6px 12px;border-radius:8px;color:${c.status==='paused'?'#fff':'#000'};font-weight:700;font-size:11px">${c.status==='paused'?'▶️ Continuar':'⏸️ Pausar'}</button><button onclick="delCamp('${c.id}')" style="background:#1e293b;border:1px solid #ef4444;color:#ef4444;padding:6px 10px;border-radius:8px;font-size:11px">🗑️ Eliminar</button></div></div>`).join('');}
+async function pauseCamp(id){await fetch('/api/campaigns/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
+async function delCamp(id){if(!confirm('¿Eliminar campaña?')) return; await fetch('/api/campaigns/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
+init();
+</script></body></html>
