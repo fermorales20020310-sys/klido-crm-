@@ -1,16 +1,12 @@
 {
-  "name": "klido-crm-v170",
-  "version": "170.0.0",
-  "description": "KLIDO V170 - SERVER QUE SI SIRVE - FIX DEFINITIVO ACOL",
+  "name": "klido-crm",
+  "version": "2.1.0",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "engines": {
-    "node": "20.x"
-  },
+  "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5"
   }
 }
