@@ -1,4 +1,4 @@
-// KLIDO V232 FIX - ACEPTA TOKEN 1 DIA, 60 DIAS Y PERMANENTE - RECOMIENDA PERMANENTE PERO CARGA CON TODOS
+// KLIDO V240 COMPLETO - SIN DAÑAR - FIX PLANTILLAS LEE 1 DIA 60 DIAS PERMANENTE + GMAIL SOLO GOLD + HISTORIAL PAUSAR CONTINUAR
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -41,9 +41,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-
-app.get('/health',(req,res)=>res.status(200).send('OK V232'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V232', time:Date.now()}));
+app.get('/health',(req,res)=>res.status(200).send('OK V240'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V240', time:Date.now()}));
 
 const verifyHook=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
 app.get('/webhook',verifyHook); app.get('/webhook/:empresa_id',verifyHook);
@@ -119,7 +118,6 @@ app.get('/api/config/:eid',(req,res)=>{
     res.json({ok:true, config:{phone:cfg.phone||'', waba:cfg.waba? cfg.waba.slice(0,6)+'...'+cfg.waba.slice(-4) : '', token: cfg.token? '•••••• guardado (solo admin ve)' : '', has_token:!!cfg.token}, is_admin:false, cached_templates:db.cached_templates||[]});
   }
 });
-
 app.post('/api/config/api',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
   db.config={phone:String(req.body.phone||'').trim(), waba:String(req.body.waba||'').trim(), token:String(req.body.token||'').trim(), last_update:Date.now()};
@@ -143,7 +141,28 @@ app.get('/api/equipo/stats/:eid',(req,res)=>{
 });
 
 app.get('/api/calendar/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json([]); res.json(db.calendar||[]);});
-app.post('/api/calendar/agendar',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const chat=db.chats?.[req.body.chat_id]; if(!chat) return res.json({ok:false}); db.calendar=db.calendar||[]; chat.tags=chat.tags||[]; if(req.body.estado_agenda==='pendiente' &&!chat.tags.includes('Pendiente')) chat.tags.push('Pendiente'); if(req.body.estado_agenda==='agendado'){ const label=`Agendado ${req.body.fecha?new Date(req.body.fecha).toLocaleDateString():''}`; if(!chat.tags.some(t=>t.toLowerCase().includes('agendado'))) chat.tags.push(label);} db.calendar.push({id:Date.now().toString(), chat_id:req.body.chat_id, chat_nombre:chat.nombre||req.body.chat_id, estado_agenda:req.body.estado_agenda, date:req.body.fecha||new Date().toISOString(), nota:req.body.nota||'', hecho:false}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
+app.post('/api/calendar/agendar',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
+  const chat=db.chats?.[req.body.chat_id]; if(!chat) return res.json({ok:false});
+  db.calendar=db.calendar||[]; chat.tags=chat.tags||[];
+  if(req.body.estado_agenda==='pendiente' &&!chat.tags.includes('Pendiente')) chat.tags.push('Pendiente');
+  if(req.body.estado_agenda==='agendado'){ const label=`Agendado ${req.body.fecha?new Date(req.body.fecha).toLocaleDateString():''}`; if(!chat.tags.some(t=>t.toLowerCase().includes('agendado'))) chat.tags.push(label); }
+  db.calendar.push({
+    id:Date.now().toString(), chat_id:req.body.chat_id, chat_nombre:chat.nombre||req.body.chat_id,
+    estado_agenda:req.body.estado_agenda, date:req.body.fecha||new Date().toISOString(), nota:req.body.nota||'', hecho:false,
+    empresa:chat.empresa||'', ciudad:chat.ciudad||'', profesion:chat.profesion||'', origen:chat.origen||'', campana:chat.campana||'', tags:chat.tags||[], email:chat.email||'', telefono:req.body.chat_id
+  });
+  saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
+app.post('/api/calendar/hecho',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
+  const c=(db.calendar||[]).find(x=>String(x.id)===String(req.body.id)); if(c){ c.hecho=!c.hecho; saveDB(req.body.empresa_id,db); }
+  res.json({ok:true});
+});
+app.post('/api/calendar/delete',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
+  db.calendar=(db.calendar||[]).filter(x=>String(x.id)!==String(req.body.id)); saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
 
 app.get('/api/chats/:eid/:uid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json([]); res.json(Object.values(db.chats||{}).map(c=>({id:c.id, nombre:c.nombre||c.id, tags:c.tags||['Nuevo'], no_leidos:c.no_leidos||0, last:c.last||0, mensajes:c.mensajes||[]})).sort((a,b)=>b.last-a.last));});
 app.get('/api/mensajes/:eid/:cid',(req,res)=>{const db=getDB(req.params.eid); const c=db?.chats?.[req.params.cid]; if(!c) return res.json({mensajes:[], profile:{}}); res.json({mensajes:(c.mensajes||[]).sort((a,b)=>a.ts-b.ts), profile:{id:c.id, nombre:c.nombre, email:c.email||'', empresa:c.empresa||'', ciudad:c.ciudad||'', profesion:c.profesion||'', campana:c.campana||'', origen:c.origen||'', estado:c.estado||'nuevo', tags:c.tags||[], notas:c.notas||[]}});});
@@ -184,56 +203,72 @@ app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{
   }catch(e){res.json({ok:false, error:e.message});}
 });
 
-// FIX V232 - ACEPTA TOKEN 1 DIA, 60 DIAS Y PERMANENTE - CARGA PLANTILLAS CON TODOS
+// FIX V240 - ACEPTA TOKEN 1 DIA, 60 DIAS Y PERMANENTE - LEE PLANTILLAS Y NO BLOQUEA FRONT - MUESTRA DEBUG PARA TU FOTO "NO HAY APROBADAS"
 app.get('/api/templates/:eid', async (req,res)=>{
-  const db=getDB(req.params.eid); if(!db) return res.json({templates:[], error:'Empresa no existe'});
-  const {waba, token}=db.config||{};
+  const db=getDB(req.params.eid);
+  if(!db) return res.json({templates:[], error:'Empresa no existe', is_expired:false});
+
+  const waba=String(db.config?.waba||'').trim();
+  const token=String(db.config?.token||'').trim();
+  const phone=String(db.config?.phone||'').trim();
+
   if(!waba||!token){
-    return res.json({templates:db.cached_templates||[], warning:'Usando cache - falta token o waba', error:'Falta WABA o Token', is_expired:false});
+    return res.json({
+      templates:db.cached_templates||[],
+      error:`Falta config - WABA:${waba?'OK':'FALTA'} Token:${token?'OK':'FALTA'} Phone:${phone?'OK':'FALTA'} - Configura en Configuración`,
+      is_expired:false,
+      warning:`Usando cache ${ (db.cached_templates||[]).length } plantillas`,
+      debug:{waba: waba? waba.slice(0,6)+'...' : 'vacio', has_token:!!token, has_phone:!!phone},
+      cached_count:(db.cached_templates||[]).length
+    });
   }
+
   try{
-    // Intenta cargar plantillas con cualquier token (1 dia, 60 dias, permanente)
-    const r=await fetch(`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=250&fields=name,status,language,components`,{headers:{Authorization:`Bearer ${token}`}});
+    // USA GRAPH v20.0 - ACEPTA CUALQUIER TOKEN VALIDO (1 DIA, 60 DIAS, PERMANENTE)
+    const url=`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=250&fields=name,status,language,components`;
+    const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
     const j=await r.json();
 
+    console.log('TEMPLATES DEBUG WABA', waba, 'RESPONSE', JSON.stringify(j).slice(0,800));
+
     if(j.error){
-      const msg=(j.error.message||'').toLowerCase();
-      const isRealExpired = j.error.code===190 && msg.includes('expired') &&!msg.includes('expires');
-
-      // Si el token expiro REALMENTE, devuelve cache pero NO bloquea, permite seguir
-      if(isRealExpired){
-        return res.json({
-          templates:db.cached_templates||[],
-          error:`Token expirado real: ${j.error.message}. Genera uno nuevo (1 día, 60 días o permanente sirven, recomendado permanente)`,
-          code:190,
-          is_expired:false, // CAMBIO CLAVE: NO BLOQUEAR FRONT
-          is_real_expired:true,
-          token_type:'expirado',
-          warning:'⚠️ Token expirado - genera nuevo. Aceptamos 1 día, 60 días o permanente (recomendado permanente)',
-          cached_count:(db.cached_templates||[]).length,
-          raw:j
-        });
-      }
-
-      // Otros errores (permisos, waba mal) - devuelve cache y permite continuar
+      const isExpired = j.error.code===190;
       return res.json({
-        templates:db.cached_templates||[],
-        error:j.error.message,
+        templates: db.cached_templates||[],
+        error: `Meta error code ${j.error.code}: ${j.error.message}. WABA usado: ${waba}. Revisa que tu WABA ID sea el ID de cuenta WhatsApp Business (no Business Manager ID) y que el token tenga permiso whatsapp_business_management y whatsapp_business_messaging.`,
         raw:j,
+        is_expired:false, // CLAVE: NUNCA BLOQUEAR FRONT - PERMITE CREAR AUN CON ERROR
+        is_meta_error:true,
+        warning: isExpired? `⚠️ Token expirado real (190) - genera nuevo (aceptamos 1 día, 60 días, permanente recomendado permanente). Cache: ${ (db.cached_templates||[]).length } plantillas` : `⚠️ Error Meta usando cache ${ (db.cached_templates||[]).length }: ${j.error.message}`,
         cached_count:(db.cached_templates||[]).length,
-        is_expired:false, // NO BLOQUEAR
-        warning:`Error Meta: ${j.error.message} - usando cache ${ (db.cached_templates||[]).length } plantillas`
+        token_type: isExpired? 'expirado' : 'error temporal pero aceptado - revisa WABA',
+        debug:{waba, has_token: true, has_phone:!!phone, error_code:j.error.code}
       });
     }
 
-    const approved=j.data?.filter(t=>t.status==='APPROVED')||[];
-    if(approved.length>0){ db.cached_templates=approved; db.config.last_templates_update=Date.now(); saveDB(db.empresa_id, db); }
+    const all=j.data||[];
+    const approved=all.filter(t=>t.status==='APPROVED');
+    const others=all.filter(t=>t.status!=='APPROVED');
 
-    // DETECTA TIPO DE TOKEN VIA DEBUG (opcional, si no puede, asume valido)
-    let token_type='válido (1 día, 60 días o permanente)';
+    // GUARDA TODO EN CACHE PARA QUE NO DIGA "NO HAY APROBADAS" VACIO
+    if(all.length>0){
+      db.cached_templates= all.length>0? all : db.cached_templates;
+      db.config.last_templates_update=Date.now();
+      saveDB(db.empresa_id, db);
+    }
+
+    let token_type='válido (1 día, 60 días o permanente - recomendado permanente)';
     let warning=null;
 
-    // Intenta saber expiracion via debug_token si hay APP_ID y APP_SECRET
+    if(all.length===0){
+      warning=`⚠️ Meta devolvió 0 plantillas para WABA ${waba} - Verifica: 1) WABA ID correcto 2) Plantillas creadas en business.facebook.com > Cuentas de WhatsApp > Plantillas 3) Token con permiso whatsapp_business_management. Cache: ${ (db.cached_templates||[]).length }`;
+    } else if(approved.length===0){
+      warning=`⚠️ Tienes ${all.length} plantillas pero 0 APPROVED. Estados: ${all.map(t=>`${t.name}:${t.status}`).join(', ')} - Necesitas APPROVED para enviar. Ve a Meta Business y aprueba.`;
+    } else {
+      warning=`✅ ${approved.length} plantillas APPROVED de ${all.length} totales - Token aceptado (1 día, 60 días, permanente) ✅`;
+    }
+
+    // DETECTA TIPO DE TOKEN SI HAY APP_ID
     try{
       const APP_ID=(process.env.META_APP_ID||'').trim();
       const APP_SECRET=(process.env.META_APP_SECRET||'').trim();
@@ -246,26 +281,69 @@ app.get('/api/templates/:eid', async (req,res)=>{
           if(exp===0){ token_type='permanente ♾️ (recomendado)'; }
           else{
             const hours=Math.round((exp*1000 - Date.now())/3600000);
-            if(hours<=24) { token_type=`1 día (expira en ${hours}h)`; warning='⚠️ Token de 1 día detectado - ✅ FUNCIONA pero recomendado cambiar a permanente Nunca Expira para no reconectar cada día'; }
-            else if(hours<=1440){ token_type=`60 días (expira en ${Math.round(hours/24)} días)`; warning='⚠️ Token de 60 días detectado - ✅ FUNCIONA pero recomendado permanente Nunca Expira'; }
-            else { token_type=`permanente / largo`; }
+            if(hours<=30){ token_type=`1 día (expira en ${hours}h) - FUNCIONA pero recomendado permanente`; }
+            else if(hours<=1500){ token_type=`60 días (expira en ${Math.round(hours/24)} días) - FUNCIONA pero recomendado permanente`; }
           }
         }
-      } else {
-        // Sin APP_ID no podemos saber, pero igual aceptamos
-        warning='✅ Token aceptado (1 día, 60 días o permanente). Recomendado: usa permanente Nunca Expira para no reconectar';
       }
-    }catch(e){ warning='✅ Token aceptado - Recomendado permanente'; }
+    }catch(e){}
 
-    return res.json({templates:approved, all:j.data?.length||0, cached:false, token_type, warning, is_expired:false});
+    return res.json({
+      templates: approved.length>0? approved : all, // SI NO HAY APPROVED DEVUELVE TODAS PARA QUE VEAS POR QUE
+      all: all.length,
+      approved: approved.length,
+      others: others.length,
+      cached:false,
+      token_type,
+      warning,
+      is_expired:false,
+      debug:{waba, total: all.length, approved: approved.length, phone}
+    });
 
   }catch(e){
-    res.json({templates:db.cached_templates||[], error:e.message, using_cache:true, is_expired:false, warning:'Usando cache - error temporal: '+e.message});
+    return res.json({
+      templates:db.cached_templates||[],
+      error:'Fetch error: '+e.message+' - revisa conexión',
+      using_cache:true,
+      is_expired:false,
+      warning:'Error red usando cache '+ (db.cached_templates||[]).length,
+      cached_count:(db.cached_templates||[]).length
+    });
   }
 });
 
+// CAMPAIGNS - GMAIL SOLO GOLD - BASICO BLOQUEADO - CON HISTORIAL PAUSAR CONTINUAR
 app.get('/api/campaigns/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]}); res.json({campaigns:(db.campaigns||[]).sort((a,b)=>b.creado-a.creado)});});
-app.post('/api/campaigns/create',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if(req.body.tipo==='gmail' && db.plan!=='gold') return res.json({ok:false, error:'Gmail solo Gold'}); db.campaigns=db.campaigns||[]; const camp={id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:req.body.variables||[], header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, indice:0, next_send:0, creado:Date.now()}; db.campaigns.push(camp); saveDB(req.body.empresa_id,db); res.json({ok:true, camp});});
+app.post('/api/campaigns/create',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
+  // GMAIL SOLO GOLD - BASICO BLOQUEADO
+  if(req.body.tipo==='gmail' && db.plan!=='gold'){
+    return res.json({ok:false, error:'⛔ Gmail masivo solo disponible en Plan Gold. Tu plan actual: '+db.plan+'. Cambia a Gold en Planes. WhatsApp funciona en Básico.'});
+  }
+  db.campaigns=db.campaigns||[];
+  const camp={
+    id:Date.now().toString(),
+    nombre:req.body.nombre,
+    tipo:req.body.tipo||'whatsapp',
+    numeros:req.body.numeros||[],
+    total:(req.body.numeros||[]).length,
+    template_name:req.body.template_name||'',
+    template_lang:req.body.template_lang||'es',
+    variables:req.body.variables||[],
+    header_image:req.body.header_image||'',
+    gmail_subject:req.body.gmail_subject||'',
+    gmail_body:req.body.gmail_body||'',
+    status:'running',
+    enviados:0,
+    fallidos:0,
+    indice:0,
+    next_send:0,
+    creado:Date.now()
+  };
+  db.campaigns.push(camp);
+  saveDB(req.body.empresa_id,db);
+  res.json({ok:true, camp});
+});
 app.post('/api/campaigns/toggle',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const c=(db.campaigns||[]).find(x=>String(x.id)===String(req.body.id)); if(c){ c.status=c.status==='paused'?'running':'paused'; if(c.status==='running' && c.next_send && Date.now()>c.next_send) c.next_send=0; saveDB(req.body.empresa_id,db); } res.json({ok:true});});
 app.post('/api/campaigns/delete',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.campaigns=(db.campaigns||[]).filter(x=>String(x.id)!==String(req.body.id)); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
@@ -309,4 +387,4 @@ app.get('/crm',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
 app.get('/crm.html',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V232 FIX TOKEN 1 DIA 60 DIAS PERMANENTE OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V240 FIX PLANTILLAS 1D 60D PERMANENTE + GMAIL GOLD + HISTORIAL PAUSAR CONTINUAR OK en 0.0.0.0:${PORT}`));
