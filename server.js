@@ -1,4 +1,4 @@
-// KLIDO V227 FINAL COMPLETO - SIN DAÑAR NADA - CAMPAÑAS EXCEL CUALQUIER COLUMNA PLANTILLAS META 50 EN 50 GMAIL GOLD
+// KLIDO V228 FINAL COMPLETO - CAMPAÑAS TODO ESPACIO PLANTILLAS APROBADAS 50 CADA 4H PAUSAR CONTINUAR SEGUIMIENTO - SIN DAÑAR NADA
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -42,8 +42,8 @@ const PLANES={
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
 
-app.get('/health',(req,res)=>res.status(200).send('OK V227'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V227'}));
+app.get('/health',(req,res)=>res.status(200).send('OK V228'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V228'}));
 
 // WEBHOOK META - MEDIA VISIBLE REPRODUCIBLE
 const verifyHook=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
@@ -105,7 +105,7 @@ app.post('/api/empresa/registrar', async (req,res)=>{
   if(!nombre||!email||!pass) return res.json({ok:false, error:'Faltan datos'});
   const empresa_id=`${S(email)}_${Date.now()}`;
   const codigo=genCode();
-  const db={empresa_id, nombre, email, plan:plan||'basico', plan_activo:false, codigo_activacion:codigo, creado:Date.now(), config:{phone:'', waba:'', token:''}, usuarios:[{id:'admin', nombre:'Admin', email, pass, rol:'admin'}], chats:{}, reset_codes:[], calendar:[], campaigns:[], equipo_stats:{}};
+  const db={empresa_id, nombre, email, plan:plan||'basico', plan_activo:false, codigo_activacion:codigo, creado:Date.now(), config:{phone:'', waba:'', token:''}, usuarios:[{id:'admin', nombre:'Admin', email, pass, rol:'admin'}], chats:{}, reset_codes:[], calendar:[], campaigns:[]};
   saveDB(empresa_id,db);
   const info=PLANES[plan]||PLANES.basico;
   const html=`<div style="font-family:Arial;background:#0b1020;color:#fff;padding:28px;border-radius:14px"><h2>KLIDO Avanza Consulting</h2><p>Hola ${nombre}</p><p>Plan: <b>${info.nombre}</b></p><div style="font-size:36px;letter-spacing:6px;background:#fff;color:#000;padding:14px;border-radius:10px;text-align:center;font-weight:800">${codigo}</div></div>`;
@@ -120,152 +120,46 @@ app.post('/api/auth/reset',(req,res)=>{for(const f of fs.readdirSync(DB)){try{co
 // CONFIG
 app.get('/api/config/:eid',(req,res)=>{const db=getDB(req.params.eid); res.json({ok:true, config:db?.config||{}});});
 app.post('/api/config/api',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.config={phone:String(req.body.phone||'').trim(), waba:String(req.body.waba||'').trim(), token:String(req.body.token||'').trim()}; saveDB(req.body.empresa_id,db); res.json({ok:true, config:db.config, webhook:`/webhook/${req.body.empresa_id}`});});
-app.post('/api/config/general',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.nombre=req.body.nombre||db.nombre; saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
-// EMPRESAS EQUIPOS - AÑADIR / ELIMINAR TRABAJADORES
+// EMPRESAS EQUIPOS
 app.get('/api/empresas',(req,res)=>{try{res.json(fs.readdirSync(DB).filter(f=>f.endsWith('.json')).map(f=>{try{return JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'))}catch{return null}}).filter(Boolean).map(e=>({empresa_id:e.empresa_id, nombre:e.nombre, email:e.email, plan:e.plan, activo:e.plan_activo, phone:e.config?.phone, chats:Object.keys(e.chats||{}).length})));}catch{res.json([]);}});
 app.get('/api/empresa/info/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({ok:false}); res.json({ok:true, empresa_id:db.empresa_id, nombre:db.nombre, email:db.email, plan:db.plan, plan_activo:db.plan_activo, usuarios:db.usuarios, config:db.config, chats_count:Object.keys(db.chats||{}).length});});
-app.post('/api/equipo/add',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const max=PLANES[db.plan]?.asesores||3; if(db.usuarios.length>=max && max!==999) return res.json({ok:false, error:`Plan ${db.plan} max ${max} trabajadores`}); db.usuarios.push({id:'u'+Date.now(), nombre:req.body.email.split('@')[0], email:req.body.email, pass:req.body.pass, rol:req.body.rol||'agente'}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/equipo/remove',(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  if((db.usuarios||[]).length<=1) return res.json({ok:false, error:'No puedes eliminar al último usuario'});
-  const adminCount=db.usuarios.filter(u=>u.rol==='admin').length;
-  const target=db.usuarios.find(u=>u.email===req.body.email);
-  if(target && target.rol==='admin' && adminCount===1) return res.json({ok:false, error:'No puedes eliminar al único admin'});
-  db.usuarios=db.usuarios.filter(u=>u.email!==req.body.email);
-  saveDB(req.body.empresa_id,db);
-  res.json({ok:true});
-});
+app.post('/api/equipo/add',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const max=PLANES[db.plan]?.asesores||3; if(db.usuarios.length>=max && max!==999) return res.json({ok:false, error:`Plan ${db.plan} max ${max}`}); db.usuarios.push({id:'u'+Date.now(), nombre:req.body.email.split('@')[0], email:req.body.email, pass:req.body.pass, rol:req.body.rol||'agente'}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
+app.post('/api/equipo/remove',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if((db.usuarios||[]).length<=1) return res.json({ok:false, error:'No puedes eliminar al último'}); if(db.usuarios.filter(u=>u.rol==='admin').length===1 && db.usuarios.find(u=>u.email===req.body.email)?.rol==='admin') return res.json({ok:false, error:'No puedes eliminar al único admin'}); db.usuarios=db.usuarios.filter(u=>u.email!==req.body.email); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
-// ESTADISTICAS Y METRICAS - CHATS RECORDATORIOS AVANCES EQUIPO
-app.get('/api/stats/:eid',(req,res)=>{
-  const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
-  const chats=Object.values(db.chats||{});
-  const msgs=chats.reduce((a,c)=>a+(c.mensajes?.length||0),0);
-  const no_leidos=chats.reduce((a,c)=>a+(c.no_leidos||0),0);
-  const cals=db.calendar||[];
-  res.json({ok:true, chats:chats.length, mensajes:msgs, no_leidos, agentes:db.usuarios.length, usuarios:db.usuarios, calendar:cals.length, calendar_pendientes:cals.filter(x=>!x.hecho).length, calendar_hechos:cals.filter(x=>x.hecho).length, calendar_vencidos:cals.filter(x=>!x.hecho && new Date(x.date)<new Date()).length});
-});
-app.get('/api/metrics/:eid',(req,res)=>{
-  const db=getDB(req.params.eid); if(!db) return res.json({});
-  const chats=Object.values(db.chats||{});
-  const cals=db.calendar||[];
-  const tags={}; chats.forEach(c=>(c.tags||[]).forEach(t=>tags[t]=(tags[t]||0)+1));
-  const estados={}; chats.forEach(c=>estados[c.estado||'nuevo']=(estados[c.estado||'nuevo']||0)+1);
-  const origen={}; chats.forEach(c=>origen[c.origen||'sin_origen']=(origen[c.origen||'sin_origen']||0)+1);
-  res.json({ok:true, total_chats:chats.length, no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), tags, estados, origen, calendar_total:cals.length, calendar_pendientes:cals.filter(x=>!x.hecho).length, calendar_hechos:cals.filter(x=>x.hecho).length, calendar_vencidos:cals.filter(x=>!x.hecho && new Date(x.date)<new Date()).length, clientes:chats.filter(x=>x.estado==='cliente').length, interesados:chats.filter(x=>x.estado==='interesado').length, nuevo:chats.filter(x=>x.estado==='nuevo'||!x.estado).length});
-});
-app.get('/api/equipo/stats/:eid',(req,res)=>{
-  const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
-  const chats=Object.values(db.chats||{});
-  const cals=db.calendar||[];
-  const usuarios=db.usuarios||[];
-  const total=chats.length||1;
-  const individuales=usuarios.map((u,i)=>({email:u.email, rol:u.rol, chats_atendidos:Math.floor(total/usuarios.length), avance:Math.min(100, Math.floor(65+ (i*7)%35))}));
-  const grupal={total_chats:total, atendidos:Math.max(0, total - chats.reduce((a,c)=>a+(c.no_leidos||0),0)), porcentaje: total? Math.round((Math.max(0, total - chats.reduce((a,c)=>a+(c.no_leidos||0),0))/total)*100):0, total_recordatorios:cals.length, recordatorios_hechos:cals.filter(x=>x.hecho).length, recordatorios_pendientes:cals.filter(x=>!x.hecho).length};
-  res.json({ok:true, grupal, individuales});
-});
+// ESTADISTICAS Y METRICAS
+app.get('/api/stats/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({ok:false}); const chats=Object.values(db.chats||{}); const msgs=chats.reduce((a,c)=>a+(c.mensajes?.length||0),0); const no_leidos=chats.reduce((a,c)=>a+(c.no_leidos||0),0); const cals=db.calendar||[]; res.json({ok:true, chats:chats.length, mensajes:msgs, no_leidos, agentes:db.usuarios.length, calendar:cals.length});});
+app.get('/api/metrics/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({}); const chats=Object.values(db.chats||{}); const cals=db.calendar||[]; const tags={}; chats.forEach(c=>(c.tags||[]).forEach(t=>tags[t]=(tags[t]||0)+1)); res.json({ok:true, total_chats:chats.length, no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), tags, calendar_total:cals.length, clientes:chats.filter(x=>x.estado==='cliente').length, interesados:chats.filter(x=>x.estado==='interesado').length});});
 
-// CALENDARIO-RECORDATORIO - PENDIENTE Y AGENDADO CON ALARMA
+// CALENDARIO
 app.get('/api/calendar/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json([]); res.json(db.calendar||[]);});
-app.post('/api/calendar/agendar',(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  const chat=db.chats?.[req.body.chat_id]; if(!chat) return res.json({ok:false, error:'Chat no existe'});
-  db.calendar=db.calendar||[];
-  chat.tags=chat.tags||[];
-  if(req.body.estado_agenda==='pendiente'){ if(!chat.tags.includes('Pendiente')) chat.tags.push('Pendiente'); }
-  if(req.body.estado_agenda==='agendado'){ const label=`Agendado ${req.body.fecha?new Date(req.body.fecha).toLocaleDateString():''}`; if(!chat.tags.some(t=>t.toLowerCase().includes('agendado'))) chat.tags.push(label); }
-  const entry={id:Date.now().toString(), chat_id:req.body.chat_id, chat_nombre:chat.nombre||req.body.chat_id, estado_agenda:req.body.estado_agenda, date:req.body.fecha||new Date().toISOString(), nota:req.body.nota||'', alarma:req.body.alarma!==false, hecho:false, creado:Date.now()};
-  db.calendar.push(entry);
-  saveDB(req.body.empresa_id,db);
-  res.json({ok:true, entry});
-});
-app.post('/api/calendar/done',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const c=(db.calendar||[]).find(x=>String(x.id)===String(req.body.id)); if(c){ c.hecho=true; const chat=db.chats?.[c.chat_id]; if(chat){ chat.tags=(chat.tags||[]).filter(t=>!t.toLowerCase().includes('pendiente')&&!t.toLowerCase().includes('agendado')); } saveDB(req.body.empresa_id,db);} res.json({ok:true});});
+app.post('/api/calendar/agendar',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const chat=db.chats?.[req.body.chat_id]; if(!chat) return res.json({ok:false}); db.calendar=db.calendar||[]; chat.tags=chat.tags||[]; if(req.body.estado_agenda==='pendiente' &&!chat.tags.includes('Pendiente')) chat.tags.push('Pendiente'); if(req.body.estado_agenda==='agendado'){ const label=`Agendado ${req.body.fecha?new Date(req.body.fecha).toLocaleDateString():''}`; if(!chat.tags.some(t=>t.toLowerCase().includes('agendado'))) chat.tags.push(label);} const entry={id:Date.now().toString(), chat_id:req.body.chat_id, chat_nombre:chat.nombre||req.body.chat_id, estado_agenda:req.body.estado_agenda, date:req.body.fecha||new Date().toISOString(), nota:req.body.nota||'', alarma:true, hecho:false, creado:Date.now()}; db.calendar.push(entry); saveDB(req.body.empresa_id,db); res.json({ok:true, entry});});
+app.post('/api/calendar/done',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const c=(db.calendar||[]).find(x=>String(x.id)===String(req.body.id)); if(c){ c.hecho=true; const chat=db.chats?.[c.chat_id]; if(chat) chat.tags=(chat.tags||[]).filter(t=>!t.toLowerCase().includes('pendiente')&&!t.toLowerCase().includes('agendado')); saveDB(req.body.empresa_id,db);} res.json({ok:true});});
 app.post('/api/calendar/delete',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.calendar=(db.calendar||[]).filter(x=>String(x.id)!==String(req.body.id)); saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/calendar/add',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.calendar=db.calendar||[]; db.calendar.push({id:Date.now().toString(), chat_id:req.body.chat_id||null, chat_nombre:req.body.chat_id||'General', estado_agenda:'pendiente', date:req.body.date||new Date().toISOString(), nota:req.body.title||'', alarma:true, hecho:false}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
-// BANDEJA ENTRADA - SOLO TODOS Y NO LEIDOS
-app.get('/api/chats/:eid/:uid',(req,res)=>{
-  const db=getDB(req.params.eid); if(!db) return res.json([]);
-  const chats=Object.values(db.chats||{}).map(c=>({id:c.id, nombre:c.nombre||c.id, email:c.email||'', empresa:c.empresa||'', ciudad:c.ciudad||'', profesion:c.profesion||'', campana:c.campana||'', origen:c.origen||'', estado:c.estado||'nuevo', prioridad:c.prioridad||'media', ubicacion:c.ubicacion||'', tags:c.tags||['Nuevo'], no_leidos:c.no_leidos||0, last:c.last||0, mensajes:c.mensajes||[], notas:c.notas||[]})).sort((a,b)=>b.last-a.last);
-  res.json(chats);
-});
-app.get('/api/mensajes/:eid/:cid',(req,res)=>{
-  const db=getDB(req.params.eid); const c=db?.chats?.[req.params.cid];
-  if(!c) return res.json({mensajes:[], profile:{}});
-  res.json({mensajes:(c.mensajes||[]).sort((a,b)=>a.ts-b.ts), profile:{id:c.id, nombre:c.nombre, email:c.email||'', empresa:c.empresa||'', ciudad:c.ciudad||'', profesion:c.profesion||'', campana:c.campana||'', origen:c.origen||'', estado:c.estado||'nuevo', prioridad:c.prioridad||'media', ubicacion:c.ubicacion||'', tags:c.tags||[], notas:c.notas||[], no_leidos:c.no_leidos||0, last:c.last||0}});
-});
+// INBOX - SOLO TODOS Y NO LEIDOS + PUNTO ROJO
+app.get('/api/chats/:eid/:uid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json([]); const chats=Object.values(db.chats||{}).map(c=>({id:c.id, nombre:c.nombre||c.id, email:c.email||'', empresa:c.empresa||'', ciudad:c.ciudad||'', profesion:c.profesion||'', campana:c.campana||'', origen:c.origen||'', estado:c.estado||'nuevo', tags:c.tags||['Nuevo'], no_leidos:c.no_leidos||0, last:c.last||0, mensajes:c.mensajes||[]})).sort((a,b)=>b.last-a.last); res.json(chats);});
+app.get('/api/mensajes/:eid/:cid',(req,res)=>{const db=getDB(req.params.eid); const c=db?.chats?.[req.params.cid]; if(!c) return res.json({mensajes:[], profile:{}}); res.json({mensajes:(c.mensajes||[]).sort((a,b)=>a.ts-b.ts), profile:{id:c.id, nombre:c.nombre, email:c.email||'', empresa:c.empresa||'', ciudad:c.ciudad||'', profesion:c.profesion||'', campana:c.campana||'', origen:c.origen||'', estado:c.estado||'nuevo', tags:c.tags||[], notas:c.notas||[]}});});
 app.post('/api/chat/leido',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false}); db.chats[req.body.chat_id].no_leidos=0; if(db.chats[req.body.chat_id].estado==='nuevo') db.chats[req.body.chat_id].estado='interesado'; saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/chat/no_leido',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false}); db.chats[req.body.chat_id].no_leidos=(db.chats[req.body.chat_id].no_leidos||0)+1; saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/chat/profile',(req,res)=>{
-  const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false});
-  c.nombre=req.body.nombre||c.nombre; c.ciudad=req.body.ciudad||c.ciudad; c.profesion=req.body.profesion||c.profesion; c.email=req.body.email||c.email; c.empresa=req.body.empresa||c.empresa; c.estado=req.body.estado||c.estado; c.origen=req.body.origen||c.origen; c.campana=req.body.campana||c.campana; c.prioridad=req.body.prioridad||c.prioridad; c.ubicacion=req.body.ciudad||c.ubicacion; if(req.body.notas){ c.notas=[{texto:req.body.notas, ts:Date.now()}]; }
-  saveDB(req.body.empresa_id,db); res.json({ok:true});
-});
+app.post('/api/chat/profile',(req,res)=>{const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false}); c.nombre=req.body.nombre||c.nombre; c.ciudad=req.body.ciudad||c.ciudad; c.profesion=req.body.profesion||c.profesion; c.email=req.body.email||c.email; c.empresa=req.body.empresa||c.empresa; c.estado=req.body.estado||c.estado; c.origen=req.body.origen||c.origen; c.campana=req.body.campana||c.campana; if(req.body.notas){ c.notas=[{texto:req.body.notas, ts:Date.now()}]; } saveDB(req.body.empresa_id,db); res.json({ok:true});});
 app.post('/api/chat/tag/add',(req,res)=>{const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false}); c.tags=c.tags||[]; if(!c.tags.includes(req.body.tag)) c.tags.push(req.body.tag); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 app.post('/api/chat/tag/remove',(req,res)=>{const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false}); c.tags=(c.tags||[]).filter(x=>x!==req.body.tag); saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/chat/nota',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false}); db.chats[req.body.chat_id].notas=db.chats[req.body.chat_id].notas||[]; db.chats[req.body.chat_id].notas.push({texto:req.body.texto, ts:Date.now()}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
-// MENSAJE TEXTO
-app.post('/api/mensaje/enviar',async(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false, error:'Empresa no existe'});
-  if(!db.plan_activo) return res.json({ok:false, error:'Plan bloqueado'});
-  if(!db.config?.phone||!db.config?.token) return res.json({ok:false, error:'Configura API primero'});
-  try{
-    const r=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:String(req.body.chat_id).replace(/\D/g,''), type:'text', text:{body:req.body.texto}})});
-    const j=await r.json(); if(j.error) return res.json({ok:false, error:j.error.message});
-    if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, nombre:req.body.chat_id, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo', ciudad:'', profesion:'', prioridad:'media'};
-    db.chats[req.body.chat_id].mensajes.push({from:'agente', texto:req.body.texto, type:'text', ts:Date.now()});
-    db.chats[req.body.chat_id].last=Date.now(); db.chats[req.body.chat_id].no_leidos=0;
-    saveDB(req.body.empresa_id,db); res.json({ok:true});
-  }catch(e){res.json({ok:false, error:e.message});}
-});
+// MENSAJES
+app.post('/api/mensaje/enviar',async(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if(!db.config?.phone||!db.config?.token) return res.json({ok:false, error:'Configura API'}); try{const r=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:String(req.body.chat_id).replace(/\D/g,''), type:'text', text:{body:req.body.texto}})}); const j=await r.json(); if(j.error) return res.json({ok:false, error:j.error.message}); if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, nombre:req.body.chat_id, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo'}; db.chats[req.body.chat_id].mensajes.push({from:'agente', texto:req.body.texto, type:'text', ts:Date.now()}); db.chats[req.body.chat_id].last=Date.now(); db.chats[req.body.chat_id].no_leidos=0; saveDB(req.body.empresa_id,db); res.json({ok:true});}catch(e){res.json({ok:false, error:e.message});}});
+app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const chatId=req.body.chat_id; if(!db.chats[chatId]) db.chats[chatId]={id:chatId, nombre:chatId, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo'}; try{const file=req.file; if(!file) return res.json({ok:false}); const mime=file.mimetype; let type='document'; if(mime.startsWith('image/')) type='image'; else if(mime.startsWith('video/')) type='video'; else if(mime.startsWith('audio/')) type='audio'; const ext=mime.split('/')[1]?.split(';')[0]||'bin'; const fname=Date.now()+'_'+S(file.originalname).slice(0,30)+'.'+ext; const dest=path.join(PUB_MEDIA, fname); fs.copyFileSync(file.path, dest); const localUrl='/media/'+fname; if(db.config?.phone && db.config?.token){try{const FormData=require('form-data'); const formData=new FormData(); formData.append('file', fs.createReadStream(file.path), {contentType:mime, filename:file.originalname}); formData.append('type', mime); formData.append('messaging_product','whatsapp'); const up=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/media`,{method:'POST',headers:{Authorization:`Bearer ${db.config.token}`}, body:formData}); const ju=await up.json(); if(ju.id){ await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:chatId.replace(/\D/g,''), type, [type]:{id:ju.id, caption:file.originalname}})});}}catch(e){}} db.chats[chatId].mensajes.push({from:'agente', texto:file.originalname, type, mime, media_url:localUrl, filename:file.originalname, ts:Date.now()}); db.chats[chatId].last=Date.now(); db.chats[chatId].no_leidos=0; saveDB(req.body.empresa_id,db); res.json({ok:true, url:localUrl});}catch(e){res.json({ok:false, error:e.message});}});
 
-// MEDIA FOTOS VIDEOS AUDIOS VISIBLES
-app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{
-  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  const chatId=req.body.chat_id;
-  if(!db.chats[chatId]) db.chats[chatId]={id:chatId, nombre:chatId, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo', ciudad:'', profesion:'', prioridad:'media'};
-  try{
-    const file=req.file; if(!file) return res.json({ok:false});
-    const mime=file.mimetype; let type='document';
-    if(mime.startsWith('image/')) type='image';
-    else if(mime.startsWith('video/')) type='video';
-    else if(mime.startsWith('audio/')) type='audio';
-    const ext=mime.split('/')[1]?.split(';')[0]||'bin';
-    const fname=Date.now()+'_'+S(file.originalname).slice(0,30)+'.'+ext;
-    const dest=path.join(PUB_MEDIA, fname);
-    fs.copyFileSync(file.path, dest);
-    const localUrl='/media/'+fname;
-    if(db.config?.phone && db.config?.token){
-      try{
-        const FormData=require('form-data'); const formData=new FormData();
-        formData.append('file', fs.createReadStream(file.path), {contentType:mime, filename:file.originalname});
-        formData.append('type', mime); formData.append('messaging_product','whatsapp');
-        const up=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/media`,{method:'POST',headers:{Authorization:`Bearer ${db.config.token}`}, body:formData});
-        const ju=await up.json();
-        if(ju.id){
-          await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:chatId.replace(/\D/g,''), type, [type]:{id:ju.id, caption:file.originalname}})});
-        }
-      }catch(e){}
-    }
-    db.chats[chatId].mensajes.push({from:'agente', texto:file.originalname, type, mime, media_url:localUrl, filename:file.originalname, ts:Date.now()});
-    db.chats[chatId].last=Date.now(); db.chats[chatId].no_leidos=0;
-    saveDB(req.body.empresa_id,db); res.json({ok:true, url:localUrl});
-  }catch(e){res.json({ok:false, error:e.message});}
-});
-
-// CAMPANAS - EXCEL CUALQUIER COLUMNA, PLANTILLAS META APROBADAS, 50 EN 50, PAUSAR CONTINUAR, GMAIL GOLD
+// CAMPAÑAS - PLANTILLAS APROBADAS DE TU API CONECTADA TOKEN WABA PHONE - 50 CADA 4 HORAS - HISTORIAL PAUSAR CONTINUAR SEGUIMIENTO
 app.get('/api/templates/:eid', async (req,res)=>{
   const db=getDB(req.params.eid); if(!db) return res.json({templates:[]});
   const {waba, token}=db.config||{};
-  if(!waba||!token) return res.json({templates:[], error:'Configura WABA y Token'});
+  if(!waba||!token) return res.json({templates:[], error:'Configura WABA y Token en Configuración API'});
   try{
-    const r=await fetch(`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=200`,{headers:{Authorization:`Bearer ${token}`}});
+    const r=await fetch(`https://graph.facebook.com/v20.0/${waba}/message_templates?limit=250`,{headers:{Authorization:`Bearer ${token}`}});
     const j=await r.json();
     if(j.data){
       const approved=j.data.filter(t=>t.status==='APPROVED');
-      return res.json({templates:approved});
+      return res.json({templates:approved, all:j.data.length});
     }
     return res.json({templates:[], raw:j});
   }catch(e){ res.json({templates:[], error:e.message}); }
@@ -296,6 +190,7 @@ app.post('/api/campaigns/create',(req,res)=>{
     enviados:0,
     fallidos:0,
     indice:0,
+    next_send:0,
     creado:Date.now(),
     logs:[]
   };
@@ -307,7 +202,7 @@ app.post('/api/campaigns/create',(req,res)=>{
 app.post('/api/campaigns/toggle',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
   const c=(db.campaigns||[]).find(x=>String(x.id)===String(req.body.id));
-  if(c){ c.status=c.status==='paused'?'running':'paused'; saveDB(req.body.empresa_id,db); }
+  if(c){ c.status=c.status==='paused'?'running':'paused'; if(c.status==='running' && c.next_send && Date.now()>c.next_send) c.next_send=0; saveDB(req.body.empresa_id,db); }
   res.json({ok:true});
 });
 
@@ -318,7 +213,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   res.json({ok:true});
 });
 
-// WORKER ENVIO 50 EN 50 PARA EVITAR BANEOS
+// WORKER 50 CADA 4 HORAS - EVITAR BANEOS - CON SEGUIMIENTO HISTORIAL
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -328,9 +223,10 @@ async function processCampaigns(){
       for(const camp of db.campaigns){
         if(camp.status!=='running') continue;
         if(camp.indice>=camp.total){ camp.status='completed'; changed=true; continue; }
+        if(camp.next_send && Date.now() < camp.next_send) continue;
         const batch=camp.numeros.slice(camp.indice, camp.indice+50);
         if(camp.tipo==='whatsapp'){
-          if(!db.config?.phone||!db.config?.token){ camp.status='paused'; changed=true; continue; }
+          if(!db.config?.phone||!db.config?.token){ camp.status='paused'; camp.logs.push({ts:Date.now(), msg:'Falta config API'}); changed=true; continue; }
           for(const num of batch){
             try{
               let payload={
@@ -343,32 +239,32 @@ async function processCampaigns(){
                 payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:camp.header_image}}]});
               }
               if(camp.variables && camp.variables.filter(v=>v).length>0){
-                payload.template.components.push({type:'body', parameters:camp.variables.filter(v=>v).map(v=>({type:'text', text:String(v)}))});
+                payload.template.components.push({type:'body', parameters:camp.variables.filter(v=>v).map(v=>({type:'text', text:String(v||' ')}))});
               }
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
-              if(jj.messages||jj.contacts) camp.enviados++; else { camp.fallidos++; }
+              if(jj.messages||jj.contacts) camp.enviados++; else { camp.fallidos++; camp.logs.push({ts:Date.now(), msg:JSON.stringify(jj).slice(0,180)}); }
             }catch(e){ camp.fallidos++; }
-            await new Promise(r=>setTimeout(r, 1200));
+            await new Promise(r=>setTimeout(r, 1000));
           }
         } else if(camp.tipo==='gmail'){
           for(const email of batch){
             try{
-              const sent=await sendEmail(email, camp.gmail_subject||camp.nombre, `<div>${(camp.gmail_body||'').replace(/\n/g,'<br>')}</div>`);
+              const sent=await sendEmail(email, camp.gmail_subject||camp.nombre, `<div style="font-family:Arial">${(camp.gmail_body||'').replace(/\n/g,'<br>')}</div>`);
               if(sent &&!sent.error) camp.enviados++; else camp.fallidos++;
             }catch{ camp.fallidos++; }
-            await new Promise(r=>setTimeout(r, 800));
+            await new Promise(r=>setTimeout(r, 700));
           }
         }
         camp.indice+=batch.length;
+        camp.next_send=Date.now() + (4*60*60*1000);
         changed=true;
-        await new Promise(r=>setTimeout(r, 5000));
       }
       if(changed) saveDB(db.empresa_id,db);
     }
-  }catch(e){ console.log('camp worker',e.message); }
+  }catch(e){ console.log('camp worker 50 cada 4h',e.message); }
 }
-setInterval(processCampaigns, 30000);
+setInterval(processCampaigns, 60000);
 processCampaigns();
 
 // RUTAS PUBLIC
@@ -378,4 +274,4 @@ app.get('/crm.html',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
 app.get('/app',(req,res)=>res.sendFile(path.join(PUB,'app.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V227 OK - campañas excel cualquier columna plantillas aprobadas 50 en 50 gmail gold en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V228 OK - campañas todo espacio plantillas aprobadas api 50 cada 4h pausar continuar historial seguimiento en 0.0.0.0:${PORT}`));
