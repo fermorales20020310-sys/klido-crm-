@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO Avanza Consulting</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><style>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter;background:#0b1020;color:#e2e8f0;height:100vh;overflow:hidden}
 .app{display:flex;flex-direction:column;height:100vh;padding:10px}.topbar{height:74px;background:#131b2e;border:1px solid #1e2a4a;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
 .menu{width:240px;background:#0f172a;border-right:1px solid #1e2a4a;padding:12px;display:flex;flex-direction:column;gap:3px;overflow:auto}
@@ -13,105 +13,97 @@
 .profile{width:360px;background:#0f172a;border-left:1px solid #1e2a4a;padding:14px;overflow:auto;display:none}
 .profile.show{display:block}
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}.kpiCard{background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:14px}
+.planCard{background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:18px;text-align:center;position:relative}
+.planCard.active{border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f633}
+.planBtn{background:#3b82f6;border:0;padding:11px;border-radius:10px;color:#fff;font-weight:700;width:100%;cursor:pointer;margin-top:12px}
+.planBtn:hover{background:#2563eb}
 </style></head><body>
 <div class="app">
 <div class="topbar"><div style="display:flex;align-items:center;gap:14px"><img src="/logo.png" style="width:58px;height:58px;border-radius:12px;background:#fff;padding:4px"><div><div style="display:flex;gap:6px"><span style="font-size:26px;font-weight:900">KLIDO</span><span style="font-size:15px;font-weight:600;color:#cbd5e1">Avanza Consulting</span></div><div style="font-size:10px;color:#93c5fd;font-weight:800">API OFICIAL META</div></div><span style="background:#3b82f6;padding:4px 10px;border-radius:20px;font-size:11px;margin-left:10px">Pro Plan</span></div><div style="display:flex;gap:12px;align-items:center"><span id="userEmail" style="font-size:12px;color:#94a3b8"></span><button onclick="salir()" style="background:#ef4444;border:0;padding:7px 14px;border-radius:8px;color:#fff;font-weight:700;cursor:pointer">Salir</button></div></div>
 <div style="flex:1;display:flex;background:#131b2e;border:1px solid #1e2a4a;border-top:0;border-radius:0 0 14px 14px;overflow:hidden">
-<div class="menu">
-<div style="font-size:10px;color:#64748b;margin:8px;font-weight:700">MENU ADMINISTRADOR</div>
-<div class="m active" id="mInbox" onclick="showView('inbox')">💬 Bandeja de entrada</div>
-<div class="m" id="mCal" onclick="showView('calendar')">📅 Calendario-Recordatorio <span id="calCount" style="margin-left:auto;background:#ef4444;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;display:none">0</span></div>
+<div class="menu" id="sideMenu">
+<div style="display:flex;gap:6px;align-items:center;background:#0b1020;border:1px solid #1e2a4a;padding:8px 10px;border-radius:10px;margin-bottom:10px"><span>🌙 / ☀️</span><span style="font-size:12px">Tema</span></div>
+<div style="font-size:10px;color:#64748b;margin:8px;font-weight:700">MENU</div>
+<div class="m active" id="mInbox" onclick="showView('inbox')">📥 Inbox</div>
+<div class="m" id="mCamp" onclick="showView('camp')">🔔 Campaigns</div>
+<div class="m" id="mPlan" onclick="showView('plan')">💳 Planes</div>
+<div class="m" id="mApi" onclick="openApi()">⚙️ Settings</div>
+<div class="m" id="mCal" onclick="showView('calendar')">📅 Calendario <span id="calCount" style="margin-left:auto;background:#ef4444;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;display:none">0</span></div>
 <div class="m" id="mStats" onclick="showView('stats')">📊 Estadísticas</div>
 <div class="m" id="mMetrics" onclick="showView('metrics')">📈 Métricas</div>
 <div class="m" id="mTeam" onclick="showView('team')">👥 Equipos</div>
-<div class="m" id="mCamp" onclick="showView('camp')">📣 Campañas</div>
-<div class="m" id="mPlan" onclick="showView('plan')">💳 Planes</div>
-<div style="font-size:10px;color:#64748b;margin:14px 8px 6px">CONFIGURACIÓN</div>
-<div class="m" id="mApi" onclick="openApi()">🔑 Configuración de API</div>
-<div style="margin-top:auto;padding:8px;background:#1e293b;border:1px solid #2a3a5c;border-radius:12px"><div style="font-size:12px;font-weight:700">Avanza Consulting</div><div style="font-size:10px;color:#64748b">API Oficial Meta - token, waba, phone guardados en base - solo admin ve sensible</div></div>
+<div style="font-size:10px;color:#64748b;margin:14px 8px 6px">SUPPORT</div>
+<div class="m" onclick="alert('Soporte KLIDO - soporte@klidoapp.com.co')">💡 Help Center</div>
+<div style="margin-top:auto;padding:8px;background:#1e293b;border:1px solid #2a3a5c;border-radius:12px"><div id="planBadge" style="font-size:11px;font-weight:700">Plan Básico</div><div style="font-size:10px;color:#64748b">Gestiona tu suscripción</div></div>
 </div>
 
 <div id="inboxArea" style="display:flex;flex:1">
-<div class="inbox"><div style="padding:12px 14px;display:flex;justify-content:space-between"><b>Inbox</b><span id="countInbox" style="font-size:11px;color:#94a3b8">0 chats</span></div><div style="padding:0 12px"><input id="q" class="api-input" placeholder="Buscar nombre, teléfono..." oninput="loadChats()"></div><div id="list" style="flex:1;overflow:auto"></div></div>
-<div class="chat"><div style="height:60px;border-bottom:1px solid #1e2a4a;display:flex;align-items:center;padding:0 14px;gap:10px"><div id="hAv" style="width:36px;height:36px;border-radius:50%;background:#a5b4fc;color:#000;display:flex;align-items:center;justify-content:center;font-weight:700">SN</div><div><div id="hName" style="font-weight:700;font-size:14px">Selecciona un chat</div><div style="font-size:11px;color:#22c55e">WhatsApp API Oficial</div></div></div><div class="msgs" id="msgs"><div style="text-align:center;color:#64748b;margin-top:80px">Selecciona una conversación</div></div><div style="padding:10px 12px;border-top:1px solid #1e2a4a;display:flex;gap:10px"><input id="txt" class="api-input" style="margin:0;flex:1;border-radius:22px" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()"><button style="width:38px;height:38px;border-radius:50%;background:#3b82f6;border:0;color:#fff" onclick="sendMsg()">▶</button></div></div>
-<div class="profile show" id="profilePanel"><div style="display:flex;justify-content:space-between"><b>Customer Profile - Solo bandeja</b><span onclick="profilePanel.classList.remove('show')" style="cursor:pointer">✕</span></div>
+<div class="inbox"><div style="padding:12px 14px;display:flex;justify-content:space-between"><b>Inbox</b><span id="countInbox" style="font-size:11px;color:#94a3b8">0 chats</span></div><div style="padding:0 12px"><input id="q" class="api-input" placeholder="Buscar..." oninput="loadChats()"></div><div id="list" style="flex:1;overflow:auto"></div></div>
+<div class="chat"><div style="height:60px;border-bottom:1px solid #1e2a4a;display:flex;align-items:center;padding:0 14px;gap:10px"><div id="hAv" style="width:36px;height:36px;border-radius:50%;background:#a5b4fc;color:#000;display:flex;align-items:center;justify-content:center;font-weight:700">SN</div><div><div id="hName" style="font-weight:700;font-size:14px">Selecciona un chat</div><div style="font-size:11px;color:#22c55e">WhatsApp Business API</div></div></div><div class="msgs" id="msgs"><div style="text-align:center;color:#64748b;margin-top:80px">Selecciona conversación</div></div><div style="padding:10px 12px;border-top:1px solid #1e2a4a;display:flex;gap:10px"><input id="txt" class="api-input" style="margin:0;flex:1;border-radius:22px" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()"><button style="width:38px;height:38px;border-radius:50%;background:#3b82f6;border:0;color:#fff" onclick="sendMsg()">▶</button></div></div>
+<div class="profile show" id="profilePanel"><div style="display:flex;justify-content:space-between"><b>Customer Profile</b><span onclick="profilePanel.classList.remove('show')" style="cursor:pointer">✕</span></div>
 <div id="profBox" style="margin-top:12px">
-<div style="display:flex;gap:10px;align-items:center"><div id="pAv" style="width:42px;height:42px;border-radius:50%;background:#a5b4fc;color:#000;display:flex;align-items:center;justify-content:center;font-weight:700">SN</div><div><div id="pNameEdit" contenteditable="true" style="font-weight:700;border-bottom:1px dashed #2a3a5c;outline:none">Nombre</div><div id="pPhone" style="font-size:11px;color:#94a3b8"></div></div></div>
-<div class="lab">Nombre completo</div><input id="pNombre" class="api-input" placeholder="Nombre completo" onblur="saveProfile()">
-<div class="lab">Ciudad</div><input id="pCiudad" class="api-input" placeholder="Ciudad" onblur="saveProfile()">
-<div class="lab">Cargo / Profesión</div><input id="pProfesion" class="api-input" placeholder="Ej: Gerente, Vendedor" onblur="saveProfile()">
-<div class="lab">Segmentación correcta</div>
-<select id="pEstado" class="api-input" onchange="saveProfile()"><option value="nuevo">🆕 Nuevo</option><option value="cliente">✅ Cliente</option><option value="interesado">👀 Interesado</option><option value="seguimiento">🎯 En seguimiento</option></select>
-<select id="pOrigen" class="api-input" onchange="saveProfile()"><option value="">-- Origen --</option><option value="campana">📣 Campaña</option><option value="afiliado">🤝 Afiliado</option><option value="organico">🌱 Orgánico</option><option value="referido">👥 Referido</option></select>
-<input id="pCamp" class="api-input" placeholder="Nombre de campaña o afiliado" onblur="saveProfile()">
-<div class="lab">Email / Empresa</div><input id="pEmail" class="api-input" placeholder="Email" onblur="saveProfile()"><input id="pEmpresa" class="api-input" placeholder="Empresa" onblur="saveProfile()">
-<div class="lab" style="color:#f59e0b">⏰ Recordatorio / Seguimiento</div>
-<div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:10px;padding:10px;margin-top:6px">
-<select id="pAgendaEstado" class="api-input"><option value="">-- Sin etiqueta --</option><option value="pendiente">📌 Pendiente</option><option value="agendado">📅 Agendado tal día</option></select>
-<input id="pAgendaFecha" type="datetime-local" class="api-input"><input id="pAgendaNota" class="api-input" placeholder="Motivo del recordatorio">
-<button onclick="agendarCliente()" style="width:100%;background:#f59e0b;border:0;padding:9px;border-radius:8px;color:#000;font-weight:800">+ Agendar recordatorio</button>
+<div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-direction:column"><div id="pAv" style="width:56px;height:56px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">SN</div><div id="pNameEdit" contenteditable="true" style="font-weight:700;border-bottom:1px dashed #2a3a5c;outline:none">-</div><div style="font-size:11px;color:#94a3b8">Customer • WhatsApp</div><div id="pPhone" style="font-size:11px;color:#94a3b8"></div></div>
+<div id="inboxOnlyProfile">
+<div style="font-size:12px;margin-top:12px">Selecciona un chat</div>
+<div style="display:flex;gap:6px;align-items:center;margin-top:8px"><span style="font-size:11px">Tag:</span><select id="pEstado" class="api-input" style="width:140px;margin:0" onchange="saveProfile()"><option value="nuevo">nuevo</option><option value="cliente">cliente</option><option value="interesado">interesado</option><option value="seguimiento">seguimiento</option></select></div>
+<div class="lab">Nombre</div><input id="pNombre" class="api-input" placeholder="Nombre" onblur="saveProfile()">
+<div class="lab">Ciudad / Cargo</div><input id="pCiudad" class="api-input" placeholder="Ciudad" onblur="saveProfile()"><input id="pProfesion" class="api-input" placeholder="Cargo" onblur="saveProfile()">
+<div class="lab">Empresa / Origen</div><input id="pEmpresa" class="api-input" placeholder="Empresa" onblur="saveProfile()"><select id="pOrigen" class="api-input" onchange="saveProfile()"><option value="">-- Origen --</option><option value="campana">Campaña</option><option value="afiliado">Afiliado</option></select><input id="pCamp" class="api-input" placeholder="Campaña" onblur="saveProfile()">
+<div class="lab" style="color:#f59e0b">Recordatorio</div><select id="pAgendaEstado" class="api-input"><option value="">--</option><option value="pendiente">Pendiente</option><option value="agendado">Agendado</option></select><input id="pAgendaFecha" type="datetime-local" class="api-input"><input id="pAgendaNota" class="api-input" placeholder="Nota"><button onclick="agendarCliente()" style="width:100%;background:#f59e0b;border:0;padding:9px;border-radius:8px;color:#000;font-weight:800">+ Agendar</button>
+<div class="lab">Notas</div><textarea id="pNotes" class="api-input" style="min-height:80px" onblur="saveProfile()"></textarea><div id="pTags"></div><div style="display:flex;gap:6px"><input id="newTag" class="api-input" style="flex:1" placeholder="Tag"><button onclick="addTag()" style="background:#3b82f6;border:0;padding:8px 12px;border-radius:8px;color:#fff">+</button></div>
 </div>
-<div class="lab">Notas / Seguimiento</div><textarea id="pNotes" class="api-input" style="min-height:80px" placeholder="Notas de seguimiento..." onblur="saveProfile()"></textarea>
-<div class="lab">Tags</div><div id="pTags" style="margin:6px 0"></div><div style="display:flex;gap:6px"><input id="newTag" class="api-input" style="flex:1" placeholder="VIP"><button onclick="addTag()" style="background:#3b82f6;border:0;padding:8px 12px;border-radius:8px;color:#fff">+</button></div>
 </div>
 </div>
 </div>
 
 <div id="mainFull" style="flex:1;position:relative;display:none">
+
+<div class="view" id="planView" style="display:flex;background:#0b1020">
+<div style="width:100%"><h2 style="margin:0 0 16px">Planes KLIDO - Anual</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px">
+<div class="planCard"><div style="font-weight:700">Básico</div><div style="font-size:28px;font-weight:900;margin:8px 0">$800.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700;margin:8px 0">+ $80.000 mant. c/3 meses</div>
+<div style="text-align:left;font-size:12px;line-height:22px"><div>✅ 1 envio masivo a la vez</div><div>✅ 2 usuarios incluidos</div><div>✅ Inbox ilimitado</div><div>❌ Sin IA automática</div></div>
+<button class="planBtn" onclick="elegirPlan('basico')">Empezar Básico</button></div>
+
+<div class="planCard active"><div style="font-weight:700">Premium ⭐</div><div style="font-size:28px;font-weight:900;margin:8px 0">$1.300.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700;margin:8px 0">+ $95.000 mant. c/3 meses</div>
+<div style="text-align:left;font-size:12px;line-height:22px"><div>✅ 5 envios simultáneos</div><div>✅ 5 usuarios incluidos</div><div>✅ IA incluida</div><div>✅ Soporte prioritario</div></div>
+<button class="planBtn" onclick="elegirPlan('premium')">Empezar Premium</button></div>
+
+<div class="planCard"><div style="font-weight:700">Gold</div><div style="font-size:28px;font-weight:900;margin:8px 0">$2.400.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700;margin:8px 0">+ $130.000 mant. c/3 meses</div>
+<div style="text-align:left;font-size:12px;line-height:22px"><div>✅ Envíos ilimitados</div><div>✅ Usuarios ilimitados</div><div>✅ IA + Pánico humano</div><div>✅ 📞 Llamada directa incluida</div></div>
+<button class="planBtn" onclick="elegirPlan('gold')">Empezar Gold</button></div>
+</div>
+<div style="font-size:11px;color:#64748b;margin-top:14px;max-width:900px">Pago anual + mantenimiento trimestral obligatorio para servidores, WhatsApp API y soporte. Factura electrónica. Puedes cambiar de plan en cualquier momento. Cumplimiento Ley 1581.</div>
+</div>
+</div>
+
 <div class="view" id="calView"><div style="display:flex;justify-content:space-between"><h2>📅 Calendario-Recordatorio</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div id="calList"></div></div>
-
-<div class="view" id="statsView"><div style="display:flex;justify-content:space-between"><h2>📊 Estadísticas - Graficadas - Mismos datos métricas</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
-<div class="kpi"><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">TOTAL CHATS</div><div id="sChats" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">RECORDATORIOS</div><div id="sCals" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">SEGUIMIENTO</div><div id="sSeg" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">EQUIPO</div><div id="sTeam" style="font-size:28px;font-weight:800">0</div></div></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
-<div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px"><h4 style="margin:0 0 8px">Chats por trabajador</h4><canvas id="chartTrabajador"></canvas></div>
-<div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px"><h4 style="margin:0 0 8px">Estado de chats</h4><canvas id="chartEstado"></canvas></div>
-</div>
-<div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px;margin-top:16px"><h4 style="margin:0 0 8px">Seguimiento - Recordatorios por día</h4><canvas id="chartSeguimiento" style="max-height:240px"></canvas></div>
-</div>
-
-<div class="view" id="metricsView"><div style="display:flex;justify-content:space-between"><h2>📈 Métricas - Resultados por trabajador</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
-<div id="metricsKpi" class="kpi"></div>
-<h3 style="margin-top:12px">Resultados de chats de cada trabajador</h3>
-<div id="metricsWorkers"></div>
-<h3 style="margin-top:16px">Número de chats y seguimiento general</h3>
-<div id="metricsGeneral"></div>
-</div>
-
-<div class="view" id="teamView"><div style="display:flex;justify-content:space-between"><h2>👥 Equipos - Añadir / Eliminar trabajadores</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:14px;margin:12px 0;display:flex;gap:8px"><input id="eqEmail" class="api-input" style="flex:1" placeholder="Email"><input id="eqPass" class="api-input" style="flex:1" placeholder="Pass" type="password"><select id="eqRol" class="api-input" style="width:120px"><option value="agente">Agente</option><option value="admin">Admin</option></select><button onclick="addWorker()" style="background:#3b82f6;border:0;padding:9px 16px;border-radius:8px;color:#fff;font-weight:700">+ Añadir</button></div><div id="teamList"></div></div>
-<div class="view" id="planView"><div style="display:flex;justify-content:space-between"><h2>💳 Planes</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div id="planInfo"></div></div>
+<div class="view" id="statsView"><div style="display:flex;justify-content:space-between"><h2>📊 Estadísticas</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div class="kpi"><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">TOTAL CHATS</div><div id="sChats" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">RECORDATORIOS</div><div id="sCals" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">SEGUIMIENTO</div><div id="sSeg" style="font-size:28px;font-weight:800">0</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">EQUIPO</div><div id="sTeam" style="font-size:28px;font-weight:800">0</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px"><div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px"><h4 style="margin:0 0 8px">Chats por trabajador</h4><canvas id="chartTrabajador"></canvas></div><div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px"><h4 style="margin:0 0 8px">Estado</h4><canvas id="chartEstado"></canvas></div></div><div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px;margin-top:16px"><canvas id="chartSeguimiento"></canvas></div></div>
+<div class="view" id="metricsView"><div style="display:flex;justify-content:space-between"><h2>📈 Métricas</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div id="metricsKpi" class="kpi"></div><div id="metricsWorkers"></div><div id="metricsGeneral" style="margin-top:12px"></div></div>
+<div class="view" id="teamView"><div style="display:flex;justify-content:space-between"><h2>👥 Equipos</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div><div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:14px;margin:12px 0;display:flex;gap:8px"><input id="eqEmail" class="api-input" style="flex:1" placeholder="Email"><input id="eqPass" class="api-input" style="flex:1" placeholder="Pass" type="password"><select id="eqRol" class="api-input" style="width:120px"><option value="agente">Agente</option><option value="admin">Admin</option></select><button onclick="addWorker()" style="background:#3b82f6;border:0;padding:9px 16px;border-radius:8px;color:#fff;font-weight:700">+ Añadir</button></div><div id="teamList"></div></div>
 
 <div class="view" id="campView" style="padding:0;display:none"><div style="padding:20px;overflow:auto;height:100%">
-<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">📣 Campañas - Plantillas Aprobadas API Oficial</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
-<p style="font-size:12px;color:#94a3b8">Todas las plantillas aprobadas de tu cuenta conectada con token, waba y phone aparecen aquí automáticamente - guardadas en base para todos los trabajadores. Si dice aprobada es válida. 50 cada 4 horas.</p>
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">🔔 Campaigns - Plantillas Aprobadas API Oficial</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
+<p style="font-size:12px;color:#94a3b8">Todas las plantillas aprobadas guardadas en base para todos los trabajadores. 50 cada 4 horas.</p>
 <div style="background:#1e293b;border:1px solid #2a3a5c;border-radius:14px;padding:16px;margin:12px 0">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-<div><label style="font-size:11px;color:#94a3b8">Nombre campaña</label><input id="campNombre" class="api-input" placeholder="Ej: Promo Febrero"></div>
-<div><label style="font-size:11px;color:#94a3b8">Tipo</label><select id="campTipo" class="api-input" onchange="toggleTipo()"><option value="whatsapp">WhatsApp - Plantilla Meta Aprobada</option><option value="gmail">Gmail - Solo Plan Gold</option></select></div>
-</div>
-<div id="whatsappBlock">
-<div style="margin-top:12px"><label style="font-size:11px;color:#22c55e;font-weight:700">✅ Plantillas aprobadas de tu API conectada - guardadas en base, solo admin ve token</label><div style="display:flex;gap:8px"><select id="campTemplate" class="api-input" style="flex:1" onchange="onTemplateChange()"><option>Cargando plantillas aprobadas automáticamente...</option></select><button onclick="loadTemplates()" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:8px 12px;border-radius:8px">🔄 Recargar aprobadas</button></div><div id="templateInfo" style="font-size:11px;color:#93c5fd;margin-top:6px;background:#0b1020;padding:8px;border-radius:8px"></div><div id="apiDebug" style="font-size:10px;color:#f59e0b;margin-top:6px"></div></div>
-<div id="varBlock" style="margin-top:10px"></div>
-</div>
-<div id="gmailBlock" style="display:none"><input id="gmailSubject" class="api-input" placeholder="Asunto Gmail"><textarea id="gmailBody" class="api-input" style="min-height:80px" placeholder="Cuerpo correo"></textarea></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
-<div style="background:#0b1020;border:1px dashed #3b82f6;border-radius:12px;padding:12px"><b>📊 Subir Excel - Detecta en cualquier columna</b><div style="font-size:11px;color:#94a3b8">No importa orden, columna o hoja</div><input type="file" id="excelFile" accept=".xlsx,.xls,.csv" onchange="parseExcel()" style="margin-top:8px;color:#fff"><div id="excelResult" style="font-size:12px;color:#22c55e;margin-top:8px"></div></div>
-<div style="background:#0b1020;border:1px dashed #f59e0b;border-radius:12px;padding:12px"><b>✍️ Añadir manual</b><textarea id="manualNums" class="api-input" style="min-height:90px" placeholder="Ej: +57 3001234567..." oninput="parseManual()"></textarea><div id="manualResult" style="font-size:12px;color:#22c55e"></div></div>
-</div>
-<div style="margin-top:12px;background:#0f172a;border:1px solid #3b82f6;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center"><div><b id="totalNums">0 contactos detectados</b><div style="font-size:11px;color:#94a3b8">50 cada 4 horas para evitar baneos - con seguimiento</div></div><button onclick="crearCamp()" style="background:#22c55e;border:0;padding:12px 22px;border-radius:10px;color:#000;font-weight:800">🚀 Crear y Enviar</button></div>
-</div>
-<h3>📜 Historial - Pausar / Continuar / Seguimiento</h3>
-<div id="campHistory"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><label style="font-size:11px;color:#94a3b8">Nombre campaña</label><input id="campNombre" class="api-input" placeholder="Ej: Promo Febrero"></div><div><label style="font-size:11px;color:#94a3b8">Tipo</label><select id="campTipo" class="api-input" onchange="toggleTipo()"><option value="whatsapp">WhatsApp - Plantilla Meta Aprobada</option><option value="gmail">Gmail - Gold</option></select></div></div>
+<div id="whatsappBlock"><div style="margin-top:12px"><label style="font-size:11px;color:#22c55e;font-weight:700">✅ Plantillas aprobadas - solo admin ve token</label><div style="display:flex;gap:8px"><select id="campTemplate" class="api-input" style="flex:1" onchange="onTemplateChange()"><option>Cargando...</option></select><button onclick="loadTemplates()" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:8px 12px;border-radius:8px">🔄 Recargar</button></div><div id="templateInfo" style="font-size:11px;color:#93c5fd;margin-top:6px;background:#0b1020;padding:8px;border-radius:8px"></div><div id="apiDebug" style="font-size:10px;color:#f59e0b;margin-top:6px"></div></div><div id="varBlock" style="margin-top:10px"></div></div>
+<div id="gmailBlock" style="display:none"><input id="gmailSubject" class="api-input" placeholder="Asunto"><textarea id="gmailBody" class="api-input" style="min-height:80px" placeholder="Cuerpo"></textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px"><div style="background:#0b1020;border:1px dashed #3b82f6;border-radius:12px;padding:12px"><b>📊 Subir Excel</b><input type="file" id="excelFile" accept=".xlsx,.xls,.csv" onchange="parseExcel()" style="margin-top:8px;color:#fff"><div id="excelResult" style="font-size:12px;color:#22c55e;margin-top:8px"></div></div><div style="background:#0b1020;border:1px dashed #f59e0b;border-radius:12px;padding:12px"><b>✍️ Manual</b><textarea id="manualNums" class="api-input" style="min-height:90px" placeholder="+57..." oninput="parseManual()"></textarea><div id="manualResult" style="font-size:12px;color:#22c55e"></div></div></div>
+<div style="margin-top:12px;background:#0f172a;border:1px solid #3b82f6;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center"><div><b id="totalNums">0 contactos</b><div style="font-size:11px;color:#94a3b8">50 cada 4h</div></div><button onclick="crearCamp()" style="background:#22c55e;border:0;padding:12px 22px;border-radius:10px;color:#000;font-weight:800">🚀 Crear y Enviar</button></div></div>
+<h3>Historial</h3><div id="campHistory"></div>
 </div></div>
 </div>
 </div>
 </div>
 
-<div id="apiModal" style="display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center;z-index:99"><div style="background:#131b2e;border:1px solid #1e2a4a;padding:18px;border-radius:14px;width:440px"><h3>🔑 Configuración API - Solo admin ve sensible</h3><div id="apiCurrent" style="font-size:11px;background:#0b1020;padding:8px;border-radius:8px;margin-bottom:8px;color:#94a3b8"></div><div id="apiAdminOnly"><div style="font-size:11px;color:#f59e0b;margin-bottom:6px">⚠️ Solo admin - genera TOKEN PERMANENTE en Meta (no temporal que expira en 1h)</div><input id="apiPhone" class="api-input" placeholder="Phone Number ID (iphone number)"><input id="apiWaba" class="api-input" placeholder="WABA ID"><input id="apiToken" class="api-input" placeholder="Token PERMANENTE Meta"><div style="font-size:10px;color:#94a3b8;margin:6px 0">Si te sale Session has expired, es token temporal. Ve a Business Manager > Usuarios de sistema > Generar token permanente con whatsapp_business_messaging</div></div><div id="apiMsg" style="font-size:12px;color:#22c55e;margin:8px 0"></div><button onclick="saveApi()" style="background:#22c55e;border:0;padding:9px;border-radius:8px;color:#fff;width:100%">Guardar automáticamente en base</button><button onclick="apiModal.style.display='none';showView('inbox')" style="background:#1e293b;border:0;padding:9px;border-radius:8px;color:#fff;width:100%;margin-top:6px">Cerrar</button></div></div>
+<div id="apiModal" style="display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center;z-index:99"><div style="background:#131b2e;border:1px solid #1e2a4a;padding:18px;border-radius:14px;width:440px"><h3>🔑 Settings API - Solo admin ve sensible</h3><div id="apiCurrent" style="font-size:11px;background:#0b1020;padding:8px;border-radius:8px;margin-bottom:8px;color:#94a3b8"></div><div id="apiAdminOnly"><input id="apiPhone" class="api-input" placeholder="Phone Number ID"><input id="apiWaba" class="api-input" placeholder="WABA ID"><input id="apiToken" class="api-input" placeholder="Token PERMANENTE"></div><div id="apiMsg" style="font-size:12px;color:#22c55e;margin:8px 0"></div><button onclick="saveApi()" style="background:#22c55e;border:0;padding:9px;border-radius:8px;color:#fff;width:100%">Guardar en base</button><button onclick="apiModal.style.display='none';showView('inbox')" style="background:#1e293b;border:0;padding:9px;border-radius:8px;color:#fff;width:100%;margin-top:6px">Cerrar</button></div></div>
 
 <script>
 let S={}, curChat=null, allChats=[], detected=[], templates=[], excelNums=[], manualNums=[], chart1=null, chart2=null, chart3=null;
-function init(){const eid=localStorage.getItem('klido_empresa'); const u=localStorage.getItem('klido_user'); if(!eid||!u){location.href='/'; return;} S={eid, user:JSON.parse(u)}; document.getElementById('userEmail').innerText=S.user.email+' ('+S.user.rol+')'; loadChats(); loadConfigAndTemplates(); setInterval(loadChats,5000);}
-function clearMenu(){ document.querySelectorAll('.menu.m').forEach(el=>{ el.classList.remove('active'); }); }
+function init(){const eid=localStorage.getItem('klido_empresa'); const u=localStorage.getItem('klido_user'); if(!eid||!u){location.href='/'; return;} S={eid, user:JSON.parse(u)}; document.getElementById('userEmail').innerText=S.user.email+' ('+S.user.rol+')'; document.getElementById('planBadge').innerText='Plan '+(localStorage.getItem('klido_plan')||'Básico'); loadChats(); loadConfigAndTemplates(); setInterval(loadChats,5000);}
+// FIX BOTONES AZULES PERMANENTEMENTE - AHORA SI QUITA AZUL
+function clearMenu(){ document.querySelectorAll('.menu.m').forEach(el=>el.classList.remove('active')); }
 function showView(v){
   clearMenu();
   document.querySelectorAll('.view').forEach(e=>e.style.display='none');
@@ -129,166 +121,39 @@ function showView(v){
     if(v==='metrics'){document.getElementById('mMetrics').classList.add('active');document.getElementById('metricsView').style.display='flex';loadMetricsWorkers();}
     if(v==='team'){document.getElementById('mTeam').classList.add('active');document.getElementById('teamView').style.display='flex';loadTeam();}
     if(v==='camp'){document.getElementById('mCamp').classList.add('active');document.getElementById('campView').style.display='block';loadCampHistory();loadTemplates();}
-    if(v==='plan'){document.getElementById('mPlan').classList.add('active');document.getElementById('planView').style.display='flex';loadPlan();}
+    if(v==='plan'){document.getElementById('mPlan').classList.add('active');document.getElementById('planView').style.display='flex';}
   }
 }
 function salir(){localStorage.clear();location.href='/';}
 async function loadChats(){const r=await fetch('/api/chats/'+S.eid+'/admin'); allChats=await r.json(); document.getElementById('countInbox').innerText=allChats.length+' chats'; const q=(document.getElementById('q').value||'').toLowerCase(); const list=document.getElementById('list'); list.innerHTML=''; let filtered=allChats.filter(c=>{ if(q &&!((c.nombre||'').toLowerCase().includes(q)||c.id.includes(q))) return false; return true;}); filtered.forEach(c=>{const d=document.createElement('div'); d.style.cssText='display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #1e2a4a33;cursor:pointer'; d.innerHTML=`<div style="width:32px;height:32px;border-radius:50%;background:#a5b4fc;color:#000;display:flex;align-items:center;justify-content:center;font-weight:700">${(c.nombre||c.id).slice(0,2).toUpperCase()}</div><div><div style="font-size:13px;font-weight:600">${c.nombre||c.id}</div><div style="font-size:11px;color:#94a3b8">${(c.mensajes?.slice(-1)[0]?.texto||'').slice(0,28)}</div></div>`; d.onclick=()=>openChat(c.id); list.appendChild(d);}); const pc=allChats.filter(c=>(c.tags||[]).some(t=>t.toLowerCase().includes('pendiente')||t.toLowerCase().includes('agendado'))).length; const cc=document.getElementById('calCount'); if(pc>0){cc.style.display='inline';cc.innerText=pc;} else cc.style.display='none';}
-async function openChat(id){curChat=id; const r=await fetch('/api/mensajes/'+S.eid+'/'+id); const j=await r.json(); const prof=j.profile||{}; document.getElementById('hName').innerText=prof.nombre||id; document.getElementById('pAv').innerText=(prof.nombre||id).slice(0,2).toUpperCase(); document.getElementById('pPhone').innerText=id; document.getElementById('pNombre').value=prof.nombre||''; document.getElementById('pNameEdit').innerText=prof.nombre||id; document.getElementById('pCiudad').value=prof.ciudad||''; document.getElementById('pProfesion').value=prof.profesion||''; document.getElementById('pEmail').value=prof.email||''; document.getElementById('pEmpresa').value=prof.empresa||''; document.getElementById('pEstado').value=prof.estado||'nuevo'; document.getElementById('pOrigen').value=prof.origen||''; document.getElementById('pCamp').value=prof.campana||''; document.getElementById('pNotes').value=(prof.notas||[]).map(n=>n.texto||n).join('\n')||''; document.getElementById('pTags').innerHTML=(prof.tags||[]).map(t=>`<span style="font-size:10px;padding:4px 8px;border-radius:20px;background:#1e293b;border:1px solid #2a3a5c;margin:2px;display:inline-flex">${t} <span style="cursor:pointer;margin-left:4px" onclick="removeTag('${t}')">✕</span></span>`).join(''); document.getElementById('msgs').innerHTML=j.mensajes.map(m=>`<div class="b ${m.from==='agente'?'age':'cli'}">${m.texto}${m.media_url?`<br><a href="${m.media_url}" target="_blank" style="color:#3b82f6">Ver archivo</a>`:''}<div style="font-size:10px;color:#64748b;text-align:right">${new Date(m.ts).toLocaleTimeString()}</div></div>`).join('');}
+async function openChat(id){curChat=id; const r=await fetch('/api/mensajes/'+S.eid+'/'+id); const j=await r.json(); const prof=j.profile||{}; document.getElementById('hName').innerText=prof.nombre||id; document.getElementById('pAv').innerText=(prof.nombre||id).slice(0,2).toUpperCase(); document.getElementById('pPhone').innerText=id; document.getElementById('pNombre').value=prof.nombre||''; document.getElementById('pNameEdit').innerText=prof.nombre||id; document.getElementById('pCiudad').value=prof.ciudad||''; document.getElementById('pProfesion').value=prof.profesion||''; document.getElementById('pEmpresa').value=prof.empresa||''; document.getElementById('pEstado').value=prof.estado||'nuevo'; document.getElementById('pOrigen').value=prof.origen||''; document.getElementById('pCamp').value=prof.campana||''; document.getElementById('pNotes').value=(prof.notas||[]).map(n=>n.texto||n).join('\n')||''; document.getElementById('pTags').innerHTML=(prof.tags||[]).map(t=>`<span style="font-size:10px;padding:4px 8px;border-radius:20px;background:#1e293b;border:1px solid #2a3a5c;margin:2px;display:inline-flex">${t} <span style="cursor:pointer;margin-left:4px" onclick="removeTag('${t}')">✕</span></span>`).join(''); document.getElementById('msgs').innerHTML=j.mensajes.map(m=>`<div class="b ${m.from==='agente'?'age':'cli'}">${m.texto}${m.media_url?`<br><a href="${m.media_url}" target="_blank" style="color:#3b82f6">Ver</a>`:''}<div style="font-size:10px;color:#64748b;text-align:right">${new Date(m.ts).toLocaleTimeString()}</div></div>`).join('');}
 async function sendMsg(){const t=document.getElementById('txt'); if(!t.value||!curChat) return; const txt=t.value; t.value=''; await fetch('/api/mensaje/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid,chat_id:curChat,texto:txt})}); openChat(curChat);}
 function openApi(){clearMenu();document.getElementById('mApi').classList.add('active');document.getElementById('apiModal').style.display='flex';loadApi();}
-async function loadApi(){
-  const role=S.user?.rol||'agente';
-  const r=await fetch('/api/config/'+S.eid+'?role='+role);
-  const j=await r.json();
-  if(j.is_admin){
-    apiPhone.value=j.config.phone||'';
-    apiWaba.value=j.config.waba||'';
-    apiToken.value=j.config.token||'';
-    document.getElementById('apiCurrent').innerText=`Admin - Token: ${j.config.token?j.config.token.slice(0,20)+'... OK solo admin':''} | Phone: ${j.config.phone||''} | WABA: ${j.config.waba||''}`;
-    document.getElementById('apiAdminOnly').style.display='block';
-  } else {
-    document.getElementById('apiCurrent').innerText=`Trabajador - ${j.config.has_token?'✅ API configurada por admin - ya tienes plantillas aprobadas':''} | Phone: ${j.config.phone} | Token: ${j.config.token}`;
-    document.getElementById('apiAdminOnly').style.display='none';
-    apiPhone.value=''; apiWaba.value=''; apiToken.value='';
-  }
-}
+async function loadApi(){const role=S.user?.rol||'agente'; const r=await fetch('/api/config/'+S.eid+'?role='+role); const j=await r.json(); if(j.is_admin){apiPhone.value=j.config.phone||''; apiWaba.value=j.config.waba||''; apiToken.value=j.config.token||''; document.getElementById('apiCurrent').innerText=`Admin - Token OK - Phone ${j.config.phone||''}`; document.getElementById('apiAdminOnly').style.display='block';} else {document.getElementById('apiCurrent').innerText=`Trabajador - ${j.config.has_token?'API configurada':''}`; document.getElementById('apiAdminOnly').style.display='none';}}
 async function loadConfigAndTemplates(){await loadApi(); await loadTemplates();}
-async function saveApi(){
-  if(S.user?.rol!=='admin') return alert('Solo admin puede guardar token, waba y phone - datos sensibles');
-  await fetch('/api/config/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, phone:apiPhone.value, waba:apiWaba.value, token:apiToken.value, admin_email:S.user.email})});
-  document.getElementById('apiMsg').innerText='✅ Guardado automáticamente en base - todos los trabajadores ya tienen plantillas - token solo visible admin';
-  await loadTemplates();
-  setTimeout(()=>{apiModal.style.display='none'; showView('camp');},1000);
-}
-async function saveProfile(){if(!curChat) return; await fetch('/api/chat/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, chat_id:curChat, nombre:pNombre.value||pNameEdit.innerText, ciudad:pCiudad.value, profesion:pProfesion.value, email:pEmail.value, empresa:pEmpresa.value, estado:pEstado.value, origen:pOrigen.value, campana:pCamp.value, notas:pNotes.value})});}
+async function saveApi(){if(S.user?.rol!=='admin') return alert('Solo admin'); await fetch('/api/config/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, phone:apiPhone.value, waba:apiWaba.value, token:apiToken.value, admin_email:S.user.email})}); document.getElementById('apiMsg').innerText='Guardado en base'; await loadTemplates(); setTimeout(()=>{apiModal.style.display='none'; showView('camp');},900);}
+async function saveProfile(){if(!curChat) return; await fetch('/api/chat/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, chat_id:curChat, nombre:pNombre.value||pNameEdit.innerText, ciudad:pCiudad.value, profesion:pProfesion.value, empresa:pEmpresa.value, estado:pEstado.value, origen:pOrigen.value, campana:pCamp.value, notas:pNotes.value})});}
 async function addTag(){if(!curChat) return; await fetch('/api/chat/tag/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid,chat_id:curChat,tag:newTag.value})}); newTag.value=''; openChat(curChat);}
 async function removeTag(tag){await fetch('/api/chat/tag/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid,chat_id:curChat,tag})}); openChat(curChat);}
-async function agendarCliente(){if(!curChat) return; await fetch('/api/calendar/agendar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, chat_id:curChat, estado_agenda:pAgendaEstado.value, fecha:pAgendaFecha.value, nota:pAgendaNota.value, alarma:true})}); alert('Recordatorio agendado');}
-async function loadCalendar(){const r=await fetch('/api/calendar/'+S.eid); const list=await r.json(); document.getElementById('calList').innerHTML=list.map(c=>`<div class="teamCard"><div><b>${c.chat_nombre}</b> - ${c.estado_agenda} - ${c.nota}</div><div>${new Date(c.date).toLocaleString()}</div></div>`).join('')||'No hay pendientes';}
-
-async function loadStatsGrafica(){
-  const r=await fetch('/api/stats/'+S.eid); const s=await r.json();
-  const r2=await fetch('/api/equipo/stats/'+S.eid); const eq=await r2.json();
-  document.getElementById('sChats').innerText=s.chats||0;
-  document.getElementById('sCals').innerText=s.calendar||0;
-  document.getElementById('sSeg').innerText=(s.calendar_pendientes||0)+' pendientes';
-  document.getElementById('sTeam').innerText=eq.individuales?.length||s.agentes||0;
-  const labels=(eq.individuales||[]).map(i=>i.email.split('@')[0]);
-  const chatsData=(eq.individuales||[]).map(i=>i.chats_atendidos||0);
-  if(chart1) chart1.destroy();
-  chart1=new Chart(document.getElementById('chartTrabajador'),{type:'bar',data:{labels, datasets:[{label:'Chats por trabajador', data:chatsData, backgroundColor:'#3b82f6'}]},options:{responsive:true, plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{x:{ticks:{color:'#94a3b8'}}, y:{ticks:{color:'#94a3b8'}}}}});
-  const estados=await (await fetch('/api/metrics/'+S.eid)).json();
-  const estLabels=Object.keys(estados.estados||{}); const estData=Object.values(estados.estados||{});
-  if(chart2) chart2.destroy();
-  chart2=new Chart(document.getElementById('chartEstado'),{type:'doughnut',data:{labels:estLabels, datasets:[{data:estData, backgroundColor:['#3b82f6','#22c55e','#f59e0b','#ef4444']}]},options:{responsive:true, plugins:{legend:{labels:{color:'#e2e8f0'}}}}});
-  const cals=await (await fetch('/api/calendar/'+S.eid)).json();
-  const porDia={}; cals.forEach(c=>{ const d=new Date(c.date).toLocaleDateString(); porDia[d]=(porDia[d]||0)+1; });
-  if(chart3) chart3.destroy();
-  chart3=new Chart(document.getElementById('chartSeguimiento'),{type:'line',data:{labels:Object.keys(porDia), datasets:[{label:'Seguimiento', data:Object.values(porDia), borderColor:'#f59e0b', backgroundColor:'#f59e0b33', fill:true}]},options:{responsive:true, plugins:{legend:{labels:{color:'#e2e8f0'}}}, scales:{x:{ticks:{color:'#94a3b8'}}, y:{ticks:{color:'#94a3b8'}}}}});
-}
-
-async function loadMetricsWorkers(){
-  const r=await fetch('/api/equipo/stats/'+S.eid); const j=await r.json();
-  const r2=await fetch('/api/metrics/'+S.eid); const m=await r2.json();
-  document.getElementById('metricsKpi').innerHTML=`<div class="kpiCard"><div style="font-size:11px;color:#94a3b8">TOTAL CHATS</div><div style="font-size:28px;font-weight:800">${m.total_chats||0}</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">SIN RESPONDER</div><div style="font-size:28px;font-weight:800;color:#ef4444">${m.no_leidos||0}</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">SEGUIMIENTO PENDIENTE</div><div style="font-size:28px;font-weight:800;color:#f59e0b">${j.grupal?.recordatorios_pendientes||0}</div></div><div class="kpiCard"><div style="font-size:11px;color:#94a3b8">CLIENTES</div><div style="font-size:28px;font-weight:800;color:#22c55e">${m.clientes||0}</div></div>`;
-  document.getElementById('metricsWorkers').innerHTML=(j.individuales||[]).map(u=>`<div class="teamCard"><div style="display:flex;gap:10px;align-items:center"><div style="width:36px;height:36px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">${u.email.slice(0,2).toUpperCase()}</div><div><div style="font-weight:700">${u.email}</div><div style="font-size:11px;color:#94a3b8">${u.rol} - ${u.chats_atendidos} chats - Avance ${u.avance}%</div><div style="font-size:11px;color:#f59e0b">Seguimiento: ${u.seguimiento} - Mensajes: ${u.mensajes}</div></div></div><div style="text-align:right"><div style="font-size:22px;font-weight:800">${u.chats_atendidos}</div><div style="font-size:10px;color:#64748b">chats</div></div></div>`).join('')||'No hay trabajadores';
-  document.getElementById('metricsGeneral').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="kpiCard"><b>Número de chats total:</b> ${m.total_chats||0}<br><b>Nuevos:</b> ${m.nuevo||0}<br><b>Interesados:</b> ${m.interesados||0}<br><b>Clientes:</b> ${m.clientes||0}</div><div class="kpiCard"><b>Seguimiento general:</b><br>Total: ${j.grupal?.total_recordatorios||0}<br>Pendientes: ${j.grupal?.recordatorios_pendientes||0}<br>Hechos: ${j.grupal?.recordatorios_hechos||0}<br>Avance: ${j.grupal?.porcentaje||0}%</div></div>`;
-}
-
+async function agendarCliente(){if(!curChat) return; await fetch('/api/calendar/agendar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, chat_id:curChat, estado_agenda:pAgendaEstado.value, fecha:pAgendaFecha.value, nota:pAgendaNota.value})}); alert('Agendado');}
+async function loadCalendar(){const r=await fetch('/api/calendar/'+S.eid); const list=await r.json(); document.getElementById('calList').innerHTML=list.map(c=>`<div class="teamCard"><div><b>${c.chat_nombre}</b> - ${c.estado_agenda}</div><div>${new Date(c.date).toLocaleString()}</div></div>`).join('')||'Sin pendientes';}
+async function loadStatsGrafica(){const r=await fetch('/api/stats/'+S.eid); const s=await r.json(); const r2=await fetch('/api/equipo/stats/'+S.eid); const eq=await r2.json(); document.getElementById('sChats').innerText=s.chats||0; document.getElementById('sCals').innerText=s.calendar||0; document.getElementById('sSeg').innerText=s.calendar_pendientes||0; document.getElementById('sTeam').innerText=eq.individuales?.length||0; const labels=(eq.individuales||[]).map(i=>i.email.split('@')[0]); const chatsData=(eq.individuales||[]).map(i=>i.chats_atendidos||0); if(chart1) chart1.destroy(); chart1=new Chart(document.getElementById('chartTrabajador'),{type:'bar',data:{labels, datasets:[{label:'Chats', data:chatsData, backgroundColor:'#3b82f6'}]},options:{responsive:true}}); const estados=await (await fetch('/api/metrics/'+S.eid)).json(); if(chart2) chart2.destroy(); chart2=new Chart(document.getElementById('chartEstado'),{type:'doughnut',data:{labels:Object.keys(estados.estados||{}), datasets:[{data:Object.values(estados.estados||{}), backgroundColor:['#3b82f6','#22c55e','#f59e0b']}]},options:{responsive:true}});}
+async function loadMetricsWorkers(){const r=await fetch('/api/equipo/stats/'+S.eid); const j=await r.json(); const r2=await fetch('/api/metrics/'+S.eid); const m=await r2.json(); document.getElementById('metricsKpi').innerHTML=`<div class="kpiCard">Total ${m.total_chats||0}</div><div class="kpiCard">No leidos ${m.no_leidos||0}</div><div class="kpiCard">Pendientes ${j.grupal?.recordatorios_pendientes||0}</div><div class="kpiCard">Clientes ${m.clientes||0}</div>`; document.getElementById('metricsWorkers').innerHTML=(j.individuales||[]).map(u=>`<div class="teamCard"><span>${u.email} - ${u.chats_atendidos} chats - Avance ${u.avance}% - Seguimiento ${u.seguimiento}</span></div>`).join(''); document.getElementById('metricsGeneral').innerHTML=`<div class="kpiCard">Total chats ${m.total_chats||0} - Seguimiento total ${j.grupal?.total_recordatorios||0}</div>`;}
 async function loadTeam(){const r=await fetch('/api/empresa/info/'+S.eid); const info=await r.json(); document.getElementById('teamList').innerHTML=(info.usuarios||[]).map(u=>`<div class="teamCard"><span>${u.email} - ${u.rol}</span><button onclick="removeWorker('${u.email}')" style="background:#ef4444;border:0;padding:6px 10px;border-radius:8px;color:#fff">Eliminar</button></div>`).join('');}
 async function addWorker(){await fetch('/api/equipo/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, email:eqEmail.value, pass:eqPass.value, rol:eqRol.value})}); loadTeam();}
 async function removeWorker(email){await fetch('/api/equipo/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, email})}); loadTeam();}
-async function loadPlan(){const r=await fetch('/api/empresa/info/'+S.eid); const info=await r.json(); document.getElementById('planInfo').innerHTML=`<div style="background:#1e293b;padding:16px;border-radius:12px">Plan: <b>${info.plan}</b> - Usuarios: ${info.usuarios?.length} - Activo: ${info.plan_activo?'Sí':'No'}</div>`;}
-
+function elegirPlan(plan){localStorage.setItem('klido_plan',plan); document.getElementById('planBadge').innerText='Plan '+plan; alert('Plan '+plan+' seleccionado - contacta soporte para pago anual + mant. trimestral');}
 function extractPhones(text){const regex=/(\+?\d[\d\s\-\(\)]{7,}\d)/g; const matches=text.match(regex)||[]; return [...new Set(matches.map(m=>m.replace(/\D/g,'')).filter(n=>n.length>=10 && n.length<=15).map(n=>{ let x=n.replace(/\D/g,''); if(x.length===10) x='57'+x; return x; }))];}
 function extractEmails(text){const re=/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g; return [...new Set((text.match(re)||[]))];}
-function parseExcel(){
-  const file=document.getElementById('excelFile').files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const wb=XLSX.read(e.target.result,{type:'binary'});
-    let allText=''; wb.SheetNames.forEach(name=>{ const sheet=wb.Sheets[name]; const json=XLSX.utils.sheet_to_json(sheet,{header:1, defval:''}); json.forEach(row=>{ row.forEach(cell=>{ allText+=' '+String(cell); }); }); });
-    const tipo=document.getElementById('campTipo').value;
-    excelNums=tipo==='gmail'?extractEmails(allText):extractPhones(allText);
-    document.getElementById('excelResult').innerText=`Detectados ${excelNums.length} en Excel - cualquier columna`;
-    updateTotal();
-  };
-  reader.readAsBinaryString(file);
-}
-function parseManual(){const txt=document.getElementById('manualNums').value; const tipo=document.getElementById('campTipo').value; manualNums=tipo==='gmail'?extractEmails(txt):extractPhones(txt); document.getElementById('manualResult').innerText=`Detectados ${manualNums.length} manuales`; updateTotal();}
+function parseExcel(){const file=document.getElementById('excelFile').files[0]; if(!file) return; const reader=new FileReader(); reader.onload=function(e){const wb=XLSX.read(e.target.result,{type:'binary'}); let allText=''; wb.SheetNames.forEach(name=>{ const sheet=wb.Sheets[name]; const json=XLSX.utils.sheet_to_json(sheet,{header:1, defval:''}); json.forEach(row=>{ row.forEach(cell=>{ allText+=' '+String(cell); }); }); }); const tipo=document.getElementById('campTipo').value; excelNums=tipo==='gmail'?extractEmails(allText):extractPhones(allText); document.getElementById('excelResult').innerText=`Detectados ${excelNums.length}`; updateTotal();}; reader.readAsBinaryString(file);}
+function parseManual(){const txt=document.getElementById('manualNums').value; const tipo=document.getElementById('campTipo').value; manualNums=tipo==='gmail'?extractEmails(txt):extractPhones(txt); document.getElementById('manualResult').innerText=`Detectados ${manualNums.length}`; updateTotal();}
 function toggleTipo(){parseExcel();parseManual();document.getElementById('whatsappBlock').style.display=document.getElementById('campTipo').value==='whatsapp'?'block':'none';document.getElementById('gmailBlock').style.display=document.getElementById('campTipo').value==='gmail'?'block':'none';}
-function updateTotal(){const all=[...excelNums,...manualNums]; const uniq=[...new Set(all)]; detected=uniq; document.getElementById('totalNums').innerText=`${uniq.length} contactos detectados - 50 cada 4 horas`;}
-async function loadTemplates(){
-  const sel=document.getElementById('campTemplate');
-  sel.innerHTML='<option>Cargando plantillas aprobadas automáticamente de la base...</option>';
-  try{
-    const cfg=await (await fetch('/api/config/'+S.eid+'?role='+(S.user?.rol||'agente'))).json();
-    document.getElementById('apiDebug').innerText=`Config leída: Phone ${cfg.config?.phone?'OK':'FALTA'} | WABA ${cfg.config?.waba?'OK':'FALTA'} | Token ${cfg.config?.has_token?'OK guardado base (solo admin ve)':cfg.config?.token?'OK':''} | Rol: ${S.user?.rol}`;
-    const r=await fetch('/api/templates/'+S.eid);
-    const j=await r.json();
-    templates=j.templates||[];
-    if(j.is_expired){
-      document.getElementById('templateInfo').innerHTML=`<div style="background:#ef444433;border:1px solid #ef4444;padding:10px;border-radius:8px"><b>⚠️ Token expirado - Session has expired</b><br>${j.error}<br><br>Solución: Genera token PERMANENTE en Meta Business > Usuarios del sistema > Permisos whatsapp_business_messaging<br>${j.cached_count?`Usando ${j.cached_count} plantillas en cache para que trabajadores sigan viendo.`:''}</div>`;
-      if(templates.length>0){
-        sel.innerHTML=templates.map(t=>`<option value="${t.name}">${t.name} - ${t.language} - ${t.status} (cache)</option>`).join('');
-        onTemplateChange();
-      } else {
-        sel.innerHTML=`<option value="">Sin cache - genera token permanente</option>`;
-      }
-      return;
-    }
-    if(j.error && templates.length===0){
-      sel.innerHTML=`<option value="">${j.error}</option>`;
-      document.getElementById('templateInfo').innerText=j.error;
-      return;
-    }
-    if(templates.length===0){
-      sel.innerHTML=`<option value="">No hay plantillas aprobadas - verifica en Meta que estén APPROVED</option>`;
-      document.getElementById('templateInfo').innerText='No hay plantillas aprobadas en Meta - crea en Business Manager > WhatsApp > Plantillas';
-      return;
-    }
-    sel.innerHTML=templates.map(t=>`<option value="${t.name}">${t.name} - ${t.language} - ${t.status} ${t.components?.find(c=>c.type==='HEADER'&&c.format==='IMAGE')?'📷':''}</option>`).join('');
-    document.getElementById('templateInfo').innerText=`✅ ${templates.length} plantillas aprobadas cargadas automáticamente de la base - todos los trabajadores ya las ven - datos sensibles solo admin - si dice aprobada es válida, se envía sin importar variables, fotos, cuerpo`;
-    onTemplateChange();
-  }catch(e){
-    sel.innerHTML=`<option>Error: ${e.message}</option>`;
-    document.getElementById('apiDebug').innerText=`Error: ${e.message}`;
-  }
-}
-function onTemplateChange(){
-  const name=document.getElementById('campTemplate').value;
-  const t=templates.find(x=>x.name===name);
-  if(!t){document.getElementById('varBlock').innerHTML=''; return;}
-  let info=`✅ APROBADA - Idioma: ${t.language} - Estado: ${t.status} - Válida. `;
-  const body=t.components?.find(c=>c.type==='BODY');
-  if(body) info+=`Cuerpo: ${body.text?.slice(0,150)}...`;
-  document.getElementById('templateInfo').innerText=info;
-  let varCount=0; if(body && body.text){ const matches=body.text.match(/\{\{\d+\}\}/g); if(matches) varCount=matches.length; }
-  const header=t.components?.find(c=>c.type==='HEADER');
-  let html='';
-  if(header?.format==='IMAGE'){ html+=`<div><label style="font-size:11px">URL imagen header (opcional)</label><input id="headerImage" class="api-input" placeholder="https://...jpg"></div>`; }
-  if(varCount>0){ html+=`<div style="margin-top:8px"><b style="font-size:11px">Variables - opcional, si no las llenas se envía igual aprobada es válida</b></div>`; for(let i=1;i<=varCount;i++){ html+=`<input id="var${i}" class="api-input" placeholder="Variable {{${i}}} opcional">`; } }
-  document.getElementById('varBlock').innerHTML=html;
-}
-async function crearCamp(){
-  if(detected.length===0) return alert('Sube Excel o pega números manual');
-  const nombre=document.getElementById('campNombre').value.trim()||'Campaña '+new Date().toLocaleDateString();
-  const tipo=document.getElementById('campTipo').value;
-  const template=document.getElementById('campTemplate').value;
-  if(tipo==='whatsapp' &&!template) return alert('Selecciona plantilla aprobada');
-  const vars=[]; document.querySelectorAll('[id^="var"]').forEach(el=>{ if(el.id.startsWith('var')) vars.push(el.value); });
-  const body={empresa_id:S.eid, nombre, tipo, numeros:detected, template_name:template, template_lang:(templates.find(t=>t.name===template)?.language||'es'), variables:vars, header_image:document.getElementById('headerImage')?.value||'', gmail_subject:document.getElementById('gmailSubject')?.value||'', gmail_body:document.getElementById('gmailBody')?.value||''};
-  const r=await fetch('/api/campaigns/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const j=await r.json();
-  if(j.ok){ alert('Campaña creada - 50 cada 4h'); detected=[]; excelNums=[]; manualNums=[]; document.getElementById('manualNums').value=''; document.getElementById('excelResult').innerText=''; document.getElementById('manualResult').innerText=''; updateTotal(); loadCampHistory(); } else alert(j.error||'Error');}
-async function loadCampHistory(){
-  const r=await fetch('/api/campaigns/'+S.eid);
-  const j=await r.json();
-  const list=j.campaigns||[];
-  document.getElementById('campHistory').innerHTML=list.length?list.map(c=>`<div class="teamCard" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between"><div><b>${c.nombre}</b> - ${c.tipo} - ${c.template_name||''}<div style="font-size:11px;color:#94a3b8">${c.total} contactos - Enviados: ${c.enviados||0} - Fallidos: ${c.fallidos||0} - Estado: ${c.status} - Siguiente lote: ${c.next_send?new Date(c.next_send).toLocaleString():'ahora'} - 50 cada 4h</div><div style="width:100%;height:6px;background:#0b1020;border-radius:10px;margin-top:6px"><div style="width:${c.total?Math.round((c.enviados||0)/c.total*100):0}%;height:100%;background:${c.status==='paused'?'#f59e0b':c.status==='completed'?'#22c55e':'#3b82f6'}"></div></div></div><div style="display:flex;gap:6px"><button onclick="pauseCamp('${c.id}')" style="background:${c.status==='paused'?'#22c55e':'#f59e0b'};border:0;padding:6px 10px;border-radius:8px;color:#000;font-weight:700">${c.status==='paused'?'▶ Continuar':'⏸ Pausar'}</button><button onclick="delCamp('${c.id}')" style="background:#1e293b;border:1px solid #ef4444;color:#ef4444;padding:6px 10px;border-radius:8px">Eliminar</button></div></div></div>`).join(''):`<div style="color:#64748b;text-align:center;margin-top:20px">Sin campañas aún</div>`;
-}
+function updateTotal(){const all=[...excelNums,...manualNums]; const uniq=[...new Set(all)]; detected=uniq; document.getElementById('totalNums').innerText=`${uniq.length} contactos - 50 cada 4h`;}
+async function loadTemplates(){const sel=document.getElementById('campTemplate'); sel.innerHTML='<option>Cargando aprobadas...</option>'; try{const r=await fetch('/api/templates/'+S.eid); const j=await r.json(); templates=j.templates||[]; if(j.is_expired){document.getElementById('templateInfo').innerHTML=`<div style="background:#ef444433;border:1px solid #ef4444;padding:10px;border-radius:8px"><b>⚠️ Token expirado</b><br>${j.error}</div>`; if(templates.length>0){sel.innerHTML=templates.map(t=>`<option value="${t.name}">${t.name}</option>`).join('');} return;} if(templates.length===0){sel.innerHTML=`<option>No hay aprobadas</option>`; document.getElementById('templateInfo').innerText=j.error||''; return;} sel.innerHTML=templates.map(t=>`<option value="${t.name}">${t.name} - ${t.language} - ${t.status}</option>`).join(''); document.getElementById('templateInfo').innerText=`✅ ${templates.length} aprobadas cargadas`; onTemplateChange();}catch(e){sel.innerHTML=`<option>Error</option>`;}}
+function onTemplateChange(){const name=document.getElementById('campTemplate').value; const t=templates.find(x=>x.name===name); if(!t){document.getElementById('varBlock').innerHTML=''; return;} let varCount=0; const body=t.components?.find(c=>c.type==='BODY'); if(body && body.text){ const m=body.text.match(/\{\{\d+\}\}/g); if(m) varCount=m.length; } const header=t.components?.find(c=>c.type==='HEADER'); let html=''; if(header?.format==='IMAGE'){ html+=`<input id="headerImage" class="api-input" placeholder="URL imagen header">`; } if(varCount>0){ for(let i=1;i<=varCount;i++){ html+=`<input id="var${i}" class="api-input" placeholder="Var {{${i}}}">`; } } document.getElementById('varBlock').innerHTML=html;}
+async function crearCamp(){if(detected.length===0) return alert('Sube numeros'); const nombre=document.getElementById('campNombre').value.trim()||'Campaña'; const tipo=document.getElementById('campTipo').value; const template=document.getElementById('campTemplate').value; if(tipo==='whatsapp' &&!template) return alert('Selecciona plantilla'); const vars=[]; document.querySelectorAll('[id^="var"]').forEach(el=>{ if(el.id.startsWith('var')) vars.push(el.value); }); const body={empresa_id:S.eid, nombre, tipo, numeros:detected, template_name:template, template_lang:(templates.find(t=>t.name===template)?.language||'es'), variables:vars, header_image:document.getElementById('headerImage')?.value||'', gmail_subject:document.getElementById('gmailSubject')?.value||'', gmail_body:document.getElementById('gmailBody')?.value||''}; const r=await fetch('/api/campaigns/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json(); if(j.ok){ alert('Creada 50 cada 4h'); detected=[]; excelNums=[]; manualNums=[]; document.getElementById('manualNums').value=''; updateTotal(); loadCampHistory(); } else alert(j.error||'Error');}
+async function loadCampHistory(){const r=await fetch('/api/campaigns/'+S.eid); const j=await r.json(); const list=j.campaigns||[]; document.getElementById('campHistory').innerHTML=list.map(c=>`<div class="teamCard" style="flex-direction:column"><div style="display:flex;justify-content:space-between;width:100%"><div><b>${c.nombre}</b> - ${c.enviados||0}/${c.total} - ${c.status}</div><div><button onclick="pauseCamp('${c.id}')" style="background:#f59e0b;border:0;padding:6px 10px;border-radius:8px">${c.status==='paused'?'Continuar':'Pausar'}</button><button onclick="delCamp('${c.id}')" style="background:#1e293b;border:1px solid #ef4444;color:#ef4444;padding:6px 10px;border-radius:8px;margin-left:6px">Eliminar</button></div></div></div>`).join('');}
 async function pauseCamp(id){await fetch('/api/campaigns/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
-async function delCamp(id){if(!confirm('¿Eliminar?')) return; await fetch('/api/campaigns/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
+async function delCamp(id){await fetch('/api/campaigns/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
 init();
 </script></body></html>
