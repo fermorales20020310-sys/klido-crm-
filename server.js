@@ -1,4 +1,4 @@
-// KLIDO V241 COMPLETO - SIN DAÑAR - PLAN SEGUN LO PAGADO + TOKEN 1D 60D PERMANENTE + CALENDARIO ORGANIZADO
+// KLIDO V242 COMPLETO - SIN DAÑAR - V241 + ADMIN CAMBIAR PLAN BLOQUEAR DESBLOQUEAR METRICAS CONSUMOS LINK PUBLICO TIEMPO REAL + TOKEN 1D 60D PERMANENTE
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -41,8 +41,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V241'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V241', time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V242'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V242', time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
 app.get('/webhook',verifyHook); app.get('/webhook/:empresa_id',verifyHook);
@@ -97,14 +97,14 @@ app.post('/api/empresa/registrar', async (req,res)=>{
   if(!nombre||!email||!pass) return res.json({ok:false, error:'Faltan datos'});
   const empresa_id=`${S(email)}_${Date.now()}`;
   const codigo=genCode();
-  const db={empresa_id, nombre, email, plan:(plan||'basico').toLowerCase(), plan_activo:false, codigo_activacion:codigo, creado:Date.now(), config:{phone:'', waba:'', token:'', last_update:0}, cached_templates:[], usuarios:[{id:'admin', nombre:'Admin', email, pass, rol:'admin'}], chats:{}, reset_codes:[], calendar:[], campaigns:[]};
+  const db={empresa_id, nombre, email, plan:(plan||'basico').toLowerCase(), plan_activo:false, codigo_activacion:codigo, creado:Date.now(), mantenimiento:0, config:{phone:'', waba:'', token:'', last_update:0}, cached_templates:[], usuarios:[{id:'admin', nombre:'Admin', email, pass, rol:'admin'}], chats:{}, reset_codes:[], calendar:[], campaigns:[]};
   saveDB(empresa_id,db);
   const html=`<div style="font-family:Arial;background:#0b1020;color:#fff;padding:28px;border-radius:14px"><h2>KLIDO</h2><div style="font-size:36px;letter-spacing:6px;background:#fff;color:#000;padding:14px;border-radius:10px;text-align:center;font-weight:800">${codigo}</div></div>`;
   const sent=await sendEmail(email, `KLIDO - Código ${codigo}`, html);
   res.json({ok:true, empresa_id, sent});
 });
-app.post('/api/empresa/activar',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if(String(db.codigo_activacion)!==String(req.body.codigo).trim()) return res.json({ok:false, error:'Código incorrecto'}); db.plan_activo=true; saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/login',(req,res)=>{for(const f of fs.readdirSync(DB)){try{const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); const u=db.usuarios.find(x=>x.email===req.body.email && x.pass===req.body.pass); if(u){ if(!db.plan_activo) return res.json({ok:false, bloqueado:true, empresa_id:db.empresa_id}); return res.json({ok:true, user:u, empresa_id:db.empresa_id, plan:db.plan, nombre:db.nombre});}}catch{} } res.json({ok:false});});
+app.post('/api/empresa/activar',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); if(String(db.codigo_activacion)!==String(req.body.codigo).trim()) return res.json({ok:false, error:'Código incorrecto'}); db.plan_activo=true; db.mantenimiento=Date.now() + (90*24*60*60*1000); saveDB(req.body.empresa_id,db); res.json({ok:true});});
+app.post('/api/login',(req,res)=>{for(const f of fs.readdirSync(DB)){try{const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); const u=db.usuarios.find(x=>x.email===req.body.email && x.pass===req.body.pass); if(u){ if(!db.plan_activo) return res.json({ok:false, bloqueado:true, empresa_id:db.empresa_id, msg:'Bloqueado por mora - contacta soporte 3133181851'}); return res.json({ok:true, user:u, empresa_id:db.empresa_id, plan:db.plan, nombre:db.nombre});}}catch{} } res.json({ok:false});});
 app.post('/api/auth/forgot', async (req,res)=>{for(const f of fs.readdirSync(DB)){try{const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); const u=db.usuarios.find(x=>x.email===req.body.email); if(u){const code=genCode(); db.reset_codes=db.reset_codes||[]; db.reset_codes.push({code, email:req.body.email, ts:Date.now(), usado:false}); saveDB(db.empresa_id,db); const sent=await sendEmail(req.body.email, `KLIDO - Código ${code}`, `<div>Código: ${code}</div>`); return res.json({ok:true, sent});}}catch{}} res.json({ok:false});});
 app.post('/api/auth/reset',(req,res)=>{for(const f of fs.readdirSync(DB)){try{const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); const rc=(db.reset_codes||[]).find(c=>c.email===req.body.email && c.code===String(req.body.code).trim() &&!c.usado && Date.now()-c.ts < 900000); if(rc){const u=db.usuarios.find(x=>x.email===req.body.email); u.pass=req.body.newPass; rc.usado=true; saveDB(db.empresa_id,db); return res.json({ok:true});}}catch{}} res.json({ok:false});});
 
@@ -126,14 +126,13 @@ app.post('/api/config/api',(req,res)=>{
 });
 
 app.get('/api/empresas',(req,res)=>{try{res.json(fs.readdirSync(DB).filter(f=>f.endsWith('.json')).map(f=>{try{return JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'))}catch{return null}}).filter(Boolean).map(e=>({empresa_id:e.empresa_id, nombre:e.nombre, email:e.email, plan:e.plan, activo:e.plan_activo, phone:e.config?.phone, chats:Object.keys(e.chats||{}).length})));}catch{res.json([]);}});
-app.get('/api/empresa/info/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({ok:false}); res.json({ok:true, empresa_id:db.empresa_id, nombre:db.nombre, email:db.email, plan:db.plan, plan_activo:db.plan_activo, plan_info:PLANES[db.plan]||PLANES.basico, usuarios:db.usuarios, config:{phone:db.config?.phone||'', waba:db.config?.waba?db.config.waba.slice(0,6)+'...':'', has_token:!!db.config?.token}, chats_count:Object.keys(db.chats||{}).length});});
+app.get('/api/empresa/info/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({ok:false}); res.json({ok:true, empresa_id:db.empresa_id, nombre:db.nombre, email:db.email, plan:db.plan, plan_activo:db.plan_activo, plan_info:PLANES[db.plan]||PLANES.basico, mantenimiento:db.mantenimiento||0, usuarios:db.usuarios, config:{phone:db.config?.phone||'', waba:db.config?.waba?db.config.waba.slice(0,6)+'...':'', has_token:!!db.config?.token}, chats_count:Object.keys(db.chats||{}).length});});
 app.post('/api/empresa/plan/update',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false, error:'Empresa no existe'});
   const nuevoPlan=(req.body.plan||'').toLowerCase();
-  if(!['basico','premium','gold'].includes(nuevoPlan)) return res.json({ok:false, error:'Plan invalido: basico, premium, gold'});
-  db.plan=nuevoPlan; db.plan_activo=true; db.plan_actualizado=Date.now(); db.plan_actualizado_por=req.body.admin_email||'admin';
+  if(!['basico','premium','gold'].includes(nuevoPlan)) return res.json({ok:false, error:'Plan invalido'});
+  db.plan=nuevoPlan; db.plan_activo=true; db.plan_actualizado=Date.now(); db.plan_actualizado_por=req.body.admin_email||'admin 3133181851';
   saveDB(req.body.empresa_id,db);
-  console.log(`Plan actualizado ${db.empresa_id} -> ${nuevoPlan}`);
   res.json({ok:true, plan:nuevoPlan, plan_info:PLANES[nuevoPlan]});
 });
 app.get('/api/planes',(req,res)=>{res.json({ok:true, planes:PLANES});});
@@ -214,7 +213,7 @@ app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{
   }catch(e){res.json({ok:false, error:e.message});}
 });
 
-// FIX V241 - ACEPTA TOKEN 1 DIA 60 DIAS PERMANENTE - LEE PLANTILLAS Y NO BLOQUEA
+// FIX V242 - TOKEN 1D 60D PERMANENTE - LEE PLANTILLAS
 app.get('/api/templates/:eid', async (req,res)=>{
   const db=getDB(req.params.eid);
   if(!db) return res.json({templates:[], error:'Empresa no existe', is_expired:false});
@@ -229,16 +228,14 @@ app.get('/api/templates/:eid', async (req,res)=>{
     const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
     const j=await r.json();
     if(j.error){
-      const isExpired = j.error.code===190;
-      return res.json({templates: db.cached_templates||[], error:`Meta ${j.error.code}: ${j.error.message}`, raw:j, is_expired:false, warning: isExpired? `Token expirado - genera nuevo (aceptamos 1d 60d permanente)` : `Error Meta cache ${ (db.cached_templates||[]).length }`, cached_count:(db.cached_templates||[]).length, token_type: isExpired?'expirado':'error temporal'});
+      return res.json({templates: db.cached_templates||[], error:`Meta ${j.error.code}: ${j.error.message}`, raw:j, is_expired:false, warning:`Error Meta cache ${ (db.cached_templates||[]).length }`, cached_count:(db.cached_templates||[]).length});
     }
     const all=j.data||[]; const approved=all.filter(t=>t.status==='APPROVED');
     if(all.length>0){ db.cached_templates=all; db.config.last_templates_update=Date.now(); saveDB(db.empresa_id, db); }
-    let token_type='válido (1 día, 60 días o permanente - recomendado permanente)'; let warning=`✅ ${approved.length} APPROVED de ${all.length} - Token acepta 1d 60d permanente`;
-    if(all.length===0) warning=`0 plantillas para WABA ${waba} - verifica WABA ID no Business ID - Cache ${ (db.cached_templates||[]).length }`;
-    else if(approved.length===0) warning=`Tienes ${all.length} pero 0 APPROVED: ${all.map(t=>t.status).join(',')}`;
-    return res.json({templates: approved.length>0? approved : all, all: all.length, approved: approved.length, token_type, warning, is_expired:false});
-  }catch(e){ return res.json({templates:db.cached_templates||[], error:e.message, using_cache:true, is_expired:false, warning:'Cache '+(db.cached_templates||[]).length}); }
+    let warning=`✅ ${approved.length} APPROVED de ${all.length} - Token acepta 1d 60d permanente`;
+    if(all.length===0) warning=`0 plantillas para WABA ${waba} - Cache ${ (db.cached_templates||[]).length }`;
+    return res.json({templates: approved.length>0? approved : all, all: all.length, approved: approved.length, warning, is_expired:false});
+  }catch(e){ return res.json({templates:db.cached_templates||[], error:e.message, using_cache:true, is_expired:false}); }
 });
 
 app.get('/api/campaigns/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]}); res.json({campaigns:(db.campaigns||[]).sort((a,b)=>b.creado-a.creado)});});
@@ -246,11 +243,11 @@ app.post('/api/campaigns/create',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
   const planInfo=PLANES[db.plan]||PLANES.basico;
   if(req.body.tipo==='gmail' &&!planInfo.gmail){
-    return res.json({ok:false, error:`⛔ Gmail solo Gold $2.4M + $130k. Tu plan: ${db.plan} - Básico 1000 msgs sin IA - Premium sin Gmail`});
+    return res.json({ok:false, error:`⛔ Gmail solo Gold. Tu plan: ${db.plan}`});
   }
   const existing=(db.campaigns||[]).length;
   if(existing>=planInfo.envios && planInfo.envios!==999){
-    return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas - tienes ${existing} - Pasa a Premium 5 o Gold ilimitados`});
+    return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas`});
   }
   db.campaigns=db.campaigns||[];
   const camp={id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:req.body.variables||[], header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, indice:0, next_send:0, creado:Date.now()};
@@ -291,9 +288,51 @@ async function processCampaigns(){
 }
 setInterval(processCampaigns, 60000); processCampaigns();
 
+// ===== ADMIN V242 - CAMBIAR PLAN BLOQUEAR DESBLOQUEAR METRICAS CONSUMOS LINK PUBLICO TIEMPO REAL =====
+function getAllEmpresas(){
+  try{return fs.readdirSync(DB).filter(f=>f.endsWith('.json')).map(f=>{try{return JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'))}catch{return null}}).filter(Boolean);}catch{return [];}
+}
+app.get('/api/admin/agencias',(req,res)=>{
+  const all=getAllEmpresas();
+  const agencias=all.map(e=>{
+    const chats=Object.keys(e.chats||{}).length;
+    const mensajes=Object.values(e.chats||{}).reduce((a,c)=>a+(c.mensajes?.length||0),0);
+    const workers=(e.usuarios||[]).length;
+    const campaigns=(e.campaigns||[]).length;
+    const planInfo=PLANES[e.plan]||PLANES.basico;
+    const consumoMensajes=planInfo.mensajes===999999?0:Math.round((mensajes/planInfo.mensajes)*100);
+    const consumoEnvios=planInfo.envios===999?0:Math.round((campaigns/planInfo.envios)*100);
+    return {id:e.empresa_id, nombre:e.nombre, email:e.email, plan:e.plan, plan_activo:e.plan_activo, mantenimiento:e.mantenimiento||e.plan_vence||0, chats, mensajes, workers, campaigns, consumoMensajes, consumoEnvios, mensajesLimite:planInfo.mensajes, enviosLimite:planInfo.envios, plan_info:planInfo, creado:e.creado, phone:e.config?.phone||'', waba:e.config?.waba||'', has_token:!!e.config?.token};
+  }).sort((a,b)=>b.creado-a.creado);
+  res.json({ok:true, agencias, total:agencias.length});
+});
+app.post('/api/admin/agencias/:id/activar',(req,res)=>{
+  const db=getDB(req.params.id); if(!db) return res.json({ok:false, error:'Empresa no existe'});
+  const plan=(req.body.plan||db.plan||'basico').toLowerCase(); const dias=Number(req.body.dias||90);
+  if(!['basico','premium','gold'].includes(plan)) return res.json({ok:false, error:'Plan invalido'});
+  db.plan=plan; db.plan_activo=true; db.mantenimiento=Date.now() + (dias*24*60*60*1000); db.plan_vence=db.mantenimiento; db.plan_actualizado=Date.now();
+  saveDB(req.params.id, db);
+  res.json({ok:true, mensaje:`✅ ${db.nombre} activado a ${plan.toUpperCase()} por ${dias} días - vence ${new Date(db.mantenimiento).toLocaleDateString()}`, plan, vence:db.mantenimiento});
+});
+app.post('/api/admin/agencias/:id/bloquear',(req,res)=>{const db=getDB(req.params.id); if(!db) return res.json({ok:false}); db.plan_activo=false; db.bloqueado=Date.now(); saveDB(req.params.id, db); res.json({ok:true, mensaje:`🚫 ${db.nombre} BLOQUEADO por mora`});});
+app.post('/api/admin/agencias/:id/desbloquear',(req,res)=>{const db=getDB(req.params.id); if(!db) return res.json({ok:false}); db.plan_activo=true; db.desbloqueado=Date.now(); saveDB(req.params.id, db); res.json({ok:true, mensaje:`✅ ${db.nombre} DESBLOQUEADO`});});
+app.get('/api/admin/agencias/:id/detalle',(req,res)=>{
+  const db=getDB(req.params.id); if(!db) return res.json({ok:false});
+  const chats=Object.values(db.chats||{}); const cals=db.calendar||[];
+  const metrics={total_chats:chats.length, total_mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), clientes:chats.filter(x=>x.estado==='cliente').length, interesados:chats.filter(x=>x.estado==='interesado').length, nuevo:chats.filter(x=>!x.estado||x.estado==='nuevo').length, calendar:cals.length, calendar_pendientes:cals.filter(x=>!x.hecho).length, calendar_hechos:cals.filter(x=>x.hecho).length, usuarios:db.usuarios||[], campaigns:db.campaigns||[], plan:db.plan, plan_info:PLANES[db.plan]||PLANES.basico, plan_activo:db.plan_activo, vence:db.mantenimiento||0};
+  res.json({ok:true, empresa_id:db.empresa_id, nombre:db.nombre, email:db.email, metrics, usuarios:db.usuarios, campaigns:db.campaigns, calendar:cals});
+});
+app.get('/api/public/:eid',(req,res)=>{
+  const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
+  const chats=Object.values(db.chats||{});
+  res.json({ok:true, empresa:db.nombre, plan:db.plan, plan_activo:db.plan_activo, vence:db.mantenimiento? new Date(Number(db.mantenimiento)).toLocaleDateString() : '-', stats:{chats:chats.length, mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), trabajadores:(db.usuarios||[]).length, campanas:(db.campaigns||[]).length, citas:(db.calendar||[]).length, pendientes:(db.calendar||[]).filter(x=>!x.hecho).length}, updated:Date.now()});
+});
+
 app.get('/',(req,res)=>res.sendFile(path.join(PUB,'index.html')));
 app.get('/crm',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
 app.get('/crm.html',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
+app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
+app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V241 PLAN SEGUN PAGO + TOKEN 1D 60D PERMANENTE OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V242 ADMIN PLAN BLOQUEAR METRICAS CONSUMOS LINK PUBLICO + TOKEN 1D 60D PERMANENTE OK en 0.0.0.0:${PORT}`));
