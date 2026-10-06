@@ -1,4 +1,4 @@
-// KLIDO V246 - FIX 1 VARIABLE + FIX 132012 + FIX is not iterable - TU V245 SIN DAÑAR
+// KLIDO V250 - TU V246 EXACTO + FIX ENVIA TAL CUAL APROBADA - 1 VAR + IMAGEN + 0 VAR
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -42,8 +42,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V246 FIX 1 VAR FULL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V246 FIX 1 VAR + 132012 + is not iterable - WEBHOOK klido123 FULL', time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V250 ENVIA TAL CUAL FULL'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V250 ENVIA TAL CUAL 1 VAR + IMAGEN - TU V246', time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -324,7 +324,9 @@ app.post('/api/campaigns/create',(req,res)=>{
   if(!Array.isArray(db.campaigns)) db.campaigns = db.campaigns? Object.values(db.campaigns) : [];
   const existing=db.campaigns.length;
   if(existing>=planInfo.envios && planInfo.envios!==999) return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas`});
-  const camp={id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:req.body.variables||[], header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, indice:0, next_send:0, creado:Date.now()};
+  // V250 - limpiar variables vacias y no forzar header_image
+  let cleanVars = (req.body.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='' );
+  const camp={id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:cleanVars, header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, indice:0, next_send:0, creado:Date.now()};
   db.campaigns.push(camp); saveDB(req.body.empresa_id,db); res.json({ok:true, camp});
 });
 
@@ -343,7 +345,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V246 - WORKER FINAL - 1 VAR + NO HEADER + NO 132012 =====
+// ===== V250 - ENVIA TAL CUAL APROBADA - 1 VAR + IMAGEN YA APROBADA =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -366,44 +368,49 @@ async function processCampaigns(){
           if(!db.config?.phone||!db.config?.token){ camp.status='paused'; changed=true; continue; }
           for(const num of batch){
             try{
-              let payload={messaging_product:'whatsapp', to:String(num).replace(/\D/g,''), type:'template', template:{name:camp.template_name, language:{code:camp.template_lang||'es'}, components:[]}};
-
-              // NO ENVIAR HEADER - tu plantilla ACOL ya tiene la imagen dentro de Meta
-              const hImg = String(camp.header_image||'').trim();
-              if(hImg && hImg.startsWith('https://')){
-                payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
-              }
-
-              // V246 - TU PLANTILLA SOLO 1 VARIABLE {{1}} - AUTO AJUSTE
-              let expectedVars = 1;
+              // LEER PLANTILLA APROBADA REAL
+              let tpl=null, expectedVars=0, tplLang=camp.template_lang||'es', hasImageHeader=false;
               try{
-                const tpl = (db.cached_templates||[]).find(t=> t.name===camp.template_name);
+                tpl=(db.cached_templates||[]).find(t=> t.name===camp.template_name);
                 if(tpl){
-                  const body = (tpl.components||[]).find(c=> c.type==='BODY');
-                  if(body?.text){
-                    const matches = body.text.match(/{{\d+}}/g);
-                    if(matches) expectedVars = matches.length;
-                  }
+                  tplLang=tpl.language||tplLang;
+                  const body=(tpl.components||[]).find(c=> c.type==='BODY');
+                  if(body?.text){ const m=body.text.match(/{{\d+}}/g); expectedVars=m?m.length:0; }
+                  const header=(tpl.components||[]).find(c=> c.type==='HEADER');
+                  if(header && header.format==='IMAGE') hasImageHeader=true;
                 }
               }catch{}
 
-              // Solo coge la primera variable (nombre), ignora la segunda
-              let vars = (camp.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='');
-              vars = vars.slice(0, expectedVars);
-              if(vars.length < expectedVars){
-                while(vars.length < expectedVars) vars.push(' ');
+              // ARMAR PAYLOAD - SI TIENE IMAGEN APROBADA, NO ENVIAR HEADER - ASI SE ENVIA TAL CUAL
+              let payload={
+                messaging_product:'whatsapp',
+                to:String(num).replace(/\D/g,''),
+                type:'template',
+                template:{name:camp.template_name, language:{code:tplLang}, components:[]}
+              };
+
+              const hImg=String(camp.header_image||'').trim();
+              if(hasImageHeader && hImg.startsWith('https://')){
+                // Solo si ponen https:// valido
+                payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
+              }
+              // Si hasImageHeader true pero hImg vacio, NO mandamos header -> usa la imagen ya aprobada en Meta
+
+              if(expectedVars>0){
+                let vars=(camp.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='');
+                vars=vars.slice(0,expectedVars);
+                while(vars.length<expectedVars) vars.push(' ');
+                payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text:v}))});
               }
 
-              if(vars.length>0){
-                payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text: v || ' '}))});
-              }
+              if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 Enviando ${camp.template_name} a ${num} - espera ${expectedVars} var, mando:`, vars);
+              console.log(`📤 ${camp.template_name} -> ${num} | aprobada ${expectedVars} vars ${hasImageHeader?'+img aprobada':''} vars:`, camp.variables);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
               if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
-              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,300)); }
+              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,500)); }
             }catch(e){ camp.fallidos++; console.log('send err', e.message); }
             await new Promise(r=>setTimeout(r, 900));
           }
@@ -481,4 +488,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V246 FIX 1 VAR - 132012 FIX OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V250 ENVIA TAL CUAL APROBADA OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
