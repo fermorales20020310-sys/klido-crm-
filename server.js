@@ -1,4 +1,4 @@
-// KLIDO V213 - FIX HEALTHCHECK - AVANZA CONSULTING UI
+// KLIDO V217 - FINAL - LOGIN + CRM AVANZA INTACTO + RESEND SOPORTE
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -8,57 +8,124 @@ app.use(cors());
 app.use(express.json({limit:'50mb'}));
 app.use(express.urlencoded({extended:true}));
 
-// public seguro
 const PUB=path.join(__dirname,'public');
 if(!fs.existsSync(PUB)) fs.mkdirSync(PUB,{recursive:true});
+if(!fs.existsSync(path.join(PUB,'crm'))) fs.mkdirSync(path.join(PUB,'crm'),{recursive:true});
+if(!fs.existsSync(path.join(PUB,'app'))) fs.mkdirSync(path.join(PUB,'app'),{recursive:true});
 app.use(express.static(PUB));
 
-const DB_PATH='/app/db';
-if(!fs.existsSync(DB_PATH)) fs.mkdirSync(DB_PATH,{recursive:true});
+const DB='/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
 const S=s=>String(s||'').replace(/[^a-z0-9_\-@.]/gi,'').slice(0,80);
-const getDB=id=>{const f=path.join(DB_PATH,`${S(id)}.json`); if(!fs.existsSync(f)) return null; try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return null}};
-const saveDB=(id,d)=>fs.writeFileSync(path.join(DB_PATH,`${S(id)}.json`),JSON.stringify(d,null,2));
-const findByPhone=phone=>{try{for(const f of fs.readdirSync(DB_PATH)){try{const j=JSON.parse(fs.readFileSync(path.join(DB_PATH,f),'utf8')); if(String(j.config?.phone)===String(phone)) return j.empresa_id}catch{}}}catch{} return null;};
+const getDB=id=>{const f=path.join(DB,`${S(id)}.json`); if(!fs.existsSync(f)) return null; try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return null}};
+const saveDB=(id,d)=>fs.writeFileSync(path.join(DB,`${S(id)}.json`),JSON.stringify(d,null,2));
+const genCode=()=>Math.floor(100000+Math.random()*900000).toString();
 
-const PLANES={
-  basico:{nombre:'BÁSICO', precio:420000, max_agentes:1},
-  gold:{nombre:'GOLD', precio:1200000, max_agentes:5},
-  premium:{nombre:'PREMIUM', precio:2400000, max_agentes:100}
-};
+// RESEND CON TUS 2 VARIABLES DE RAILWAY
+async function sendEmail(to, subject, html){
+  const API_KEY=(process.env.RESEND_API_KEY||'').trim();
+  const FROM=(process.env.RESEND_FROM||'KLIDO <soporte@klidoapp.com.co>').trim();
+  console.log('EMAIL intentando:',to,' FROM:',FROM,' hasKey:',!!API_KEY);
+  if(!API_KEY) return {ok:false, error:'Falta RESEND_API_KEY'};
+  try{
+    const r=await fetch('https://api.resend.com/emails',{
+      method:'POST',
+      headers:{'Content-Type':'application/json', Authorization:`Bearer ${API_KEY}`},
+      body:JSON.stringify({from:FROM, to, subject, html})
+    });
+    const j=await r.json();
+    console.log('RESEND RESPUESTA:',j);
+    return j;
+  }catch(e){console.log('RESEND ERROR',e.message); return {ok:false};}
+}
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-console.log('V213 AVANZA CONSULTING - VERIFY:',VERIFY, 'PORT:',process.env.PORT);
+console.log('V217 - FROM:',process.env.RESEND_FROM,' VERIFY:',VERIFY);
 
-// HEALTHCHECK QUE RAILWAY NECESITA
-app.get('/health',(req,res)=>res.status(200).send('OK V213'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V213', time:Date.now()}));
+app.get('/health',(req,res)=>res.status(200).send('OK V217'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V217', from:process.env.RESEND_FROM}));
 
-const verify=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){console.log('WEBHOOK VERIFICADO OK'); return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
-app.get('/webhook',verify); app.get('/webhook/:empresa_id',verify);
-async function handle(body){try{const val=body.entry?.[0]?.changes?.[0]?.value; if(!val) return; const eid=findByPhone(val.metadata?.phone_number_id); if(!eid) {console.log('No empresa para',val.metadata?.phone_number_id); return;} let db=getDB(eid); if(!db) return; if(!db.chats) db.chats={}; if(val.messages){for(const m of val.messages){const from=m.from; if(!db.chats[from]) db.chats[from]={id:from, nombre:val.contacts?.[0]?.profile?.name||from, mensajes:[], notas:[], tags:[], no_leidos:0, last:Date.now()}; let texto=m.type==='text'?m.text.body:'📎 '+m.type; db.chats[from].mensajes.push({from:'cliente', texto, type:m.type, ts:Date.now()}); db.chats[from].no_leidos++; db.chats[from].last=Date.now();} saveDB(eid,db);}}catch(e){console.log('handle error',e.message);}}
-app.post('/webhook',(req,res)=>{handle(req.body); res.sendStatus(200);}); app.post('/webhook/:empresa_id',(req,res)=>{handle(req.body); res.sendStatus(200);});
+// WEBHOOK
+const verify=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){console.log('WEBHOOK OK'); return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
+app.get('/webhook',verify); app.get('/webhook/:id',verify);
+async function handle(b){try{const v=b.entry?.[0]?.changes?.[0]?.value; if(!v) return; const phone=v.metadata?.phone_number_id; let eid=null; try{for(const f of fs.readdirSync(DB)){try{const j=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); if(String(j.config?.phone)===String(phone)) eid=j.empresa_id;}catch{}}}catch{} if(!eid) return; let db=getDB(eid); if(!db) return; if(!db.chats) db.chats={}; if(v.messages){for(const m of v.messages){const from=m.from; if(!db.chats[from]) db.chats[from]={id:from, nombre:v.contacts?.[0]?.profile?.name||from, mensajes:[], notas:[], tags:['Hot Lead'], no_leidos:0, last:Date.now()}; let texto=m.type==='text'?m.text.body:'📎 '+m.type; let media_url=null; if(m[m.type]?.id && db.config?.token){try{const r=await fetch(`https://graph.facebook.com/v20.0/${m[m.type].id}`,{headers:{Authorization:`Bearer ${db.config.token}`}}); const jj=await r.json(); media_url=jj.url;}catch{}} db.chats[from].mensajes.push({from:'cliente', texto, type:m.type, media_url, ts:Date.now()}); db.chats[from].no_leidos++; db.chats[from].last=Date.now();} saveDB(eid,db);}}catch(e){console.log(e.message);}}
+app.post('/webhook',(req,res)=>{handle(req.body); res.sendStatus(200);}); app.post('/webhook/:id',(req,res)=>{handle(req.body); res.sendStatus(200);});
 
-// APIS MINIMAS
-app.post('/api/empresa/registrar',(req,res)=>{const {nombre,email,phone,token,waba,plan,admin_pass}=req.body; const empresa_id=`${S(email||nombre)}_${Date.now()}`; const db={empresa_id, nombre, email, plan:plan||'basico', plan_activo:false, config:{phone:String(phone||'').trim(), token:String(token||'').trim(), waba:String(waba||'').trim()}, usuarios:[{id:'admin', nombre:'Admin', email, pass:admin_pass, rol:'admin'}], chats:{}}; saveDB(empresa_id,db); res.json({ok:true, empresa_id, webhook_url:`https://${req.headers.host}/webhook/${empresa_id}`});});
-app.post('/api/empresa/pagar',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.plan=req.body.plan; db.plan_activo=true; saveDB(req.body.empresa_id,db); res.json({ok:true});});
-app.post('/api/login',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); const u=db.usuarios.find(x=>x.email===req.body.email&&x.pass===req.body.pass); if(!u) return res.json({ok:false, error:'Credenciales'}); if(!db.plan_activo) return res.json({ok:false, bloqueado:true, precio:PLANES[db.plan].precio}); res.json({ok:true, user:u, plan:db.plan});});
-app.get('/api/empresas',(req,res)=>{try{const list=fs.readdirSync(DB_PATH).filter(f=>f.endsWith('.json')).map(f=>{try{return JSON.parse(fs.readFileSync(path.join(DB_PATH,f),'utf8'))}catch{return null}}).filter(Boolean).map(e=>({empresa_id:e.empresa_id, nombre:e.nombre, plan:e.plan, activo:e.plan_activo, phone:e.config?.phone})); res.json(list);}catch{res.json([]);}});
+// APIS AUTH
+app.post('/api/empresa/registrar', async (req,res)=>{
+  const {nombre,email,pass,plan}=req.body;
+  if(!nombre||!email||!pass) return res.json({ok:false, error:'Faltan datos'});
+  const empresa_id=`${S(email)}_${Date.now()}`;
+  const codigo=genCode();
+  const db={empresa_id, nombre, email, plan:plan||'basico', plan_activo:false, codigo_activacion:codigo, codigo_usado:false, creado:Date.now(), config:{phone:'', token:''}, usuarios:[{id:'admin', nombre:'Admin', email, pass, rol:'admin'}], chats:{}, reset_codes:[]};
+  saveDB(empresa_id,db);
+  const html=`<div style="font-family:Arial;background:#0b1020;color:#fff;padding:28px;border-radius:14px"><h2 style="margin:0">KLIDO Avanza Consulting</h2><p>Hola ${nombre},</p><p>Plan seleccionado: <b>${plan}</b></p><p>Tu código de activación después del pago:</p><div style="font-size:36px;letter-spacing:6px;background:#fff;color:#000;padding:14px;border-radius:10px;text-align:center;font-weight:800">${codigo}</div><p style="margin-top:16px;font-size:13px;color:#94a3b8">Este código fue enviado desde soporte@klidoapp.com.co. Ingrésalo en app.klidoapp.com.co para desbloquear tu panel Avanza.</p></div>`;
+  const sent=await sendEmail(email, `KLIDO - Código activación ${codigo}`, html);
+  res.json({ok:true, empresa_id, sent});
+});
+
+app.post('/api/empresa/activar',(req,res)=>{
+  const {empresa_id, codigo}=req.body; const db=getDB(empresa_id); if(!db) return res.json({ok:false, error:'No existe'});
+  if(String(db.codigo_activacion)!==String(codigo).trim()) return res.json({ok:false, error:'Código incorrecto'});
+  db.plan_activo=true; saveDB(empresa_id,db); res.json({ok:true});
+});
+
+app.post('/api/login',(req,res)=>{
+  try{
+    for(const f of fs.readdirSync(DB)){
+      try{
+        const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
+        const u=db.usuarios.find(x=>x.email===req.body.email && x.pass===req.body.pass);
+        if(u){
+          if(!db.plan_activo) return res.json({ok:false, bloqueado:true, empresa_id:db.empresa_id, plan:db.plan});
+          return res.json({ok:true, user:u, empresa_id:db.empresa_id, plan:db.plan});
+        }
+      }catch{}
+    }
+    res.json({ok:false, error:'Credenciales incorrectas'});
+  }catch{res.json({ok:false});}
+});
+
+app.post('/api/auth/forgot', async (req,res)=>{
+  const {email}=req.body;
+  for(const f of fs.readdirSync(DB)){
+    try{
+      const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
+      const u=db.usuarios.find(x=>x.email===email);
+      if(u){
+        const code=genCode();
+        db.reset_codes=db.reset_codes||[]; db.reset_codes.push({code, email, ts:Date.now(), usado:false}); saveDB(db.empresa_id,db);
+        const html=`<div style="font-family:Arial;background:#0b1020;color:#fff;padding:28px;border-radius:14px"><h2>KLIDO - Recuperar contraseña</h2><p>Tu código de recuperación:</p><div style="font-size:36px;letter-spacing:6px;background:#fff;color:#000;padding:14px;border-radius:10px;text-align:center;font-weight:800">${code}</div><p style="font-size:12px;color:#94a3b8">Expira en 15 minutos. Soporte: soporte@klidoapp.com.co</p></div>`;
+        const sent=await sendEmail(email, `KLIDO - Código recuperación ${code}`, html);
+        return res.json({ok:true, sent});
+      }
+    }catch{}
+  }
+  res.json({ok:false, error:'Email no encontrado'});
+});
+
+app.post('/api/auth/reset',(req,res)=>{
+  const {email, code, newPass}=req.body;
+  for(const f of fs.readdirSync(DB)){
+    try{
+      const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
+      const rc=(db.reset_codes||[]).find(c=>c.email===email && c.code===String(code).trim() &&!c.usado && Date.now()-c.ts < 900000);
+      if(rc){ const u=db.usuarios.find(x=>x.email===email); u.pass=newPass; rc.usado=true; saveDB(db.empresa_id,db); return res.json({ok:true});}
+    }catch{}
+  }
+  res.json({ok:false, error:'Código inválido o expirado'});
+});
+
+// CHATS
+app.get('/api/empresas',(req,res)=>{try{res.json(fs.readdirSync(DB).filter(f=>f.endsWith('.json')).map(f=>{try{return JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'))}catch{return null}}).filter(Boolean).map(e=>({empresa_id:e.empresa_id, nombre:e.nombre, plan:e.plan, activo:e.plan_activo})));}catch{res.json([]);}});
 app.get('/api/chats/:eid/:uid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json([]); res.json(Object.values(db.chats||{}).sort((a,b)=>b.last-a.last));});
-app.get('/api/mensajes/:eid/:cid',(req,res)=>{const db=getDB(req.params.eid); const chat=db?.chats?.[req.params.cid]; res.json({mensajes:(chat?.mensajes||[]), profile:{id:chat?.id, nombre:chat?.nombre, tags:chat?.tags, notas:chat?.notas}});});
-app.post('/api/mensaje/enviar',async(req,res)=>{const db=getDB(req.body.empresa_id); if(!db||!db.plan_activo) return res.json({ok:false, error:'BLOQUEADO'}); try{const r=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:String(req.body.chat_id).replace(/\D/g,''), type:'text', text:{body:req.body.texto}})}); const j=await r.json(); if(j.error) return res.json({ok:false, error:j.error}); if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, nombre:req.body.chat_id, mensajes:[], no_leidos:0, last:Date.now()}; db.chats[req.body.chat_id].mensajes.push({from:'agente', texto:req.body.texto, ts:Date.now()}); db.chats[req.body.chat_id].last=Date.now(); saveDB(req.body.empresa_id,db); res.json({ok:true});}catch(e){res.json({ok:false, error:e.message});}});
+app.get('/api/mensajes/:eid/:cid',(req,res)=>{const db=getDB(req.params.eid); const c=db?.chats?.[req.params.cid]; res.json({mensajes:c?.mensajes||[], profile:{id:c?.id, nombre:c?.nombre, tags:c?.tags||['Hot Lead'], notas:c?.notas||[], email:c?.email||'', phone:c?.id}});});
+app.post('/api/mensaje/enviar',async(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); try{const r=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:String(req.body.chat_id).replace(/\D/g,''), type:'text', text:{body:req.body.texto}})}); const j=await r.json(); if(j.error) return res.json({ok:false, error:j.error}); if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, nombre:req.body.chat_id, mensajes:[], last:Date.now()}; db.chats[req.body.chat_id].mensajes.push({from:'agente', texto:req.body.texto, ts:Date.now()}); db.chats[req.body.chat_id].last=Date.now(); saveDB(req.body.empresa_id,db); res.json({ok:true});}catch(e){res.json({ok:false});}});
+app.post('/api/chat/nota',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false}); db.chats[req.body.chat_id].notas=db.chats[req.body.chat_id].notas||[]; db.chats[req.body.chat_id].notas.push({texto:req.body.texto, ts:Date.now()}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
-const INDEX=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO Avanza Consulting</title><style>*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial;background:#0b1020;color:#e2e8f0;height:100vh;overflow:hidden}.app{display:flex;flex-direction:column;height:100vh;padding:12px}.topbar{height:56px;background:#131b2e;border:1px solid #1e2a4a;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;padding:0 18px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}.brand img{width:32px;height:32px;border-radius:8px;background:#fff;object-fit:contain}.main{flex:1;display:flex;background:#131b2e;border:1px solid #1e2a4a;border-top:0;border-radius:0 0 14px 14px;overflow:hidden}.menu{width:200px;background:#0f172a;border-right:1px solid #1e2a4a;padding:12px}.m{padding:10px 12px;border-radius:10px;margin:4px 0;cursor:pointer;color:#94a3b8}.m.active{background:#3b82f6;color:#fff}.inbox{width:340px;background:#0f172a;border-right:1px solid #1e2a4a;display:flex;flex-direction:column}.chat{flex:1;background:#0f172a;display:flex;flex-direction:column}.msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:8px}.b{max-width:65%;padding:10px 12px;border-radius:14px;font-size:13px}.b.cli{background:#1e293b;align-self:flex-start}.b.age{background:#bfdbfe;color:#000;align-self:flex-end}.profile{width:300px;background:#0f172a;border-left:1px solid #1e2a4a;padding:14px}</style></head><body><div class="app"><div class="topbar"><div class="brand"><img src="/logo.png" onerror="this.src='https://via.placeholder.com/32'"><span>KLIDO Avanza Consulting</span><span style="background:#3b82f6;padding:4px 10px;border-radius:20px;font-size:12px;margin-left:8px">Pro Plan</span></div><div id="uInfo" style="font-size:13px"></div></div><div class="main"><div class="menu"><div style="font-size:11px;color:#64748b;margin:10px 6px">MENU</div><div class="m active">💬 Inbox</div><div class="m">👥 Contacts</div><div class="m">📢 Campaigns</div><div class="m">⚙️ Automation</div><div class="m">📊 Analytics</div><div class="m">📄 Templates</div><div style="margin-top:20px"><button onclick="document.getElementById('login').style.display='flex'" style="width:100%;padding:8px;border-radius:8px;background:#1e293b;border:1px solid #2a3a5c;color:#fff;cursor:pointer">Login / Registrar</button></div></div><div class="inbox"><div style="padding:14px;border-bottom:1px solid #1e2a4a"><b>Inbox</b><input id="q" placeholder="Search..." style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid #2a3a5c;background:#1e293b;color:#fff"></div><div id="list" style="flex:1;overflow:auto"></div></div><div class="chat"><div style="padding:14px;border-bottom:1px solid #1e2a4a"><b id="chatName">Selecciona un chat</b></div><div class="msgs" id="msgs"><div style="text-align:center;color:#64748b;margin-top:80px">Conecta tu webhook<br>https://app.klidoapp.com.co/webhook/TU_EMPRESA_ID<br><br>Logo cargado desde /logo.png</div></div><div style="padding:10px;border-top:1px solid #1e2a4a;display:flex;gap:8px"><input id="txt" placeholder="Type a message..." style="flex:1;padding:10px;border-radius:20px;border:1px solid #2a3a5c;background:#1e293b;color:#fff"><button onclick="send()" style="width:40px;height:40px;border-radius:50%;background:#3b82f6;border:0;color:#fff">▶</button></div></div><div class="profile"><b>Customer Profile</b><div id="pBox" style="margin-top:12px;font-size:13px;color:#94a3b8">Selecciona un chat para ver perfil</div></div></div></div><div id="login" style="position:fixed;inset:0;background:#0b1020e6;display:flex;align-items:center;justify-content:center"><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:20px;width:380px"><h3>KLIDO Avanza Consulting</h3><select id="eid" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:4px 0"></select><input id="le" placeholder="Email" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:4px 0"><input id="lp" type="password" placeholder="Pass" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:4px 0"><button onclick="login()" style="width:100%;padding:10px;background:#3b82f6;border:0;border-radius:8px;color:#fff;font-weight:700;margin-top:6px">Entrar</button><div id="msg" style="font-size:12px;color:#f87171;margin-top:6px"></div><hr style="margin:12px 0;border:0;border-top:1px solid #1e2a4a"><input id="rn" placeholder="Nombre agencia" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:2px 0"><input id="re" placeholder="Email admin" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:2px 0"><input id="rp" placeholder="Pass admin" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:2px 0"><input id="rph" placeholder="Phone ID" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:2px 0"><input id="rtk" placeholder="Token" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:2px 0"><select id="rplan" style="width:100%;padding:8px;border-radius:8px;background:#0f172a;color:#fff;border:1px solid #2a3a5c;margin:2px 0"><option value="basico">BASICO $420k/año</option><option value="gold">GOLD $1.2M/año Gmail+IA+Llamadas</option><option value="premium">PREMIUM $2.4M/año</option></select><button onclick="registrar()" style="width:100%;padding:8px;background:#fff;color:#000;border-radius:8px;font-weight:700;margin-top:4px">Registrar agencia</button><button onclick="pagar()" style="width:100%;padding:8px;background:#22c55e;color:#fff;border-radius:8px;font-weight:700;margin-top:4px">PAGAR Y DESBLOQUEAR</button><button onclick="document.getElementById('login').style.display='none'" style="width:100%;padding:6px;background:transparent;border:1px solid #2a3a5c;color:#94a3b8;border-radius:8px;margin-top:6px">Cerrar</button></div></div><script>let S={}; let cur=null; async function loadEmpresas(){const r=await fetch('/api/empresas'); const emps=await r.json(); const sel=document.getElementById('eid'); sel.innerHTML=''; emps.forEach(e=>{const o=document.createElement('option'); o.value=e.empresa_id; o.textContent=e.nombre+' '+(e.activo?'✅':'🔒'); sel.appendChild(o);});}
-async function registrar(){const body={nombre:rn.value,email:re.value,admin_pass:rp.value,phone:rph.value,token:rtk.value,plan:rplan.value}; const r=await fetch('/api/empresa/registrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json(); alert('Creado '+j.empresa_id+' Webhook: '+j.webhook_url); loadEmpresas();}
-async function pagar(){const eid=document.getElementById('eid').value; const r=await fetch('/api/empresa/pagar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:eid,plan:rplan.value})}); alert('Plan activado'); loadEmpresas();}
-async function login(){const empresa_id=document.getElementById('eid').value; const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id,email:le.value,pass:lp.value})}); const j=await r.json(); if(!j.ok){msg.innerText=j.bloqueado?'PLAN BLOQUEADO $'+j.precio+' - Dale PAGAR':j.error; return;} S={eid:empresa_id,user:j.user}; document.getElementById('uInfo').innerText=j.user.rol+': '+j.user.nombre+' '+j.plan; document.getElementById('login').style.display='none'; loadChats();}
-async function loadChats(){if(!S.eid) return; const r=await fetch('/api/chats/'+S.eid+'/admin'); const chats=await r.json(); const q=document.getElementById('q').value.toLowerCase(); const list=document.getElementById('list'); list.innerHTML=''; chats.filter(c=>!q||c.id.includes(q)).forEach(c=>{const d=document.createElement('div'); d.style.padding='10px'; d.style.borderBottom='1px solid #1e2a4a'; d.style.cursor='pointer'; d.innerHTML='<b>'+(c.nombre||c.id)+'</b><br><small style=color:#94a3b8>'+(c.mensajes?.slice(-1)[0]?.texto||'').slice(0,30)+'</small>'; d.onclick=()=>openChat(c.id); list.appendChild(d);});}
-async function openChat(id){cur=id; const r=await fetch('/api/mensajes/'+S.eid+'/'+id); const j=await r.json(); const msgs=j.mensajes||[]; document.getElementById('chatName').innerText=j.profile.nombre||id; document.getElementById('pBox').innerHTML='<div>'+id+'</div><div>Tags: '+(j.profile.tags||[]).join(',')+'</div>'; const m=document.getElementById('msgs'); m.innerHTML=''; msgs.forEach(x=>{const d=document.createElement('div'); d.className='b '+(x.from==='agente'?'age':'cli'); d.innerText=x.texto; m.appendChild(d);}); m.scrollTop=m.scrollHeight;}
-async function send(){const t=document.getElementById('txt').value; if(!t||!cur) return; document.getElementById('txt').value=''; await fetch('/api/mensaje/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid,chat_id:cur,texto:t})}); openChat(cur); loadChats();}
-document.getElementById('q')?.addEventListener('input',loadChats); setInterval(loadChats,4000); loadEmpresas();
-<\/script></body></html>`;
+// RUTAS
+app.get('/',(req,res)=>res.sendFile(path.join(PUB,'index.html')));
+app.get('/crm',(req,res)=>res.sendFile(path.join(PUB,'crm','index.html')));
+app.get('/app',(req,res)=>res.sendFile(path.join(PUB,'app','index.html')));
 
-app.get('/',(req,res)=>res.send(INDEX));
-
-// ESCUCHA EN 0.0.0.0 PARA RAILWAY
 const PORT=process.env.PORT||3000;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V213 OK escuchando en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V217 OK - FROM ${process.env.RESEND_FROM} en ${PORT}`));
