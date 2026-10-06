@@ -2,7 +2,9 @@
 *{box-sizing:border-box}body{margin:0;font-family:Inter;background:#0b1020;color:#e2e8f0;height:100vh;overflow:hidden}
 .app{display:flex;flex-direction:column;height:100vh;padding:10px}.topbar{height:74px;background:#131b2e;border:1px solid #1e2a4a;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
 .menu{width:240px;background:#0f172a;border-right:1px solid #1e2a4a;padding:12px;display:flex;flex-direction:column;gap:3px;overflow:auto}
-.m{padding:11px 12px;border-radius:10px;color:#94a3b8;cursor:pointer;font-size:13.5px;display:flex;gap:10px;transition:0.15s;user-select:none;border:1px solid transparent}.m:hover{background:#1e293b;color:#fff}.m.active{background:#3b82f6!important;color:#fff!important;font-weight:700;border-color:#3b82f6!important}
+.m{padding:11px 12px;border-radius:10px;color:#94a3b8;cursor:pointer;font-size:13.5px;display:flex;gap:10px;transition:0.15s;user-select:none;border:1px solid transparent;background:transparent}
+.m:hover{background:#1e293b!important;color:#fff!important}
+.m.active{background:#3b82f6!important;color:#fff!important;font-weight:700;border-color:#3b82f6!important}
 .api-input{width:100%;padding:9px 11px;border-radius:8px;border:1px solid #2a3a5c;background:#0b1020;color:#fff;margin:5px 0;font-size:13px}
 .teamCard{background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:12px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
 .view{position:absolute;inset:0;background:#0f172a;z-index:5;display:none;flex-direction:column;padding:20px;overflow:auto}
@@ -13,24 +15,24 @@
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}.kpiCard{background:#1e293b;border:1px solid #2a3a5c;border-radius:12px;padding:14px}
 .planCard{background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:18px;text-align:center}.planBtn{background:#3b82f6;border:0;padding:11px;border-radius:10px;color:#fff;font-weight:700;width:100%;cursor:pointer;margin-top:12px}
 .wpp-float{position:fixed;bottom:20px;right:20px;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px #0006;z-index:999;cursor:pointer}
-.wpp-logo-only{width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px #0004}
+.wpp-logo-only{width:72px;height:72px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px #0004}
 </style></head><body>
 <div class="app">
 <div class="topbar"><div style="display:flex;align-items:center;gap:14px"><img src="/logo.png" style="width:58px;height:58px;border-radius:12px;background:#fff;padding:4px"><div><div style="display:flex;gap:6px"><span style="font-size:26px;font-weight:900">KLIDO</span><span style="font-size:15px;font-weight:600;color:#cbd5e1">Avanza Consulting</span></div><div style="font-size:10px;color:#93c5fd;font-weight:800">API OFICIAL META</div></div></div><div style="display:flex;gap:12px;align-items:center"><span id="userEmail" style="font-size:12px;color:#94a3b8"></span><button onclick="salir()" style="background:#ef4444;border:0;padding:7px 14px;border-radius:8px;color:#fff;font-weight:700;cursor:pointer">Salir</button></div></div>
 <div style="flex:1;display:flex;background:#131b2e;border:1px solid #1e2a4a;border-top:0;border-radius:0 0 14px 14px;overflow:hidden">
 <div class="menu" id="sideMenu">
 <div style="font-size:10px;color:#64748b;margin:8px;font-weight:700">MENU</div>
-<div class="m active" id="mInbox" data-view="inbox" onclick="showView('inbox')">📥 Inbox</div>
-<div class="m" id="mCamp" data-view="camp" onclick="showView('camp')">🔔 Campaigns</div>
-<div class="m" id="mPlan" data-view="plan" onclick="showView('plan')">💳 Planes</div>
-<div class="m" id="mCal" data-view="calendar" onclick="showView('calendar')">📅 Calendario <span id="calCount" style="margin-left:auto;background:#ef4444;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;display:none">0</span></div>
-<div class="m" id="mStats" data-view="stats" onclick="showView('stats')">📊 Estadísticas</div>
-<div class="m" id="mMetrics" data-view="metrics" onclick="showView('metrics')">📈 Métricas</div>
-<div class="m" id="mTeam" data-view="team" onclick="showView('team')">👥 Equipos</div>
-<div class="m" id="mConfig" data-view="config" onclick="showView('config')">⚙️ Configuración</div>
+<div class="m active" id="mInbox" onclick="showView('inbox')">📥 Inbox</div>
+<div class="m" id="mCamp" onclick="showView('camp')">🔔 Campaigns</div>
+<div class="m" id="mPlan" onclick="showView('plan')">💳 Planes</div>
+<div class="m" id="mCal" onclick="showView('calendar')">📅 Calendario <span id="calCount" style="margin-left:auto;background:#ef4444;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;display:none">0</span></div>
+<div class="m" id="mStats" onclick="showView('stats')">📊 Estadísticas</div>
+<div class="m" id="mMetrics" onclick="showView('metrics')">📈 Métricas</div>
+<div class="m" id="mTeam" onclick="showView('team')">👥 Equipos</div>
+<div class="m" id="mConfig" onclick="showView('config')">⚙️ Configuración</div>
 <div style="font-size:10px;color:#64748b;margin:14px 8px 6px">SUPPORT</div>
-<div class="m" id="mSupport" data-view="support" onclick="showView('support')">💡 Help Center / Soporte</div>
-<div style="margin-top:auto;padding:8px;background:#1e293b;border:1px solid #2a3a5c;border-radius:12px"><div id="planBadge" style="font-size:11px;font-weight:700">Plan Básico</div><div style="font-size:10px;color:#64748b">Gestiona tu suscripción</div></div>
+<div class="m" id="mSupport" onclick="showView('support')">💡 Help Center / Soporte</div>
+<div style="margin-top:auto;padding:8px;background:#1e293b;border:1px solid #2a3a5c;border-radius:12px"><div id="planBadge" style="font-size:11px;font-weight:700">Plan básico</div><div style="font-size:10px;color:#64748b">Gestiona tu suscripción</div></div>
 </div>
 
 <div id="inboxArea" style="display:flex;flex:1">
@@ -40,22 +42,30 @@
 </div>
 
 <div id="mainFull" style="flex:1;position:relative;display:none">
-<div class="view" id="planView" style="background:#0b1020"><h2>Planes KLIDO - Anual</h2><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px"><div class="planCard"><div style="font-weight:700">Básico</div><div style="font-size:28px;font-weight:900;margin:8px 0">$800.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $80.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ 1 envio masivo</div><div>✅ 2 usuarios</div><div>✅ Inbox ilimitado</div><div>❌ Sin IA</div></div><button class="planBtn" onclick="elegirPlan('basico')">Empezar Básico</button></div><div class="planCard"><div style="font-weight:700">Premium ⭐</div><div style="font-size:28px;font-weight:900;margin:8px 0">$1.300.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $95.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ 5 envios simultáneos</div><div>✅ 5 usuarios</div><div>✅ IA incluida</div><div>✅ Soporte prioritario</div></div><button class="planBtn" onclick="elegirPlan('premium')">Empezar Premium</button></div><div class="planCard"><div style="font-weight:700">Gold</div><div style="font-size:28px;font-weight:900;margin:8px 0">$2.400.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $130.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ Ilimitados</div><div>✅ Usuarios ilimitados</div><div>✅ IA + Pánico humano</div><div>✅ Llamada directa</div></div><button class="planBtn" onclick="elegirPlan('gold')">Empezar Gold</button></div></div></div>
+
+<div class="view" id="planView" style="background:#0b1020"><h2>Planes KLIDO - Anual</h2><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:900px">
+<!-- BASICO - AHORA 1000 MENSAJES NO INBOX ILIMITADO -->
+<div class="planCard"><div style="font-weight:700">Básico</div><div style="font-size:28px;font-weight:900;margin:8px 0">$800.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $80.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ 1 envio masivo</div><div>✅ 2 usuarios</div><div>✅ 1000 mensajes</div><div>❌ Sin IA</div></div><button class="planBtn" onclick="elegirPlan('basico')">Empezar Básico</button></div>
+
+<div class="planCard"><div style="font-weight:700">Premium ⭐</div><div style="font-size:28px;font-weight:900;margin:8px 0">$1.300.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $95.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ 5 envios simultáneos</div><div>✅ 5 usuarios</div><div>✅ IA incluida</div><div>✅ Soporte prioritario</div></div><button class="planBtn" onclick="elegirPlan('premium')">Empezar Premium</button></div>
+
+<div class="planCard"><div style="font-weight:700">Gold</div><div style="font-size:28px;font-weight:900;margin:8px 0">$2.400.000</div><div style="font-size:12px;color:#94a3b8">anual</div><div style="font-size:11px;color:#3b82f6;font-weight:700">+ $130.000 mant. c/3 meses</div><div style="text-align:left;font-size:12px;line-height:22px;margin-top:10px"><div>✅ Ilimitados</div><div>✅ Usuarios ilimitados</div><div>✅ IA + Pánico humano</div><div>✅ Llamada directa</div></div><button class="planBtn" onclick="elegirPlan('gold')">Empezar Gold</button></div>
+</div></div>
 
 <div class="view" id="configView" style="background:#0b1020"><div style="display:flex;justify-content:space-between"><h2>⚙️ Configuración - Todo sobre KLIDO</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px"><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#3b82f6;margin:0 0 8px">📥 Mensajes</h3><p style="font-size:12px;color:#cbd5e1">API Oficial Meta, media reproducible, inbox Todos/No leídos, customer profile solo bandeja.</p></div><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#22c55e;margin:0 0 8px">📊 Estadísticas</h3><p style="font-size:12px;color:#cbd5e1">Graficadas con Chart.js, mismos datos métricas, chats por trabajador, estado, seguimiento diario.</p></div><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#f59e0b;margin:0 0 8px">📈 Métricas</h3><p style="font-size:12px;color:#cbd5e1">Resultados por trabajador, número de chats, avance, seguimiento, mensajes, no leídos.</p></div><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="margin:0 0 8px">🔔 Campaigns</h3><p style="font-size:12px;color:#cbd5e1">Excel cualquier columna, 50 cada 4h anti-baneo, pausar/continuar, historial, plantillas APPROVED válidas aunque sin variables.</p></div></div>
-<div style="margin-top:16px;background:#131b2e;border:1px solid #3b82f6;border-radius:14px;padding:16px"><h3>💳 Planes y Funciones</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px"><div style="background:#0b1020;padding:12px;border-radius:10px"><b>Básico $800k + $80k trim</b><br>• 1 envío<br>• 2 usuarios<br>• Inbox<br>• Sin IA</div><div style="background:#0b1020;padding:12px;border-radius:10px;border:1px solid #3b82f6"><b>Premium $1.3M + $95k ⭐</b><br>• 5 envíos<br>• 5 usuarios<br>• IA<br>• Soporte prio</div><div style="background:#0b1020;padding:12px;border-radius:10px"><b>Gold $2.4M + $130k</b><br>• Ilimitados<br>• Usuarios ilimit<br>• IA + Pánico<br>• Llamada + Gmail</div></div></div>
-<div style="margin-top:16px;background:#131b2e;border:1px solid #ef4444;border-radius:14px;padding:16px"><h3 style="color:#f59e0b;margin:0 0 8px">🔑 Token Meta, WABA ID, Phone - Importancia - Solo admin ve</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:11px"><div style="background:#0b1020;padding:10px;border-radius:8px"><b>TOKEN</b><br>Token 60 días muere con cambio contraseña → Session expired. Usa Usuario Sistema Permanente Nunca expira. Guardado en base, trabajadores usan cache sin verlo.</div><div style="background:#0b1020;padding:10px;border-radius:8px"><b>WABA ID</b><br>ID cuenta WhatsApp Business (no Business ID). Para listar plantillas. Si pones Business ID sale 0.</div><div style="background:#0b1020;padding:10px;border-radius:8px"><b>PHONE ID</b><br>ID número no el número. Para enviar POST /{PHONE_ID}/messages y webhook metadata.phone_number_id.</div></div><button onclick="openApi()" style="margin-top:12px;background:#3b82f6;border:0;padding:10px 16px;border-radius:8px;color:#fff;font-weight:700">🔑 Configurar API (Admin)</button></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px"><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#3b82f6;margin:0 0 8px">📥 Mensajes</h3><p style="font-size:12px;color:#cbd5e1">API Oficial Meta, media reproducible, inbox Todos/No leídos, customer profile solo bandeja.</p></div><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#22c55e;margin:0 0 8px">📊 Estadísticas</h3><p style="font-size:12px;color:#cbd5e1">Graficadas, chats por trabajador, estado, seguimiento diario.</p></div><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="color:#f59e0b;margin:0 0 8px">📈 Métricas</h3><p style="font-size:12px;color:#cbd5e1">Resultados por trabajador, número de chats, avance, seguimiento.</p></div><div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3 style="margin:0 0 8px">🔔 Campaigns</h3><p style="font-size:12px;color:#cbd5e1">Excel cualquier columna, 50 cada 4h anti-baneo, pausar/continuar, plantillas APPROVED.</p></div></div>
+<div style="margin-top:16px;background:#131b2e;border:1px solid #3b82f6;border-radius:14px;padding:16px"><h3>💳 Planes y Funciones</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:12px"><div style="background:#0b1020;padding:12px;border-radius:10px"><b>Básico $800k + $80k trim</b><br>• 1 envío<br>• 2 usuarios<br>• 1000 mensajes<br>• Sin IA</div><div style="background:#0b1020;padding:12px;border-radius:10px;border:1px solid #3b82f6"><b>Premium $1.3M + $95k ⭐</b><br>• 5 envíos<br>• 5 usuarios<br>• IA<br>• Soporte prio</div><div style="background:#0b1020;padding:12px;border-radius:10px"><b>Gold $2.4M + $130k</b><br>• Ilimitados<br>• Usuarios ilimit<br>• IA + Pánico<br>• Llamada + Gmail</div></div></div>
+<div style="margin-top:16px;background:#131b2e;border:1px solid #ef4444;border-radius:14px;padding:16px"><h3 style="color:#f59e0b;margin:0 0 8px">🔑 Token Meta, WABA ID, Phone - Solo admin ve</h3><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:11px"><div style="background:#0b1020;padding:10px;border-radius:8px"><b>TOKEN</b><br>Token 60 días expira con cambio pass. Usa Sistema Permanente Nunca expira.</div><div style="background:#0b1020;padding:10px;border-radius:8px"><b>WABA ID</b><br>ID cuenta WhatsApp Business, no Business ID.</div><div style="background:#0b1020;padding:10px;border-radius:8px"><b>PHONE ID</b><br>ID número no el número, para enviar y webhook.</div></div><button onclick="openApi()" style="margin-top:12px;background:#3b82f6;border:0;padding:10px 16px;border-radius:8px;color:#fff;font-weight:700">🔑 Configurar API (Admin)</button></div>
 </div>
 
 <div class="view" id="supportView" style="background:#0b1020"><div style="display:flex;justify-content:space-between"><h2>💡 Help Center / Soporte KLIDO</h2><button onclick="showView('inbox')" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px">Volver</button></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
 <div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3>📞 Contacto Directo</h3><p style="font-size:12px;color:#cbd5e1">Soporte prioritario KLIDO Avanza Consulting</p>
-<div style="margin-top:14px;display:flex;align-items:center;gap:12px"><span style="font-size:12px;color:#94a3b8">WhatsApp Privado:</span>
-<!-- SOLO LOGO WPP - SIN TEXTO VERDE - REDIRIGE A 3133181851 -->
-<a href="https://wa.me/573133181851?text=Hola%20soporte%20KLIDO" target="_blank" class="wpp-logo-only" title="WhatsApp 3133181851"><svg viewBox="0 0 32 32" width="28" height="28" fill="white"><path d="M16 3C9.373 3 4 8.373 4 15c0 2.251.59 4.36 1.63 6.19L4 29l8.07-1.56A11.94 11.94 0 0016 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.514 0 10 4.486 10 10s-4.486 10-10 10c-1.95 0-3.77-.56-5.31-1.52l-.38-.23-4.8.93.97-4.67-.25-.39A9.94 9.94 0 016 15c0-5.514 4.486-10 10-10zm-3.5 5.5c-.28 0-.72.1-1.1.5-.38.4-1.45 1.42-1.45 3.46s1.48 4.01 1.69 4.29c.21.28 2.91 4.45 7.06 6.24.34.14.61.22.82.28.34.11.65.09.89.06.27-.04.82-.34.94-.66.12-.33.12-.61.08-.67-.04-.06-.14-.09-.29-.15s-.89-.44-1.03-.49c-.14-.05-.24-.08-.34.08-.1.16-.39.49-.48.59-.09.1-.18.11-.33.04-.15-.07-.64-.24-1.22-.76-.45-.4-.76-.9-.85-1.05-.09-.16-.01-.24.07-.32.07-.07.15-.18.23-.27.07-.09.1-.15.15-.25.05-.1.02-.19-.01-.26-.03-.07-.34-.82-.47-1.12-.12-.29-.25-.34-.25h-.29c-.1 0-.26.04-.4.19-.14.15-.53.52-.53 1.27s.54 1.47.62 1.57c.07.1 1.06 1.62 2.57 2.27.36.15.64.24.86.31.36.11.69.1.95.06.29-.04.89-.36 1.01-.72.12-.35.12-.66.08-.72-.04-.06-.14-.1-.29-.16z"/></svg></a>
-<span style="font-size:12px;color:#94a3b8">3133181851</span></div>
-<div style="margin-top:12px;background:#0b1020;padding:12px;border-radius:10px;font-size:12px"><b>Email:</b> soporte@klidoapp.com.co<br><b>Horario:</b> Lun-Vie 8am-6pm<br><b>Respuesta:</b> < 2h Premium/Gold</div>
+<div style="margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:12px">
+<a href="https://wa.me/573133181851?text=Hola%20soporte%20KLIDO" target="_blank" class="wpp-logo-only" title="Soporte WhatsApp"><svg viewBox="0 0 32 32" width="36" height="36" fill="white"><path d="M16 3C9.373 3 4 8.373 4 15c0 2.251.59 4.36 1.63 6.19L4 29l8.07-1.56A11.94 11.94 0 0016 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.514 0 10 4.486 10 10s-4.486 10-10 10c-1.95 0-3.77-.56-5.31-1.52l-.38-.23-4.8.93.97-4.67-.25-.39A9.94 9.94 0 016 15c0-5.514 4.486-10 10-10zm-3.5 5.5c-.28 0-.72.1-1.1.5-.38.4-1.45 1.42-1.45 3.46s1.48 4.01 1.69 4.29c.21.28 2.91 4.45 7.06 6.24.34.14.61.22.82.28.34.11.65.09.89.06.27-.04.82-.34.94-.66.12-.33.12-.61.08-.67-.04-.06-.14-.09-.29-.15s-.89-.44-1.03-.49c-.14-.05-.24-.08-.34.08-.1.16-.39.49-.48.59-.09.1-.18.11-.33.04-.15-.07-.64-.24-1.22-.76-.45-.4-.76-.9-.85-1.05-.09-.16-.01-.24.07-.32.07-.07.15-.18.23-.27.07-.09.1-.15.15-.25.05-.1.02-.19-.01-.26-.03-.07-.34-.82-.47-1.12-.12-.29-.25-.34-.25h-.29c-.1 0-.26.04-.4.19-.14.15-.53.52-.53 1.27s.54 1.47.62 1.57c.07.1 1.06 1.62 2.57 2.27.36.15.64.24.86.31.36.11.69.1.95.06.29-.04.89-.36 1.01-.72.12-.35.12-.66.08-.72-.04-.06-.14-.1-.29-.16z"/></svg></a>
+<span style="font-size:11px;color:#94a3b8">Toca el logo para hablar con soporte</span>
+</div>
+<div style="margin-top:18px;background:#0b1020;padding:12px;border-radius:10px;font-size:12px"><b>Email:</b> soporte@klidoapp.com.co<br><b>Horario:</b> Soporte 24/7</div>
 </div>
 <div style="background:#131b2e;border:1px solid #1e2a4a;border-radius:14px;padding:16px"><h3>❓ Preguntas Frecuentes</h3><div style="font-size:11px;line-height:18px;color:#cbd5e1"><b>¿Plantillas no cargan?</b> Session expired → token permanente sistema.<br><br><b>¿50 cada 4h?</b> Anti-baneo Meta.<br><br><b>¿Token visible?</b> Solo admin.<br><br><b>¿Eliminar único admin?</b> No deja.<br><br><b>¿Excel cualquier columna?</b> Sí, regex cualquier hoja.</div></div>
 </div>
@@ -70,45 +80,48 @@
 </div>
 </div>
 
-<!-- SOLO LOGO WPP FLOTANTE A 3133181851 -->
-<a href="https://wa.me/573133181851?text=Hola%20soporte%20KLIDO" target="_blank" class="wpp-float" title="WhatsApp 3133181851"><svg viewBox="0 0 32 32" width="30" height="30" fill="white"><path d="M16 3C9.373 3 4 8.373 4 15c0 2.251.59 4.36 1.63 6.19L4 29l8.07-1.56A11.94 11.94 0 0016 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.514 0 10 4.486 10 10s-4.486 10-10 10c-1.95 0-3.77-.56-5.31-1.52l-.38-.23-4.8.93.97-4.67-.25-.39A9.94 9.94 0 016 15c0-5.514 4.486-10 10-10zm-3.5 5.5c-.28 0-.72.1-1.1.5-.38.4-1.45 1.42-1.45 3.46s1.48 4.01 1.69 4.29c.21.28 2.91 4.45 7.06 6.24.34.14.61.22.82.28.34.11.65.09.89.06.27-.04.82-.34.94-.66.12-.33.12-.61.08-.67-.04-.06-.14-.09-.29-.15s-.89-.44-1.03-.49c-.14-.05-.24-.08-.34.08-.1.16-.39.49-.48.59-.09.1-.18.11-.33.04-.15-.07-.64-.24-1.22-.76-.45-.4-.76-.9-.85-1.05-.09-.16-.01-.24.07-.32.07-.07.15-.18.23-.27.07-.09.1-.15.15-.25.05-.1.02-.19-.01-.26-.03-.07-.34-.82-.47-1.12-.12-.29-.25-.34-.25h-.29c-.1 0-.26.04-.4.19-.14.15-.53.52-.53 1.27s.54 1.47.62 1.57c.07.1 1.06 1.62 2.57 2.27.36.15.64.24.86.31.36.11.69.1.95.06.29-.04.89-.36 1.01-.72.12-.35.12-.66.08-.72-.04-.06-.14-.1-.29-.16z"/></svg></a>
+<a href="https://wa.me/573133181851?text=Hola%20soporte%20KLIDO" target="_blank" class="wpp-float" title="Soporte"><svg viewBox="0 0 32 32" width="30" height="30" fill="white"><path d="M16 3C9.373 3 4 8.373 4 15c0 2.251.59 4.36 1.63 6.19L4 29l8.07-1.56A11.94 11.94 0 0016 27c6.627 0 12-5.373 12-12S22.627 3 16 3zm0 2c5.514 0 10 4.486 10 10s-4.486 10-10 10c-1.95 0-3.77-.56-5.31-1.52l-.38-.23-4.8.93.97-4.67-.25-.39A9.94 9.94 0 016 15c0-5.514 4.486-10 10-10zm-3.5 5.5c-.28 0-.72.1-1.1.5-.38.4-1.45 1.42-1.45 3.46s1.48 4.01 1.69 4.29c.21.28 2.91 4.45 7.06 6.24.34.14.61.22.82.28.34.11.65.09.89.06.27-.04.82-.34.94-.66.12-.33.12-.61.08-.67-.04-.06-.14-.09-.29-.15s-.89-.44-1.03-.49c-.14-.05-.24-.08-.34.08-.1.16-.39.49-.48.59-.09.1-.18.11-.33.04-.15-.07-.64-.24-1.22-.76-.45-.4-.76-.9-.85-1.05-.09-.16-.01-.24.07-.32.07-.07.15-.18.23-.27.07-.09.1-.15.15-.25.05-.1.02-.19-.01-.26-.03-.07-.34-.82-.47-1.12-.12-.29-.25-.34-.25h-.29c-.1 0-.26.04-.4.19-.14.15-.53.52-.53 1.27s.54 1.47.62 1.57c.07.1 1.06 1.62 2.57 2.27.36.15.64.24.86.31.36.11.69.1.95.06.29-.04.89-.36 1.01-.72.12-.35.12-.66.08-.72-.04-.06-.14-.1-.29-.16z"/></svg></a>
 
 <div id="apiModal" style="display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center;z-index:99"><div style="background:#131b2e;border:1px solid #1e2a4a;padding:18px;border-radius:14px;width:440px"><h3>🔑 Settings API - Solo admin</h3><div id="apiCurrent" style="font-size:11px;background:#0b1020;padding:8px;border-radius:8px;margin-bottom:8px;color:#94a3b8"></div><div id="apiAdminOnly"><input id="apiPhone" class="api-input" placeholder="Phone Number ID"><input id="apiWaba" class="api-input" placeholder="WABA ID"><input id="apiToken" class="api-input" placeholder="Token PERMANENTE"></div><div id="apiMsg" style="font-size:12px;color:#22c55e;margin:8px 0"></div><button onclick="saveApi()" style="background:#22c55e;border:0;padding:9px;border-radius:8px;color:#fff;width:100%">Guardar</button><button onclick="apiModal.style.display='none';showView('inbox')" style="background:#1e293b;border:0;padding:9px;border-radius:8px;color:#fff;width:100%;margin-top:6px">Cerrar</button></div></div>
 
 <script>
 let S={}, curChat=null, allChats=[], detected=[], templates=[], excelNums=[], manualNums=[], chart1=null, chart2=null, chart3=null;
 function init(){const eid=localStorage.getItem('klido_empresa'); const u=localStorage.getItem('klido_user'); if(!eid||!u){location.href='/'; return;} S={eid, user:JSON.parse(u)}; document.getElementById('userEmail').innerText=S.user.email+' ('+S.user.rol+')'; document.getElementById('planBadge').innerText='Plan '+(localStorage.getItem('klido_plan')||'básico'); loadChats(); loadConfigAndTemplates(); setInterval(loadChats,5000);}
-// FIX DEFINITIVO BOTONES AZULES PERMANENTE - LIMPIA TODOS LOS.m Y SOLO ACTIVA UNO
+
+// FIX DEFINITIVO BOTONES AZULES - AHORA SI SOLO 1 AZUL
 function clearMenu(){
-  const all = document.querySelectorAll('#sideMenu.m');
-  all.forEach(el=>{
+  document.querySelectorAll('#sideMenu.m').forEach(el=>{
     el.classList.remove('active');
-    el.style.background='';
-    el.style.color='';
   });
 }
 function showView(v){
+  // LIMPIA TODOS LOS BOTONES AZULES
   clearMenu();
+  // ESCONDE TODO
   document.querySelectorAll('.view').forEach(e=>e.style.display='none');
   document.getElementById('inboxArea').style.display='none';
   document.getElementById('mainFull').style.display='none';
   const prof=document.getElementById('profilePanel'); if(prof) prof.classList.remove('show');
-  const target=document.getElementById('m'+v.charAt(0).toUpperCase()+v.slice(1));
+
+  // ACTIVA SOLO EL QUE CLICKEASTE
+  const idMap={inbox:'mInbox', camp:'mCamp', plan:'mPlan', calendar:'mCal', stats:'mStats', metrics:'mMetrics', team:'mTeam', config:'mConfig', support:'mSupport'};
+  const activeEl=document.getElementById(idMap[v]);
+  if(activeEl) activeEl.classList.add('active');
+
   if(v==='inbox'){
-    const el=document.getElementById('mInbox'); if(el) el.classList.add('active');
     document.getElementById('inboxArea').style.display='flex';
     document.getElementById('profilePanel').classList.add('show');
   } else {
     document.getElementById('mainFull').style.display='flex';
-    const map={calendar:'Cal', stats:'Stats', metrics:'Metrics', team:'Team', camp:'Camp', plan:'Plan', config:'Config', support:'Support'};
-    const id='m'+(map[v]||'');
-    const el=document.getElementById(id); if(el) el.classList.add('active');
-    const viewId=v+'View'; const viewEl=document.getElementById(viewId); if(viewEl) viewEl.style.display='flex';
+    const viewId=v+'View';
+    const viewEl=document.getElementById(viewId);
+    if(viewEl) viewEl.style.display='flex';
+    if(v==='camp') document.getElementById('campView').style.display='block';
     if(v==='calendar') loadCalendar();
     if(v==='stats') loadStatsGrafica();
     if(v==='metrics') loadMetricsWorkers();
     if(v==='team') loadTeam();
-    if(v==='camp'){document.getElementById('campView').style.display='block'; loadCampHistory(); loadTemplates();}
+    if(v==='camp'){ loadCampHistory(); loadTemplates(); }
   }
 }
 function salir(){localStorage.clear();location.href='/';}
@@ -116,7 +129,7 @@ async function loadChats(){const r=await fetch('/api/chats/'+S.eid+'/admin'); al
 async function openChat(id){curChat=id; const r=await fetch('/api/mensajes/'+S.eid+'/'+id); const j=await r.json(); const prof=j.profile||{}; document.getElementById('hName').innerText=prof.nombre||id; document.getElementById('pAv').innerText=(prof.nombre||id).slice(0,2).toUpperCase(); document.getElementById('pPhone').innerText=id; document.getElementById('pNombre').value=prof.nombre||''; document.getElementById('pNameEdit').innerText=prof.nombre||id; document.getElementById('pCiudad').value=prof.ciudad||''; document.getElementById('pProfesion').value=prof.profesion||''; document.getElementById('pEmpresa').value=prof.empresa||''; document.getElementById('pEstado').value=prof.estado||'nuevo'; document.getElementById('pOrigen').value=prof.origen||''; document.getElementById('pCamp').value=prof.campana||''; document.getElementById('pNotes').value=(prof.notas||[]).map(n=>n.texto||n).join('\n')||''; document.getElementById('pTags').innerHTML=(prof.tags||[]).map(t=>`<span style="font-size:10px;padding:4px 8px;border-radius:20px;background:#1e293b;border:1px solid #2a3a5c;margin:2px;display:inline-flex">${t} <span style="cursor:pointer;margin-left:4px" onclick="removeTag('${t}')">✕</span></span>`).join(''); document.getElementById('msgs').innerHTML=j.mensajes.map(m=>`<div class="b ${m.from==='agente'?'age':'cli'}">${m.texto}${m.media_url?`<br><a href="${m.media_url}" target="_blank" style="color:#3b82f6">Ver</a>`:''}<div style="font-size:10px;color:#64748b;text-align:right">${new Date(m.ts).toLocaleTimeString()}</div></div>`).join('');}
 async function sendMsg(){const t=document.getElementById('txt'); if(!t.value||!curChat) return; const txt=t.value; t.value=''; await fetch('/api/mensaje/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid,chat_id:curChat,texto:txt})}); openChat(curChat);}
 function openApi(){clearMenu();document.getElementById('mConfig').classList.add('active');document.getElementById('mainFull').style.display='flex';document.querySelectorAll('.view').forEach(e=>e.style.display='none');document.getElementById('configView').style.display='flex';document.getElementById('apiModal').style.display='flex';loadApi();}
-async function loadApi(){const role=S.user?.rol||'agente'; const r=await fetch('/api/config/'+S.eid+'?role='+role); const j=await r.json(); if(j.is_admin){apiPhone.value=j.config.phone||''; apiWaba.value=j.config.waba||''; apiToken.value=j.config.token||''; document.getElementById('apiCurrent').innerText=`Admin - Phone ${j.config.phone||''} - WABA ${j.config.waba||''}`; document.getElementById('apiAdminOnly').style.display='block';} else {document.getElementById('apiCurrent').innerText=`Trabajador - API OK`; document.getElementById('apiAdminOnly').style.display='none';}}
+async function loadApi(){const role=S.user?.rol||'agente'; const r=await fetch('/api/config/'+S.eid+'?role='+role); const j=await r.json(); if(j.is_admin){apiPhone.value=j.config.phone||''; apiWaba.value=j.config.waba||''; apiToken.value=j.config.token||''; document.getElementById('apiCurrent').innerText=`Admin - Phone ${j.config.phone||''}`; document.getElementById('apiAdminOnly').style.display='block';} else {document.getElementById('apiCurrent').innerText=`Trabajador - API OK`; document.getElementById('apiAdminOnly').style.display='none';}}
 async function loadConfigAndTemplates(){await loadApi(); await loadTemplates();}
 async function saveApi(){if(S.user?.rol!=='admin') return alert('Solo admin'); await fetch('/api/config/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, phone:apiPhone.value, waba:apiWaba.value, token:apiToken.value, admin_email:S.user.email})}); document.getElementById('apiMsg').innerText='Guardado'; await loadTemplates(); setTimeout(()=>{apiModal.style.display='none';},700);}
 async function saveProfile(){if(!curChat) return; await fetch('/api/chat/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, chat_id:curChat, nombre:pNombre.value||pNameEdit.innerText, ciudad:pCiudad.value, profesion:pProfesion.value, empresa:pEmpresa.value, estado:pEstado.value, origen:pOrigen.value, campana:pCamp.value, notas:pNotes.value})});}
