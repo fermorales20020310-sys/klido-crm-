@@ -1,8 +1,10 @@
-// KLIDO V220 FINAL COMPLETO - PARA ESTRUCTURA REAL public/crm.html + public/index.html - SIN BORRAR NADA
+// KLIDO V221 FINAL COMPLETO - SIN BORRAR NADA + BANDEJA SEGMENTADA PUNTO ROJO HISTORIAL MEDIA DATOS
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
 const path=require('path');
+const multer=require('multer');
+const upload=multer({dest:'/tmp'});
 const app=express();
 app.use(cors());
 app.use(express.json({limit:'50mb'}));
@@ -10,6 +12,8 @@ app.use(express.urlencoded({extended:true}));
 
 const PUB=path.join(__dirname,'public');
 if(!fs.existsSync(PUB)) fs.mkdirSync(PUB,{recursive:true});
+const PUB_MEDIA=path.join(PUB,'media');
+if(!fs.existsSync(PUB_MEDIA)) fs.mkdirSync(PUB_MEDIA,{recursive:true});
 app.use(express.static(PUB));
 
 const DB='/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
@@ -23,7 +27,7 @@ async function sendEmail(to, subject, html){
   let FROM=(process.env.RESEND_FROM||process.env.SOPORTE_EMAIL||'soporte@klidoapp.com.co').trim();
   if(FROM &&!FROM.includes('<')) FROM=`KLIDO Avanza Consulting <${FROM}>`;
   if(!FROM.includes('<')) FROM=`KLIDO <soporte@klidoapp.com.co>`;
-  console.log('V220 EMAIL:',to,' FROM:',FROM,' hasKey:',!!API_KEY);
+  console.log('V221 EMAIL:',to,' FROM:',FROM,' hasKey:',!!API_KEY);
   if(!API_KEY) return {ok:false, error:'Falta RESEND_API_KEY'};
   try{
     const r=await fetch('https://api.resend.com/emails',{
@@ -42,37 +46,67 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-console.log('V220 - FROM:',process.env.RESEND_FROM,' VERIFY:',VERIFY);
+console.log('V221 FINAL - FROM:',process.env.RESEND_FROM,' VERIFY:',VERIFY);
 
-app.get('/health',(req,res)=>res.status(200).send('OK V220'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V220', from:process.env.RESEND_FROM}));
+app.get('/health',(req,res)=>res.status(200).send('OK V221'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V221', from:process.env.RESEND_FROM}));
 
-// WEBHOOK META
-const verifyHook=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){console.log('WEBHOOK OK'); return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
+// WEBHOOK META - CON MEDIA VISIBLE REPRODUCIBLE
+const verifyHook=(req,res)=>{ if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){console.log('WEBHOOK VERIFICADO OK'); return res.send(req.query['hub.challenge']);} res.sendStatus(403);};
 app.get('/webhook',verifyHook); app.get('/webhook/:empresa_id',verifyHook);
+
 async function handleWebhook(body){
   try{
     const val=body.entry?.[0]?.changes?.[0]?.value; if(!val) return;
     const phoneId=val.metadata?.phone_number_id;
     let eid=null;
     try{for(const f of fs.readdirSync(DB)){try{const j=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); if(String(j.config?.phone)===String(phoneId)) eid=j.empresa_id;}catch{}}}catch{}
-    if(!eid) return;
+    if(!eid){console.log('No empresa para phone',phoneId); return;}
     let db=getDB(eid); if(!db) return; if(!db.chats) db.chats={};
     if(val.messages){
       for(const m of val.messages){
         const from=m.from;
-        if(!db.chats[from]) db.chats[from]={id:from, nombre:val.contacts?.[0]?.profile?.name||from, mensajes:[], notas:[], tags:['Hot Lead'], no_leidos:0, last:Date.now(), email:'', empresa:'Natura Goods'};
-        let texto=m.type==='text'?m.text.body:'📎 '+m.type;
-        let media_url=null;
-        if(m[m.type]?.id && db.config?.token){
-          try{const rr=await fetch(`https://graph.facebook.com/v20.0/${m[m.type].id}`,{headers:{Authorization:`Bearer ${db.config.token}`}}); const jj=await rr.json(); media_url=jj.url;}catch{}
+        if(!db.chats[from]){
+          db.chats[from]={
+            id:from, nombre:val.contacts?.[0]?.profile?.name||from,
+            mensajes:[], notas:[], tags:['Nuevo'], no_leidos:0, last:Date.now(),
+            estado:'nuevo', origen:'', campana:'', empresa:'', email:'', ubicacion:'Natura Goods'
+          };
         }
-        db.chats[from].mensajes.push({from:'cliente', texto, type:m.type, media_url, ts:Date.now()});
-        db.chats[from].no_leidos++; db.chats[from].last=Date.now();
+        let texto=''; let type=m.type||'text'; let media_url=null; let mime=''; let filename='';
+        if(type==='text'){ texto=m.text.body; }
+        else{
+          texto=m[type]?.caption||'📎 '+type;
+          const mediaId=m[type]?.id;
+          mime=m[type]?.mime_type||'';
+          filename=m[type]?.filename||'';
+          if(mediaId && db.config?.token){
+            try{
+              // Obtener url real de Meta
+              const rr=await fetch(`https://graph.facebook.com/v20.0/${mediaId}`,{headers:{Authorization:`Bearer ${db.config.token}`}});
+              const jj=await rr.json();
+              if(jj.url){
+                const mediaResp=await fetch(jj.url,{headers:{Authorization:`Bearer ${db.config.token}`}});
+                const buffer=Buffer.from(await mediaResp.arrayBuffer());
+                const ext=(mime.split('/')[1]||'bin').split(';')[0];
+                const fname=Date.now()+'_'+mediaId+'.'+ext;
+                const fpath=path.join(PUB_MEDIA, fname);
+                fs.writeFileSync(fpath, buffer);
+                media_url='/media/'+fname;
+                console.log('MEDIA GUARDADO:',media_url);
+              }
+            }catch(e){console.log('media download err',e.message);}
+          }
+        }
+        db.chats[from].mensajes.push({from:'cliente', texto, type, media_url, mime, filename, ts:Date.now()});
+        db.chats[from].no_leidos=(db.chats[from].no_leidos||0)+1;
+        db.chats[from].last=Date.now();
+        // Si no tiene estado, queda como nuevo para segmentación
+        if(!db.chats[from].estado) db.chats[from].estado='nuevo';
       }
       saveDB(eid,db);
     }
-  }catch(e){console.log('hook err',e.message);}
+  }catch(e){console.log('handle err',e.message);}
 }
 app.post('/webhook',(req,res)=>{handleWebhook(req.body); res.sendStatus(200);});
 app.post('/webhook/:empresa_id',(req,res)=>{handleWebhook(req.body); res.sendStatus(200);});
@@ -103,7 +137,6 @@ app.post('/api/empresa/activar',(req,res)=>{
   db.plan_activo=true; saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// LOGIN + RECUPERACION
 app.post('/api/login',(req,res)=>{
   for(const f of fs.readdirSync(DB)){
     try{
@@ -145,7 +178,7 @@ app.post('/api/auth/reset',(req,res)=>{
   res.json({ok:false, error:'Código inválido'});
 });
 
-// ===== CONFIGURACION API POR EMPRESA INDIVIDUAL - CADA EMPRESA TOKEN WABA PHONE =====
+// ===== CONFIGURACION API POR EMPRESA INDIVIDUAL =====
 app.get('/api/config/:eid',(req,res)=>{const db=getDB(req.params.eid); res.json({ok:true, config:db?.config||{phone:'',waba:'',token:''}});});
 app.post('/api/config/api',(req,res)=>{
   const {empresa_id, phone, waba, token}=req.body;
@@ -157,7 +190,7 @@ app.post('/api/config/api',(req,res)=>{
 });
 app.post('/api/config/general',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.nombre=req.body.nombre||db.nombre; saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
-// ===== ADMIN: EMPRESAS, EQUIPOS, ESTADISTICAS, METRICAS, SEGUIMIENTO, CALENDARIO, PLANES =====
+// ===== EMPRESAS, EQUIPOS, ESTADISTICAS, METRICAS, CALENDARIO, PLANES =====
 app.get('/api/empresas',(req,res)=>{try{res.json(fs.readdirSync(DB).filter(f=>f.endsWith('.json')).map(f=>{try{return JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'))}catch{return null}}).filter(Boolean).map(e=>({empresa_id:e.empresa_id, nombre:e.nombre, email:e.email, plan:e.plan, activo:e.plan_activo, phone:e.config?.phone, chats:Object.keys(e.chats||{}).length})));}catch{res.json([]);}});
 app.get('/api/empresa/info/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({ok:false}); res.json({ok:true, empresa_id:db.empresa_id, nombre:db.nombre, email:db.email, plan:db.plan, plan_activo:db.plan_activo, usuarios:db.usuarios, config:db.config, chats_count:Object.keys(db.chats||{}).length, creado:db.creado});});
 app.post('/api/equipo/add',(req,res)=>{
@@ -173,30 +206,137 @@ app.get('/api/calendar/:eid',(req,res)=>{const db=getDB(req.params.eid); res.jso
 app.post('/api/calendar/add',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false}); db.calendar=db.calendar||[]; db.calendar.push({id:Date.now(), title:req.body.title, date:req.body.date, chat_id:req.body.chat_id||null, hecho:false}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
 app.post('/api/calendar/done',(req,res)=>{const db=getDB(req.body.empresa_id); const c=(db.calendar||[]).find(x=>x.id==req.body.id); if(c) c.hecho=true; saveDB(req.body.empresa_id,db); res.json({ok:true});});
 
-// ===== CHATS - BANDEJA DE ENTRADA =====
-app.get('/api/chats/:eid/:uid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json([]); res.json(Object.values(db.chats||{}).sort((a,b)=>b.last-a.last));});
-app.get('/api/mensajes/:eid/:cid',(req,res)=>{const db=getDB(req.params.eid); const c=db?.chats?.[req.params.cid]; if(!c) return res.json({mensajes:[], profile:{}}); res.json({mensajes:c.mensajes||[], profile:{id:c.id, nombre:c.nombre, tags:c.tags||['Hot Lead'], notas:c.notas||[], email:c.email||'', empresa:c.empresa||'Natura Goods', phone:c.id}});});
+// ===== BANDEJA DE ENTRADA AVANZADA - SEGMENTACION + PUNTO ROJO + HISTORIAL + MEDIA + DATOS =====
+app.get('/api/chats/:eid/:uid',(req,res)=>{
+  const db=getDB(req.params.eid); if(!db) return res.json([]);
+  const chats=Object.values(db.chats||{}).map(c=>({
+    id:c.id, nombre:c.nombre||c.id, email:c.email||'', empresa:c.empresa||'', ubicacion:c.ubicacion||'',
+    campana:c.campana||'', origen:c.origen||'', estado:c.estado||'nuevo',
+    tags:c.tags||['Nuevo'], no_leidos:c.no_leidos||0, last:c.last||0,
+    mensajes:c.mensajes||[], notas:c.notas||[]
+  })).sort((a,b)=>b.last-a.last);
+  res.json(chats);
+});
+
+app.get('/api/mensajes/:eid/:cid',(req,res)=>{
+  const db=getDB(req.params.eid); const c=db?.chats?.[req.params.cid];
+  if(!c) return res.json({mensajes:[], profile:{}});
+  res.json({
+    mensajes:(c.mensajes||[]).sort((a,b)=>a.ts-b.ts),
+    profile:{
+      id:c.id, nombre:c.nombre, email:c.email||'', empresa:c.empresa||'', ubicacion:c.ubicacion||'',
+      campana:c.campana||'', origen:c.origen||'', estado:c.estado||'nuevo',
+      tags:c.tags||[], notas:c.notas||[], no_leidos:c.no_leidos||0, last:c.last||0
+    }
+  });
+});
+
+// punto rojo desaparece SOLO al responder
+app.post('/api/chat/leido',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false});
+  db.chats[req.body.chat_id].no_leidos=0;
+  if(db.chats[req.body.chat_id].estado==='nuevo') db.chats[req.body.chat_id].estado='interesado';
+  saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
+app.post('/api/chat/no_leido',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false});
+  db.chats[req.body.chat_id].no_leidos=(db.chats[req.body.chat_id].no_leidos||0)+1;
+  saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
+
+app.post('/api/chat/profile',(req,res)=>{
+  const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false});
+  c.estado=req.body.estado||c.estado; c.origen=req.body.origen||c.origen; c.email=req.body.email||c.email;
+  c.empresa=req.body.empresa||c.empresa; c.ubicacion=req.body.ubicacion||c.ubicacion; c.campana=req.body.campana||c.campana; c.nombre=req.body.nombre||c.nombre;
+  if(req.body.notas){ c.notas=[{texto:req.body.notas, ts:Date.now()}]; }
+  saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
+
+app.post('/api/chat/tag/add',(req,res)=>{
+  const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false});
+  c.tags=c.tags||[]; if(!c.tags.includes(req.body.tag)) c.tags.push(req.body.tag);
+  const t=req.body.tag.toLowerCase();
+  if(t==='cliente') c.estado='cliente';
+  if(t==='campaña' || t==='campana') c.origen='campana_meta';
+  if(t==='afiliación' || t==='afiliacion') c.origen='afiliacion';
+  saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
+app.post('/api/chat/tag/remove',(req,res)=>{
+  const db=getDB(req.body.empresa_id); const c=db?.chats?.[req.body.chat_id]; if(!c) return res.json({ok:false});
+  c.tags=(c.tags||[]).filter(x=>x!==req.body.tag); saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
+
+app.post('/api/chat/nota',(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false});
+  db.chats[req.body.chat_id].notas=db.chats[req.body.chat_id].notas||[];
+  db.chats[req.body.chat_id].notas.push({texto:req.body.texto, ts:Date.now()});
+  saveDB(req.body.empresa_id,db); res.json({ok:true});
+});
+
+// ===== MENSAJES ENVIAR TEXTO =====
 app.post('/api/mensaje/enviar',async(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false, error:'Empresa no existe'});
   if(!db.plan_activo) return res.json({ok:false, error:'Plan bloqueado - ingresa código'});
-  if(!db.config?.phone||!db.config?.token) return res.json({ok:false, error:'Configura API primero en Configuración de API - token, waba y phone'});
+  if(!db.config?.phone||!db.config?.token) return res.json({ok:false, error:'Configura API primero en Configuración de API'});
   try{
     const r=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},body:JSON.stringify({messaging_product:'whatsapp', to:String(req.body.chat_id).replace(/\D/g,''), type:'text', text:{body:req.body.texto}})});
     const j=await r.json(); if(j.error){console.log('META ERR',j.error); return res.json({ok:false, error:j.error.message||JSON.stringify(j.error)});}
-    if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, nombre:req.body.chat_id, mensajes:[], no_leidos:0, last:Date.now(), tags:['Hot Lead']};
-    db.chats[req.body.chat_id].mensajes.push({from:'agente', texto:req.body.texto, type:'text', ts:Date.now()}); db.chats[req.body.chat_id].last=Date.now(); saveDB(req.body.empresa_id,db); res.json({ok:true});
+    if(!db.chats[req.body.chat_id]) db.chats[req.body.chat_id]={id:req.body.chat_id, nombre:req.body.chat_id, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo'};
+    db.chats[req.body.chat_id].mensajes.push({from:'agente', texto:req.body.texto, type:'text', ts:Date.now()});
+    db.chats[req.body.chat_id].last=Date.now();
+    // al responder se borra punto rojo
+    db.chats[req.body.chat_id].no_leidos=0;
+    saveDB(req.body.empresa_id,db); res.json({ok:true});
   }catch(e){res.json({ok:false, error:e.message});}
 });
-app.post('/api/chat/nota',(req,res)=>{const db=getDB(req.body.empresa_id); if(!db?.chats?.[req.body.chat_id]) return res.json({ok:false}); db.chats[req.body.chat_id].notas=db.chats[req.body.chat_id].notas||[]; db.chats[req.body.chat_id].notas.push({texto:req.body.texto, ts:Date.now()}); saveDB(req.body.empresa_id,db); res.json({ok:true});});
+
+// ===== MEDIA - FOTOS VIDEOS AUDIOS VISIBLES REPRODUCIBLES - HISTORIAL COMPLETO =====
+app.post('/api/mensaje/media',upload.single('file'),async(req,res)=>{
+  const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
+  const chatId=req.body.chat_id;
+  if(!db.chats[chatId]) db.chats[chatId]={id:chatId, nombre:chatId, mensajes:[], no_leidos:0, last:Date.now(), tags:['Nuevo'], estado:'nuevo'};
+  try{
+    const file=req.file; if(!file) return res.json({ok:false});
+    const mime=file.mimetype; let type='document';
+    if(mime.startsWith('image/')) type='image';
+    else if(mime.startsWith('video/')) type='video';
+    else if(mime.startsWith('audio/')) type='audio';
+    const ext=mime.split('/')[1]?.split(';')[0]||'bin';
+    const fname=Date.now()+'_'+S(file.originalname).slice(0,30)+'.'+ext;
+    const dest=path.join(PUB_MEDIA, fname);
+    fs.copyFileSync(file.path, dest);
+    const localUrl='/media/'+fname;
+    // Intentar enviar por WhatsApp API
+    if(db.config?.phone && db.config?.token){
+      try{
+        const formData=new (require('form-data'))();
+        formData.append('file', fs.createReadStream(file.path), {contentType:mime, filename:file.originalname});
+        formData.append('type', mime);
+        formData.append('messaging_product','whatsapp');
+        const up=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/media`,{method:'POST',headers:{Authorization:`Bearer ${db.config.token}`}, body:formData});
+        const ju=await up.json();
+        if(ju.id){
+          await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{
+            method:'POST',
+            headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`},
+            body:JSON.stringify({messaging_product:'whatsapp', to:chatId.replace(/\D/g,''), type, [type]:{id:ju.id, caption:file.originalname}})
+          });
+        }
+      }catch(e){console.log('media send err',e.message);}
+    }
+    db.chats[chatId].mensajes.push({from:'agente', texto:file.originalname, type, mime, media_url:localUrl, filename:file.originalname, ts:Date.now()});
+    db.chats[chatId].last=Date.now(); db.chats[chatId].no_leidos=0;
+    saveDB(req.body.empresa_id,db);
+    res.json({ok:true, url:localUrl});
+  }catch(e){console.log(e); res.json({ok:false, error:e.message});}
+});
 
 // ===== RUTAS PUBLIC PARA TU ESTRUCTURA REAL =====
-// Tu tienes public/crm.html y public/index.html no carpetas, por eso el V218 fallaba
 app.get('/',(req,res)=>res.sendFile(path.join(PUB,'index.html')));
 app.get('/crm',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
 app.get('/crm.html',(req,res)=>res.sendFile(path.join(PUB,'crm.html')));
 app.get('/app',(req,res)=>res.sendFile(path.join(PUB,'app.html')));
 app.get('/app.html',(req,res)=>res.sendFile(path.join(PUB,'app.html')));
-// fallback por si tienes carpeta crm/index.html creada por error, soporta ambos
 app.get('/crm/',(req,res)=>{
   const p1=path.join(PUB,'crm.html');
   const p2=path.join(PUB,'crm','index.html');
@@ -206,4 +346,4 @@ app.get('/crm/',(req,res)=>{
 });
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V220 COMPLETO OK - crm.html + index.html - FROM ${process.env.RESEND_FROM} en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V221 COMPLETO OK - crm.html + bandeja avanzada + media + datos cliente en 0.0.0.0:${PORT} - FROM ${process.env.RESEND_FROM}`));
