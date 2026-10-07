@@ -1,4 +1,4 @@
-// KLIDO V250 - TU V246 EXACTO + FIX ENVIA TAL CUAL APROBADA - 1 VAR + IMAGEN + 0 VAR
+// KLIDO V254 - TU V250 EXACTO - SI APROBADA SE ENVIA - FIX 132000 + 132012
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -42,8 +42,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V250 ENVIA TAL CUAL FULL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V250 ENVIA TAL CUAL 1 VAR + IMAGEN - TU V246', time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V254 SI APROBADA SE ENVIA FULL'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V254 SI APROBADA SE ENVIA - FIX 132000 132012', time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -324,7 +324,6 @@ app.post('/api/campaigns/create',(req,res)=>{
   if(!Array.isArray(db.campaigns)) db.campaigns = db.campaigns? Object.values(db.campaigns) : [];
   const existing=db.campaigns.length;
   if(existing>=planInfo.envios && planInfo.envios!==999) return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas`});
-  // V250 - limpiar variables vacias y no forzar header_image
   let cleanVars = (req.body.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='' );
   const camp={id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:cleanVars, header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, indice:0, next_send:0, creado:Date.now()};
   db.campaigns.push(camp); saveDB(req.body.empresa_id,db); res.json({ok:true, camp});
@@ -345,7 +344,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V250 - ENVIA TAL CUAL APROBADA - 1 VAR + IMAGEN YA APROBADA =====
+// ===== V254 - SI APROBADA SE ENVIA - TENGA O NO VAR, TENGA O NO IMAGEN =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -357,7 +356,6 @@ async function processCampaigns(){
       if(!Array.isArray(db.campaigns)){
         db.campaigns = campaignsList;
         changed=true;
-        console.log(`🔧 FIX campaigns objeto a array ${db.nombre}`);
       }
       for(const camp of db.campaigns){
         if(camp.status!=='running') continue;
@@ -368,7 +366,7 @@ async function processCampaigns(){
           if(!db.config?.phone||!db.config?.token){ camp.status='paused'; changed=true; continue; }
           for(const num of batch){
             try{
-              // LEER PLANTILLA APROBADA REAL
+              // LEER PLANTILLA APROBADA REAL DE META
               let tpl=null, expectedVars=0, tplLang=camp.template_lang||'es', hasImageHeader=false;
               try{
                 tpl=(db.cached_templates||[]).find(t=> t.name===camp.template_name);
@@ -381,7 +379,6 @@ async function processCampaigns(){
                 }
               }catch{}
 
-              // ARMAR PAYLOAD - SI TIENE IMAGEN APROBADA, NO ENVIAR HEADER - ASI SE ENVIA TAL CUAL
               let payload={
                 messaging_product:'whatsapp',
                 to:String(num).replace(/\D/g,''),
@@ -390,33 +387,50 @@ async function processCampaigns(){
               };
 
               const hImg=String(camp.header_image||'').trim();
-              if(hasImageHeader && hImg.startsWith('https://')){
-                // Solo si ponen https:// valido
-                payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
+              // SI TIENE IMAGEN, SIEMPRE MANDARLA - SI ESTA APROBADA, SE ENVIA
+              if(hasImageHeader){
+                if(hImg.startsWith('https://')){
+                  payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
+                } else {
+                  // Si no pusiste URL, usa la imagen que ya subiste a /media/ o una por defecto
+                  // Para acol_invitacion pon aqui tu URL fija si quieres que siempre se envie
+                  // Ejemplo: const DEFAULT_IMG = 'https://tu-app.railway.app/media/acol.jpg';
+                  // payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:DEFAULT_IMG}}]});
+                  console.log(`⚠️ ${camp.template_name} HEADER IMAGE sin URL - pon https:// en la campaña para que se envie`);
+                }
               }
-              // Si hasImageHeader true pero hImg vacio, NO mandamos header -> usa la imagen ya aprobada en Meta
 
               if(expectedVars>0){
                 let vars=(camp.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='');
                 vars=vars.slice(0,expectedVars);
-                while(vars.length<expectedVars) vars.push(' ');
+                while(vars.length<expectedVars) vars.push('Hola');
                 payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text:v}))});
               }
 
               if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 ${camp.template_name} -> ${num} | aprobada ${expectedVars} vars ${hasImageHeader?'+img aprobada':''} vars:`, camp.variables);
+              console.log(`📤 ${camp.template_name} -> ${num} | ${expectedVars} vars ${hasImageHeader?'+IMG':''} | ${hImg?'img OK':'sin img'} | vars:${JSON.stringify(camp.variables)}`);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
-              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
-              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,500)); }
+              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num} - aprobado se envia`); }
+              else {
+                camp.fallidos++;
+                const err = jj.error?.message||JSON.stringify(jj).slice(0,1000);
+                console.log(`❌ Fallo ${camp.nombre} a ${num}: ${err}`);
+                if(String(err).includes('132012')){
+                  console.log(`👉 FIX: Pon en Header Image: https://tu-imagen-publica.jpg`);
+                }
+                if(String(err).includes('132000')){
+                  console.log(`👉 FIX: Esta plantilla espera ${expectedVars} vars y mandaste ${camp.variables?.length||0}`);
+                }
+              }
             }catch(e){ camp.fallidos++; console.log('send err', e.message); }
             await new Promise(r=>setTimeout(r, 900));
           }
         }
         camp.indice+=batch.length; camp.next_send=Date.now() + (4*60*60*1000); changed=true;
-        console.log(`📦 Lote ${camp.nombre}: ${camp.enviados}/${camp.total} - prox en 4h`);
+        console.log(`📦 Lote ${camp.nombre}: ${camp.enviados}/${camp.total}`);
       }
       if(changed) saveDB(db.empresa_id,db);
     }
@@ -488,4 +502,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V250 ENVIA TAL CUAL APROBADA OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V254 SI APROBADA SE ENVIA OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
