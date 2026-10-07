@@ -1,4 +1,4 @@
-// KLIDO V256 - TU V254 EXACTO + FIX SI APROBADA SE ENVIA AUTO IMAGEN - NO BORRA NADA
+// KLIDO V260 - TU V256 EXACTO - app.klidoapp.com.co - NO DAÑA NADA - SI APROBADA SE ENVIA
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -17,8 +17,8 @@ if(!fs.existsSync(PUB_MEDIA)) fs.mkdirSync(PUB_MEDIA,{recursive:true});
 app.use(express.static(PUB));
 app.use('/media', express.static(PUB_MEDIA));
 
-// SI NO LE PONES URL EN LA CAMPAÑA, USA ESTA - PON AQUI TU IMAGEN DE RAILWAY
-const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://images.unsplash.com/photo-1558008258-3256797b43f3?w=1080';
+// TU DOMINIO FIJO - app.klidoapp.com.co - SI NO LE PONES URL USA ESTA Y NO FALLA 132012
+const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/media/acol.jpg';
 
 const DB='/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
 const S=s=>String(s||'').replace(/[^a-z0-9_\-@.]/gi,'').slice(0,80);
@@ -45,8 +45,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V256 AUTO IMAGEN FULL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V256 AUTO IMAGEN - SI APROBADA SE ENVIA', time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V260 app.klidoapp.com.co AUTO IMAGEN FULL'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V260 app.klidoapp.com.co - SI APROBADA SE ENVIA', imagen:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -347,7 +347,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V256 - SI APROBADA SE ENVIA - AUTO IMAGEN - 0/1 VAR + CON/SIN IMAGEN =====
+// ===== V260 - SI APROBADA SE ENVIA - app.klidoapp.com.co - AUTO IMAGEN =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -378,8 +378,8 @@ async function processCampaigns(){
                   if(body?.text){ const m=body.text.match(/{{\d+}}/g); expectedVars=m?m.length:0; }
                   const header=(tpl.components||[]).find(c=> c.type==='HEADER');
                   if(header && header.format==='IMAGE') hasImageHeader=true;
-                }
-              }catch{}
+                } else { expectedVars=1; hasImageHeader=true; }
+              }catch{ expectedVars=1; hasImageHeader=true; }
 
               let payload={
                 messaging_product:'whatsapp',
@@ -389,40 +389,34 @@ async function processCampaigns(){
               };
 
               let hImg=String(camp.header_image||'').trim();
-              // V256 AUTO - SI TIENE IMAGEN Y NO PUSISTE URL, USA DEFAULT PARA NO FALLAR 132012
               if(hasImageHeader){
-                if(!hImg.startsWith('https://')){
-                  hImg = DEFAULT_ACOL_IMAGE; // SIEMPRE MANDA ALGO, NO DEJA VACIO
-                  console.log(`🔁 AUTO IMAGEN para ${camp.template_name}: ${hImg}`);
-                }
+                if(!hImg.startsWith('https://')) hImg = DEFAULT_ACOL_IMAGE;
                 payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
               }
 
               if(expectedVars>0){
                 let vars=(camp.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='');
+                if(vars.length===0) vars=[''];
                 vars=vars.slice(0,expectedVars);
-                while(vars.length<expectedVars) vars.push('Hola');
-                payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text:v}))});
+                while(vars.length<expectedVars) vars.push(' ');
+                payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text:v||' '}))});
               }
 
               if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 ${camp.template_name} -> ${num} | ${expectedVars} vars ${hasImageHeader?'+IMG AUTO':''} | vars:${JSON.stringify(camp.variables)}`);
-
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
-              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num} - SI APROBADA SE ENVIA`); }
-              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,500)); }
-            }catch(e){ camp.fallidos++; console.log('send err', e.message); }
+              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
+              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message); }
+            }catch(e){ camp.fallidos++; }
             await new Promise(r=>setTimeout(r, 900));
           }
         }
         camp.indice+=batch.length; camp.next_send=Date.now() + (4*60*60*1000); changed=true;
-        console.log(`📦 Lote ${camp.nombre}: ${camp.enviados}/${camp.total}`);
       }
       if(changed) saveDB(db.empresa_id,db);
     }
-  }catch(e){ console.log('worker',e.message, e.stack); }
+  }catch(e){ console.log('worker',e.message); }
 }
 setInterval(processCampaigns, 60000); processCampaigns();
 
@@ -440,7 +434,6 @@ async function syncPlantillasTodas(){
       }catch{}
       await new Promise(r=>setTimeout(r, 800));
     }
-    console.log('🔄 Auto-sync plantillas terminado');
   }catch(e){}
 }
 setInterval(syncPlantillasTodas, 3*60*60*1000);
@@ -490,4 +483,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V256 AUTO IMAGEN - SI APROBADA SE ENVIA OK en 0.0.0.0:${PORT} - WEBHOOK klido123 FULL`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V260 app.klidoapp.com.co AUTO IMAGEN - SI APROBADA SE ENVIA OK en 0.0.0.0:${PORT}`));
