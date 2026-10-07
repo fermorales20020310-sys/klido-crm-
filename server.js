@@ -1,4 +1,4 @@
-// KLIDO V260 - TU V256 EXACTO - app.klidoapp.com.co - NO DAÑA NADA - SI APROBADA SE ENVIA
+// KLIDO V261 - TU V260 EXACTO - IMAGEN REAL acol-congreso.jpg - NO DAÑA NADA
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -17,8 +17,8 @@ if(!fs.existsSync(PUB_MEDIA)) fs.mkdirSync(PUB_MEDIA,{recursive:true});
 app.use(express.static(PUB));
 app.use('/media', express.static(PUB_MEDIA));
 
-// TU DOMINIO FIJO - app.klidoapp.com.co - SI NO LE PONES URL USA ESTA Y NO FALLA 132012
-const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/media/acol.jpg';
+// TU IMAGEN REAL TAL CUAL LA TIENES GUARDADA EN public/acol-congreso.jpg
+const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/acol-congreso.jpg';
 
 const DB='/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
 const S=s=>String(s||'').replace(/[^a-z0-9_\-@.]/gi,'').slice(0,80);
@@ -45,8 +45,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V260 app.klidoapp.com.co AUTO IMAGEN FULL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V260 app.klidoapp.com.co - SI APROBADA SE ENVIA', imagen:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V261 acol-congreso.jpg AUTO FULL'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V261 acol-congreso.jpg REAL - SI APROBADA SE ENVIA', imagen:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -155,7 +155,7 @@ async function handleWebhook(body){
         }
         if(val.statuses){
           for(const st of val.statuses){
-            console.log(`📊 Status ${st.status} id:${st.id} to:${st.recipient_id}`);
+            console.log(`📊 Status ${st.status} id:${st.id} to:${st.recipient_id}`, st.errors? JSON.stringify(st.errors).slice(0,500) : '');
           }
         }
       }
@@ -347,7 +347,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V260 - SI APROBADA SE ENVIA - app.klidoapp.com.co - AUTO IMAGEN =====
+// ===== V261 - acol-congreso.jpg REAL - SI APROBADA SE ENVIA =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -404,19 +404,22 @@ async function processCampaigns(){
 
               if(payload.template.components.length===0) delete payload.template.components;
 
+              console.log(`📤 ${camp.template_name} -> ${num} | ${expectedVars} vars +IMG | ${hImg}`);
+
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
-              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
-              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message); }
-            }catch(e){ camp.fallidos++; }
+              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num} - ${DEFAULT_ACOL_IMAGE}`); }
+              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,500)); }
+            }catch(e){ camp.fallidos++; console.log('send err', e.message); }
             await new Promise(r=>setTimeout(r, 900));
           }
         }
         camp.indice+=batch.length; camp.next_send=Date.now() + (4*60*60*1000); changed=true;
+        console.log(`📦 Lote ${camp.nombre}: ${camp.enviados}/${camp.total}`);
       }
       if(changed) saveDB(db.empresa_id,db);
     }
-  }catch(e){ console.log('worker',e.message); }
+  }catch(e){ console.log('worker',e.message, e.stack); }
 }
 setInterval(processCampaigns, 60000); processCampaigns();
 
@@ -434,6 +437,7 @@ async function syncPlantillasTodas(){
       }catch{}
       await new Promise(r=>setTimeout(r, 800));
     }
+    console.log('🔄 Auto-sync plantillas terminado');
   }catch(e){}
 }
 setInterval(syncPlantillasTodas, 3*60*60*1000);
@@ -483,4 +487,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V260 app.klidoapp.com.co AUTO IMAGEN - SI APROBADA SE ENVIA OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V261 acol-congreso.jpg REAL - SI APROBADA SE ENVIA OK en 0.0.0.0:${PORT}`));
