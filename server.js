@@ -1,4 +1,4 @@
-// KLIDO V262 - TU V261 EXACTO + FIX IMAGEN NO PISA - app.klidoapp.com.co
+// KLIDO V263 - TU V262 EXACTO + FIX #132012 SAPOLIN + ACOL - app.klidoapp.com.co
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -17,8 +17,9 @@ if(!fs.existsSync(PUB_MEDIA)) fs.mkdirSync(PUB_MEDIA,{recursive:true});
 app.use(express.static(PUB));
 app.use('/media', express.static(PUB_MEDIA));
 
-// TU IMAGEN REAL TAL CUAL LA TIENES GUARDADA EN public/acol-congreso.jpg
+// TUS IMAGENES REALES - ASEGURATE QUE EXISTAN EN public/
 const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/acol-congreso.jpg';
+const DEFAULT_SAPOLIN_IMAGE = process.env.SAPOLIN_IMAGE || 'https://app.klidoapp.com.co/sapolin-bogota.jpg';
 
 const DB='/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
 const S=s=>String(s||'').replace(/[^a-z0-9_\-@.]/gi,'').slice(0,80);
@@ -45,8 +46,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V262 FIX IMAGEN NO PISA'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V262 FIX - Si header vacio usa foto original plantilla - Si pones link usa acol-congreso.jpg', imagen:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V263 FIX 132012 SAPOLIN+ACOL'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V263 FIX 132012 - Sapolin y Acol siempre con imagen', imagen_acol:DEFAULT_ACOL_IMAGE, imagen_sapolin:DEFAULT_SAPOLIN_IMAGE, time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -347,7 +348,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V262 FIX - NO PISA IMAGEN SI HEADER VACIO =====
+// ===== V263 FIX DEFINITIVO #132012 - SIEMPRE ENVIA IMAGE =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -356,10 +357,7 @@ async function processCampaigns(){
       const campaignsList = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
       if(campaignsList.length===0) continue;
       let changed=false;
-      if(!Array.isArray(db.campaigns)){
-        db.campaigns = campaignsList;
-        changed=true;
-      }
+      if(!Array.isArray(db.campaigns)){ db.campaigns = campaignsList; changed=true; }
       for(const camp of db.campaigns){
         if(camp.status!=='running') continue;
         if(camp.indice>=camp.total){ camp.status='completed'; changed=true; continue; }
@@ -378,8 +376,11 @@ async function processCampaigns(){
                   if(body?.text){ const m=body.text.match(/{{\d+}}/g); expectedVars=m?m.length:0; }
                   const header=(tpl.components||[]).find(c=> c.type==='HEADER');
                   if(header && header.format==='IMAGE') hasImageHeader=true;
-                } else { expectedVars=1; hasImageHeader=true; }
-              }catch{ expectedVars=1; hasImageHeader=true; }
+                }
+              }catch{}
+              // FIX CLAVE: si es sapolin, siempre forzar que tiene header image
+              if(camp.template_name.toLowerCase().includes('sapolin')) hasImageHeader=true;
+              if(!hasImageHeader && (camp.header_image||'').trim().startsWith('https://')) hasImageHeader=true;
 
               let payload={
                 messaging_product:'whatsapp',
@@ -388,14 +389,19 @@ async function processCampaigns(){
                 template:{name:camp.template_name, language:{code:tplLang}, components:[]}
               };
 
-              // FIX V262: Si el usuario NO pone imagen en la campaña, NO mandamos header, Meta usa la foto original de la plantilla (Sapolin)
-              // Si SÍ pone link https://..., se manda esa (acol-congreso.jpg para Congreso)
-              let hImg=String(camp.header_image||'').trim();
-              if(hasImageHeader && hImg.startsWith('https://')){
+              // FIX V263: SIEMPRE mandar imagen cuando hasImageHeader=true
+              if(hasImageHeader){
+                let hImg=String(camp.header_image||'').trim();
+                if(!hImg.startsWith('https://')){
+                  // Si deja vacio, elige automaticamente segun nombre plantilla
+                  if(camp.template_name.toLowerCase().includes('sapolin')){
+                    hImg = DEFAULT_SAPOLIN_IMAGE;
+                  } else {
+                    hImg = DEFAULT_ACOL_IMAGE;
+                  }
+                }
                 payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
-                console.log(`🖼️ Header custom ${hImg} para ${num}`);
-              } else if(hasImageHeader){
-                console.log(`🖼️ Sin header custom, usa imagen original de plantilla ${camp.template_name} para ${num}`);
+                console.log(`🖼️ V263 FIX Header ${hImg} para ${camp.template_name} -> ${num}`);
               }
 
               if(expectedVars>0){
@@ -405,15 +411,14 @@ async function processCampaigns(){
                 while(vars.length<expectedVars) vars.push(' ');
                 payload.template.components.push({type:'body', parameters: vars.map(v=>({type:'text', text:v||' '}))});
               }
-
               if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 ${camp.template_name} -> ${num} | ${expectedVars} vars | header: ${hImg||'ORIGINAL PLANTILLA'}`);
+              console.log(`📤 V263 ${camp.template_name} -> ${num} vars:${expectedVars} header:${hasImageHeader?'SI IMAGE':'NO'}`);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
               if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
-              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,500)); }
+              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,800)); }
             }catch(e){ camp.fallidos++; console.log('send err', e.message); }
             await new Promise(r=>setTimeout(r, 900));
           }
@@ -491,4 +496,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V262 FIX IMAGEN NO PISA OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V263 FIX 132012 SAPOLIN+ACOL OK en 0.0.0.0:${PORT}`));
