@@ -1,4 +1,4 @@
-// KLIDO V261 - TU V260 EXACTO - IMAGEN REAL acol-congreso.jpg - NO DAÑA NADA
+// KLIDO V262 - TU V261 EXACTO + FIX IMAGEN NO PISA - app.klidoapp.com.co
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -45,8 +45,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V261 acol-congreso.jpg AUTO FULL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V261 acol-congreso.jpg REAL - SI APROBADA SE ENVIA', imagen:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V262 FIX IMAGEN NO PISA'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V262 FIX - Si header vacio usa foto original plantilla - Si pones link usa acol-congreso.jpg', imagen:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -347,7 +347,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V261 - acol-congreso.jpg REAL - SI APROBADA SE ENVIA =====
+// ===== V262 FIX - NO PISA IMAGEN SI HEADER VACIO =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -388,10 +388,14 @@ async function processCampaigns(){
                 template:{name:camp.template_name, language:{code:tplLang}, components:[]}
               };
 
+              // FIX V262: Si el usuario NO pone imagen en la campaña, NO mandamos header, Meta usa la foto original de la plantilla (Sapolin)
+              // Si SÍ pone link https://..., se manda esa (acol-congreso.jpg para Congreso)
               let hImg=String(camp.header_image||'').trim();
-              if(hasImageHeader){
-                if(!hImg.startsWith('https://')) hImg = DEFAULT_ACOL_IMAGE;
+              if(hasImageHeader && hImg.startsWith('https://')){
                 payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
+                console.log(`🖼️ Header custom ${hImg} para ${num}`);
+              } else if(hasImageHeader){
+                console.log(`🖼️ Sin header custom, usa imagen original de plantilla ${camp.template_name} para ${num}`);
               }
 
               if(expectedVars>0){
@@ -404,11 +408,11 @@ async function processCampaigns(){
 
               if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 ${camp.template_name} -> ${num} | ${expectedVars} vars +IMG | ${hImg}`);
+              console.log(`📤 ${camp.template_name} -> ${num} | ${expectedVars} vars | header: ${hImg||'ORIGINAL PLANTILLA'}`);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
-              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num} - ${DEFAULT_ACOL_IMAGE}`); }
+              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
               else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,500)); }
             }catch(e){ camp.fallidos++; console.log('send err', e.message); }
             await new Promise(r=>setTimeout(r, 900));
@@ -487,4 +491,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V261 acol-congreso.jpg REAL - SI APROBADA SE ENVIA OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V262 FIX IMAGEN NO PISA OK en 0.0.0.0:${PORT}`));
