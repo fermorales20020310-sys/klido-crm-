@@ -1,4 +1,4 @@
-// KLIDO V263 - TU V262 EXACTO + FIX #132012 SAPOLIN + ACOL - app.klidoapp.com.co
+// KLIDO V264 - FIX ACOL NOVIEMBRE - app.klidoapp.com.co
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -17,9 +17,9 @@ if(!fs.existsSync(PUB_MEDIA)) fs.mkdirSync(PUB_MEDIA,{recursive:true});
 app.use(express.static(PUB));
 app.use('/media', express.static(PUB_MEDIA));
 
-// TUS IMAGENES REALES - ASEGURATE QUE EXISTAN EN public/
-const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/acol-congreso.jpg';
-const DEFAULT_SAPOLIN_IMAGE = process.env.SAPOLIN_IMAGE || 'https://app.klidoapp.com.co/sapolin-bogota.jpg';
+// V264 - SOLO ACOL NOVIEMBRE - SIN ESPACIOS
+const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/acol-noviembre.jpg';
+const DEFAULT_SAPOLIN_IMAGE = process.env.SAPOLIN_IMAGE || 'https://app.klidoapp.com.co/acol-noviembre.jpg';
 
 const DB='/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
 const S=s=>String(s||'').replace(/[^a-z0-9_\-@.]/gi,'').slice(0,80);
@@ -46,8 +46,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V263 FIX 132012 SAPOLIN+ACOL'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V263 FIX 132012 - Sapolin y Acol siempre con imagen', imagen_acol:DEFAULT_ACOL_IMAGE, imagen_sapolin:DEFAULT_SAPOLIN_IMAGE, time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V264 FIX ACOL NOVIEMBRE'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V264 FIX ACOL NOVIEMBRE - Solo ACOL', imagen_acol:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -312,8 +312,7 @@ app.get('/api/templates/:eid', async (req,res)=>{
     }
     const all=j.data||[]; const approved=all.filter(t=>t.status==='APPROVED');
     if(all.length>0){ db.cached_templates=all; db.config.last_templates_update=Date.now(); saveDB(db.empresa_id, db); }
-    let warning=`✅ ${approved.length} APPROVED de ${all.length}`;
-    return res.json({templates: approved.length>0? approved : all, all: all.length, approved: approved.length, warning});
+    return res.json({templates: approved.length>0? approved : all, all: all.length, approved: approved.length, warning:`✅ ${approved.length} APPROVED`});
   }catch(e){ return res.json({templates:db.cached_templates||[], error:e.message, using_cache:true}); }
 });
 
@@ -348,7 +347,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V263 FIX DEFINITIVO #132012 - SIEMPRE ENVIA IMAGE =====
+// ===== V264 FIX ACOL NOVIEMBRE - SIEMPRE ENVIA IMAGE =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -378,9 +377,10 @@ async function processCampaigns(){
                   if(header && header.format==='IMAGE') hasImageHeader=true;
                 }
               }catch{}
-              // FIX CLAVE: si es sapolin, siempre forzar que tiene header image
-              if(camp.template_name.toLowerCase().includes('sapolin')) hasImageHeader=true;
-              if(!hasImageHeader && (camp.header_image||'').trim().startsWith('https://')) hasImageHeader=true;
+              // V264: FORZAR HEADER PARA ACOL
+              if(camp.template_name.toLowerCase().includes('acol')) hasImageHeader=true;
+              if(camp.template_name.toLowerCase().includes('noviembre')) hasImageHeader=true;
+              if((camp.header_image||'').trim().startsWith('https://')) hasImageHeader=true;
 
               let payload={
                 messaging_product:'whatsapp',
@@ -389,19 +389,14 @@ async function processCampaigns(){
                 template:{name:camp.template_name, language:{code:tplLang}, components:[]}
               };
 
-              // FIX V263: SIEMPRE mandar imagen cuando hasImageHeader=true
               if(hasImageHeader){
                 let hImg=String(camp.header_image||'').trim();
                 if(!hImg.startsWith('https://')){
-                  // Si deja vacio, elige automaticamente segun nombre plantilla
-                  if(camp.template_name.toLowerCase().includes('sapolin')){
-                    hImg = DEFAULT_SAPOLIN_IMAGE;
-                  } else {
-                    hImg = DEFAULT_ACOL_IMAGE;
-                  }
+                  hImg = DEFAULT_ACOL_IMAGE;
                 }
+                hImg = encodeURI(hImg);
                 payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
-                console.log(`🖼️ V263 FIX Header ${hImg} para ${camp.template_name} -> ${num}`);
+                console.log(`🖼️ V264 ACOL Header ${hImg} -> ${num}`);
               }
 
               if(expectedVars>0){
@@ -413,7 +408,7 @@ async function processCampaigns(){
               }
               if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 V263 ${camp.template_name} -> ${num} vars:${expectedVars} header:${hasImageHeader?'SI IMAGE':'NO'}`);
+              console.log(`📤 V264 ${camp.template_name} -> ${num} vars:${expectedVars} header:${hasImageHeader?'SI':'NO'}`);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
@@ -496,4 +491,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V263 FIX 132012 SAPOLIN+ACOL OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V264 FIX ACOL NOVIEMBRE OK en 0.0.0.0:${PORT}`));
