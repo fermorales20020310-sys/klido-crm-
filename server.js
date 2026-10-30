@@ -1,3 +1,4 @@
+
 // KLIDO V265 FINAL - ACOL NOVIEMBRE - app.klidoapp.com.co
 const express=require('express');
 const cors=require('cors');
@@ -48,6 +49,21 @@ const PLANES={
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
 app.get('/health',(req,res)=>res.status(200).send('OK V265 FINAL ACOL NOVIEMBRE'));
 app.get('/api/health',(req,res)=>res.json({ok:true, v:'V265 FINAL - ACOL NOVIEMBRE', imagen_acol:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
+
+// SOLO AÑADIDO - DEBUG FILES
+app.get('/api/debug/files',(req,res)=>{
+  try{
+    const files = fs.existsSync(PUB) ? fs.readdirSync(PUB) : [];
+    const media = fs.existsSync(PUB_MEDIA) ? fs.readdirSync(PUB_MEDIA) : [];
+    const checkPaths = [
+      path.join(PUB, 'acol-noviembre.jpg'),
+      path.join(PUB_MEDIA, 'acol-noviembre.jpg'),
+      path.join(PUB, 'acol noviembre.jpg'),
+      path.join(__dirname, 'acol-noviembre.jpg')
+    ].map(p=>({path:p, exists: fs.existsSync(p), size: fs.existsSync(p) ? fs.statSync(p).size : 0}));
+    res.json({ok:true, PUB, PUB_MEDIA, files, media: media.slice(0,30), checks: checkPaths, has_acol: files.includes('acol-noviembre.jpg')});
+  }catch(e){ res.json({ok:false, error:e.message}); }
+});
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
