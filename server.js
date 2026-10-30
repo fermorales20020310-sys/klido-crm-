@@ -1,4 +1,4 @@
-// KLIDO V264 - FIX ACOL NOVIEMBRE - app.klidoapp.com.co
+// KLIDO V265 FINAL - ACOL NOVIEMBRE - app.klidoapp.com.co
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -17,7 +17,7 @@ if(!fs.existsSync(PUB_MEDIA)) fs.mkdirSync(PUB_MEDIA,{recursive:true});
 app.use(express.static(PUB));
 app.use('/media', express.static(PUB_MEDIA));
 
-// V264 - SOLO ACOL NOVIEMBRE - SIN ESPACIOS
+// V265 - FIX DEFINITIVO ACOL NOVIEMBRE
 const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/acol-noviembre.jpg';
 const DEFAULT_SAPOLIN_IMAGE = process.env.SAPOLIN_IMAGE || 'https://app.klidoapp.com.co/acol-noviembre.jpg';
 
@@ -46,8 +46,8 @@ const PLANES={
 };
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V264 FIX ACOL NOVIEMBRE'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V264 FIX ACOL NOVIEMBRE - Solo ACOL', imagen_acol:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V265 FINAL ACOL NOVIEMBRE'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V265 FINAL - ACOL NOVIEMBRE', imagen_acol:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
 
 const verifyHook=(req,res)=>{
   if(req.query['hub.mode']==='subscribe' && req.query['hub.verify_token']===VERIFY){
@@ -347,7 +347,7 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V264 FIX ACOL NOVIEMBRE - SIEMPRE ENVIA IMAGE =====
+// ===== V265 FINAL - ACOL NOVIEMBRE CON MEDIA ID PARA EVITAR 404 =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -377,10 +377,8 @@ async function processCampaigns(){
                   if(header && header.format==='IMAGE') hasImageHeader=true;
                 }
               }catch{}
-              // V264: FORZAR HEADER PARA ACOL
               if(camp.template_name.toLowerCase().includes('acol')) hasImageHeader=true;
               if(camp.template_name.toLowerCase().includes('noviembre')) hasImageHeader=true;
-              if((camp.header_image||'').trim().startsWith('https://')) hasImageHeader=true;
 
               let payload={
                 messaging_product:'whatsapp',
@@ -390,13 +388,38 @@ async function processCampaigns(){
               };
 
               if(hasImageHeader){
-                let hImg=String(camp.header_image||'').trim();
-                if(!hImg.startsWith('https://')){
-                  hImg = DEFAULT_ACOL_IMAGE;
+                let mediaId = null;
+                try {
+                  const localPaths = [
+                    path.join(PUB, 'acol-noviembre.jpg'),
+                    path.join(PUB_MEDIA, 'acol-noviembre.jpg'),
+                    path.join(__dirname, 'acol-noviembre.jpg'),
+                    path.join(PUB, 'acol noviembre.jpg')
+                  ];
+                  let filePath = localPaths.find(p => fs.existsSync(p));
+                  if (filePath) {
+                    const buf = fs.readFileSync(filePath);
+                    const form = new FormData();
+                    form.append('file', new Blob([buf], {type:'image/jpeg'}), 'acol-noviembre.jpg');
+                    form.append('type', 'image/jpeg');
+                    form.append('messaging_product','whatsapp');
+                    const up = await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/media`,{
+                      method:'POST',
+                      headers:{Authorization:`Bearer ${db.config.token}`},
+                      body: form
+                    });
+                    const ju = await up.json();
+                    if (ju.id) mediaId = ju.id;
+                    console.log(`🖼️ V265 Media ID ${mediaId} desde ${filePath}`);
+                  }
+                } catch(e){ console.log('media id err', e.message); }
+
+                if (mediaId) {
+                  payload.template.components.push({type:'header', parameters:[{type:'image', image:{id:mediaId}}]});
+                } else {
+                  let hImg = encodeURI(DEFAULT_ACOL_IMAGE);
+                  payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
                 }
-                hImg = encodeURI(hImg);
-                payload.template.components.push({type:'header', parameters:[{type:'image', image:{link:hImg}}]});
-                console.log(`🖼️ V264 ACOL Header ${hImg} -> ${num}`);
               }
 
               if(expectedVars>0){
@@ -408,7 +431,7 @@ async function processCampaigns(){
               }
               if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 V264 ${camp.template_name} -> ${num} vars:${expectedVars} header:${hasImageHeader?'SI':'NO'}`);
+              console.log(`📤 V265 ${camp.template_name} -> ${num} header:${hasImageHeader?'SI':'NO'}`);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
@@ -419,7 +442,6 @@ async function processCampaigns(){
           }
         }
         camp.indice+=batch.length; camp.next_send=Date.now() + (4*60*60*1000); changed=true;
-        console.log(`📦 Lote ${camp.nombre}: ${camp.enviados}/${camp.total}`);
       }
       if(changed) saveDB(db.empresa_id,db);
     }
@@ -491,4 +513,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V264 FIX ACOL NOVIEMBRE OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V265 FINAL ACOL NOVIEMBRE OK en 0.0.0.0:${PORT}`));
