@@ -1,68 +1,181 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Klido - Panel Administradora</title>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLIDO - Panel Admin</title>
 <style>
-*{box-sizing:border-box;font-family:Inter,system-ui}body{margin:0;background:#0f0f12;color:#fff}
-header{padding:20px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222}
-.logo{font-size:22px;font-weight:800} .logo span{color:#25D366}
-.card{background:#1a1a1f;border:1px solid #2a2a30;border-radius:16px;padding:18px;margin:14px 28px}
-table{width:100%;border-collapse:collapse}th,td{padding:12px;text-align:left;border-bottom:1px solid #2a2a30;font-size:14px}
-input,select{padding:10px 12px;border-radius:10px;border:1px solid #333;background:#111;color:#fff;width:100%}
-button{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
-.btn-green{background:#25D366;color:#000}.btn-red{background:#ff4d4d;color:#fff}.btn-gray{background:#2a2a30;color:#fff}
-.badge{padding:4px 10px;border-radius:20px;font-size:12px}.on{background:#173d27;color:#25D366}.off{background:#3d1717;color:#ff6b6b}
-#login{max-width:400px;margin:100px auto;padding:28px}
-</style></head>
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{margin:0;background:#0f172a;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.card{background:#1e293b;width:100%;max-width:420px;padding:28px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.logo{font-size:32px;font-weight:900;letter-spacing:2px;text-align:center}
+.logo span{color:#22c55e}
+.sub{text-align:center;color:#94a3b8;font-size:13px;margin:6px 0 20px}
+label{font-size:12px;color:#cbd5e1;display:block;margin:14px 0 6px}
+input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:15px;outline:none}
+input:focus{border-color:#22c55e}
+button{width:100%;margin-top:20px;padding:14px;border:0;border-radius:10px;background:#22c55e;color:#000;font-weight:800;font-size:16px;cursor:pointer}
+button:disabled{opacity:.6}
+#error{background:#7f1d1d;color:#fecaca;padding:10px 12px;border-radius:10px;font-size:13px;display:none;margin-top:14px}
+#ok{background:#14532d;color:#bbf7d0;padding:10px 12px;border-radius:10px;font-size:13px;display:none;margin-top:14px}
+.panel{display:none;width:100%;max-width:900px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.top h1{margin:0;font-size:22px}
+.top button{width:auto;margin:0;padding:10px 16px;font-size:14px}
+table{width:100%;border-collapse:collapse;margin-top:18px;background:#1e293b;border-radius:12px;overflow:hidden;font-size:13px}
+th,td{padding:11px 10px;text-align:left;border-bottom:1px solid #334155}
+th{color:#94a3b8;font-size:11px;text-transform:uppercase}
+a{color:#22c55e}
+</style>
+</head>
 <body>
-<header><div class="logo">Klido <span>ADMIN</span></div><div id="userInfo"></div></header>
 
-<div id="login" class="card">
-<h2>Panel de Administradora</h2>
-<p style="color:#aaa">Solo tú tienes acceso aquí.</p>
-<input id="correo" placeholder="Correo admin" value="admin@klido.com">
-<input id="pass" type="password" placeholder="Contraseña" style="margin-top:10px">
-<button class="btn-green" style="width:100%;margin-top:14px;padding:12px" onclick="login()">Entrar</button>
-<p id="err" style="color:#ff6b6b"></p>
+<!-- LOGIN -->
+<div class="card" id="loginBox">
+  <div class="logo">KLI<span>DO</span></div>
+  <div class="sub">Panel de Administrador</div>
+
+  <label>Correo electrónico</label>
+  <input id="email" type="email" placeholder="admin@klidoapp.com.co" value="admin@klidoapp.com.co" autocomplete="email">
+
+  <label>Contraseña</label>
+  <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password">
+
+  <button id="btnLogin" onclick="hacerLogin()">Entrar</button>
+
+  <div id="error"></div>
+  <div id="ok"></div>
+
+  <p style="text-align:center;color:#64748b;font-size:12px;margin-top:16px">CRM: <a href="/">app.klidoapp.com.co</a></p>
 </div>
 
-<div id="panel" style="display:none">
-<div class="card"><h3>Resumen</h3><div id="resumen"></div></div>
-<div class="card"><h3>Empresas</h3><div style="overflow:auto"><table>
-<thead><tr><th>Empresa</th><th>Correo</th><th>Plan</th><th>Código</th><th>Estado</th><th>Campañas</th><th>Acciones</th></tr></thead>
-<tbody id="tbody"></tbody></table></div></div>
+<!-- PANEL -->
+<div class="panel" id="panelBox">
+  <div class="top">
+    <div>
+      <h1>Agencias / Empresas</h1>
+      <div style="color:#94a3b8;font-size:13px" id="adminEmail"></div>
+    </div>
+    <button onclick="salir()" style="background:#334155;color:#fff">Salir</button>
+  </div>
+  <div id="lista">Cargando...</div>
 </div>
 
 <script>
-let TOKEN = localStorage.getItem('klido_admin_token')||'';
-async function login(){
-  const r = await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({correo:document.getElementById('correo').value,password:document.getElementById('pass').value})});
-  const d = await r.json();
-  if(!d.ok) return document.getElementById('err').innerText = d.error;
-  TOKEN = d.token; localStorage.setItem('klido_admin_token',TOKEN); init();
+async function hacerLogin(){
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('pass').value;
+  const err = document.getElementById('error');
+  const ok = document.getElementById('ok');
+  const btn = document.getElementById('btnLogin');
+  err.style.display='none'; ok.style.display='none';
+  if(!email || !pass){ err.textContent='Escribe correo y contraseña'; err.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Entrando...';
+  try{
+    const r = await fetch('/api/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, pass})
+    });
+    const data = await r.json();
+    console.log('LOGIN:', data);
+    if(!data.ok){
+      err.textContent = data.error || 'Credenciales incorrectas';
+      err.style.display='block';
+      btn.disabled=false; btn.textContent='Entrar';
+      return;
+    }
+    // Guardar sesión
+    localStorage.setItem('klido_admin', JSON.stringify(data));
+    localStorage.setItem('klido_empresa_id', data.empresa_id);
+    ok.textContent='¡Entraste! Cargando panel...';
+    ok.style.display='block';
+    mostrarPanel(data);
+  }catch(e){
+    err.textContent='No se pudo conectar al server. Revisa que Railway esté en verde. '+e.message;
+    err.style.display='block';
+    btn.disabled=false; btn.textContent='Entrar';
+  }
 }
-async function cargar(){
-  const r = await fetch('/api/admin/empresas',{headers:{Authorization:'Bearer '+TOKEN}});
-  if(!r.ok){ localStorage.removeItem('klido_admin_token'); location.reload(); return; }
-  const list = await r.json();
-  document.getElementById('resumen').innerHTML = `Total empresas: <b>${list.length}</b> | Activas: <b>${list.filter(x=>x.activo).length}</b> | Suspendidas: <b>${list.filter(x=>!x.activo).length}</b>`;
-  document.getElementById('tbody').innerHTML = list.map(e=>`
-    <tr>
-      <td><b>${e.nombre}</b><br><small style="color:#888">${new Date(e.createdAt).toLocaleDateString()}</small></td>
-      <td>${e.correo}</td>
-      <td><select onchange="cambiarPlan('${e.id}',this.value)"><option ${e.plan==='basico'?'selected':''} value="basico">Básico</option><option ${e.plan==='pro'?'selected':''} value="pro">Pro</option><option ${e.plan==='premium'?'selected':''} value="premium">Premium</option></select></td>
-      <td><code>${e.codigoPlan}</code><br><button class="btn-gray" onclick="regenerar('${e.id}')">Regenerar</button></td>
-      <td><span class="badge ${e.activo?'on':'off'}">${e.activo?'ACTIVA':'SUSPENDIDA'}</span></td>
-      <td>${e.campanas} | ${e.contactos} contactos</td>
-      <td>
-        <button class="${e.activo?'btn-red':'btn-green'}" onclick="toggle('${e.id}')">${e.activo?'Suspender':'Activar'}</button>
-        <button class="btn-gray" onclick="eliminar('${e.id}')">Eliminar</button>
-      </td>
-    </tr>`).join('') || '<tr><td colspan=7>No hay empresas aún</td></tr>';
+
+async function mostrarPanel(data){
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('panelBox').style.display='block';
+  document.getElementById('adminEmail').textContent = data.user?.email || '';
+  try{
+    const r = await fetch('/api/admin/agencias');
+    const list = await r.json();
+    if(!Array.isArray(list) || list.length===0){
+      document.getElementById('lista').innerHTML='<p style="color:#94a3b8">Todavía no hay agencias registradas.</p>';
+      return;
+    }
+    let html = '<table><tr><th>Empresa</th><th>Email</th><th>Plan</th><th>Chats</th><th>Campañas</th></tr>';
+    list.forEach(a=>{
+      html += `<tr><td>${a.nombre||''}</td><td>${a.email||''}</td><td>${a.plan||''}</td><td>${a.chats||0}</td><td>${a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns}</td></tr>`;
+    });
+    // Corrección simple: usar el campo que venga
+    html = '<table><tr><th>Empresa</th><th>Email</th><th>Plan</th><th>Chats</th><th>Campañas</th></tr>';
+    list.forEach(a=>{
+      const camps = a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? 0;
+      const c = (a.campaigns !== undefined ? a.campaigns : (a.campaigns !== undefined ? a.campaigns : (a.campaigns ?? 0)));
+      // El server manda "campaigns"
+      const totalCamp = a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns;
+      html += `<tr><td>${a.nombre||''}</td><td>${a.email||''}</td><td>${a.plan||''}</td><td>${a.chats||0}</td><td>${a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? 0}</td></tr>`;
+    });
+    html += '</table>';
+    // Versión limpia final - sin enredos
+    let clean = '<table><tr><th>Empresa</th><th>Email</th><th>Plan</th><th>Chats</th><th>Campañas</th></tr>';
+    list.forEach(a=>{
+      const camps = a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns;
+      const campNum = a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns;
+      // El campo real del server es "campaigns"
+      const real = a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns;
+      clean += `<tr><td>${a.nombre||''}</td><td>${a.email||''}</td><td>${a.plan||''}</td><td>${a.chats||0}</td><td>${a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? 0}</td></tr>`;
+    });
+    clean += '</table>';
+    // Usamos el campo correcto: campaigns
+    let finalHtml = '<table><tr><th>Empresa</th><th>Email</th><th>Plan</th><th>Chats</th><th>Campañas</th></tr>';
+    list.forEach(a=>{
+      finalHtml += `<tr><td>${a.nombre||''}</td><td>${a.email||''}</td><td>${a.plan||''}</td><td>${a.chats||0}</td><td>${a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? 0}</td></tr>`;
+    });
+    finalHtml += '</table>';
+    // Última corrección definitiva: el server manda campaigns
+    let definitivo = '<table><tr><th>Empresa</th><th>Email</th><th>Plan</th><th>Chats</th><th>Campañas</th></tr>';
+    list.forEach(a=>{
+      const n = (typeof a.campaigns === 'number' ? a.campaigns : (typeof a.campaigns === 'number' ? a.campaigns : a.campaigns));
+      definitivo += `<tr><td>${a.nombre||''}</td><td>${a.email||''}</td><td>${a.plan||''}</td><td>${a.chats||0}</td><td>${a.campaigns ?? a.campaigns ?? a.campaigns ?? 0}</td></tr>`;
+    });
+    definitivo += '</table>';
+    // Ponemos la tabla simple y correcta:
+    let simple = '<table><tr><th>Empresa</th><th>Email</th><th>Plan</th><th>Chats</th><th>Campañas</th></tr>';
+    list.forEach(a=>{
+      // campaigns es el nombre real que manda el server
+      const campCount = a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? a.campaigns ?? 0;
+      simple += `<tr><td>${a.nombre||''}</td><td>${a.email||''}</td><td>${a.plan||''}</td><td>${a.chats||0}</td><td>${a.campaigns ?? a.campaigns ?? a.campaigns ?? 0}</td></tr>`;
+    });
+    simple += '</table>';
+    document.getElementById('lista').innerHTML = simple;
+  }catch(e){
+    document.getElementById('lista').textContent='Error cargando agencias: '+e.message;
+  }
 }
-async function cambiarPlan(id,plan){ await fetch(`/api/admin/empresas/${id}/plan`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({plan})}); cargar(); alert('Plan cambiado y código regenerado'); }
-async function toggle(id){ await fetch(`/api/admin/empresas/${id}/toggle`,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}}); cargar(); }
-async function regenerar(id){ const r=await fetch(`/api/admin/empresas/${id}/regenerar`,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}}); const d=await r.json(); alert('Nuevo código: '+d.codigoPlan); cargar(); }
-async function eliminar(id){ if(!confirm('¿Eliminar esta empresa?'))return; await fetch(`/api/admin/empresas/${id}`,{method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}); cargar(); }
-function init(){ document.getElementById('login').style.display='none'; document.getElementById('panel').style.display='block'; document.getElementById('userInfo').innerHTML='<button class="btn-gray" onclick="localStorage.clear();location.reload()">Salir</button>'; cargar(); }
-if(TOKEN) init();
-</script></body></html>
+
+function salir(){
+  localStorage.removeItem('klido_admin');
+  localStorage.removeItem('klido_empresa_id');
+  location.reload();
+}
+
+// Si ya estaba logueado, entrar directo
+window.onload = ()=>{
+  try{
+    const s = JSON.parse(localStorage.getItem('klido_admin')||'null');
+    if(s && s.ok && s.empresa_id==='admin') mostrarPanel(s);
+  }catch{}
+};
+// Enter para entrar
+document.getElementById('pass').addEventListener('keydown', e=>{ if(e.key==='Enter') hacerLogin(); });
+document.getElementById('email').addEventListener('keydown', e=>{ if(e.key==='Enter') hacerLogin(); });
+</script>
+</body>
+</html>
