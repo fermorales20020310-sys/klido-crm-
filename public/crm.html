@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO V244 - FIX MENU + FULL MEDIA</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><style>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KLIDO V244 - FIX MENU + FULL MEDIA + HISTORIAL</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter;background:#0b1020;color:#e2e8f0;height:100vh;overflow:hidden}
 .app{display:flex;flex-direction:column;height:100vh;padding:10px}.topbar{height:74px;background:#131b2e;border:1px solid #1e2a4a;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
 .menu{width:240px;background:#0f172a;border-right:1px solid #1e2a4a;padding:12px;display:flex;flex-direction:column;gap:3px;overflow:auto}
@@ -17,9 +17,13 @@
 .wpp-float{position:fixed;bottom:20px;right:20px;width:56px;height:56px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px #0006;z-index:999;cursor:pointer}
 .wpp-logo-only{width:72px;height:72px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px #0004}
 .badge-gold{background:#f59e0b;color:#000;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800}.badge-premium{background:#3b82f6;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px}.badge-basico{background:#1e293b;color:#94a3b8;border:1px solid #2a3a5c;padding:2px 8px;border-radius:10px;font-size:10px}
+/* HISTORIAL CAMPAÑAS */
+.histTable{width:100%;border-collapse:collapse;font-size:12px}.histTable th,.histTable td{padding:8px 10px;border-bottom:1px solid #1e2a4a;text-align:left}.histTable th{color:#94a3b8;font-size:11px}.pill{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}.pill-enviado{background:#14532d;color:#bbf7d0}.pill-entregado{background:#1e3a8a;color:#bfdbfe}.pill-leido{background:#064e3b;color:#a7f3d0}.pill-fallido{background:#7f1d1d;color:#fecaca}.pill-pendiente{background:#78350f;color:#fde68a}
+.progressBar{height:8px;background:#0b1020;border-radius:20px;overflow:hidden;border:1px solid #2a3a5c}.progressFill{height:100%;background:#22c55e;transition:0.3s}
+.filterBtn{padding:6px 12px;border-radius:20px;border:1px solid #2a3a5c;background:#0b1020;color:#94a3b8;cursor:pointer;font-size:12px;font-weight:700}.filterBtn.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
 </style></head><body>
 <div class="app">
-<div class="topbar"><div style="display:flex;align-items:center;gap:14px"><img src="/logo.png" style="width:58px;height:58px;border-radius:12px;background:#fff;padding:4px"><div><div style="display:flex;gap:6px"><span style="font-size:26px;font-weight:900">KLIDO</span><span style="font-size:15px;font-weight:600;color:#cbd5e1">Avanza Consulting</span></div><div style="font-size:10px;color:#93c5fd;font-weight:800">API OFICIAL META - WEBHOOK klido123 - V244 FIX MENU + FULL MEDIA</div></div></div><div style="display:flex;gap:12px;align-items:center"><span id="userEmail" style="font-size:12px;color:#94a3b8"></span><span id="planTopBadge"></span><button onclick="salir()" style="background:#ef4444;border:0;padding:7px 14px;border-radius:8px;color:#fff;font-weight:700;cursor:pointer">Salir</button></div></div>
+<div class="topbar"><div style="display:flex;align-items:center;gap:14px"><img src="/logo.png" style="width:58px;height:58px;border-radius:12px;background:#fff;padding:4px"><div><div style="display:flex;gap:6px"><span style="font-size:26px;font-weight:900">KLIDO</span><span style="font-size:15px;font-weight:600;color:#cbd5e1">Avanza Consulting</span></div><div style="font-size:10px;color:#93c5fd;font-weight:800">API OFICIAL META - WEBHOOK klido123 - V244 FIX MENU + FULL MEDIA + HISTORIAL</div></div></div><div style="display:flex;gap:12px;align-items:center"><span id="userEmail" style="font-size:12px;color:#94a3b8"></span><span id="planTopBadge"></span><button onclick="salir()" style="background:#ef4444;border:0;padding:7px 14px;border-radius:8px;color:#fff;font-weight:700;cursor:pointer">Salir</button></div></div>
 <div style="flex:1;display:flex;background:#131b2e;border:1px solid #1e2a4a;border-top:0;border-radius:0 0 14px 14px;overflow:hidden">
 <div class="menu" id="sideMenu">
 <div style="font-size:10px;color:#64748b;margin:8px;font-weight:700">MENU</div>
@@ -71,14 +75,18 @@
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px"><div style="background:#0b1020;border:1px dashed #3b82f6;border-radius:12px;padding:12px"><b>📊 Excel</b><input type="file" id="excelFile" accept=".xlsx,.xls,.csv" onchange="parseExcel()" style="margin-top:8px"><div id="excelResult" style="font-size:12px;color:#22c55e"></div></div><div style="background:#0b1020;border:1px dashed #f59e0b;border-radius:12px;padding:12px"><b>✍️ Manual</b><textarea id="manualNums" class="api-input" style="min-height:90px" oninput="parseManual()"></textarea><div id="manualResult"></div></div></div>
 <div style="margin-top:12px;background:#0f172a;border:1px solid #3b82f6;border-radius:10px;padding:12px;display:flex;justify-content:space-between"><b id="totalNums">0 contactos - 50 cada 4h</b><button onclick="crearCamp()" style="background:#22c55e;border:0;padding:12px 22px;border-radius:10px;color:#000;font-weight:800">🚀 Crear y Enviar</button></div>
 </div>
-<div style="padding:20px"><h3 style="margin:0 0 10px">📜 Historial</h3><div id="campHistory" style="max-height:400px;overflow:auto"></div></div>
+<!-- HISTORIAL CAMPAÑAS - NUEVO -->
+<div style="padding:4px 0 20px"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">📜 Historial de campañas</h3><button onclick="loadCampHistory()" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer">🔄 Actualizar</button></div><div id="campSummary" style="margin-top:12px"></div><div id="campHistory" style="max-height:500px;overflow:auto;margin-top:10px"></div></div>
 </div></div>
 </div>
 </div>
 </div>
 <div id="apiModal" style="display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center;z-index:99"><div style="background:#131b2e;border:1px solid #1e2a4a;padding:18px;border-radius:14px;width:440px"><h3>🔑 Settings API - Webhook klido123</h3><div id="apiCurrent" style="font-size:11px;background:#0b1020;padding:8px;border-radius:8px;margin-bottom:8px;color:#94a3b8"></div><div id="apiAdminOnly"><input id="apiPhone" class="api-input" placeholder="Phone Number ID"><input id="apiWaba" class="api-input" placeholder="WABA ID"><input id="apiToken" class="api-input" placeholder="Token permanente"></div><div id="apiMsg" style="font-size:12px;color:#22c55e;margin:8px 0"></div><button onclick="saveApi()" style="background:#22c55e;border:0;padding:9px;border-radius:8px;color:#fff;width:100%">Guardar permanente</button><button onclick="apiModal.style.display='none';showView('inbox')" style="background:#1e293b;border:0;padding:9px;border-radius:8px;color:#fff;width:100%;margin-top:6px">Cerrar</button></div></div>
+<!-- MODAL HISTORIAL DETALLE -->
+<div id="histModal" style="display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center;z-index:100"><div style="background:#131b2e;border:1px solid #1e2a4a;padding:18px;border-radius:14px;width:720px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column"><div style="display:flex;justify-content:space-between;align-items:center"><h3 id="histTitle" style="margin:0">Historial</h3><button onclick="cerrarHistorial()" style="background:#1e293b;border:1px solid #2a3a5c;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer">✕ Cerrar</button></div><div id="histSummary" style="font-size:12px;color:#94a3b8;margin:10px 0"></div><div style="display:flex;gap:6px;flex-wrap:wrap"><input id="histSearch" class="api-input" style="flex:1;min-width:180px" placeholder="Buscar número..." oninput="filtrarHistorial()"><button class="filterBtn active" id="fTodos" onclick="setFiltroHist('todos')">Todos</button><button class="filterBtn" id="fEnviado" onclick="setFiltroHist('enviado')">✅ Enviados</button><button class="filterBtn" id="fFallido" onclick="setFiltroHist('fallido')">❌ Fallidos</button><button class="filterBtn" id="fPendiente" onclick="setFiltroHist('pendiente')">⏳ Pendientes</button></div><div id="histBody" style="overflow:auto;margin-top:12px;flex:1"></div></div></div>
 <script>
 let S={}, curChat=null, allChats=[], detected=[], templates=[], excelNums=[], manualNums=[], chart1=null, chart2=null, currentPlanInfo={plan:'basico', usuarios:2, envios:1, mensajes:1000, ia:false, gmail:false, llamadas:false};
+let campList=[], histActual=[], histFiltro='todos', histCampId=null;
 function getPlanInfoLocal(){const p=(localStorage.getItem('klido_plan')||'basico').toLowerCase(); if(p==='gold') return {plan:'gold', usuarios:999, envios:999, mensajes:'Ilimitados', ia:true, gmail:true, llamadas:true, nombre:'Gold'}; if(p==='premium') return {plan:'premium', usuarios:5, envios:5, mensajes:'5000', ia:true, gmail:false, llamadas:false, nombre:'Premium'}; return {plan:'basico', usuarios:2, envios:1, mensajes:'1000', ia:false, gmail:false, llamadas:false, nombre:'Básico'};}
 async function init(){
   const eid=localStorage.getItem('klido_empresa'); const u=localStorage.getItem('klido_user');
@@ -113,7 +121,6 @@ async function init(){
   document.getElementById('userEmail').innerText=S.user.email+' ('+S.user.rol+')';
   loadChats(); loadConfigAndTemplates(); setInterval(loadChats,5000);
 }
-// FIX MENU AZUL - CORREGIDO: #sideMenu .m con espacio, antes era #sideMenu.m sin espacio y nunca quitaba el active
 function clearMenu(){ document.querySelectorAll('#sideMenu .m').forEach(el=>el.classList.remove('active')); }
 function showView(v){
   clearMenu();
@@ -203,8 +210,69 @@ function updateTotal(){const all=[...excelNums,...manualNums]; const uniq=[...ne
 async function loadTemplates(){const sel=document.getElementById('campTemplate'); const info=document.getElementById('templateInfo'); sel.innerHTML='<option>Cargando...</option>'; try{const r=await fetch('/api/templates/'+S.eid); const j=await r.json(); templates=j.templates||[]; let html=''; if(j.error) html+=`<div style="background:#ef444433;padding:6px;border-radius:6px">❌ ${j.error}</div>`; if(j.warning) html+=`<div style="background:#22c55e22;border:1px solid #22c55e;padding:6px;border-radius:6px">${j.warning}</div>`; info.innerHTML=html||`✅ ${templates.length} plantillas - Webhook klido123 OK`; if(templates.length===0){ sel.innerHTML=`<option>No hay aprobadas</option>`; return; } sel.innerHTML=templates.map(t=>`<option value="${t.name}">${t.name} - ${t.language}</option>`).join(''); onTemplateChange();}catch(e){ sel.innerHTML=`<option>Error</option>`; }}
 function onTemplateChange(){const name=document.getElementById('campTemplate').value; const t=templates.find(x=>x.name===name); if(!t){document.getElementById('varBlock').innerHTML=''; return;} let varCount=0; const body=t.components?.find(c=>c.type==='BODY'); if(body && body.text){ const m=body.text.match(/\{\{\d+\}\}/g); if(m) varCount=m.length; } let html=`<div style="font-size:11px;color:#22c55e">Plantilla ${t.name} - Vars ${varCount}</div>`; const header=t.components?.find(c=>c.type==='HEADER'); if(header?.format==='IMAGE') html+=`<input id="headerImage" class="api-input" placeholder="URL imagen">`; for(let i=1;i<=varCount;i++) html+=`<input id="var${i}" class="api-input" placeholder="Var {{${i}}}">`; document.getElementById('varBlock').innerHTML=html;}
 async function crearCamp(){if(detected.length===0) return alert('Sube numeros'); const nombre=document.getElementById('campNombre').value.trim()||'Campaña'; const tipo=document.getElementById('campTipo').value; const template=document.getElementById('campTemplate').value; if(tipo==='whatsapp' &&!template) return alert('Selecciona plantilla'); const vars=[]; document.querySelectorAll('[id^="var"]').forEach(el=>{ vars.push(el.value); }); const body={empresa_id:S.eid, nombre, tipo, numeros:detected, template_name:template, template_lang:(templates.find(t=>t.name===template)?.language||'es'), variables:vars, header_image:document.getElementById('headerImage')?.value||'', gmail_subject:document.getElementById('gmailSubject')?.value||'', gmail_body:document.getElementById('gmailBody')?.value||''}; const r=await fetch('/api/campaigns/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const j=await r.json(); if(j.ok){ alert('Creada'); detected=[]; excelNums=[]; manualNums=[]; document.getElementById('manualNums').value=''; updateTotal(); loadCampHistory(); } else alert(j.error||'Error');}
-async function loadCampHistory(){const r=await fetch('/api/campaigns/'+S.eid); const j=await r.json(); const list=j.campaigns||[]; if(list.length===0){ document.getElementById('campHistory').innerHTML='<div style="color:#64748b;font-size:12px;padding:10px">Sin campañas</div>'; return; } document.getElementById('campHistory').innerHTML=list.map(c=>`<div class="teamCard"><div><b>🔔 ${c.nombre}</b> - ${c.tipo.toUpperCase()}<br><span style="font-size:11px">${c.template_name||''} | ${c.enviados||0}/${c.total} | <b style="color:${c.status==='running'?'#22c55e':'#f59e0b'}">${c.status.toUpperCase()}</b></span></div><div style="display:flex;gap:6px"><button onclick="pauseCamp('${c.id}')" style="background:${c.status==='paused'?'#22c55e':'#f59e0b'};border:0;padding:6px 12px;border-radius:8px;color:#000;font-weight:700;font-size:11px">${c.status==='paused'?'▶️ Continuar':'⏸️ Pausar'}</button><button onclick="delCamp('${c.id}')" style="background:#1e293b;border:1px solid #ef4444;color:#ef4444;padding:6px 10px;border-radius:8px;font-size:11px">🗑️</button></div></div>`).join('');}
+// ===== HISTORIAL CAMPAÑAS - NUEVO EN CRM =====
+async function loadCampHistory(){
+  const box=document.getElementById('campHistory'); const sum=document.getElementById('campSummary');
+  try{
+    const r=await fetch('/api/campaigns/'+S.eid); const j=await r.json(); const list=j.campaigns||[];
+    campList=list;
+    if(list.length===0){
+      sum.innerHTML=''; box.innerHTML='<div style="color:#64748b;font-size:12px;padding:10px">Sin campañas todavía. Cuando crees una, aquí queda su historial completo aunque sea antigua.</div>'; return;
+    }
+    const tot=list.reduce((a,c)=>a+(c.total||0),0);
+    const env=list.reduce((a,c)=>a+(c.enviados||0),0);
+    const fal=list.reduce((a,c)=>a+(c.fallidos||0),0);
+    const pen=Math.max(0, tot-env-fal);
+    sum.innerHTML=`<div class="kpi" style="grid-template-columns:repeat(5,1fr)"><div class="kpiCard"><div style="font-size:11px">CAMPAÑAS</div><div style="font-size:22px;font-weight:800">${list.length}</div></div><div class="kpiCard"><div style="font-size:11px">CONTACTOS</div><div style="font-size:22px;font-weight:800">${tot}</div></div><div class="kpiCard"><div style="font-size:11px;color:#22c55e">ENVIADOS</div><div style="font-size:22px;font-weight:800;color:#22c55e">${env}</div></div><div class="kpiCard"><div style="font-size:11px;color:#ef4444">FALLIDOS</div><div style="font-size:22px;font-weight:800;color:#ef4444">${fal}</div></div><div class="kpiCard"><div style="font-size:11px;color:#f59e0b">PENDIENTES</div><div style="font-size:22px;font-weight:800;color:#f59e0b">${pen}</div></div></div>`;
+    box.innerHTML=list.map(c=>{
+      const res=c.resumen||{}; const pend=res.pendientes ?? Math.max(0,(c.total||0)-(c.enviados||0)-(c.fallidos||0));
+      const pct=c.porcentaje ?? (c.total?Math.round(((c.enviados||0)/c.total)*100):0);
+      const fecha=c.creado?new Date(c.creado).toLocaleString():'';
+      return `<div class="teamCard" style="align-items:flex-start;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;width:100%;gap:10px;flex-wrap:wrap"><div><b>🔔 ${c.nombre}</b> ${(c.legacy_reconstruido||c.legacy)?'<span style="font-size:10px;background:#78350f;color:#fde68a;padding:2px 6px;border-radius:10px">ANTIGUA</span>':''} - ${(c.tipo||'').toUpperCase()}<br><span style="font-size:11px;color:#94a3b8">${c.template_name||''} | ${fecha}</span><br><span style="font-size:12px">✅ ${c.enviados||0} enviados | ❌ ${c.fallidos||0} fallidos | ⏳ ${pend} pendientes | Total ${c.total} | <b style="color:${c.status==='running'?'#22c55e':c.status==='completed'?'#22c55e':'#f59e0b'}">${(c.status||'').toUpperCase()}</b></span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button onclick="verHistorial('${c.id}')" style="background:#3b82f6;border:0;padding:7px 12px;border-radius:8px;color:#fff;font-weight:700;font-size:12px;cursor:pointer">👁️ Ver historial</button><button onclick="pauseCamp('${c.id}')" style="background:${c.status==='paused'?'#22c55e':'#f59e0b'};border:0;padding:7px 12px;border-radius:8px;color:#000;font-weight:700;font-size:12px;cursor:pointer">${c.status==='paused'?'▶️ Continuar':'⏸️ Pausar'}</button><button onclick="delCamp('${c.id}')" style="background:#1e293b;border:1px solid #ef4444;color:#ef4444;padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer">🗑️</button></div></div><div style="width:100%"><div class="progressBar"><div class="progressFill" style="width:${pct}%"></div></div><div style="font-size:11px;color:#94a3b8;margin-top:4px">${pct}% enviado</div></div></div>`;
+    }).join('');
+  }catch(e){ box.innerHTML='Error cargando historial: '+e.message; }
+}
+async function verHistorial(id){
+  histCampId=id; histFiltro='todos'; document.getElementById('histSearch').value='';
+  document.querySelectorAll('.filterBtn').forEach(b=>b.classList.remove('active')); document.getElementById('fTodos').classList.add('active');
+  const camp=campList.find(c=>String(c.id)===String(id));
+  document.getElementById('histTitle').innerText='Historial - '+(camp?camp.nombre:id);
+  document.getElementById('histModal').style.display='flex';
+  document.getElementById('histBody').innerHTML='Cargando historial...';
+  try{
+    const r=await fetch(`/api/campaigns/${S.eid}/${id}/historial`);
+    const j=await r.json();
+    if(!j.ok){ document.getElementById('histBody').innerHTML='No se pudo cargar: '+(j.error||'Error'); return; }
+    histActual=j.historial||[];
+    const cp=j.campana||{};
+    document.getElementById('histSummary').innerHTML=`Total ${cp.total||histActual.length} | ✅ Enviados ${cp.enviados||0} | ❌ Fallidos ${cp.fallidos||0} | Plantilla ${cp.template||''}`;
+    renderHistorial();
+  }catch(e){ document.getElementById('histBody').innerHTML='Error: '+e.message; }
+}
+function setFiltroHist(f){
+  histFiltro=f;
+  document.querySelectorAll('.filterBtn').forEach(b=>b.classList.remove('active'));
+  const map={todos:'fTodos', enviado:'fEnviado', fallido:'fFallido', pendiente:'fPendiente'};
+  if(document.getElementById(map[f])) document.getElementById(map[f]).classList.add('active');
+  renderHistorial();
+}
+function filtrarHistorial(){ renderHistorial(); }
+function renderHistorial(){
+  const q=(document.getElementById('histSearch').value||'').toLowerCase().trim();
+  let list=[...histActual];
+  if(histFiltro==='enviado') list=list.filter(h=>['enviado','entregado','leido'].includes(h.estado));
+  if(histFiltro==='fallido') list=list.filter(h=>h.estado==='fallido');
+  if(histFiltro==='pendiente') list=list.filter(h=>h.estado==='pendiente');
+  if(q) list=list.filter(h=>String(h.numero||'').includes(q) || String(h.error||'').toLowerCase().includes(q));
+  if(list.length===0){ document.getElementById('histBody').innerHTML='<div style="color:#94a3b8;font-size:12px;padding:12px">Sin resultados para este filtro.</div>'; return; }
+  document.getElementById('histBody').innerHTML=`<table class="histTable"><thead><tr><th>Número</th><th>Estado</th><th>Detalle / Error</th><th>Fecha</th></tr></thead><tbody>${list.map(h=>{
+    const cls=h.estado==='fallido'?'pill-fallido':h.estado==='leido'?'pill-leido':h.estado==='entregado'?'pill-entregado':h.estado==='pendiente'?'pill-pendiente':'pill-enviado';
+    const label=h.estado==='fallido'?'❌ Fallido':h.estado==='leido'?'👁️ Leído':h.estado==='entregado'?'✅ Entregado':h.estado==='pendiente'?'⏳ Pendiente':'✅ Enviado';
+    return `<tr><td><b>${h.numero||''}</b>${h.legacy?'<br><span style="font-size:10px;color:#f59e0b">Antigua</span>':''}</td><td><span class="pill ${cls}">${label}</span></td><td style="max-width:260px;word-break:break-word">${h.error||''}<br><span style="font-size:10px;color:#64748b">${h.message_id||''}</span></td><td>${h.ts?new Date(h.ts).toLocaleString():''}</td></tr>`;
+  }).join('')}</tbody></table><div style="font-size:11px;color:#94a3b8;margin-top:8px">Mostrando ${list.length} de ${histActual.length}</div>`;
+}
+function cerrarHistorial(){ document.getElementById('histModal').style.display='none'; }
 async function pauseCamp(id){await fetch('/api/campaigns/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
-async function delCamp(id){if(!confirm('¿Eliminar?')) return; await fetch('/api/campaigns/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
+async function delCamp(id){if(!confirm('¿Eliminar? Esto borra su historial también.')) return; await fetch('/api/campaigns/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
 init();
 </script></body></html>
