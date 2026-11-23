@@ -113,8 +113,8 @@ async function init(){
   document.getElementById('userEmail').innerText=S.user.email+' ('+S.user.rol+')';
   loadChats(); loadConfigAndTemplates(); setInterval(loadChats,5000);
 }
-// FIX MENU AZUL - CON ESPACIO
-function clearMenu(){ document.querySelectorAll('#sideMenu.m').forEach(el=>el.classList.remove('active')); }
+// FIX MENU AZUL - CORREGIDO: #sideMenu .m con espacio, antes era #sideMenu.m sin espacio y nunca quitaba el active
+function clearMenu(){ document.querySelectorAll('#sideMenu .m').forEach(el=>el.classList.remove('active')); }
 function showView(v){
   clearMenu();
   document.querySelectorAll('.view').forEach(e=>e.style.display='none');
