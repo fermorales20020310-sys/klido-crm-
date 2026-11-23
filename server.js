@@ -1,5 +1,5 @@
-// KLIDO V266 FINAL - ACOL NOVIEMBRE - app.klidoapp.com.co
-// + ADMIN CON LOGIN + HISTORIAL EN LA APP (CRM)
+// KLIDO V267 FINAL - ACOL NOVIEMBRE - app.klidoapp.com.co
+// + ADMIN CON LOGIN + HISTORIAL EN LA APP (CRM) INCLUYENDO ANTIGUAS
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -21,11 +21,74 @@ app.use('/media', express.static(PUB_MEDIA));
 const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/acol-noviembre.jpg';
 const DEFAULT_SAPOLIN_IMAGE = process.env.SAPOLIN_IMAGE || 'https://app.klidoapp.com.co/acol-noviembre.jpg';
 
-const DB='/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
+const DB=process.env.DB_PATH || '/app/db'; if(!fs.existsSync(DB)) fs.mkdirSync(DB,{recursive:true});
 const S=s=>String(s||'').replace(/[^a-z0-9_\-@.]/gi,'').slice(0,80);
 const getDB=id=>{const f=path.join(DB,`${S(id)}.json`); if(!fs.existsSync(f)) return null; try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return null}};
 const saveDB=(id,d)=>fs.writeFileSync(path.join(DB,`${S(id)}.json`),JSON.stringify(d,null,2));
 const genCode=()=>Math.floor(100000+Math.random()*900000).toString();
+
+// ===== HISTORIAL CAMPAÑAS - INCLUYE ANTIGUAS - NO BORRA NADA =====
+// Junta ccampaigns (nuevo) + campaigns (registrar) + campaigns (viejas) sin duplicar
+function getAllCampaigns(db){
+  if(!db) return [];
+  const seen = new Set();
+  const out = [];
+  const pushList = (list)=>{
+    const arr = Array.isArray(list) ? list : Object.values(list||{});
+    for(const c of arr){
+      if(!c) continue;
+      const key = String(c.id || '') + '|' + String(c.nombre||'') + '|' + String(c.creado||'');
+      if(seen.has(key)) continue;
+      seen.add(key);
+      out.push(c);
+    }
+  };
+  pushList(db.campaigns);
+  pushList(db.campaigns);
+  pushList(db.campaigns);
+  pushList(db.campaign);
+  return out;
+}
+// Si una campaña antigua no tiene historial, lo reconstruye desde sus números / indice
+function normalizeCampaign(c){
+  if(!c) return c;
+  c.historial = Array.isArray(c.historial) ? c.historial : [];
+  c.numeros = Array.isArray(c.numeros) ? c.numeros : [];
+  c.total = c.total || c.numeros.length || 0;
+  c.enviados = c.enviados || 0;
+  c.fallidos = c.fallidos || 0;
+  // Reconstruir solo si es antigua y no tiene detalle
+  if(c.historial.length===0 && c.total>0 && (c.enviados>0 || c.fallidos>0 || (c.indice||0)>0)){
+    const intentados = Math.min(c.total, Math.max(c.enviados + c.fallidos, c.indice||0));
+    for(let i=0;i<intentados;i++){
+      const num = c.numeros[i];
+      if(!num) continue;
+      // Los primeros enviados los marcamos como enviados legacy, el resto fallidos legacy
+      if(i < c.enviados) c.historial.push({numero:num, estado:'enviado', message_id:'', error:'', ts:c.creado||Date.now(), legacy:true});
+      else if(i < c.enviados + c.fallidos) c.historial.push({numero:num, estado:'fallido', message_id:'', error:'Registro antiguo sin detalle', ts:c.creado||Date.now(), legacy:true});
+    }
+    c.legacy_reconstruido = true;
+  }
+  c.resumen = c.resumen || {total:c.total, enviados:c.enviados, fallidos:c.fallidos, pendientes: Math.max(0, c.total - c.enviados - c.fallidos)};
+  c.resumen = {total:c.total, enviados:c.enviados, fallidos:c.fallidos, pendientes: Math.max(0, c.total - c.enviados - c.fallidos)};
+  c.porcentaje = c.total ? Math.round(((c.enviados||0)/c.total)*100) : 0;
+  c.historial_count = c.historial.length;
+  return c;
+}
+// Guarda la migración sin borrar: deja todo en ccampaigns (canónico) y mantiene campaigns por compatibilidad
+function ensureCampaignHistory(db){
+  if(!db) return [];
+  const all = getAllCampaigns(db).map(normalizeCampaign);
+  let needsSave = false;
+  if(!Array.isArray(db.campaigns) || db.campaigns.length !== all.length) needsSave = true;
+  if(all.some(c=>c.legacy_reconstruido)) needsSave = true;
+  if(needsSave){
+    db.campaigns = all;
+    // No borramos db.campaigns ni db.campaigns, solo sincronizamos para que nada se pierda
+    saveDB(db.empresa_id, db);
+  }
+  return all;
+}
 
 async function sendEmail(to, subject, html){
   const API_KEY=(process.env.RESEND_API_KEY||process.env.RESEND_API||'').trim();
@@ -73,8 +136,8 @@ app.post('/api/admin/logout', authAdmin, (req,res)=>{
 });
 
 const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V266 FINAL ACOL NOVIEMBRE'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V266 FINAL - ACOL NOVIEMBRE + ADMIN + HISTORIAL APP', imagen_acol:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
+app.get('/health',(req,res)=>res.status(200).send('OK V267 FINAL ACOL NOVIEMBRE'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V267 FINAL - ACOL NOVIEMBRE + ADMIN + HISTORIAL APP INCL ANTIGUAS', imagen_acol:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
 
 app.get('/api/debug/files',(req,res)=>{
   try{
@@ -88,6 +151,13 @@ app.get('/api/debug/files',(req,res)=>{
     ].map(p=>({path:p, exists: fs.existsSync(p), size: fs.existsSync(p) ? fs.statSync(p).size : 0}));
     res.json({ok:true, PUB, PUB_MEDIA, files, media: media.slice(0,30), checks: checkPaths, has_acol: files.includes('acol-noviembre.jpg')});
   }catch(e){ res.json({ok:false, error:e.message}); }
+});
+
+// DEBUG CAMPAÑAS - para verificar que las antiguas sí aparecen
+app.get('/api/debug/campanas/:eid',(req,res)=>{
+  const db=getDB(req.params.eid); if(!db) return res.json({ok:false, error:'Empresa no existe'});
+  const all = getAllCampaigns(db).map(normalizeCampaign);
+  res.json({ok:true, empresa:db.nombre, empresa_id:db.empresa_id, en_ccampaigns:Array.isArray(db.campaigns)?db.campaigns.length:0, en_campaigns:Array.isArray(db.campaigns)?db.campaigns.length:0, total_unificadas:all.length, campanas: all.map(c=>({id:c.id, nombre:c.nombre, total:c.total, enviados:c.enviados, fallidos:c.fallidos, status:c.status, creado:c.creado, historial_count:c.historial.length, legacy:c.legacy_reconstruido||false}))});
 });
 
 const verifyHook=(req,res)=>{
@@ -198,23 +268,23 @@ async function handleWebhook(body){
         if(val.statuses){
           for(const st of val.statuses){
             console.log(`📊 Status ${st.status} id:${st.id} to:${st.recipient_id}`, st.errors? JSON.stringify(st.errors).slice(0,500) : '');
-            // Actualizar historial de campaña si el status corresponde a un mensaje enviado por campaña
             try{
-              if(db.campaigns){
-                const list = Array.isArray(db.campaigns) ? db.campaigns : Object.values(db.campaigns||{});
-                let changedSt=false;
-                for(const camp of list){
-                  if(!camp.historial) continue;
-                  const h = camp.historial.find(x=>x.message_id===st.id);
-                  if(h){
-                    if(st.status==='delivered') h.estado='entregado';
-                    if(st.status==='read') h.estado='leido';
-                    if(st.status==='failed'){ h.estado='fallido'; h.error = st.errors?.[0]?.title || st.errors?.[0]?.message || 'Fallido'; }
-                    h.status_update = Date.now();
-                    changedSt=true;
-                  }
+              const allC = getAllCampaigns(db);
+              let changedSt=false;
+              for(const camp of allC){
+                if(!camp.historial) continue;
+                const h = camp.historial.find(x=>x.message_id===st.id);
+                if(h){
+                  if(st.status==='delivered') h.estado='entregado';
+                  if(st.status==='read') h.estado='leido';
+                  if(st.status==='failed'){ h.estado='fallido'; h.error = st.errors?.[0]?.title || st.errors?.[0]?.message || 'Fallido'; }
+                  h.status_update = Date.now();
+                  changedSt=true;
                 }
-                if(changedSt) saveDB(eid,db);
+              }
+              if(changedSt){
+                db.campaigns = allC;
+                saveDB(eid,db);
               }
             }catch{}
           }
@@ -231,7 +301,7 @@ app.post('/api/empresa/registrar', async (req,res)=>{
   if(!nombre||!email||!pass) return res.json({ok:false, error:'Faltan datos'});
   const empresa_id=`${S(email)}_${Date.now()}`;
   const codigo=genCode();
-  const db={empresa_id, nombre, email, plan:(plan||'basico').toLowerCase(), plan_activo:false, codigo_activacion:codigo, creado:Date.now(), mantenimiento:0, config:{phone:'', waba:'', token:'', last_update:0, guardado_permanente:false}, cached_templates:[], usuarios:[{id:'admin', nombre:'Admin', email, pass, rol:'admin'}], chats:{}, reset_codes:[], calendar:[], campaigns:[]};
+  const db={empresa_id, nombre, email, plan:(plan||'basico').toLowerCase(), plan_activo:false, codigo_activacion:codigo, creado:Date.now(), mantenimiento:0, config:{phone:'', waba:'', token:'', last_update:0, guardado_permanente:false}, cached_templates:[], usuarios:[{id:'admin', nombre:'Admin', email, pass, rol:'admin'}], chats:{}, reset_codes:[], calendar:[], campaigns:[], ccampaigns:[]};
   saveDB(empresa_id,db);
   const html=`<div style="font-family:Arial;background:#0b1020;color:#fff;padding:28px;border-radius:14px"><h2>KLIDO</h2><div style="font-size:36px;letter-spacing:6px;background:#fff;color:#000;padding:14px;border-radius:10px;text-align:center;font-weight:800">${codigo}</div></div>`;
   const sent=await sendEmail(email, `KLIDO - Código ${codigo}`, html);
@@ -376,33 +446,23 @@ app.get('/api/templates/:eid', async (req,res)=>{
   }catch(e){ return res.json({templates:db.cached_templates||[], error:e.message, using_cache:true}); }
 });
 
-// ===== CAMPAÑAS + HISTORIAL EN LA APP =====
+// ===== CAMPAÑAS + HISTORIAL EN LA APP - INCLUYE ANTIGUAS =====
 app.get('/api/campaigns/:eid',(req,res)=>{
   const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]});
-  const list = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
-  // Historial incluido para la app, sin exponer token ni datos del admin
-  const enriched = list.map(c=>{
-    const hist = c.historial || [];
-    return {
-      ...c,
-      historial_count: hist.length,
-      resumen: c.resumen || {total:c.total||0, enviados:c.enviados||0, fallidos:c.fallidos||0, pendientes: Math.max(0,(c.total||0)-(c.enviados||0)-(c.fallidos||0))},
-      porcentaje: c.total ? Math.round(((c.enviados||0)/c.total)*100) : 0
-    };
-  });
-  res.json({campaigns:enriched.sort((a,b)=>b.creado-a.creado)});
+  const list = ensureCampaignHistory(db);
+  res.json({campaigns:list.sort((a,b)=>b.creado-a.creado)});
 });
 
-// Historial detalle de UNA campaña - PARA LA APP (CRM)
+// Historial detalle de UNA campaña - PARA LA APP (CRM) - incluye antiguas
 app.get('/api/campaigns/:eid/:cid/historial',(req,res)=>{
   const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
-  const list = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
+  const list = ensureCampaignHistory(db);
   const c=list.find(x=>String(x.id)===String(req.params.cid));
   if(!c) return res.json({ok:false, error:'Campaña no existe'});
   const hist = c.historial || [];
   res.json({
     ok:true,
-    campana:{id:c.id, nombre:c.nombre, tipo:c.tipo, template:c.template_name, total:c.total, enviados:c.enviados||0, fallidos:c.fallidos||0, status:c.status, creado:c.creado, terminado_en:c.terminado_en||null, resumen:c.resumen},
+    campana:{id:c.id, nombre:c.nombre, tipo:c.tipo, template:c.template_name, total:c.total, enviados:c.enviados||0, fallidos:c.fallidos||0, status:c.status, creado:c.creado, terminado_en:c.terminado_en||null, resumen:c.resumen, legacy:c.legacy_reconstruido||false},
     historial: hist.sort((a,b)=>b.ts-a.ts),
     enviados_detalle: hist.filter(h=>h.estado==='enviado'||h.estado==='entregado'||h.estado==='leido'),
     fallidos_detalle: hist.filter(h=>h.estado==='fallido')
@@ -413,30 +473,32 @@ app.post('/api/campaigns/create',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
   const planInfo=PLANES[db.plan]||PLANES.basico;
   if(req.body.tipo==='gmail' &&!planInfo.gmail) return res.json({ok:false, error:`⛔ Gmail solo Gold`});
-  if(!Array.isArray(db.campaigns)) db.campaigns = db.campaigns? Object.values(db.campaigns) : [];
-  const existing=db.campaigns.length;
-  if(existing>=planInfo.envios && planInfo.envios!==999) return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas`});
+  const all = ensureCampaignHistory(db);
+  // FIX: solo cuentan activas, el historial NO bloquea crear nuevas
+  const activas = all.filter(c=>c.status==='running' || c.status==='paused').length;
+  if(activas>=planInfo.envios && planInfo.envios!==999) return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas activas. Pausa o elimina una activa. Tu historial se mantiene.`});
   let cleanVars = (req.body.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='' );
   const camp={
     id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:cleanVars, header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, entregados:0, leidos:0, indice:0, next_send:0, creado:Date.now(), creado_por:req.body.creado_por||'agente',
     historial:[],
     resumen:{total:(req.body.numeros||[]).length, enviados:0, fallidos:0, pendientes:(req.body.numeros||[]).length}
   };
-  db.campaigns.push(camp); saveDB(req.body.empresa_id,db); res.json({ok:true, camp});
+  db.campaigns = [...all, camp];
+  saveDB(req.body.empresa_id,db); res.json({ok:true, camp});
 });
 
 app.post('/api/campaigns/toggle',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  if(!Array.isArray(db.campaigns)) db.campaigns = Object.values(db.campaigns||{});
-  const c=db.campaigns.find(x=>String(x.id)===String(req.body.id));
-  if(c){ c.status=c.status==='paused'?'running':'paused'; if(c.status==='running' && c.next_send && Date.now()>c.next_send) c.next_send=0; saveDB(req.body.empresa_id,db); }
+  const all = ensureCampaignHistory(db);
+  const c=all.find(x=>String(x.id)===String(req.body.id));
+  if(c){ c.status=c.status==='paused'?'running':'paused'; if(c.status==='running' && c.next_send && Date.now()>c.next_send) c.next_send=0; db.campaigns=all; saveDB(req.body.empresa_id,db); }
   res.json({ok:true});
 });
 
 app.post('/api/campaigns/delete',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
-  if(!Array.isArray(db.campaigns)) db.campaigns = Object.values(db.campaigns||{});
-  db.campaigns=db.campaigns.filter(x=>String(x.id)!==String(req.body.id));
+  const all = ensureCampaignHistory(db);
+  db.campaigns=all.filter(x=>String(x.id)!==String(req.body.id));
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
@@ -444,11 +506,11 @@ async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
       let db; try{ db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); }catch{continue;}
-      if(!db.campaigns) continue;
-      const campaignsList = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
-      if(campaignsList.length===0) continue;
+      const allInit = getAllCampaigns(db);
+      if(allInit.length===0) continue;
       let changed=false;
-      if(!Array.isArray(db.campaigns)){ db.campaigns = campaignsList; changed=true; }
+      // Trabajar siempre sobre la lista unificada
+      if(!Array.isArray(db.campaigns) || db.campaigns.length!==allInit.length){ db.campaigns = allInit; changed=true; }
       for(const camp of db.campaigns){
         if(camp.status!=='running') continue;
         if(camp.indice>=camp.total){ camp.status='completed'; camp.terminado_en=Date.now(); changed=true; continue; }
@@ -502,7 +564,7 @@ async function processCampaigns(){
                     });
                     const ju = await up.json();
                     if (ju.id) mediaId = ju.id;
-                    console.log(`🖼️ V266 Media ID ${mediaId} desde ${filePath}`);
+                    console.log(`🖼️ V267 Media ID ${mediaId} desde ${filePath}`);
                   }
                 } catch(e){ console.log('media id err', e.message); }
 
@@ -523,7 +585,7 @@ async function processCampaigns(){
               }
               if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 V266 ${camp.template_name} -> ${num} header:${hasImageHeader?'SI':'NO'}`);
+              console.log(`📤 V267 ${camp.template_name} -> ${num} header:${hasImageHeader?'SI':'NO'}`);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
@@ -582,7 +644,7 @@ app.get('/api/admin/agencias', authAdmin, (req,res)=>{
     const chats=Object.keys(e.chats||{}).length;
     const mensajes=Object.values(e.chats||{}).reduce((a,c)=>a+(c.mensajes?.length||0),0);
     const workers=(e.usuarios||[]).length;
-    const campaignsList = Array.isArray(e.campaigns)? e.campaigns : Object.values(e.campaigns||{});
+    const campaignsList = getAllCampaigns(e);
     const campaigns=campaignsList.length;
     const planInfo=PLANES[e.plan]||PLANES.basico;
     return {id:e.empresa_id, nombre:e.nombre, email:e.email, plan:e.plan, plan_activo:e.plan_activo, mantenimiento:e.mantenimiento||0, chats, mensajes, workers, campaigns, mensajesLimite:planInfo.mensajes, enviosLimite:planInfo.envios, plan_info:planInfo, creado:e.creado, phone:e.config?.phone||'', waba:e.config?.waba||'', has_token:!!e.config?.token};
@@ -602,12 +664,12 @@ app.get('/api/admin/agencias/:id/detalle', authAdmin, (req,res)=>{
   const db=getDB(req.params.id); if(!db) return res.json({ok:false});
   const chats=Object.values(db.chats||{}); const cals=db.calendar||[];
   const metrics={total_chats:chats.length, total_mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), clientes:chats.filter(x=>x.estado==='cliente').length, interesados:chats.filter(x=>x.estado==='interesado').length, nuevo:chats.filter(x=>!x.estado||x.estado==='nuevo').length, calendar:cals.length, calendar_pendientes:cals.filter(x=>!x.hecho).length};
-  res.json({ok:true, empresa_id:db.empresa_id, nombre:db.nombre, email:db.email, metrics, usuarios:db.usuarios, campaigns:db.campaigns, calendar:cals});
+  res.json({ok:true, empresa_id:db.empresa_id, nombre:db.nombre, email:db.email, metrics, usuarios:db.usuarios, campaigns:getAllCampaigns(db), calendar:cals});
 });
 app.get('/api/public/:eid',(req,res)=>{
   const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
   const chats=Object.values(db.chats||{});
-  res.json({ok:true, empresa:db.nombre, plan:db.plan, plan_activo:db.plan_activo, vence:db.mantenimiento? new Date(Number(db.mantenimiento)).toLocaleDateString() : '-', stats:{chats:chats.length, mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), trabajadores:(db.usuarios||[]).length, campanas:(Array.isArray(db.campaigns)?db.campaigns:Object.values(db.campaigns||{})).length, citas:(db.calendar||[]).length}, updated:Date.now()});
+  res.json({ok:true, empresa:db.nombre, plan:db.plan, plan_activo:db.plan_activo, vence:db.mantenimiento? new Date(Number(db.mantenimiento)).toLocaleDateString() : '-', stats:{chats:chats.length, mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), trabajadores:(db.usuarios||[]).length, campanas:getAllCampaigns(db).length, citas:(db.calendar||[]).length}, updated:Date.now()});
 });
 
 app.get('/',(req,res)=>res.sendFile(path.join(PUB,'index.html')));
@@ -617,4 +679,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V266 FINAL ACOL NOVIEMBRE + ADMIN + HISTORIAL APP OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V267 FINAL ACOL NOVIEMBRE + ADMIN + HISTORIAL APP INCL ANTIGUAS OK en 0.0.0.0:${PORT}`));
