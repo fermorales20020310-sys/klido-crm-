@@ -166,14 +166,17 @@ app.post('/api/registro', (req,res)=>{
 });
 app.post('/api/login', (req,res)=>{
   const { email, pass } = req.body||{};
-  const emailL = String(email||'').toLowerCase();
-  if(emailL===ADMIN_EMAIL.toLowerCase() && pass===ADMIN_PASS) return res.json({ok:true, empresa_id:'admin', user:{email:emailL, rol:'admin'}, is_admin_panel:true});
+  const emailL = String(email||'').toLowerCase().trim();
+  // ===== ADMIN - ACEPTA LOS 2 CORREOS PARA NO FALLAR =====
+  // admin@klidoapp.com.co (el bueno) y admin@klido.com (el que sale en la foto)
+  if((emailL===ADMIN_EMAIL.toLowerCase() || emailL==='admin@klido.com' || emailL==='admin@klidoapp.com') && pass===ADMIN_PASS) return res.json({ok:true, empresa_id:'admin', user:{email:emailL, rol:'admin'}, is_admin_panel:true});
+  // Buscar en todos los DB por email y pass - trabajadores y dueños
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
-      const u = (db.usuarios||[]).find(x=> String(x.email).toLowerCase()===emailL && x.pass===pass);
+      const u = (db.usuarios||[]).find(x=> String(x.email).toLowerCase().trim()===emailL && String(x.pass)===String(pass));
       if(u) return res.json({ok:true, empresa_id: db.empresa_id, user:{email:u.email, rol:u.rol}});
-      if(String(db.email||'').toLowerCase()===emailL && db.pass===pass) return res.json({ok:true, empresa_id: db.empresa_id, user:{email:emailL, rol:'admin'}});
+      if(String(db.email||'').toLowerCase().trim()===emailL && String(db.pass)===String(pass)) return res.json({ok:true, empresa_id: db.empresa_id, user:{email:emailL, rol:'admin'}});
     }catch{}
   }
   res.json({ok:false, error:'Credenciales incorrectas'});
@@ -332,14 +335,14 @@ app.post('/api/equipo/add', (req,res)=>{
   const planInfo = getPlanInfo(db.plan);
   if((db.usuarios||[]).length >= planInfo.asesores && planInfo.asesores!==999) return res.json({ok:false, error:'Límite de usuarios del plan'});
   if(!db.usuarios) db.usuarios=[];
-  if(db.usuarios.find(u=>u.email===email)) return res.json({ok:false, error:'Ya existe'});
-  db.usuarios.push({ email, pass, rol: rol||'agente' });
+  if(db.usuarios.find(u=>String(u.email).toLowerCase().trim()===String(email||'').toLowerCase().trim())) return res.json({ok:false, error:'Ya existe'});
+  db.usuarios.push({ email: String(email||'').toLowerCase().trim(), pass: String(pass||''), rol: rol||'agente' });
   saveDB(db); res.json({ok:true});
 });
 app.post('/api/equipo/remove', (req,res)=>{
   const { empresa_id, email } = req.body||{};
   const db = loadDB(empresa_id); if(!db) return res.json({ok:false});
-  db.usuarios = (db.usuarios||[]).filter(u=>u.email!==email);
+  db.usuarios = (db.usuarios||[]).filter(u=>String(u.email).toLowerCase().trim()!==String(email||'').toLowerCase().trim());
   saveDB(db); res.json({ok:true});
 });
 
