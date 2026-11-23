@@ -1,12 +1,13 @@
 // KLIDO V268 - SERVER COMPLETO - HISTORIAL UNIFICADO POR CORREO
 // Anteriores + Proximas - No borra nada de lo anterior
-// + AÑADIDO Y ALINEADO: Admin Plan/Aceptar/Bloquear + Reglas Planes Gmail/WhatsApp
+// + AÑADIDO Y ALINEADO: Admin Plan/Aceptar/Bloquear + Reglas Planes Gmail/WhatsApp + Gmail Real con EMAIL_USER / EMAIL_PASS
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const axios = require('axios');
+const nodemailer = require('nodemailer');
 
 const app = express();
 
@@ -30,6 +31,34 @@ const upload = multer({ dest: UPLOADS });
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@klidoapp.com.co';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'KlidoAdmin2026*';
 const PUBLIC_URL = process.env.PUBLIC_URL || 'https://app.klidoapp.com.co';
+
+// ---------- GMAIL REAL - USA TUS VARIABLES EMAIL_USER / EMAIL_PASS QUE YA TIENES EN RAILWAY ----------
+const GMAIL_USER = process.env.EMAIL_USER || process.env.GMAIL_USER || process.env.SMTP_USER || '';
+const GMAIL_PASS = process.env.EMAIL_PASS || process.env.GMAIL_PASS || process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || '';
+
+let gmailTransporter = null;
+function getGmailTransporter(){
+  if(gmailTransporter) return gmailTransporter;
+  if(!GMAIL_USER || !GMAIL_PASS) return null;
+  gmailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: GMAIL_USER, pass: String(GMAIL_PASS).replace(/\s/g,'') }
+  });
+  return gmailTransporter;
+}
+
+async function enviarCorreoReal(to, subject, htmlBody, textBody){
+  const transporter = getGmailTransporter();
+  if(!transporter) throw new Error('Falta EMAIL_USER / EMAIL_PASS en Railway');
+  const fromName = process.env.GMAIL_FROM_NAME || 'KLIDO';
+  await transporter.sendMail({
+    from: `"${fromName}" <${GMAIL_USER}>`,
+    to: to,
+    subject: subject || 'Mensaje KLIDO',
+    text: textBody || htmlBody?.replace(/<[^>]+>/g,'') || '',
+    html: htmlBody || `<p>${(textBody||'').replace(/\n/g,'<br>')}</p>`
+  });
+}
 
 // ---------- UTILS ----------
 function dbPath(eid){ return path.join(DB, String(eid).replace(/[^a-zA-Z0-9@._-]/g,'_') + '.json'); }
@@ -112,7 +141,7 @@ function normalizeCampaign(c){
 function getAllCampaigns(db){
   if(!db) return [];
   let all = [];
-  const keys = ['ccampaigns','campaigns','campaign_list','campanas','campanhas','campañas','campañas_list'];
+  const keys = ['cccampaigns','campaigns','campaign_list','campanas','campanhas','campañas','campañas_list'];
   for(const k of keys){
     if(Array.isArray(db[k])) all = all.concat(db[k]);
   }
@@ -441,9 +470,9 @@ app.post('/api/campaigns/create', async (req,res)=>{
     creado: Date.now(),
     historial: lista.map(n=>({ numero: esGmail ? '' : n, email: esGmail ? n : '', estado:'pendiente', error:'', message_id:'', ts:Date.now() }))
   };
-  if(!db.ccampaigns) db.ccampaigns=[];
+  if(!db.cccampaigns) db.cccampaigns=[];
   if(!db.campaigns) db.campaigns=[];
-  db.ccampaigns.push(camp);
+  db.cccampaigns.push(camp);
   db.campaigns.push(camp);
   saveDB(db);
   enviarCampana(empresa_id, camp.id).catch(e=>console.log('camp error',e.message));
@@ -453,13 +482,13 @@ app.post('/api/campaigns/create', async (req,res)=>{
 async function enviarCampana(empresa_id, campId){
   const db = loadDB(empresa_id); if(!db) return;
   const findCamp = (arr)=> (arr||[]).find(c=>String(c.id)===String(campId));
-  let camp = findCamp(db.ccampaigns) || findCamp(db.campaigns);
+  let camp = findCamp(db.cccampaigns) || findCamp(db.campaigns);
   if(!camp) return;
   const BATCH = 50;
   let idx = (camp.historial||[]).findIndex(h=>h.estado==='pendiente');
   while(idx!==-1){
     const campNow = loadDB(empresa_id);
-    const cNow = (campNow.ccampaigns||[]).find(c=>String(c.id)===String(campId)) || (campNow.campaigns||[]).find(c=>String(c.id)===String(campId));
+    const cNow = (campNow.cccampaigns||[]).find(c=>String(c.id)===String(campId)) || (campNow.campaigns||[]).find(c=>String(c.id)===String(campId));
     if(!cNow || cNow.status==='paused'){ await new Promise(r=>setTimeout(r, 10000)); continue; }
     if(cNow.status==='deleted') break;
     const batch = cNow.historial.filter(h=>h.estado==='pendiente').slice(0,BATCH);
@@ -467,6 +496,13 @@ async function enviarCampana(empresa_id, campId){
     for(const h of batch){
       try{
         if(cNow.tipo==='gmail'){
+          // AHORA SI MANDA EL CORREO DE VERDAD CON EMAIL_USER / EMAIL_PASS
+          const to = h.email || h.numero || '';
+          const subject = cNow.gmail_subject || cNow.nombre || 'Mensaje KLIDO';
+          const bodyText = cNow.gmail_body || cNow.gmail_html || '';
+          const bodyHtml = `<div style="font-family:Arial,sans-serif;white-space:pre-wrap">${String(bodyText).replace(/\n/g,'<br>')}</div>`;
+          if(!to || !to.includes('@')) throw new Error('Correo inválido: '+to);
+          await enviarCorreoReal(to, subject, bodyHtml, bodyText);
           h.estado='enviado'; h.ts=Date.now();
         } else {
           if(db.config?.token && db.config?.phone){
@@ -480,6 +516,7 @@ async function enviarCampana(empresa_id, campId){
         }
       }catch(e){
         h.estado='fallido'; h.error=e.response?.data?.error?.message || e.message; h.ts=Date.now();
+        console.log('Error envio', h.email||h.numero, e.message);
       }
       await new Promise(r=>setTimeout(r, 800));
     }
@@ -493,7 +530,7 @@ async function enviarCampana(empresa_id, campId){
         cc.status = cNow.historial.every(h=>h.estado!=='pendiente') ? 'completed' : 'running';
       }
     };
-    updateIn(db2.ccampaigns); updateIn(db2.campaigns);
+    updateIn(db2.cccampaigns); updateIn(db2.campaigns);
     saveDB(db2);
     const quedan = cNow.historial.filter(h=>h.estado==='pendiente').length;
     if(quedan>0){
@@ -598,7 +635,7 @@ app.get('/api/debug/campanas/:eid', (req,res)=>{
   const db = loadDB(req.params.eid);
   if(!db) return res.json({ok:false, error:'No encontrada'});
   const list = getAllCampaigns(db);
-  res.json({ ok:true, empresa_id: db.empresa_id, email: db.email, en_ccampaigns: (db.cccampaigns||[]).length, en_campaigns: (db.campaigns||[]).length, total_unificadas: list.length, campanas: list.map(normalizeCampaign) });
+  res.json({ ok:true, empresa_id: db.empresa_id, email: db.email, en_cccampaigns: (db.cccampaigns||[]).length, en_campaigns: (db.campaigns||[]).length, total_unificadas: list.length, campanas: list.map(normalizeCampaign) });
 });
 app.get('/api/admin/agencias', (req,res)=>{
   const list=[];
@@ -676,7 +713,7 @@ app.post('/webhook', (req,res)=>{
                     }
                   }
                 };
-                upd(db.ccampaigns); upd(db.campaigns);
+                upd(db.cccampaigns); upd(db.campaigns);
                 if(changed) saveDB(db);
               }catch{}
             }
