@@ -223,6 +223,8 @@ async function crearCamp(){if(detected.length===0) return alert('Agrega números
 async function loadCampHistory(){
   const box=document.getElementById('campHistory'); const sum=document.getElementById('campSummary');
   try{
+    // LO NUEVO: limpiar cache para no mostrar números de otra campaña al actualizar
+    histCache={};
     const email = S.user.email;
     const r=await fetch('/api/mis-campanas/'+encodeURIComponent(email)); const j=await r.json(); const list=j.campanas||[];
     campList=list;
@@ -293,7 +295,33 @@ function filtrarExpand(id, q){
   const f=list.filter(h=>String(h.numero||'').includes(q.trim()));
   document.getElementById('histList-'+id).innerHTML=f.map(h=>histRow(h)).join('')||'<div style="padding:14px;color:#94A3B8">Sin resultados</div>';
 }
-async function pauseCamp(id){await fetch('/api/campaigns/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
-async function delCamp(id){if(!confirm('¿Eliminar esta campaña y su historial?')) return; await fetch('/api/campaigns/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})}); loadCampHistory();}
+// ===== LO NUEVO: PAUSAR / BORRAR POR CORREO - FUNCIONA CON CAMPAÑAS VIEJAS DE OTRO ID =====
+async function pauseCamp(id){
+  try{
+    // Primero intenta el nuevo endpoint por correo (busca en todas tus cuentas)
+    const r = await fetch('/api/mis-campanas/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:S.user.email, id})});
+    const j = await r.json();
+    if(!j.ok){
+      // Si no lo encontró por correo, intenta el viejo por empresa_id para no dañar nada
+      await fetch('/api/campaigns/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})});
+    }
+  }catch(e){
+    await fetch('/api/campaigns/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})});
+  }
+  loadCampHistory();
+}
+async function delCamp(id){
+  if(!confirm('¿Eliminar esta campaña y su historial?')) return;
+  try{
+    const r = await fetch('/api/mis-campanas/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:S.user.email, id})});
+    const j = await r.json();
+    if(!j.ok){
+      await fetch('/api/campaigns/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})});
+    }
+  }catch(e){
+    await fetch('/api/campaigns/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa_id:S.eid, id})});
+  }
+  loadCampHistory();
+}
 init();
 </script></body></html>
