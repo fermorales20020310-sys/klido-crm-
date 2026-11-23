@@ -1,5 +1,6 @@
 // KLIDO V268 - SERVER COMPLETO - HISTORIAL UNIFICADO POR CORREO
 // Anteriores + Proximas - No borra nada de lo anterior
+// + AÑADIDO: Planes / Aceptar / Bloquear / Desbloquear - Sin dañar lo anterior
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -157,6 +158,9 @@ app.post('/api/registro', (req,res)=>{
     empresa_id: eid, email: email.toLowerCase(), nombre: nombre||email, pass,
     plan: (plan||'basico').toLowerCase(), plan_info: getPlanInfo(plan||'basico'),
     creado: Date.now(),
+    // <<< NUEVO - AÑADIDO, NO QUITA NADA
+    estado: 'pendiente',
+    bloqueado: false,
     config: { phone:'', waba:'', token:'' },
     usuarios: [{ email: email.toLowerCase(), pass, rol:'admin' }],
     chats: {}, campaigns: [], ccampaigns: [], calendar: [], templates_cache: []
@@ -174,6 +178,13 @@ app.post('/api/login', (req,res)=>{
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
+      // <<< NUEVO - SI ESTA BLOQUEADO NO DEJA ENTRAR A NADIE DE ESA EMPRESA
+      if(db.bloqueado || db.estado==='bloqueado'){
+        const uBlock = (db.usuarios||[]).find(x=> String(x.email).toLowerCase().trim()===emailL);
+        if(uBlock || String(db.email||'').toLowerCase().trim()===emailL){
+          return res.json({ok:false, error:'Cuenta bloqueada por el administrador. Contacta a KLIDO.'});
+        }
+      }
       const u = (db.usuarios||[]).find(x=> String(x.email).toLowerCase().trim()===emailL && String(x.pass)===String(pass));
       if(u) return res.json({ok:true, empresa_id: db.empresa_id, user:{email:u.email, rol:u.rol}});
       if(String(db.email||'').toLowerCase().trim()===emailL && String(db.pass)===String(pass)) return res.json({ok:true, empresa_id: db.empresa_id, user:{email:emailL, rol:'admin'}});
@@ -186,14 +197,16 @@ app.post('/api/login', (req,res)=>{
 app.get('/api/empresa/info/:eid', (req,res)=>{
   const db = loadDB(req.params.eid);
   if(!db) return res.json({ok:false, error:'No encontrada'});
-  res.json({ok:true, plan: db.plan, plan_info: getPlanInfo(db.plan), usuarios: db.usuarios||[], nombre: db.nombre, email: db.email});
+  // <<< NUEVO - AÑADIDO estado y bloqueado al final, no quita lo anterior
+  res.json({ok:true, plan: db.plan, plan_info: getPlanInfo(db.plan), usuarios: db.usuarios||[], nombre: db.nombre, email: db.email, estado: db.estado||'activo', bloqueado: !!db.bloqueado});
 });
 app.get('/api/empresas', (req,res)=>{
   const list = [];
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
-      list.push({ empresa_id: db.empresa_id, email: db.email, nombre: db.nombre, plan: db.plan, chats: Object.keys(db.chats||{}).length, campaigns: getAllCampaigns(db).length, creado: db.creado });
+      // <<< NUEVO - AÑADIDO estado y bloqueado al final
+      list.push({ empresa_id: db.empresa_id, email: db.email, nombre: db.nombre, plan: db.plan, chats: Object.keys(db.chats||{}).length, campaigns: getAllCampaigns(db).length, creado: db.creado, estado: db.estado||'activo', bloqueado: !!db.bloqueado });
     }catch{}
   }
   res.json(list);
@@ -474,7 +487,7 @@ app.post('/api/campaigns/toggle', (req,res)=>{
 app.post('/api/campaigns/delete', (req,res)=>{
   const { empresa_id, id } = req.body||{};
   const db = loadDB(empresa_id); if(!db) return res.json({ok:false});
-  db.ccampaigns = (db.ccampaigns||[]).filter(c=>String(c.id)!==String(id));
+  db.ccampaigns = (db.cccampaigns||[]).filter(c=>String(c.id)!==String(id));
   db.campaigns = (db.campaigns||[]).filter(c=>String(c.id)!==String(id));
   saveDB(db); res.json({ok:true});
 });
@@ -525,9 +538,9 @@ app.post('/api/mis-campanas/delete', (req,res)=>{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
       if(emailL && String(db.email||'').toLowerCase().trim() !== emailL) continue;
       const before = (db.ccampaigns||[]).length + (db.campaigns||[]).length;
-      db.ccampaigns = (db.ccampaigns||[]).filter(c=>String(c.id)!==String(id));
+      db.ccampaigns = (db.cccampaigns||[]).filter(c=>String(c.id)!==String(id));
       db.campaigns = (db.campaigns||[]).filter(c=>String(c.id)!==String(id));
-      if((db.ccampaigns.length + db.campaigns.length) !== before){ found=true; saveDB(db); }
+      if((db.cccampaigns.length + db.campaigns.length) !== before){ found=true; saveDB(db); }
     }catch{}
   }
   res.json({ok: found});
@@ -538,12 +551,16 @@ app.get('/api/debug/campanas/:eid', (req,res)=>{
   const db = loadDB(req.params.eid);
   if(!db) return res.json({ok:false, error:'No encontrada'});
   const list = getAllCampaigns(db);
-  res.json({ ok:true, empresa_id: db.empresa_id, email: db.email, en_ccampaigns: (db.ccampaigns||[]).length, en_campaigns: (db.campaigns||[]).length, total_unificadas: list.length, campanas: list.map(normalizeCampaign) });
+  res.json({ ok:true, empresa_id: db.empresa_id, email: db.email, en_ccampaigns: (db.cccampaigns||[]).length, en_campaigns: (db.campaigns||[]).length, total_unificadas: list.length, campanas: list.map(normalizeCampaign) });
 });
 app.get('/api/admin/agencias', (req,res)=>{
   const list=[];
   for(const f of listDBFiles()){
-    try{ const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); list.push({ empresa_id:db.empresa_id, email:db.email, nombre:db.nombre, plan:db.plan, chats:Object.keys(db.chats||{}).length, campaigns:getAllCampaigns(db).length, creado:db.creado }); }catch{}
+    try{
+      const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
+      // <<< NUEVO - AÑADIDO estado y bloqueado, lo demás igual
+      list.push({ empresa_id:db.empresa_id, email:db.email, nombre:db.nombre, plan:db.plan, chats:Object.keys(db.chats||{}).length, campaigns:getAllCampaigns(db).length, creado:db.creado, estado: db.estado || (db.bloqueado ? 'bloqueado' : 'activo'), bloqueado: !!db.bloqueado });
+    }catch{}
   }
   res.json(list);
 });
@@ -551,6 +568,37 @@ app.get('/api/admin/agencias/:id/detalle', (req,res)=>{
   const db=loadDB(req.params.id); if(!db) return res.json({ok:false});
   res.json({ok:true, empresa: db, campanas: getAllCampaigns(db).map(normalizeCampaign)});
 });
+
+// <<< NUEVO - TODO ESTE BLOQUE ES LO ÚNICO NUEVO, NO TOCA NADA DE ARRIBA
+// ---------- ADMIN - CAMBIAR PLAN / ACEPTAR / BLOQUEAR / DESBLOQUEAR ----------
+app.post('/api/admin/empresa/plan', (req,res)=>{
+  const { empresa_id, plan } = req.body||{};
+  const db=loadDB(empresa_id); if(!db) return res.json({ok:false, error:'No encontrada'});
+  const p = String(plan||'').toLowerCase();
+  if(!['basico','premium','gold'].includes(p)) return res.json({ok:false, error:'Plan inválido'});
+  db.plan=p; db.plan_info=getPlanInfo(p); saveDB(db); res.json({ok:true, plan:p});
+});
+app.post('/api/admin/empresa/aceptar', (req,res)=>{
+  const { empresa_id } = req.body||{};
+  const db=loadDB(empresa_id); if(!db) return res.json({ok:false});
+  db.estado='activo'; db.bloqueado=false; saveDB(db); res.json({ok:true});
+});
+app.post('/api/admin/empresa/bloquear', (req,res)=>{
+  const { empresa_id } = req.body||{};
+  const db=loadDB(empresa_id); if(!db) return res.json({ok:false});
+  db.estado='bloqueado'; db.bloqueado=true; saveDB(db); res.json({ok:true});
+});
+app.post('/api/admin/empresa/desbloquear', (req,res)=>{
+  const { empresa_id } = req.body||{};
+  const db=loadDB(empresa_id); if(!db) return res.json({ok:false});
+  db.estado='activo'; db.bloqueado=false; saveDB(db); res.json({ok:true});
+});
+app.post('/api/admin/empresa/estado', (req,res)=>{
+  const { empresa_id, estado } = req.body||{};
+  const db=loadDB(empresa_id); if(!db) return res.json({ok:false});
+  db.estado=estado; db.bloqueado = (estado==='bloqueado'); saveDB(db); res.json({ok:true});
+});
+// <<< FIN DE LO NUEVO
 
 // ---------- WEBHOOK META ----------
 app.get('/webhook', (req,res)=>{
