@@ -8,6 +8,11 @@ const multer = require('multer');
 const axios = require('axios');
 
 const app = express();
+
+// ---------- HEALTHCHECK PARA RAILWAY - PARA QUE NO LO TUMBE ----------
+app.get('/health', (req,res)=>{ res.status(200).send('OK'); });
+app.get('/api/health', (req,res)=>{ res.json({ok:true, status:'OK', time: Date.now()}); });
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -48,7 +53,6 @@ function getPlanInfo(plan){
 // ---------- CAMPAÑAS - NORMALIZADOR (para antiguas) ----------
 function normalizeCampaign(c){
   if(!c) return null;
-  // c puede venir de ccampaigns, campaigns, campaign_list, etc.
   const historialRaw = c.historial || c.detalle || c.numeros_detalle || c.results || [];
   let historial = [];
   if(Array.isArray(historialRaw)){
@@ -64,7 +68,6 @@ function normalizeCampaign(c){
       };
     });
   }
-  // Si no hay historial pero hay numeros, reconstruir
   if(historial.length===0 && Array.isArray(c.numeros)){
     historial = c.numeros.map(n=>{
       const num = typeof n==='string'? n : (n.numero||n.phone||'');
@@ -72,7 +75,6 @@ function normalizeCampaign(c){
       return { numero:num, estado:est, error:'', message_id:'', ts:c.creado||Date.now(), legacy:true };
     });
   }
-  // Si hay enviados pero no historial, reconstruir con enviados
   if(historial.length===0 && c.total && c.enviados){
     for(let i=0;i<(c.enviados||0);i++) historial.push({ numero:'', estado:'enviado', error:'', message_id:'', ts:c.creado||Date.now(), legacy:true });
   }
@@ -90,10 +92,7 @@ function normalizeCampaign(c){
     creado: c.creado || c.created_at || c.fecha || Date.now(),
     numeros: c.numeros || [],
     historial,
-    resumen: {
-      total, enviados, fallidos,
-      pendientes: Math.max(0, total - enviados - fallidos)
-    },
+    resumen: { total, enviados, fallidos, pendientes: Math.max(0, total - enviados - fallidos) },
     porcentaje: total ? Math.round((enviados/total)*100) : 0,
     legacy: !!(c.legacy||c.legacy_reconstruido),
     legacy_reconstruido: !!(c.legacy||c.legacy_reconstruido)
@@ -102,21 +101,10 @@ function normalizeCampaign(c){
 function getAllCampaigns(db){
   if(!db) return [];
   let all = [];
-  const buckets = [
-    db.ccampaigns, db.campaigns, db.campaigns_list,
-    db.campaigns_list, db.campaigns, db.campaigns,
-    db.campaigns, db.campaigns, db.campaigns,
-    db.campaigns, db.campaigns, db.campaigns,
-    db.campaigns, db.campaigns, db.campaigns,
-    db.campaigns, db.campaigns, db.campaigns,
-    db.campaigns, db.campaigns, db.campaigns
-  ];
-  // Recolecta de TODAS las claves posibles sin duplicar
   const keys = ['ccampaigns','campaigns','campaign_list','campanas','campanhas','campañas','campañas_list'];
   for(const k of keys){
     if(Array.isArray(db[k])) all = all.concat(db[k]);
   }
-  // También si db.campanas existe como objeto
   return all.filter(Boolean);
 }
 
@@ -161,9 +149,7 @@ app.post('/api/registro', (req,res)=>{
 app.post('/api/login', (req,res)=>{
   const { email, pass } = req.body||{};
   const emailL = String(email||'').toLowerCase();
-  // Admin global
   if(emailL===ADMIN_EMAIL.toLowerCase() && pass===ADMIN_PASS) return res.json({ok:true, empresa_id:'admin', user:{email:emailL, rol:'admin'}, is_admin_panel:true});
-  // Buscar en todos los DB por email y pass
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
@@ -211,7 +197,6 @@ app.post('/api/mensaje/enviar', async (req,res)=>{
   if(!db.chats[chat_id]) db.chats[chat_id]={ id:chat_id, nombre:chat_id, mensajes:[], profile:{} };
   db.chats[chat_id].mensajes.push({ from:'agente', texto, type:'text', ts:Date.now() });
   saveDB(db);
-  // Intentar enviar por Meta si hay config
   try{
     if(db.config?.token && db.config?.phone){
       await axios.post(`https://graph.facebook.com/v21.0/${db.config.phone}/messages`, { messaging_product:'whatsapp', to:chat_id, type:'text', text:{body:texto} }, { headers:{ Authorization:`Bearer ${db.config.token}`, 'Content-Type':'application/json' } });
@@ -380,7 +365,6 @@ app.post('/api/campaigns/create', async (req,res)=>{
   db.ccampaigns.push(camp);
   db.campaigns.push(camp);
   saveDB(db);
-  // Enviar en background 50 cada 4h - anti baneo
   enviarCampana(empresa_id, camp.id).catch(e=>console.log('camp error',e.message));
   res.json({ok:true, id: camp.id});
 });
@@ -402,7 +386,6 @@ async function enviarCampana(empresa_id, campId){
     for(const h of batch){
       try{
         if(cNow.tipo==='gmail'){
-          // Gmail solo Gold - se marca como enviado (integrar SMTP real aquí si se desea)
           h.estado='enviado'; h.ts=Date.now();
         } else {
           if(db.config?.token && db.config?.phone){
@@ -417,10 +400,8 @@ async function enviarCampana(empresa_id, campId){
       }catch(e){
         h.estado='fallido'; h.error=e.response?.data?.error?.message || e.message; h.ts=Date.now();
       }
-      // Pequeña pausa entre mensajes
       await new Promise(r=>setTimeout(r, 800));
     }
-    // Guardar progreso
     const db2 = loadDB(empresa_id);
     const updateIn = (arr)=>{
       const cc = (arr||[]).find(c=>String(c.id)===String(campId));
@@ -433,10 +414,8 @@ async function enviarCampana(empresa_id, campId){
     };
     updateIn(db2.ccampaigns); updateIn(db2.campaigns);
     saveDB(db2);
-    // Si quedan pendientes, esperar 4h
     const quedan = cNow.historial.filter(h=>h.estado==='pendiente').length;
     if(quedan>0){
-      // En producción esperar 4h: 4*60*60*1000. Para pruebas, el loop revisa pausa.
       await new Promise(r=>setTimeout(r, 4*60*60*1000));
     } else break;
   }
@@ -446,7 +425,6 @@ app.get('/api/campaigns/:eid', (req,res)=>{
   const db = loadDB(req.params.eid);
   if(!db) return res.json({ok:true, campanas:[]});
   const list = getAllCampaigns(db).map(normalizeCampaign).filter(Boolean);
-  // Deduplicar por id
   const seen = new Set(); const uniq=[];
   for(const c of list){ if(!seen.has(String(c.id))){ seen.add(String(c.id)); uniq.push(c); } }
   uniq.sort((a,b)=>(b.creado||0)-(a.creado||0));
@@ -531,9 +509,8 @@ app.post('/webhook', (req,res)=>{
       for(const entry of body.entry||[]){
         for(const change of entry.changes||[]){
           const value=change.value||{};
-          // Estados: entregado / leído -> actualizar historial de campañas
           for(const st of value.statuses||[]){
-            const mid=st.id; const nuevo = st.status; // sent, delivered, read, failed
+            const mid=st.id; const nuevo = st.status;
             for(const f of listDBFiles()){
               try{
                 const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
@@ -559,10 +536,8 @@ app.post('/webhook', (req,res)=>{
               }catch{}
             }
           }
-          // Mensajes entrantes
           for(const msg of value.messages||[]){
             const from=msg.from; const phoneId=value.metadata?.phone_number_id;
-            // Buscar empresa por phone
             for(const f of listDBFiles()){
               try{
                 const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
@@ -590,4 +565,4 @@ app.post('/webhook', (req,res)=>{
   res.sendStatus(200);
 });
 
-app.listen(PORT, ()=>{ console.log('KLIDO V268 corriendo en '+PORT+' DB:'+DB); });
+app.listen(PORT, '0.0.0.0', ()=>{ console.log('KLIDO V268 corriendo en '+PORT+' DB:'+DB); });
