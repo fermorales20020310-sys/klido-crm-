@@ -109,15 +109,22 @@ function getAllCampaigns(db){
 }
 
 // ---------- HISTORIAL UNIFICADO POR CORREO - ANTERIORES + PROXIMAS ----------
+// ===== LO QUE FALTABA 1: DEDUPLICAR - TU GUARDAS 2 VECES LA MISMA CAMPAÑA =====
 function getAllCampaignsByEmail(email){
   const emailL = String(email||'').toLowerCase().trim();
   let todas = [];
+  const seen = new Set();
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
       if(String(db.email||'').toLowerCase().trim() !== emailL) continue;
       const list = getAllCampaigns(db).map(normalizeCampaign).filter(Boolean);
-      for(const c of list) todas.push({...c, empresa_id: db.empresa_id, empresa: db.nombre||db.empresa||''});
+      for(const c of list){
+        const key = String(c.id);
+        if(seen.has(key)) continue; // ya la tenemos de ccampaigns, no repetir la de campaigns
+        seen.add(key);
+        todas.push({...c, empresa_id: db.empresa_id, empresa: db.nombre||db.empresa||''});
+      }
     }catch{}
   }
   todas.sort((a,b)=> (b.creado||0)-(a.creado||0));
@@ -455,7 +462,6 @@ app.post('/api/campaigns/delete', (req,res)=>{
   const db = loadDB(empresa_id); if(!db) return res.json({ok:false});
   db.ccampaigns = (db.ccampaigns||[]).filter(c=>String(c.id)!==String(id));
   db.campaigns = (db.campaigns||[]).filter(c=>String(c.id)!==String(id));
-  db.campaigns = db.campaigns.filter(c=>String(c.id)!==String(id));
   saveDB(db); res.json({ok:true});
 });
 
@@ -475,6 +481,48 @@ app.get('/api/mis-campanas/:email/:id/historial', (req,res)=>{
     if(!c) return res.json({ok:false, error:'No encontrada'});
     res.json({ ok:true, campana:c, historial: c.historial||[] });
   }catch(e){ res.json({ok:false, error:e.message}); }
+});
+
+// ===== LO QUE FALTABA 2: PAUSAR / BORRAR DESDE HISTORIAL UNIFICADO POR CORREO =====
+// Antes el CRM pausaba solo en el ID actual y si la campaña era de un ID anterior no la encontraba.
+// Ahora busca en TODOS los archivos de ese correo.
+app.post('/api/mis-campanas/toggle', (req,res)=>{
+  const { email, id, empresa_id } = req.body||{};
+  const emailL = String(email||'').toLowerCase().trim();
+  let found = false;
+  for(const f of listDBFiles()){
+    try{
+      const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
+      if(emailL && String(db.email||'').toLowerCase().trim() !== emailL) continue;
+      if(empresa_id && String(db.empresa_id)!==String(empresa_id) && emailL) {
+        // si viene email, no importa el empresa_id, busca en todos los de ese email
+      }
+      let changed = false;
+      const toggleIn = (arr)=>{
+        const c = (arr||[]).find(x=>String(x.id)===String(id));
+        if(c){ c.status = c.status==='paused' ? 'running' : 'paused'; changed=true; found=true; }
+      };
+      toggleIn(db.ccampaigns); toggleIn(db.campaigns);
+      if(changed) saveDB(db);
+    }catch{}
+  }
+  res.json({ok: found});
+});
+app.post('/api/mis-campanas/delete', (req,res)=>{
+  const { email, id } = req.body||{};
+  const emailL = String(email||'').toLowerCase().trim();
+  let found = false;
+  for(const f of listDBFiles()){
+    try{
+      const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
+      if(emailL && String(db.email||'').toLowerCase().trim() !== emailL) continue;
+      const before = (db.ccampaigns||[]).length + (db.campaigns||[]).length;
+      db.ccampaigns = (db.ccampaigns||[]).filter(c=>String(c.id)!==String(id));
+      db.campaigns = (db.campaigns||[]).filter(c=>String(c.id)!==String(id));
+      if((db.ccampaigns.length + db.campaigns.length) !== before){ found=true; saveDB(db); }
+    }catch{}
+  }
+  res.json({ok: found});
 });
 
 // ---------- DEBUG / ADMIN ----------
