@@ -1,6 +1,6 @@
 // KLIDO V268 - SERVER COMPLETO - HISTORIAL UNIFICADO POR CORREO
 // Anteriores + Proximas - No borra nada de lo anterior
-// + AÑADIDO: Planes / Aceptar / Bloquear / Desbloquear - Sin dañar lo anterior
+// + AÑADIDO Y ALINEADO: Admin Plan/Aceptar/Bloquear + Reglas Planes Gmail/WhatsApp
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -61,6 +61,7 @@ function normalizeCampaign(c){
       if(typeof h === 'string') return { numero: h, estado:'enviado', ts: c.creado||Date.now(), legacy: !!(c.legacy||c.legacy_reconstruido) };
       return {
         numero: h.numero || h.phone || h.to || h.destino || '',
+        email: h.email || h.correo || '',
         estado: (h.estado || h.status || 'enviado').toLowerCase(),
         error: h.error || h.mensaje || h.detail || '',
         message_id: h.message_id || h.id || '',
@@ -76,10 +77,16 @@ function normalizeCampaign(c){
       return { numero:num, estado:est, error:'', message_id:'', ts:c.creado||Date.now(), legacy:true };
     });
   }
+  if(historial.length===0 && Array.isArray(c.emails)){
+    historial = c.emails.map(e=>{
+      const em = typeof e==='string'? e : (e.email||e.correo||'');
+      return { numero:'', email:em, estado:'pendiente', error:'', message_id:'', ts:c.creado||Date.now(), legacy:true };
+    });
+  }
   if(historial.length===0 && c.total && c.enviados){
     for(let i=0;i<(c.enviados||0);i++) historial.push({ numero:'', estado:'enviado', error:'', message_id:'', ts:c.creado||Date.now(), legacy:true });
   }
-  const total = c.total || c.total_contactos || c.total_numeros || (Array.isArray(c.numeros)?c.numeros.length:0) || historial.length || 0;
+  const total = c.total || c.total_contactos || c.total_numeros || (Array.isArray(c.numeros)?c.numeros.length:0) || (Array.isArray(c.emails)?c.emails.length:0) || historial.length || 0;
   const enviados = c.enviados || c.sent || historial.filter(h=>['enviado','entregado','leido'].includes(h.estado)).length || 0;
   const fallidos = c.fallidos || c.failed || historial.filter(h=>h.estado==='fallido').length || 0;
   return {
@@ -88,10 +95,13 @@ function normalizeCampaign(c){
     tipo: (c.tipo || c.type || 'whatsapp').toLowerCase(),
     template_name: c.template_name || c.template || c.plantilla || '',
     template_lang: c.template_lang || c.language || 'es',
+    gmail_subject: c.gmail_subject || c.asunto || '',
+    gmail_body: c.gmail_body || c.gmail_html || c.cuerpo || '',
     total, enviados, fallidos,
     status: c.status || c.estado || (enviados>=total && total>0 ? 'completed' : 'running'),
     creado: c.creado || c.created_at || c.fecha || Date.now(),
     numeros: c.numeros || [],
+    emails: c.emails || [],
     historial,
     resumen: { total, enviados, fallidos, pendientes: Math.max(0, total - enviados - fallidos) },
     porcentaje: total ? Math.round((enviados/total)*100) : 0,
@@ -158,7 +168,6 @@ app.post('/api/registro', (req,res)=>{
     empresa_id: eid, email: email.toLowerCase(), nombre: nombre||email, pass,
     plan: (plan||'basico').toLowerCase(), plan_info: getPlanInfo(plan||'basico'),
     creado: Date.now(),
-    // <<< NUEVO - AÑADIDO, NO QUITA NADA
     estado: 'pendiente',
     bloqueado: false,
     config: { phone:'', waba:'', token:'' },
@@ -178,7 +187,7 @@ app.post('/api/login', (req,res)=>{
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
-      // <<< NUEVO - SI ESTA BLOQUEADO NO DEJA ENTRAR A NADIE DE ESA EMPRESA
+      // SI ESTA BLOQUEADO NO DEJA ENTRAR A NADIE DE ESA EMPRESA
       if(db.bloqueado || db.estado==='bloqueado'){
         const uBlock = (db.usuarios||[]).find(x=> String(x.email).toLowerCase().trim()===emailL);
         if(uBlock || String(db.email||'').toLowerCase().trim()===emailL){
@@ -197,7 +206,6 @@ app.post('/api/login', (req,res)=>{
 app.get('/api/empresa/info/:eid', (req,res)=>{
   const db = loadDB(req.params.eid);
   if(!db) return res.json({ok:false, error:'No encontrada'});
-  // <<< NUEVO - AÑADIDO estado y bloqueado al final, no quita lo anterior
   res.json({ok:true, plan: db.plan, plan_info: getPlanInfo(db.plan), usuarios: db.usuarios||[], nombre: db.nombre, email: db.email, estado: db.estado||'activo', bloqueado: !!db.bloqueado});
 });
 app.get('/api/empresas', (req,res)=>{
@@ -205,7 +213,6 @@ app.get('/api/empresas', (req,res)=>{
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
-      // <<< NUEVO - AÑADIDO estado y bloqueado al final
       list.push({ empresa_id: db.empresa_id, email: db.email, nombre: db.nombre, plan: db.plan, chats: Object.keys(db.chats||{}).length, campaigns: getAllCampaigns(db).length, creado: db.creado, estado: db.estado||'activo', bloqueado: !!db.bloqueado });
     }catch{}
   }
@@ -373,26 +380,66 @@ app.get('/api/templates/:eid', async (req,res)=>{
   res.json({ templates: db.templates_cache||[] });
 });
 
-// ---------- CAMPAÑAS ----------
+// ---------- CAMPAÑAS - ALINEADO CON REGLAS DE PLANES ----------
 app.post('/api/campaigns/create', async (req,res)=>{
-  const { empresa_id, nombre, tipo, numeros, template_name, template_lang, variables, header_image, gmail_subject, gmail_body } = req.body||{};
-  const db = loadDB(empresa_id); if(!db) return res.json({ok:false, error:'Empresa no encontrada'});
-  if(!Array.isArray(numeros) || numeros.length===0) return res.json({ok:false, error:'Sin números'});
+  const { empresa_id, nombre, tipo, numeros, emails, correos, destinatarios, template_name, template_lang, variables, header_image, gmail_subject, gmail_body, gmail_html } = req.body||{};
+  const db = loadDB(empresa_id);
+  if(!db) return res.json({ok:false, error:'Empresa no encontrada'});
+
+  const plan = String(db.plan||'basico').toLowerCase();
+  const esGmail = String(tipo||'').toLowerCase().includes('gmail') || String(tipo||'').toLowerCase()==='email' || String(tipo||'').toLowerCase()==='correo';
+
+  // REGLA 1: SOLO GOLD PUEDE HACER CAMPAÑA DE CORREOS
+  if(esGmail && plan!=='gold'){
+    return res.json({ok:false, error:'Tu plan '+plan.toUpperCase()+' solo permite números de teléfono. La campaña de correos (Gmail) es solo para plan GOLD.'});
+  }
+  // REGLA 2: TELEFONO SIEMPRE NECESITA PLANTILLA APROBADA DE META
+  if(!esGmail && !template_name){
+    return res.json({ok:false, error:'Para WhatsApp debes elegir una plantilla aprobada en Meta. Sin plantilla aprobada no se puede enviar.'});
+  }
+  // REGLA 3: CORREO NO PIDE PLANTILLA DE META, PIDE ASUNTO + CUERPO
+  if(esGmail && !gmail_subject && !gmail_body && !gmail_html){
+    return res.json({ok:false, error:'Para campaña de correos escribe el asunto y el cuerpo del correo. No necesitas plantilla de Meta.'});
+  }
+
+  let lista = [];
+  if(esGmail){
+    const cruda = emails || correos || destinatarios || numeros || [];
+    const arr = Array.isArray(cruda) ? cruda : String(cruda).split(/[\n,; ]+/);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    lista = [...new Set(arr.map(x=>{
+      if(typeof x==='object') return String(x.email||x.correo||x.numero||x.phone||'').trim();
+      return String(x||'').trim();
+    }).filter(e=>emailRegex.test(e)))];
+    if(lista.length===0) return res.json({ok:false, error:'Sin correos. Escribe correos como nombre@gmail.com, uno por línea.'});
+  } else {
+    const crudaNum = Array.isArray(numeros) ? numeros : [];
+    lista = [...new Set(crudaNum.map(n=>{
+      if(typeof n==='object') return String(n.numero||n.phone||'').replace(/\D/g,'');
+      return String(n||'').replace(/\D/g,'');
+    }).filter(n=>n.length>=7))];
+    if(lista.length===0) return res.json({ok:false, error:'Sin números de teléfono. Escribe números como 573001234567.'});
+  }
+
   const camp = {
     id: 'camp_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
     nombre: nombre||'Campaña',
-    tipo: tipo||'whatsapp',
-    template_name: template_name||'',
+    tipo: esGmail ? 'gmail' : 'whatsapp',
+    template_name: esGmail ? '' : (template_name||''),
     template_lang: template_lang||'es',
     variables: variables||[],
     header_image: header_image||'',
-    gmail_subject, gmail_body,
-    numeros: numeros,
-    total: numeros.length,
+    gmail_subject: esGmail ? (gmail_subject || nombre || '') : '',
+    gmail_body: esGmail ? (gmail_body || gmail_html || '') : '',
+    gmail_html: esGmail ? (gmail_html || gmail_body || '') : '',
+    numeros: esGmail ? [] : lista,
+    emails: esGmail ? lista : [],
+    destinatarios: lista,
+    total: lista.length,
     enviados: 0, fallidos: 0,
     status: 'running',
     creado: Date.now(),
-    historial: numeros.map(n=>({ numero: typeof n==='string'?n:(n.numero||n.phone||''), estado:'pendiente', error:'', message_id:'', ts:Date.now() }))
+    historial: lista.map(n=>({ numero: esGmail ? '' : n, email: esGmail ? n : '', estado:'pendiente', error:'', message_id:'', ts:Date.now() }))
   };
   if(!db.ccampaigns) db.ccampaigns=[];
   if(!db.campaigns) db.campaigns=[];
@@ -481,13 +528,13 @@ app.post('/api/campaigns/toggle', (req,res)=>{
     const c = (arr||[]).find(x=>String(x.id)===String(id));
     if(c) c.status = c.status==='paused' ? 'running' : 'paused';
   };
-  toggleIn(db.ccampaigns); toggleIn(db.campaigns);
+  toggleIn(db.cccampaigns); toggleIn(db.campaigns);
   saveDB(db); res.json({ok:true});
 });
 app.post('/api/campaigns/delete', (req,res)=>{
   const { empresa_id, id } = req.body||{};
   const db = loadDB(empresa_id); if(!db) return res.json({ok:false});
-  db.ccampaigns = (db.cccampaigns||[]).filter(c=>String(c.id)!==String(id));
+  db.cccampaigns = (db.cccampaigns||[]).filter(c=>String(c.id)!==String(id));
   db.campaigns = (db.campaigns||[]).filter(c=>String(c.id)!==String(id));
   saveDB(db); res.json({ok:true});
 });
@@ -523,7 +570,7 @@ app.post('/api/mis-campanas/toggle', (req,res)=>{
         const c = (arr||[]).find(x=>String(x.id)===String(id));
         if(c){ c.status = c.status==='paused' ? 'running' : 'paused'; changed=true; found=true; }
       };
-      toggleIn(db.ccampaigns); toggleIn(db.campaigns);
+      toggleIn(db.cccampaigns); toggleIn(db.campaigns);
       if(changed) saveDB(db);
     }catch{}
   }
@@ -537,8 +584,8 @@ app.post('/api/mis-campanas/delete', (req,res)=>{
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
       if(emailL && String(db.email||'').toLowerCase().trim() !== emailL) continue;
-      const before = (db.ccampaigns||[]).length + (db.campaigns||[]).length;
-      db.ccampaigns = (db.cccampaigns||[]).filter(c=>String(c.id)!==String(id));
+      const before = (db.cccampaigns||[]).length + (db.campaigns||[]).length;
+      db.cccampaigns = (db.cccampaigns||[]).filter(c=>String(c.id)!==String(id));
       db.campaigns = (db.campaigns||[]).filter(c=>String(c.id)!==String(id));
       if((db.cccampaigns.length + db.campaigns.length) !== before){ found=true; saveDB(db); }
     }catch{}
@@ -556,11 +603,7 @@ app.get('/api/debug/campanas/:eid', (req,res)=>{
 app.get('/api/admin/agencias', (req,res)=>{
   const list=[];
   for(const f of listDBFiles()){
-    try{
-      const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
-      // <<< NUEVO - AÑADIDO estado y bloqueado, lo demás igual
-      list.push({ empresa_id:db.empresa_id, email:db.email, nombre:db.nombre, plan:db.plan, chats:Object.keys(db.chats||{}).length, campaigns:getAllCampaigns(db).length, creado:db.creado, estado: db.estado || (db.bloqueado ? 'bloqueado' : 'activo'), bloqueado: !!db.bloqueado });
-    }catch{}
+    try{ const db=JSON.parse(fs.readFileSync(path.join(DB,f),'utf8')); list.push({ empresa_id:db.empresa_id, email:db.email, nombre:db.nombre, plan:db.plan, chats:Object.keys(db.chats||{}).length, campaigns:getAllCampaigns(db).length, creado:db.creado, estado: db.estado || (db.bloqueado ? 'bloqueado' : 'activo'), bloqueado: !!db.bloqueado }); }catch{}
   }
   res.json(list);
 });
@@ -569,7 +612,6 @@ app.get('/api/admin/agencias/:id/detalle', (req,res)=>{
   res.json({ok:true, empresa: db, campanas: getAllCampaigns(db).map(normalizeCampaign)});
 });
 
-// <<< NUEVO - TODO ESTE BLOQUE ES LO ÚNICO NUEVO, NO TOCA NADA DE ARRIBA
 // ---------- ADMIN - CAMBIAR PLAN / ACEPTAR / BLOQUEAR / DESBLOQUEAR ----------
 app.post('/api/admin/empresa/plan', (req,res)=>{
   const { empresa_id, plan } = req.body||{};
@@ -598,7 +640,6 @@ app.post('/api/admin/empresa/estado', (req,res)=>{
   const db=loadDB(empresa_id); if(!db) return res.json({ok:false});
   db.estado=estado; db.bloqueado = (estado==='bloqueado'); saveDB(db); res.json({ok:true});
 });
-// <<< FIN DE LO NUEVO
 
 // ---------- WEBHOOK META ----------
 app.get('/webhook', (req,res)=>{
