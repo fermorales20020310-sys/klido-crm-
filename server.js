@@ -1,6 +1,7 @@
 // KLIDO V268 - SERVER COMPLETO - HISTORIAL UNIFICADO POR CORREO
 // Anteriores + Proximas - No borra nada de lo anterior
 // + AÑADIDO Y ALINEADO: Admin Plan/Aceptar/Bloquear + Reglas Planes Gmail/WhatsApp + Gmail Real con EMAIL_USER / EMAIL_PASS
+// + FIX: Correos por Resend (RESEND_API_KEY / RESEND_FROM) - Si no hay llave, usa Gmail como antes
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -47,9 +48,25 @@ function getGmailTransporter(){
   return gmailTransporter;
 }
 
+// ---------- ENVIO CORREO - RESEND PRIMERO, GMAIL RESPALDO ----------
 async function enviarCorreoReal(to, subject, htmlBody, textBody){
+  const RESEND_KEY = process.env.RESEND_API_KEY || '';
+  if(RESEND_KEY){
+    try{
+      const r = await axios.post('https://api.resend.com/emails', {
+        from: process.env.RESEND_FROM || 'KLIDO <onboarding@resend.dev>',
+        to: [to],
+        subject: subject || 'Mensaje KLIDO',
+        html: htmlBody || `<p>${(textBody||'').replace(/\n/g,'<br>')}</p>`,
+        text: textBody || ''
+      }, { headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' }, timeout: 20000 });
+      return r.data;
+    }catch(e){
+      throw new Error('Resend: ' + (e.response?.data?.message || e.response?.data?.error || e.message));
+    }
+  }
   const transporter = getGmailTransporter();
-  if(!transporter) throw new Error('Falta EMAIL_USER / EMAIL_PASS en Railway');
+  if(!transporter) throw new Error('Falta RESEND_API_KEY o EMAIL_USER / EMAIL_PASS en Railway');
   const fromName = process.env.GMAIL_FROM_NAME || 'KLIDO';
   await transporter.sendMail({
     from: `"${fromName}" <${GMAIL_USER}>`,
@@ -209,14 +226,10 @@ app.post('/api/registro', (req,res)=>{
 app.post('/api/login', (req,res)=>{
   const { email, pass } = req.body||{};
   const emailL = String(email||'').toLowerCase().trim();
-  // ===== ADMIN - ACEPTA LOS 2 CORREOS PARA NO FALLAR =====
-  // admin@klidoapp.com.co (el bueno) y admin@klido.com (el que sale en la foto)
   if((emailL===ADMIN_EMAIL.toLowerCase() || emailL==='admin@klido.com' || emailL==='admin@klidoapp.com') && pass===ADMIN_PASS) return res.json({ok:true, empresa_id:'admin', user:{email:emailL, rol:'admin'}, is_admin_panel:true});
-  // Buscar en todos los DB por email y pass - trabajadores y dueños
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
-      // SI ESTA BLOQUEADO NO DEJA ENTRAR A NADIE DE ESA EMPRESA
       if(db.bloqueado || db.estado==='bloqueado'){
         const uBlock = (db.usuarios||[]).find(x=> String(x.email).toLowerCase().trim()===emailL);
         if(uBlock || String(db.email||'').toLowerCase().trim()===emailL){
@@ -418,15 +431,12 @@ app.post('/api/campaigns/create', async (req,res)=>{
   const plan = String(db.plan||'basico').toLowerCase();
   const esGmail = String(tipo||'').toLowerCase().includes('gmail') || String(tipo||'').toLowerCase()==='email' || String(tipo||'').toLowerCase()==='correo';
 
-  // REGLA 1: SOLO GOLD PUEDE HACER CAMPAÑA DE CORREOS
   if(esGmail && plan!=='gold'){
     return res.json({ok:false, error:'Tu plan '+plan.toUpperCase()+' solo permite números de teléfono. La campaña de correos (Gmail) es solo para plan GOLD.'});
   }
-  // REGLA 2: TELEFONO SIEMPRE NECESITA PLANTILLA APROBADA DE META
   if(!esGmail && !template_name){
     return res.json({ok:false, error:'Para WhatsApp debes elegir una plantilla aprobada en Meta. Sin plantilla aprobada no se puede enviar.'});
   }
-  // REGLA 3: CORREO NO PIDE PLANTILLA DE META, PIDE ASUNTO + CUERPO
   if(esGmail && !gmail_subject && !gmail_body && !gmail_html){
     return res.json({ok:false, error:'Para campaña de correos escribe el asunto y el cuerpo del correo. No necesitas plantilla de Meta.'});
   }
@@ -496,7 +506,6 @@ async function enviarCampana(empresa_id, campId){
     for(const h of batch){
       try{
         if(cNow.tipo==='gmail'){
-          // AHORA SI MANDA EL CORREO DE VERDAD CON EMAIL_USER / EMAIL_PASS
           const to = h.email || h.numero || '';
           const subject = cNow.gmail_subject || cNow.nombre || 'Mensaje KLIDO';
           const bodyText = cNow.gmail_body || cNow.gmail_html || '';
