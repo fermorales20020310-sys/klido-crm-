@@ -1,5 +1,5 @@
-
-// KLIDO V265 FINAL - ACOL NOVIEMBRE - app.klidoapp.com.co
+// KLIDO V266 FINAL - ACOL NOVIEMBRE - app.klidoapp.com.co
+// + ADMIN CON LOGIN + HISTORIAL EN LA APP (CRM)
 const express=require('express');
 const cors=require('cors');
 const fs=require('fs');
@@ -18,7 +18,6 @@ if(!fs.existsSync(PUB_MEDIA)) fs.mkdirSync(PUB_MEDIA,{recursive:true});
 app.use(express.static(PUB));
 app.use('/media', express.static(PUB_MEDIA));
 
-// V265 - FIX DEFINITIVO ACOL NOVIEMBRE
 const DEFAULT_ACOL_IMAGE = process.env.DEFAULT_IMAGE || 'https://app.klidoapp.com.co/acol-noviembre.jpg';
 const DEFAULT_SAPOLIN_IMAGE = process.env.SAPOLIN_IMAGE || 'https://app.klidoapp.com.co/acol-noviembre.jpg';
 
@@ -46,11 +45,37 @@ const PLANES={
   gold:{nombre:'Gold + IA + Llamadas', precio:2400000, trim:130000, asesores:999, envios:999, mensajes:999999, ia:true, gmail:true, llamadas:true}
 };
 
-const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
-app.get('/health',(req,res)=>res.status(200).send('OK V265 FINAL ACOL NOVIEMBRE'));
-app.get('/api/health',(req,res)=>res.json({ok:true, v:'V265 FINAL - ACOL NOVIEMBRE', imagen_acol:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
+// ===== ADMIN KLIDO - SEGURIDAD =====
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@klidoapp.com.co').trim().toLowerCase();
+const ADMIN_PASS = (process.env.ADMIN_PASS || 'KlidoAdmin2026*').trim();
+let ADMIN_TOKENS = new Set();
+const genAdminToken = () => 'klido_admin_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,12);
+const authAdmin = (req,res,next) => {
+  const h = req.headers.authorization || '';
+  const token = h.replace('Bearer ','').trim();
+  if(token && ADMIN_TOKENS.has(token)) return next();
+  return res.status(401).json({ok:false, error:'No autorizado - inicia sesión como administradora'});
+};
+app.post('/api/admin/login', (req,res)=>{
+  const email = String(req.body.email||'').trim().toLowerCase();
+  const pass = String(req.body.pass||req.body.password||'').trim();
+  if(email === ADMIN_EMAIL && pass === ADMIN_PASS){
+    const token = genAdminToken();
+    ADMIN_TOKENS.add(token);
+    return res.json({ok:true, token, admin:email});
+  }
+  return res.status(401).json({ok:false, error:'Correo o contraseña de administradora incorrectos'});
+});
+app.post('/api/admin/logout', authAdmin, (req,res)=>{
+  const token = (req.headers.authorization||'').replace('Bearer ','').trim();
+  ADMIN_TOKENS.delete(token);
+  res.json({ok:true});
+});
 
-// SOLO AÑADIDO - DEBUG FILES
+const VERIFY=(process.env.META_VERIFY_TOKEN||'klido123').trim();
+app.get('/health',(req,res)=>res.status(200).send('OK V266 FINAL ACOL NOVIEMBRE'));
+app.get('/api/health',(req,res)=>res.json({ok:true, v:'V266 FINAL - ACOL NOVIEMBRE + ADMIN + HISTORIAL APP', imagen_acol:DEFAULT_ACOL_IMAGE, time:Date.now(), planes:PLANES}));
+
 app.get('/api/debug/files',(req,res)=>{
   try{
     const files = fs.existsSync(PUB) ? fs.readdirSync(PUB) : [];
@@ -173,6 +198,25 @@ async function handleWebhook(body){
         if(val.statuses){
           for(const st of val.statuses){
             console.log(`📊 Status ${st.status} id:${st.id} to:${st.recipient_id}`, st.errors? JSON.stringify(st.errors).slice(0,500) : '');
+            // Actualizar historial de campaña si el status corresponde a un mensaje enviado por campaña
+            try{
+              if(db.campaigns){
+                const list = Array.isArray(db.campaigns) ? db.campaigns : Object.values(db.campaigns||{});
+                let changedSt=false;
+                for(const camp of list){
+                  if(!camp.historial) continue;
+                  const h = camp.historial.find(x=>x.message_id===st.id);
+                  if(h){
+                    if(st.status==='delivered') h.estado='entregado';
+                    if(st.status==='read') h.estado='leido';
+                    if(st.status==='failed'){ h.estado='fallido'; h.error = st.errors?.[0]?.title || st.errors?.[0]?.message || 'Fallido'; }
+                    h.status_update = Date.now();
+                    changedSt=true;
+                  }
+                }
+                if(changedSt) saveDB(eid,db);
+              }
+            }catch{}
           }
         }
       }
@@ -332,9 +376,38 @@ app.get('/api/templates/:eid', async (req,res)=>{
   }catch(e){ return res.json({templates:db.cached_templates||[], error:e.message, using_cache:true}); }
 });
 
-app.get('/api/campaigns/:eid',(req,res)=>{const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]});
+// ===== CAMPAÑAS + HISTORIAL EN LA APP =====
+app.get('/api/campaigns/:eid',(req,res)=>{
+  const db=getDB(req.params.eid); if(!db) return res.json({campaigns:[]});
   const list = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
-  res.json({campaigns:list.sort((a,b)=>b.creado-a.creado)});});
+  // Historial incluido para la app, sin exponer token ni datos del admin
+  const enriched = list.map(c=>{
+    const hist = c.historial || [];
+    return {
+      ...c,
+      historial_count: hist.length,
+      resumen: c.resumen || {total:c.total||0, enviados:c.enviados||0, fallidos:c.fallidos||0, pendientes: Math.max(0,(c.total||0)-(c.enviados||0)-(c.fallidos||0))},
+      porcentaje: c.total ? Math.round(((c.enviados||0)/c.total)*100) : 0
+    };
+  });
+  res.json({campaigns:enriched.sort((a,b)=>b.creado-a.creado)});
+});
+
+// Historial detalle de UNA campaña - PARA LA APP (CRM)
+app.get('/api/campaigns/:eid/:cid/historial',(req,res)=>{
+  const db=getDB(req.params.eid); if(!db) return res.json({ok:false});
+  const list = Array.isArray(db.campaigns)? db.campaigns : Object.values(db.campaigns||{});
+  const c=list.find(x=>String(x.id)===String(req.params.cid));
+  if(!c) return res.json({ok:false, error:'Campaña no existe'});
+  const hist = c.historial || [];
+  res.json({
+    ok:true,
+    campana:{id:c.id, nombre:c.nombre, tipo:c.tipo, template:c.template_name, total:c.total, enviados:c.enviados||0, fallidos:c.fallidos||0, status:c.status, creado:c.creado, terminado_en:c.terminado_en||null, resumen:c.resumen},
+    historial: hist.sort((a,b)=>b.ts-a.ts),
+    enviados_detalle: hist.filter(h=>h.estado==='enviado'||h.estado==='entregado'||h.estado==='leido'),
+    fallidos_detalle: hist.filter(h=>h.estado==='fallido')
+  });
+});
 
 app.post('/api/campaigns/create',(req,res)=>{
   const db=getDB(req.body.empresa_id); if(!db) return res.json({ok:false});
@@ -344,7 +417,11 @@ app.post('/api/campaigns/create',(req,res)=>{
   const existing=db.campaigns.length;
   if(existing>=planInfo.envios && planInfo.envios!==999) return res.json({ok:false, error:`⛔ Plan ${db.plan} max ${planInfo.envios} campañas`});
   let cleanVars = (req.body.variables||[]).map(v=> String(v||'').trim()).filter(v=> v!=='' );
-  const camp={id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:cleanVars, header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, indice:0, next_send:0, creado:Date.now()};
+  const camp={
+    id:Date.now().toString(), nombre:req.body.nombre, tipo:req.body.tipo||'whatsapp', numeros:req.body.numeros||[], total:(req.body.numeros||[]).length, template_name:req.body.template_name||'', template_lang:req.body.template_lang||'es', variables:cleanVars, header_image:req.body.header_image||'', gmail_subject:req.body.gmail_subject||'', gmail_body:req.body.gmail_body||'', status:'running', enviados:0, fallidos:0, entregados:0, leidos:0, indice:0, next_send:0, creado:Date.now(), creado_por:req.body.creado_por||'agente',
+    historial:[],
+    resumen:{total:(req.body.numeros||[]).length, enviados:0, fallidos:0, pendientes:(req.body.numeros||[]).length}
+  };
   db.campaigns.push(camp); saveDB(req.body.empresa_id,db); res.json({ok:true, camp});
 });
 
@@ -363,7 +440,6 @@ app.post('/api/campaigns/delete',(req,res)=>{
   saveDB(req.body.empresa_id,db); res.json({ok:true});
 });
 
-// ===== V265 FINAL - ACOL NOVIEMBRE CON MEDIA ID PARA EVITAR 404 =====
 async function processCampaigns(){
   try{
     for(const f of fs.readdirSync(DB)){
@@ -375,7 +451,7 @@ async function processCampaigns(){
       if(!Array.isArray(db.campaigns)){ db.campaigns = campaignsList; changed=true; }
       for(const camp of db.campaigns){
         if(camp.status!=='running') continue;
-        if(camp.indice>=camp.total){ camp.status='completed'; changed=true; continue; }
+        if(camp.indice>=camp.total){ camp.status='completed'; camp.terminado_en=Date.now(); changed=true; continue; }
         if(camp.next_send && Date.now() < camp.next_send) continue;
         const batch=camp.numeros.slice(camp.indice, camp.indice+50);
         if(camp.tipo==='whatsapp'){
@@ -426,7 +502,7 @@ async function processCampaigns(){
                     });
                     const ju = await up.json();
                     if (ju.id) mediaId = ju.id;
-                    console.log(`🖼️ V265 Media ID ${mediaId} desde ${filePath}`);
+                    console.log(`🖼️ V266 Media ID ${mediaId} desde ${filePath}`);
                   }
                 } catch(e){ console.log('media id err', e.message); }
 
@@ -447,17 +523,28 @@ async function processCampaigns(){
               }
               if(payload.template.components.length===0) delete payload.template.components;
 
-              console.log(`📤 V265 ${camp.template_name} -> ${num} header:${hasImageHeader?'SI':'NO'}`);
+              console.log(`📤 V266 ${camp.template_name} -> ${num} header:${hasImageHeader?'SI':'NO'}`);
 
               const rr=await fetch(`https://graph.facebook.com/v20.0/${db.config.phone}/messages`,{method:'POST',headers:{'Content-Type':'application/json', Authorization:`Bearer ${db.config.token}`}, body:JSON.stringify(payload)});
               const jj=await rr.json();
-              if(jj.messages){ camp.enviados++; console.log(`✅ Enviado ${camp.nombre} a ${num}`); }
-              else { camp.fallidos++; console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,800)); }
-            }catch(e){ camp.fallidos++; console.log('send err', e.message); }
+              if(jj.messages){
+                camp.enviados++;
+                camp.historial = camp.historial || [];
+                camp.historial.push({numero:num, estado:'enviado', message_id: jj.messages[0]?.id || '', error:'', ts:Date.now()});
+                console.log(`✅ Enviado ${camp.nombre} a ${num}`);
+              } else {
+                camp.fallidos++;
+                camp.historial = camp.historial || [];
+                camp.historial.push({numero:num, estado:'fallido', message_id:'', error: jj.error?.message || 'Error desconocido', ts:Date.now()});
+                console.log(`❌ Fallo ${camp.nombre} a ${num}:`, jj.error?.message, JSON.stringify(jj).slice(0,800));
+              }
+              camp.resumen = {total: camp.total, enviados: camp.enviados, fallidos: camp.fallidos, pendientes: Math.max(0, camp.total - camp.enviados - camp.fallidos)};
+            }catch(e){ camp.fallidos++; camp.historial = camp.historial || []; camp.historial.push({numero:num, estado:'fallido', message_id:'', error:e.message, ts:Date.now()}); camp.resumen={total:camp.total, enviados:camp.enviados, fallidos:camp.fallidos, pendientes:Math.max(0,camp.total-camp.enviados-camp.fallidos)}; console.log('send err', e.message); }
             await new Promise(r=>setTimeout(r, 900));
           }
         }
         camp.indice+=batch.length; camp.next_send=Date.now() + (4*60*60*1000); changed=true;
+        if(camp.indice>=camp.total){ camp.status='completed'; camp.terminado_en=Date.now(); }
       }
       if(changed) saveDB(db.empresa_id,db);
     }
@@ -488,7 +575,8 @@ setTimeout(syncPlantillasTodas, 15000);
 function getAllEmpresas(){
   try{return fs.readdirSync(DB).filter(f=>f.endsWith('.json')).map(f=>{try{return JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'))}catch{return null}}).filter(Boolean);}catch{return [];}
 }
-app.get('/api/admin/agencias',(req,res)=>{
+// ===== ADMIN - SOLO ADMINISTRADORA =====
+app.get('/api/admin/agencias', authAdmin, (req,res)=>{
   const all=getAllEmpresas();
   const agencias=all.map(e=>{
     const chats=Object.keys(e.chats||{}).length;
@@ -501,16 +589,16 @@ app.get('/api/admin/agencias',(req,res)=>{
   }).sort((a,b)=>b.creado-a.creado);
   res.json({ok:true, agencias, total:agencias.length});
 });
-app.post('/api/admin/agencias/:id/activar',(req,res)=>{
+app.post('/api/admin/agencias/:id/activar', authAdmin, (req,res)=>{
   const db=getDB(req.params.id); if(!db) return res.json({ok:false, error:'Empresa no existe'});
   const plan=(req.body.plan||db.plan||'basico').toLowerCase(); const dias=Number(req.body.dias||90);
   if(!['basico','premium','gold'].includes(plan)) return res.json({ok:false, error:'Plan invalido'});
   db.plan=plan; db.plan_activo=true; db.mantenimiento=Date.now() + (dias*24*60*60*1000); db.plan_vence=db.mantenimiento; saveDB(req.params.id, db);
   res.json({ok:true, mensaje:`✅ ${db.nombre} activado a ${plan.toUpperCase()} por ${dias} días`, plan, vence:db.mantenimiento});
 });
-app.post('/api/admin/agencias/:id/bloquear',(req,res)=>{const db=getDB(req.params.id); if(!db) return res.json({ok:false}); db.plan_activo=false; saveDB(req.params.id, db); res.json({ok:true});});
-app.post('/api/admin/agencias/:id/desbloquear',(req,res)=>{const db=getDB(req.params.id); if(!db) return res.json({ok:false}); db.plan_activo=true; saveDB(req.params.id, db); res.json({ok:true});});
-app.get('/api/admin/agencias/:id/detalle',(req,res)=>{
+app.post('/api/admin/agencias/:id/bloquear', authAdmin, (req,res)=>{const db=getDB(req.params.id); if(!db) return res.json({ok:false}); db.plan_activo=false; saveDB(req.params.id, db); res.json({ok:true});});
+app.post('/api/admin/agencias/:id/desbloquear', authAdmin, (req,res)=>{const db=getDB(req.params.id); if(!db) return res.json({ok:false}); db.plan_activo=true; saveDB(req.params.id, db); res.json({ok:true});});
+app.get('/api/admin/agencias/:id/detalle', authAdmin, (req,res)=>{
   const db=getDB(req.params.id); if(!db) return res.json({ok:false});
   const chats=Object.values(db.chats||{}); const cals=db.calendar||[];
   const metrics={total_chats:chats.length, total_mensajes:chats.reduce((a,c)=>a+(c.mensajes?.length||0),0), no_leidos:chats.reduce((a,c)=>a+(c.no_leidos||0),0), clientes:chats.filter(x=>x.estado==='cliente').length, interesados:chats.filter(x=>x.estado==='interesado').length, nuevo:chats.filter(x=>!x.estado||x.estado==='nuevo').length, calendar:cals.length, calendar_pendientes:cals.filter(x=>!x.hecho).length};
@@ -529,4 +617,4 @@ app.get('/admin',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 app.get('/admin.html',(req,res)=>res.sendFile(path.join(PUB,'admin.html')));
 
 const PORT=process.env.PORT||8080;
-app.listen(PORT,'0.0.0.0',()=>console.log(`V265 FINAL ACOL NOVIEMBRE OK en 0.0.0.0:${PORT}`));
+app.listen(PORT,'0.0.0.0',()=>console.log(`V266 FINAL ACOL NOVIEMBRE + ADMIN + HISTORIAL APP OK en 0.0.0.0:${PORT}`));
