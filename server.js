@@ -109,7 +109,6 @@ function getAllCampaigns(db){
 }
 
 // ---------- HISTORIAL UNIFICADO POR CORREO - ANTERIORES + PROXIMAS ----------
-// ===== LO QUE FALTABA 1: DEDUPLICAR - TU GUARDAS 2 VECES LA MISMA CAMPAÑA =====
 function getAllCampaignsByEmail(email){
   const emailL = String(email||'').toLowerCase().trim();
   let todas = [];
@@ -121,7 +120,7 @@ function getAllCampaignsByEmail(email){
       const list = getAllCampaigns(db).map(normalizeCampaign).filter(Boolean);
       for(const c of list){
         const key = String(c.id);
-        if(seen.has(key)) continue; // ya la tenemos de ccampaigns, no repetir la de campaigns
+        if(seen.has(key)) continue;
         seen.add(key);
         todas.push({...c, empresa_id: db.empresa_id, empresa: db.nombre||db.empresa||''});
       }
@@ -131,11 +130,23 @@ function getAllCampaignsByEmail(email){
   return todas;
 }
 
-// ---------- STATIC ----------
+// ---------- STATIC - ARREGLADO PARA HEALTHCHECK ----------
 app.use(express.static(path.join(__dirname,'public')));
-app.get('/', (req,res)=>{ res.sendFile(path.join(__dirname,'public','index.html')); });
-app.get('/crm', (req,res)=>{ res.sendFile(path.join(__dirname,'public','crm.html')); });
-app.get('/admin', (req,res)=>{ res.sendFile(path.join(__dirname,'public','admin.html')); });
+app.get('/', (req,res)=>{
+  const f = path.join(__dirname,'public','index.html');
+  if(fs.existsSync(f)) return res.sendFile(f);
+  return res.status(200).send('KLIDO OK');
+});
+app.get('/crm', (req,res)=>{
+  const f = path.join(__dirname,'public','crm.html');
+  if(fs.existsSync(f)) return res.sendFile(f);
+  return res.status(200).send('KLIDO CRM OK');
+});
+app.get('/admin', (req,res)=>{
+  const f = path.join(__dirname,'public','admin.html');
+  if(fs.existsSync(f)) return res.sendFile(f);
+  return res.status(200).send('KLIDO ADMIN OK');
+});
 
 // ---------- AUTH / REGISTRO ----------
 app.post('/api/registro', (req,res)=>{
@@ -483,20 +494,14 @@ app.get('/api/mis-campanas/:email/:id/historial', (req,res)=>{
   }catch(e){ res.json({ok:false, error:e.message}); }
 });
 
-// ===== LO QUE FALTABA 2: PAUSAR / BORRAR DESDE HISTORIAL UNIFICADO POR CORREO =====
-// Antes el CRM pausaba solo en el ID actual y si la campaña era de un ID anterior no la encontraba.
-// Ahora busca en TODOS los archivos de ese correo.
 app.post('/api/mis-campanas/toggle', (req,res)=>{
-  const { email, id, empresa_id } = req.body||{};
+  const { email, id } = req.body||{};
   const emailL = String(email||'').toLowerCase().trim();
   let found = false;
   for(const f of listDBFiles()){
     try{
       const db = JSON.parse(fs.readFileSync(path.join(DB,f),'utf8'));
       if(emailL && String(db.email||'').toLowerCase().trim() !== emailL) continue;
-      if(empresa_id && String(db.empresa_id)!==String(empresa_id) && emailL) {
-        // si viene email, no importa el empresa_id, busca en todos los de ese email
-      }
       let changed = false;
       const toggleIn = (arr)=>{
         const c = (arr||[]).find(x=>String(x.id)===String(id));
